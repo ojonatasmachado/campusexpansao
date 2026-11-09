@@ -12,12 +12,20 @@ export function avisoCep(t: Text = sourceText): string {
 }
 export const AVISO_CEP = avisoCep();
 
-/* os 3 pontos que ficam visíveis na tela de aceite (não escondidos no termo) */
-export function pontosDoTermo(igreja?: string | null, t: Text = sourceText): string[] {
+/* os 3 pontos que ficam visíveis na tela de aceite (não escondidos no termo).
+   O grupo vem do vocabulário da igreja e some se ela não usa grupos (lei 7). */
+export type PontoDoTermo = { icone: "cadeado" | "mapapin" | "perfil"; texto: string; forte?: string };
+export function pontosDoTermo(igreja?: string | null, t: Text = sourceText, usaGrupos = false): PontoDoTermo[] {
   return [
-    t("Seus dados ficam só com a {igreja}.", { igreja: igreja?.trim() || t("igreja") }),
-    t("A liderança pode ver seu nome, a região do seu CEP, sua célula e onde você serve. Nunca o endereço."),
-    t("Você muda isso quando quiser no Perfil."),
+    { icone: "cadeado", texto: t("Seus dados ficam só com a {igreja}.", { igreja: igreja?.trim() || t("igreja") }) },
+    {
+      icone: "mapapin",
+      texto: usaGrupos
+        ? t("A liderança pode ver seu nome, a região do seu CEP, o {grupo} de que você participa e onde você serve.")
+        : t("A liderança pode ver seu nome, a região do seu CEP e onde você serve."),
+      forte: t("Nunca o endereço."),
+    },
+    { icone: "perfil", texto: t("Você muda isso quando quiser no Perfil.") },
   ];
 }
 

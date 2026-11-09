@@ -15,6 +15,8 @@ O estado vivo não fica escrito aqui. A trava é o branch `historia/<ID>-<slug>`
 
 ## Como pegar uma história
 
+O campo "quem" é `codex` ou `claude`. As fotos saem de `tools/captura-service/foto.mjs`.
+
 1. Ler `AGENTS.md` inteiro. Rodar `npx tsx scripts/historias.ts livres` e escolher a primeira da ordem abaixo que estiver LIVRE e for do seu tipo (decisão é do usuário; o agente só prepara as opções).
 2. Reservar, num worktree novo a partir do `main` atualizado:
    ```bash
@@ -62,9 +64,7 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 
 ### 4b. Evolução da jornada do mapa (decisões de 04/11, `mapa/PLANO.md` §10)
 Ordem por dependência; G3 cancelada (sem avisos automáticos de expansão).
-- **G16** Mapa no celular do painel · **G11** Rota, Linha do tempo e Marcar lugar no painel (tela principal da G7 pronta)
-- **G10** Criar área com formas e acesso do responsável → **G13** Líderes de área em Quem vê · **G14** Emergência nova → **G15** Resposta da família
-- **G12** Analisar (espera G1 para a idade) · **G8** Camadas do IBGE (espera G1) · **G17** Onde e aceite no app do membro
+- **G12** Analisar (espera G1 para a idade) · **G8** Camadas do IBGE (espera G1)
 
 ### 5. Verificações em código e banco local
 - **E5** Troca de escala ponta a ponta · **M4** Convite e primeiro acesso

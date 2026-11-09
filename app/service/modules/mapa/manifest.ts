@@ -18,6 +18,8 @@ export default defineModule({
     menu: [{ rota: "mapa", grupo: "Pessoas", rotulo: "Mapa da igreja", icone: "mapapin", ordem: 21, papeis: ["master", "pastor"], acessos: ["mapa"] }],
   },
   vocabulario: ["grupo"],
+  /* G15: a pergunta da emergência chega como conversa, com "Estamos bem" e "Precisamos de ajuda" */
+  avisos: [{ tipo: "emergencia_pergunta", categoria: "mensagens", publico: "família na área da emergência que ainda não respondeu", cartao: "pedido", quando: "ao perguntar a quem não respondeu" }],
   densidade: [
     {
       tela: "Mapa da igreja",
@@ -25,6 +27,62 @@ export default defineModule({
       medido: { palavras: 105, acoes: 45, sobreposicoes: 0 },
       limite: { palavras: 100, acoes: 25, sobreposicoes: 0 },
       motivo: "Decisão de 04/11 (mapa/PLANO.md §10): ferramentas à vista numa barra, no lugar do menu Ferramentas, e camadas que se somam num painel. A casca do painel (menu, busca e avatar) soma 24 das 45 ações e 40 das 105 palavras; o mapa em si tem 21 ações e 65 palavras. Antes da G7 a tela tinha 42 ações, 183 palavras e 1 sobreposição.",
+    },
+    {
+      tela: "Mapa da igreja (painel no celular)",
+      tamanho: "390×844",
+      medido: { palavras: 11, acoes: 14, sobreposicoes: 0 },
+      limite: { palavras: 80, acoes: 12, sobreposicoes: 0 },
+      motivo: "G16: a casca do painel no celular (menu, busca, ajuda e avatar) soma 4 ações; o mapa tem busca, Camadas, 3D, minha posição, o \"i\" dos créditos do mapa (obrigatório pela licença) e as ferramentas visíveis da fileira que rola. Antes da G16 eram 18 ações e 1 sobreposição.",
+    },
+    {
+      tela: "Mapa da igreja · Traçar rota",
+      tamanho: "1366×860",
+      medido: { palavras: 103, acoes: 39, sobreposicoes: 0 },
+      limite: { palavras: 100, acoes: 25, sobreposicoes: 0 },
+      motivo: "G11, prancha P9: objetivo, paradas que se reordenam, área, jeito de ir, nome, quando, equipe e as três saídas ficam no mesmo painel para a rota sair numa tela só. A casca do painel soma 24 ações. Antes eram 37 ações e 127 palavras.",
+    },
+    {
+      tela: "Mapa da igreja · Linha do tempo",
+      tamanho: "1366×860",
+      medido: { palavras: 96, acoes: 32, sobreposicoes: 0 },
+      limite: { palavras: 100, acoes: 25, sobreposicoes: 0 },
+      motivo: "G11, prancha P10: os dois controles do período, o play, os períodos prontos e De perto ou Cidade toda. A casca do painel soma 24 ações. Antes eram 30 ações, 108 palavras, 1 sobreposição e 2 alvos pequenos.",
+    },
+    {
+      tela: "Mapa da igreja · Criar área",
+      tamanho: "1366×860",
+      medido: { palavras: 118, acoes: 45, sobreposicoes: 0 },
+      limite: { palavras: 100, acoes: 25, sobreposicoes: 0 },
+      motivo: "G10, prancha P5: as quatro formas, Desfazer e o ímã ficam à vista em cima do mapa, e nome, tipo, as 7 cores e o responsável no painel, para a área sair numa tela só. A casca do painel soma 24 ações e cerca de 40 palavras; a dica do gesto e a regra do responsável são o resto do texto. Antes eram 42 ações e 99 palavras. No celular (390×844) a tela tem 12 ações e 60 palavras, dentro da lei.",
+    },
+    {
+      tela: "Mapa da igreja · Quem vê o mapa (com uma pessoa aberta)",
+      tamanho: "1366×860",
+      medido: { palavras: 171, acoes: 30, sobreposicoes: 0 },
+      limite: { palavras: 100, acoes: 25, sobreposicoes: 0 },
+      motivo: "G13, prancha P8: lista em dois grupos e o detalhe da pessoa (o que vê, nível de detalhe, três permissões e as saídas) lado a lado, para mudar ou tirar o acesso sem trocar de tela. A casca do painel soma 24 ações. Antes, com a mesma pessoa aberta, eram 30 ações, 163 palavras e 1 sobreposição; o líder de área nem aparecia.",
+    },
+    {
+      tela: "Agenda · Onde (app do membro)",
+      tamanho: "390×844",
+      medido: { palavras: 39, acoes: 14, sobreposicoes: 0 },
+      limite: { palavras: 80, acoes: 12, sobreposicoes: 0 },
+      motivo: "G17, prancha P14: a casca do app (avatar e 4 abas) e o seletor da Agenda somam 8 ações; o Onde tem os 3 filtros, a alça da folha e os lugares mais perto. Antes eram as mesmas 14 ações e 29 palavras, com o mapa pequeno e a lista embaixo.",
+    },
+    {
+      tela: "Mapa da igreja · Emergência (marcar a área)",
+      tamanho: "1366×860",
+      medido: { palavras: 98, acoes: 32, sobreposicoes: 0 },
+      limite: { palavras: 100, acoes: 25, sobreposicoes: 0 },
+      motivo: "G14, prancha P12: as quatro formas e o Desfazer da área atingida ficam à vista, como no Criar área. A casca do painel soma 24 ações. Antes eram 27 ações e 85 palavras, com a área só canto a canto.",
+    },
+    {
+      tela: "Mapa da igreja · Emergência aberta (família aberta no mapa)",
+      tamanho: "1366×860",
+      medido: { palavras: 163, acoes: 42, sobreposicoes: 0 },
+      limite: { palavras: 100, acoes: 25, sobreposicoes: 0 },
+      motivo: "G14, prancha P13: lista de famílias com a situação ao lado do mapa e o balão da família com situação, endereço e as duas saídas, para quem coordena agir sem trocar de tela numa emergência. A casca do painel soma 24 ações.",
     },
   ],
 });

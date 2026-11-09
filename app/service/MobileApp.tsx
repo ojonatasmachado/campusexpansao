@@ -333,10 +333,10 @@ function MobileMembro({
     if ((member.mapConsentAt || member.mapConsentDeclinedAt) && member.mapConsentTerms === TERMO_MAPA_VERSAO) return;
     const timer = setTimeout(() => {
       aceiteMapaPedido.current = true;
-      setSheetEl(<SheetAceiteMapa memberId={member.id} churchName={churchName} onDecidido={() => {}} />);
+      setSheetEl(<SheetAceiteMapa memberId={member.id} churchName={churchName} usaGrupos={ligadosMembro.has("grupos")} onDecidido={() => {}} />);
     }, 800);
     return () => clearTimeout(timer);
-  }, [mode, onboarded, member, churchName]);
+  }, [mode, onboarded, member, churchName, ligadosMembro]);
   const ui: MemberUi = { go, sheet: setSheetEl, toast, respostas, responderEscala: responderEscalaUi, tamanhoTexto: abrirTamanhoTexto, abrirEvento, escalaConfirmada };
 
   const pedirEtapa = (step: JourneyStep) => {

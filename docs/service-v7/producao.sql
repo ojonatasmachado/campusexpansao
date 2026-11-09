@@ -5569,4 +5569,509 @@ grant execute on function service.mapa_pessoas(uuid) to authenticated;
 revoke all on function service.mapa_ponto_rua(double precision, double precision, text, double precision, double precision) from public, anon, authenticated;
 revoke all on function service.mapa_sorteio(text) from public, anon, authenticated;
 
+-- ═══ 0100_service_mapa_responsavel_acesso.sql ═══
+-- G10: o responsável de uma área vê o mapa só daquela área, pessoas uma a
+-- uma, sem precisar de liberação. A liberação feita pelo pastor em "Quem vê
+-- o mapa" (map_access) sempre vence: pode ampliar, mudar ou tirar ('nenhum').
+-- Só pastor e administração (owner, master, pastor) veem e gravam o
+-- responsável. PLANO.md §10.
+
+-- 'nenhum' = o pastor tirou o acesso (inclusive o automático de responsável)
+alter table service.map_access drop constraint if exists map_access_escopo_check;
+alter table service.map_access add constraint map_access_escopo_check check (escopo in ('cidade', 'area', 'nenhum'));
+alter table service.map_access drop constraint if exists map_access_check;
+alter table service.map_access add constraint map_access_check check (escopo <> 'area' or area_id is not null);
+
+-- ── o que a pessoa logada pode no mapa desta igreja ──
+create or replace function service.mapa_acesso(p_org uuid)
+returns table (pode boolean, total boolean, area_id uuid, detalhe text, pode_mesa boolean, pode_csv boolean, pode_editar boolean)
+language plpgsql stable security definer set search_path = service, core, public as $$
+declare
+  a service.map_access%rowtype;
+  v_area uuid;
+begin
+  if core.has_role(p_org, 'owner', 'master', 'pastor') then
+    return query select true, true, null::uuid, 'pessoas'::text, true, true, true;
+    return;
+  end if;
+  select ma.* into a from service.map_access ma
+    join service.people p on p.id = ma.person_id
+   where ma.organization_id = p_org and p.user_id = auth.uid()
+   limit 1;
+  if found then
+    if a.escopo = 'nenhum' then
+      return query select false, false, null::uuid, null::text, false, false, false;
+      return;
+    end if;
+    return query select true, a.escopo = 'cidade', case when a.escopo = 'area' then a.area_id end, a.detalhe, a.pode_mesa, a.pode_csv, a.pode_editar;
+    return;
+  end if;
+  -- responsável de área: só a área (a mais antiga como referência; o recorte junta todas)
+  select ar.id into v_area from service.map_areas ar
+    join service.people p on p.id = ar.responsavel_id
+   where ar.organization_id = p_org and p.user_id = auth.uid()
+   order by ar.created_at, ar.id
+   limit 1;
+  if v_area is null then
+    return query select false, false, null::uuid, null::text, false, false, false;
+    return;
+  end if;
+  return query select true, false, v_area, 'pessoas'::text, true, false, false;
+end $$;
+revoke all on function service.mapa_acesso(uuid) from public, anon;
+grant execute on function service.mapa_acesso(uuid) to authenticated;
+
+-- recorte da pessoa logada: null = cidade inteira. Liberação do pastor:
+-- a área dela. Responsável sem liberação: todas as áreas que ele cuida.
+create or replace function service.mapa_recorte(p_org uuid)
+returns extensions.geometry
+language sql stable security definer set search_path = service, public as $$
+  select case
+    when x.area_id is null then null
+    when exists (select 1 from service.map_access ma join service.people p on p.id = ma.person_id
+                  where ma.organization_id = p_org and p.user_id = auth.uid())
+      then (select ar.geom from service.map_areas ar where ar.id = x.area_id)
+    else (select extensions.st_multi(extensions.st_union(ar.geom)) from service.map_areas ar
+            join service.people p on p.id = ar.responsavel_id
+           where ar.organization_id = p_org and p.user_id = auth.uid())
+  end
+  from service.mapa_acesso(p_org) x
+$$;
+revoke all on function service.mapa_recorte(uuid) from public, anon;
+grant execute on function service.mapa_recorte(uuid) to authenticated;
+
+-- ── o responsável só aparece para pastor e administração ──
+-- Leitura direta da tabela sem a coluna; escrita só pela função abaixo
+-- (apagar continua direto, pela política map_areas_escrever).
+revoke select, insert, update on service.map_areas from authenticated;
+grant select (id, organization_id, nome, tipo, cor, bairros, geom, criado_por, created_at, updated_at) on service.map_areas to authenticated;
+
+create or replace function service.mapa_areas(p_org uuid)
+returns table (id uuid, nome text, tipo text, cor text, responsavel_id uuid, responsavel text, bairros text[], geojson jsonb)
+language plpgsql stable security definer set search_path = service, core, public as $$
+declare v_gestao boolean := core.has_role(p_org, 'owner', 'master', 'pastor');
+begin
+  if not (select pode from service.mapa_acesso(p_org)) then raise exception 'sem_acesso'; end if;
+  return query
+  select a.id, a.nome, a.tipo, a.cor,
+         case when v_gestao then a.responsavel_id end,
+         case when v_gestao then p.name end,
+         a.bairros, extensions.st_asgeojson(a.geom, 6)::jsonb
+    from service.map_areas a left join service.people p on p.id = a.responsavel_id
+   where a.organization_id = p_org
+   order by a.nome;
+end $$;
+revoke all on function service.mapa_areas(uuid) from public, anon;
+grant execute on function service.mapa_areas(uuid) to authenticated;
+
+-- salvar área: quem não é pastor nem administração não muda o responsável
+-- (na área nova fica sem; na existente fica o que estava)
+create or replace function service.mapa_salvar_area(p_org uuid, p_id uuid, p_nome text, p_tipo text, p_cor text, p_responsavel uuid, p_bairros text[], p_geojson jsonb)
+returns uuid
+language plpgsql security definer set search_path = service, core, public as $$
+declare
+  v_geom extensions.geometry;
+  v_id uuid;
+  v_resp uuid := p_responsavel;
+  v_eu uuid := (select p.id from service.people p where p.user_id = auth.uid() and p.organization_id = p_org limit 1);
+begin
+  if not (select x.total and x.pode_editar from service.mapa_acesso(p_org) x) then raise exception 'sem_acesso'; end if;
+  if not core.has_role(p_org, 'owner', 'master', 'pastor') then
+    v_resp := (select a.responsavel_id from service.map_areas a where a.id = p_id and a.organization_id = p_org);
+  end if;
+  if v_resp is not null and not exists (select 1 from service.people p where p.id = v_resp and p.organization_id = p_org) then raise exception 'responsavel_invalido'; end if;
+  if coalesce(array_length(p_bairros, 1), 0) > 0 then
+    select extensions.st_multi(extensions.st_union(b.geom)) into v_geom from service.ibge_bairros b where b.codigo = any(p_bairros);
+  elsif p_geojson is not null then
+    v_geom := extensions.st_multi(extensions.st_makevalid(extensions.st_setsrid(extensions.st_geomfromgeojson(p_geojson::text), 4326)));
+  end if;
+  if v_geom is null or extensions.st_isempty(v_geom) then raise exception 'area_vazia'; end if;
+  v_geom := extensions.st_multi(extensions.st_collectionextract(v_geom, 3));
+  if p_id is null then
+    insert into service.map_areas (organization_id, nome, tipo, cor, responsavel_id, bairros, geom, criado_por)
+    values (p_org, trim(p_nome), p_tipo, p_cor, v_resp, coalesce(p_bairros, '{}'), v_geom, v_eu) returning id into v_id;
+  else
+    update service.map_areas set nome = trim(p_nome), tipo = p_tipo, cor = p_cor, responsavel_id = v_resp, bairros = coalesce(p_bairros, '{}'), geom = v_geom, updated_at = now()
+     where id = p_id and organization_id = p_org returning id into v_id;
+    if v_id is null then raise exception 'area_nao_encontrada'; end if;
+  end if;
+  return v_id;
+end $$;
+revoke all on function service.mapa_salvar_area(uuid, uuid, text, text, text, uuid, text[], jsonb) from public, anon;
+grant execute on function service.mapa_salvar_area(uuid, uuid, text, text, text, uuid, text[], jsonb) to authenticated;
+
+-- ── o menu "Mapa da igreja" do responsável ──
+-- O menu aparece com a liberação "mapa" (person_grants). Ela acompanha o
+-- responsável: entra quando ele passa a cuidar de uma área (se o pastor não
+-- tirou o acesso dele) e sai quando deixa de cuidar de todas, a não ser que o
+-- pastor tenha liberado o mapa por conta própria (linha em map_access).
+create or replace function service.trg_map_areas_responsavel()
+returns trigger
+language plpgsql security definer set search_path = service, public as $$
+declare v_novo uuid; v_velho uuid;
+begin
+  v_novo := case when tg_op in ('INSERT', 'UPDATE') then new.responsavel_id end;
+  v_velho := case when tg_op in ('UPDATE', 'DELETE') then old.responsavel_id end;
+  if v_novo is not null and v_novo is distinct from v_velho
+     and not exists (select 1 from service.map_access ma where ma.person_id = v_novo and ma.escopo = 'nenhum') then
+    insert into service.person_grants (organization_id, person_id, grant_code)
+    values (new.organization_id, v_novo, 'mapa')
+    on conflict (person_id, grant_code) do nothing;
+  end if;
+  if v_velho is not null and v_velho is distinct from v_novo
+     and not exists (select 1 from service.map_access ma where ma.person_id = v_velho)
+     and not exists (select 1 from service.map_areas ar where ar.responsavel_id = v_velho and ar.id <> coalesce(new.id, old.id)) then
+    delete from service.person_grants where person_id = v_velho and grant_code = 'mapa';
+  end if;
+  return null;
+end $$;
+revoke all on function service.trg_map_areas_responsavel() from public, anon, authenticated;
+drop trigger if exists map_areas_responsavel on service.map_areas;
+create trigger map_areas_responsavel after insert or update of responsavel_id or delete on service.map_areas
+  for each row execute function service.trg_map_areas_responsavel();
+
+-- responsáveis que já existem
+insert into service.person_grants (organization_id, person_id, grant_code)
+select distinct ar.organization_id, ar.responsavel_id, 'mapa'
+  from service.map_areas ar
+ where ar.responsavel_id is not null
+   and not exists (select 1 from service.map_access ma where ma.person_id = ar.responsavel_id and ma.escopo = 'nenhum')
+on conflict (person_id, grant_code) do nothing;
+
+-- ── prévia da área: os números ao vivo do Criar área ──
+-- Igual à 0091, com o filtro pela caixa do desenho (usa o índice gist dos
+-- setores). Sem ele, cada arraste percorria todos os setores do país e
+-- estourava o tempo do banco.
+create or replace function service.mapa_area_previa(p_org uuid, p_bairros text[], p_geojson jsonb)
+returns table (pessoas integer, moradores integer, grupos integer)
+language plpgsql stable security definer set search_path = service, public as $$
+declare
+  v_geom extensions.geometry;
+  v_recorte extensions.geometry;
+  v_n integer;
+begin
+  if not (select pode from service.mapa_acesso(p_org)) then raise exception 'sem_acesso'; end if;
+  if coalesce(array_length(p_bairros, 1), 0) > 0 then
+    select extensions.st_union(b.geom) into v_geom from service.ibge_bairros b where b.codigo = any(p_bairros);
+  elsif p_geojson is not null then
+    v_geom := extensions.st_makevalid(extensions.st_setsrid(extensions.st_geomfromgeojson(p_geojson::text), 4326));
+    if extensions.st_npoints(v_geom) > 500 then raise exception 'area_complexa'; end if;
+  end if;
+  if v_geom is null then return query select 0, 0, 0; return; end if;
+  v_recorte := service.mapa_recorte(p_org);
+  if v_recorte is not null then v_geom := extensions.st_intersection(v_geom, v_recorte); end if;
+  if extensions.st_isempty(v_geom) or extensions.st_area(v_geom::extensions.geography) < 50000 then return query select -1, 0, 0; return; end if;
+  v_n := (select count(*) from service.members m where m.organization_id = p_org and m.latitude is not null and extensions.st_intersects(v_geom, extensions.st_setsrid(extensions.st_makepoint(m.longitude, m.latitude), 4326)))::integer;
+  return query select
+    case when v_n between 1 and 2 then -1 else v_n end,
+    coalesce((select sum(s.moradores) from service.ibge_setores s where s.geom operator(extensions.&&) v_geom and extensions.st_intersects(v_geom, extensions.st_pointonsurface(s.geom))), 0)::integer,
+    (select count(*) from service.fellowship_groups g where g.organization_id = p_org and g.latitude is not null and extensions.st_intersects(v_geom, extensions.st_setsrid(extensions.st_makepoint(g.longitude, g.latitude), 4326)))::integer;
+end $$;
+revoke all on function service.mapa_area_previa(uuid, text[], jsonb) from public, anon;
+grant execute on function service.mapa_area_previa(uuid, text[], jsonb) to authenticated;
+
+-- ── as áreas que a pessoa logada vê (para a máscara e o "Você vê só...") ──
+-- Liberação do pastor: a área dela. Responsável sem liberação: todas as que
+-- cuida (o mesmo que o recorte junta). Cidade inteira: nenhuma linha.
+create or replace function service.mapa_minhas_areas(p_org uuid)
+returns setof uuid
+language plpgsql stable security definer set search_path = service, public as $$
+declare v_area uuid;
+begin
+  select x.area_id into v_area from service.mapa_acesso(p_org) x;
+  if v_area is null then return; end if;
+  if exists (select 1 from service.map_access ma join service.people p on p.id = ma.person_id
+              where ma.organization_id = p_org and p.user_id = auth.uid()) then
+    return next v_area;
+    return;
+  end if;
+  return query select ar.id from service.map_areas ar
+    join service.people p on p.id = ar.responsavel_id
+   where ar.organization_id = p_org and p.user_id = auth.uid()
+   order by ar.created_at, ar.id;
+end $$;
+revoke all on function service.mapa_minhas_areas(uuid) from public, anon;
+grant execute on function service.mapa_minhas_areas(uuid) to authenticated;
+
+-- ═══ 0101_service_mapa_lider_nenhum.sql ═══
+-- G13: quem teve o acesso tirado ('nenhum') e deixa de cuidar da última área
+-- volta a ser uma pessoa comum: a linha 'nenhum' sai. Assim, se um dia virar
+-- responsável de novo, ganha o acesso automático (e o pastor vê na lista).
+create or replace function service.trg_map_areas_responsavel()
+returns trigger
+language plpgsql security definer set search_path = service, public as $$
+declare v_novo uuid; v_velho uuid;
+begin
+  v_novo := case when tg_op in ('INSERT', 'UPDATE') then new.responsavel_id end;
+  v_velho := case when tg_op in ('UPDATE', 'DELETE') then old.responsavel_id end;
+  if v_novo is not null and v_novo is distinct from v_velho
+     and not exists (select 1 from service.map_access ma where ma.person_id = v_novo and ma.escopo = 'nenhum') then
+    insert into service.person_grants (organization_id, person_id, grant_code)
+    values (new.organization_id, v_novo, 'mapa')
+    on conflict (person_id, grant_code) do nothing;
+  end if;
+  if v_velho is not null and v_velho is distinct from v_novo
+     and not exists (select 1 from service.map_areas ar where ar.responsavel_id = v_velho and ar.id <> coalesce(new.id, old.id)) then
+    delete from service.map_access where person_id = v_velho and escopo = 'nenhum';
+    if not exists (select 1 from service.map_access ma where ma.person_id = v_velho) then
+      delete from service.person_grants where person_id = v_velho and grant_code = 'mapa';
+    end if;
+  end if;
+  return null;
+end $$;
+revoke all on function service.trg_map_areas_responsavel() from public, anon, authenticated;
+
+-- quem já está nessa situação
+delete from service.map_access ma
+ where ma.escopo = 'nenhum'
+   and not exists (select 1 from service.map_areas ar where ar.responsavel_id = ma.person_id);
+
+-- ═══ 0102_service_mapa_emergencia_pontos.sql ═══
+-- G14: a emergência mostra cada família como um ponto no mapa, com a
+-- situação e quem marcou; ao desenhar a área, famílias e pessoas contam ao vivo.
+
+-- famílias: + ponto (média dos pontos da família com 3 casas, ~110 m: o
+-- endereço só abre pelo mapa_revelar_endereco, com registro) e quem marcou
+drop function if exists service.mapa_emergencia_familias(uuid);
+create or replace function service.mapa_emergencia_familias(p_id uuid)
+returns table (chave text, nome text, pessoas integer, bairro text, contato_member_id uuid, telefone text, status text, atualizado_em timestamptz, membros jsonb, latitude double precision, longitude double precision, marcado_por text)
+language plpgsql security definer set search_path = service, public as $$
+declare e service.map_emergencies%rowtype;
+begin
+  select * into e from service.map_emergencies where id = p_id;
+  if not found or not service.mapa_coordena(e.organization_id) then raise exception 'sem_acesso'; end if;
+  -- encerrada: a lista com pontos deixa de abrir
+  if e.status <> 'aberta' then raise exception 'encerrada'; end if;
+  -- quem abriu a lista (nomes e telefones), uma vez por minuto por pessoa
+  if not exists (select 1 from service.map_emergency_log l where l.emergencia_id = p_id and l.acao = 'lista' and l.por = service.mapa_eu(e.organization_id) and l.em > now() - interval '1 minute') then
+    insert into service.map_emergency_log (emergencia_id, acao, por) values (p_id, 'lista', service.mapa_eu(e.organization_id));
+  end if;
+  return query
+  with dentro as (
+    select m.*, coalesce(nullif(trim(m.family), ''), m.id::text) as k
+      from service.members m
+     where m.organization_id = e.organization_id and m.latitude is not null
+       and extensions.st_intersects(e.geom, extensions.st_setsrid(extensions.st_makepoint(m.longitude, m.latitude), 4326))
+  )
+  select d.k,
+         case when count(*) > 1 or nullif(trim(min(d.family)), '') is not null then 'Família ' || coalesce(nullif(trim(min(d.family)), ''), split_part(min(d.name), ' ', 2)) else min(d.name) end,
+         count(*)::integer, min(d.neighborhood),
+         (array_agg(d.id order by (d.phone is null), d.created_at))[1],
+         (array_agg(d.phone order by (d.phone is null), d.created_at))[1],
+         coalesce(f.status, 'sem_resposta'), f.atualizado_em,
+         jsonb_agg(jsonb_build_object('id', d.id, 'nome', d.name) order by d.name),
+         round(avg(d.latitude)::numeric, 3)::double precision,
+         round(avg(d.longitude)::numeric, 3)::double precision,
+         (select p.name from service.people p where p.id = f.atualizado_por)
+    from dentro d left join service.map_emergency_families f on f.emergencia_id = p_id and f.chave = d.k
+   group by d.k, f.status, f.atualizado_em, f.atualizado_por
+   order by case coalesce(f.status, 'sem_resposta') when 'ajuda' then 0 when 'sem_resposta' then 1 else 2 end, 2;
+end $$;
+revoke all on function service.mapa_emergencia_familias(uuid) from public, anon;
+grant execute on function service.mapa_emergencia_familias(uuid) to authenticated;
+
+-- contagem ao vivo enquanto a área atingida é desenhada (só quem coordena)
+create or replace function service.mapa_emergencia_previa(p_org uuid, p_geojson jsonb)
+returns table (familias integer, pessoas integer)
+language plpgsql stable security definer set search_path = service, public as $$
+declare v_geom extensions.geometry;
+begin
+  if not service.mapa_coordena(p_org) then raise exception 'sem_acesso'; end if;
+  v_geom := extensions.st_makevalid(extensions.st_setsrid(extensions.st_geomfromgeojson(p_geojson::text), 4326));
+  -- bairros juntos trazem muitos pontos: simplifica (~10 m) antes de contar
+  v_geom := extensions.st_simplifypreservetopology(v_geom, 0.0001);
+  if extensions.st_npoints(v_geom) > 20000 then raise exception 'area_complexa'; end if;
+  return query
+  select count(distinct coalesce(nullif(trim(m.family), ''), m.id::text))::integer, count(*)::integer
+    from service.members m
+   where m.organization_id = p_org and m.latitude is not null
+     and extensions.st_intersects(v_geom, extensions.st_setsrid(extensions.st_makepoint(m.longitude, m.latitude), 4326));
+end $$;
+revoke all on function service.mapa_emergencia_previa(uuid, jsonb) from public, anon;
+grant execute on function service.mapa_emergencia_previa(uuid, jsonb) to authenticated;
+
+-- ═══ 0103_service_emergencia_resposta.sql ═══
+-- G15: a pergunta da emergência chega à família com "Estamos bem" e
+-- "Precisamos de ajuda"; o toque grava a resposta e a situação muda sozinha
+-- no painel. Quem coordena ainda corrige à mão, e tudo fica registrado
+-- (fonte e quem). PLANO.md §10, prancha P13.
+
+-- de onde veio a situação: da coordenação (à mão) ou da família (resposta)
+alter table service.map_emergency_families add column if not exists fonte text not null default 'coordenacao';
+alter table service.map_emergency_families drop constraint if exists map_emergency_families_fonte_check;
+alter table service.map_emergency_families add constraint map_emergency_families_fonte_check check (fonte in ('coordenacao', 'familia'));
+alter table service.map_emergency_families add column if not exists respondido_por uuid references service.members(id) on delete set null;
+
+-- cada pergunta enviada: a mensagem na conversa com a família
+create table if not exists service.map_emergency_asks (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references core.organizations(id) on delete cascade,
+  emergencia_id uuid not null references service.map_emergencies(id) on delete cascade,
+  chave text not null,
+  member_id uuid not null references service.members(id) on delete cascade,
+  message_id uuid not null references service.messages(id) on delete cascade,
+  perguntado_por uuid references service.people(id) on delete set null,
+  -- a resposta de quem recebeu (cada toque fica guardado aqui)
+  resposta text check (resposta is null or resposta in ('bem', 'ajuda')),
+  respondido_em timestamptz,
+  created_at timestamptz not null default now()
+);
+alter table service.map_emergency_asks add column if not exists resposta text check (resposta is null or resposta in ('bem', 'ajuda'));
+alter table service.map_emergency_asks add column if not exists respondido_em timestamptz;
+create index if not exists map_emergency_asks_msg_idx on service.map_emergency_asks (message_id);
+create index if not exists map_emergency_asks_emerg_idx on service.map_emergency_asks (emergencia_id);
+alter table service.map_emergency_asks enable row level security;
+revoke all on service.map_emergency_asks from anon, authenticated;
+-- leitura e escrita só pelas funções abaixo
+
+-- perguntar a uma família (quem coordena): manda a mensagem e guarda a pergunta
+create or replace function service.mapa_emergencia_perguntar(p_id uuid, p_chave text, p_member uuid, p_body text)
+returns uuid language plpgsql security definer set search_path = service, public as $$
+declare e service.map_emergencies%rowtype; v_chat uuid; v_me uuid; v_msg uuid;
+begin
+  select * into e from service.map_emergencies where id = p_id;
+  if not found or not service.mapa_coordena(e.organization_id) then raise exception 'sem_acesso'; end if;
+  if e.status <> 'aberta' then raise exception 'encerrada'; end if;
+  if nullif(btrim(coalesce(p_body, '')), '') is null or length(p_body) > 500 then raise exception 'texto_invalido'; end if;
+  -- o destinatário tem de ser da família e morar na área
+  if not exists (select 1 from service.members m where m.id = p_member and m.organization_id = e.organization_id and m.latitude is not null
+      and coalesce(nullif(trim(m.family), ''), m.id::text) = p_chave
+      and extensions.st_intersects(e.geom, extensions.st_setsrid(extensions.st_makepoint(m.longitude, m.latitude), 4326))) then raise exception 'fora_da_area'; end if;
+  v_chat := service.start_dm(p_member, null);
+  if v_chat is null then raise exception 'sem_ficha'; end if;
+  select m.id into v_me from service.members m where m.id = any(service.my_members()) and m.organization_id = e.organization_id limit 1;
+  insert into service.messages (organization_id, chat_id, sender_id, body) values (e.organization_id, v_chat, v_me, btrim(p_body)) returning id into v_msg;
+  insert into service.map_emergency_asks (organization_id, emergencia_id, chave, member_id, message_id, perguntado_por)
+  values (e.organization_id, p_id, p_chave, p_member, v_msg, service.mapa_eu(e.organization_id));
+  return v_msg;
+end $$;
+revoke all on function service.mapa_emergencia_perguntar(uuid, text, uuid, text) from public, anon;
+grant execute on function service.mapa_emergencia_perguntar(uuid, text, uuid, text) to authenticated;
+
+-- perguntar a todas as famílias sem resposta de uma vez (cada membro da
+-- família recebe; devolve quantas famílias receberam ao menos uma mensagem)
+create or replace function service.mapa_emergencia_perguntar_todas(p_id uuid, p_body text)
+returns integer language plpgsql security definer set search_path = service, public as $$
+declare e service.map_emergencies%rowtype; r record; v_n integer := 0; v_ultima text := null; v_ok boolean;
+begin
+  select * into e from service.map_emergencies where id = p_id;
+  if not found or not service.mapa_coordena(e.organization_id) then raise exception 'sem_acesso'; end if;
+  if e.status <> 'aberta' then raise exception 'encerrada'; end if;
+  for r in
+    select m.id, coalesce(nullif(trim(m.family), ''), m.id::text) as k
+      from service.members m
+      left join service.map_emergency_families f on f.emergencia_id = p_id and f.chave = coalesce(nullif(trim(m.family), ''), m.id::text)
+     where m.organization_id = e.organization_id and m.latitude is not null
+       and extensions.st_intersects(e.geom, extensions.st_setsrid(extensions.st_makepoint(m.longitude, m.latitude), 4326))
+       and coalesce(f.status, 'sem_resposta') = 'sem_resposta'
+     order by 2
+  loop
+    v_ok := true;
+    begin
+      perform service.mapa_emergencia_perguntar(p_id, r.k, r.id, p_body);
+    exception when others then v_ok := false;
+    end;
+    if v_ok and r.k is distinct from v_ultima then v_n := v_n + 1; v_ultima := r.k; end if;
+  end loop;
+  return v_n;
+end $$;
+revoke all on function service.mapa_emergencia_perguntar_todas(uuid, text) from public, anon;
+grant execute on function service.mapa_emergencia_perguntar_todas(uuid, text) to authenticated;
+
+-- as perguntas que chegaram para mim (app do membro): a mensagem, se ainda
+-- vale e o que a família respondeu
+drop function if exists service.mapa_minhas_perguntas();
+create or replace function service.mapa_minhas_perguntas()
+returns table (message_id uuid, aberta boolean, resposta text, minha boolean)
+language sql stable security definer set search_path = service, public as $$
+  select a.message_id, e.status = 'aberta',
+         coalesce(a.resposta, case when f.fonte = 'familia' then f.status end),
+         a.resposta is not null
+    from service.map_emergency_asks a
+    join service.map_emergencies e on e.id = a.emergencia_id
+    left join service.map_emergency_families f on f.emergencia_id = a.emergencia_id and f.chave = a.chave
+   where a.member_id = any(service.my_members())
+$$;
+revoke all on function service.mapa_minhas_perguntas() from public, anon;
+grant execute on function service.mapa_minhas_perguntas() to authenticated;
+
+-- a família responde com um toque. A chave e a área são as de agora (a
+-- família pode ter mudado); um "bem" não apaga um "ajuda" já registrado,
+-- e cada toque fica guardado na pergunta.
+create or replace function service.mapa_emergencia_responder(p_message uuid, p_status text)
+returns void language plpgsql security definer set search_path = service, public as $$
+declare a service.map_emergency_asks%rowtype; e service.map_emergencies%rowtype; v_chave text;
+begin
+  if p_status not in ('bem', 'ajuda') then raise exception 'status_invalido'; end if;
+  select * into a from service.map_emergency_asks where message_id = p_message and member_id = any(service.my_members()) limit 1;
+  if not found then raise exception 'sem_acesso'; end if;
+  select * into e from service.map_emergencies where id = a.emergencia_id;
+  if e.status <> 'aberta' then raise exception 'encerrada'; end if;
+  select coalesce(nullif(trim(m.family), ''), m.id::text) into v_chave from service.members m
+   where m.id = a.member_id and m.latitude is not null
+     and extensions.st_intersects(e.geom, extensions.st_setsrid(extensions.st_makepoint(m.longitude, m.latitude), 4326));
+  if v_chave is null then raise exception 'fora_da_area'; end if;
+  update service.map_emergency_asks set resposta = p_status, respondido_em = now() where id = a.id;
+  insert into service.map_emergency_families (emergencia_id, chave, status, fonte, respondido_por, atualizado_por)
+  values (a.emergencia_id, v_chave, p_status, 'familia', a.member_id, null)
+  on conflict (emergencia_id, chave) do update set status = excluded.status, fonte = 'familia', respondido_por = excluded.respondido_por, atualizado_por = null, atualizado_em = now()
+   where service.map_emergency_families.status <> 'ajuda' or excluded.status = 'ajuda';
+end $$;
+revoke all on function service.mapa_emergencia_responder(uuid, text) from public, anon;
+grant execute on function service.mapa_emergencia_responder(uuid, text) to authenticated;
+
+-- correção à mão: a fonte volta a ser a coordenação
+create or replace function service.mapa_emergencia_status(p_id uuid, p_chave text, p_status text, p_nota text default null)
+returns void language plpgsql security definer set search_path = service, public as $$
+declare e service.map_emergencies%rowtype;
+begin
+  select * into e from service.map_emergencies where id = p_id;
+  if not found or not service.mapa_coordena(e.organization_id) then raise exception 'sem_acesso'; end if;
+  if e.status <> 'aberta' then raise exception 'encerrada'; end if;
+  if p_status not in ('sem_resposta', 'bem', 'ajuda') then raise exception 'status_invalido'; end if;
+  if not exists (select 1 from service.members m where m.organization_id = e.organization_id and m.latitude is not null
+      and coalesce(nullif(trim(m.family), ''), m.id::text) = p_chave
+      and extensions.st_intersects(e.geom, extensions.st_setsrid(extensions.st_makepoint(m.longitude, m.latitude), 4326))) then raise exception 'fora_da_area'; end if;
+  insert into service.map_emergency_families (emergencia_id, chave, status, nota, atualizado_por, fonte) values (p_id, p_chave, p_status, p_nota, service.mapa_eu(e.organization_id), 'coordenacao')
+  on conflict (emergencia_id, chave) do update set status = excluded.status, nota = coalesce(excluded.nota, service.map_emergency_families.nota), atualizado_em = now(), atualizado_por = excluded.atualizado_por, fonte = 'coordenacao', respondido_por = null;
+end $$;
+
+-- famílias: + de onde veio a situação
+drop function if exists service.mapa_emergencia_familias(uuid);
+create or replace function service.mapa_emergencia_familias(p_id uuid)
+returns table (chave text, nome text, pessoas integer, bairro text, contato_member_id uuid, telefone text, status text, atualizado_em timestamptz, membros jsonb, latitude double precision, longitude double precision, marcado_por text, fonte text)
+language plpgsql security definer set search_path = service, public as $$
+declare e service.map_emergencies%rowtype;
+begin
+  select * into e from service.map_emergencies where id = p_id;
+  if not found or not service.mapa_coordena(e.organization_id) then raise exception 'sem_acesso'; end if;
+  if e.status <> 'aberta' then raise exception 'encerrada'; end if;
+  if not exists (select 1 from service.map_emergency_log l where l.emergencia_id = p_id and l.acao = 'lista' and l.por = service.mapa_eu(e.organization_id) and l.em > now() - interval '1 minute') then
+    insert into service.map_emergency_log (emergencia_id, acao, por) values (p_id, 'lista', service.mapa_eu(e.organization_id));
+  end if;
+  return query
+  with dentro as (
+    select m.*, coalesce(nullif(trim(m.family), ''), m.id::text) as k
+      from service.members m
+     where m.organization_id = e.organization_id and m.latitude is not null
+       and extensions.st_intersects(e.geom, extensions.st_setsrid(extensions.st_makepoint(m.longitude, m.latitude), 4326))
+  )
+  select d.k,
+         case when count(*) > 1 or nullif(trim(min(d.family)), '') is not null then 'Família ' || coalesce(nullif(trim(min(d.family)), ''), split_part(min(d.name), ' ', 2)) else min(d.name) end,
+         count(*)::integer, min(d.neighborhood),
+         (array_agg(d.id order by (d.phone is null), d.created_at))[1],
+         (array_agg(d.phone order by (d.phone is null), d.created_at))[1],
+         coalesce(f.status, 'sem_resposta'), f.atualizado_em,
+         jsonb_agg(jsonb_build_object('id', d.id, 'nome', d.name) order by d.name),
+         round(avg(d.latitude)::numeric, 3)::double precision,
+         round(avg(d.longitude)::numeric, 3)::double precision,
+         (select p.name from service.people p where p.id = f.atualizado_por),
+         f.fonte
+    from dentro d left join service.map_emergency_families f on f.emergencia_id = p_id and f.chave = d.k
+   group by d.k, f.status, f.atualizado_em, f.atualizado_por, f.fonte
+   order by case coalesce(f.status, 'sem_resposta') when 'ajuda' then 0 when 'sem_resposta' then 1 else 2 end, 2;
+end $$;
+revoke all on function service.mapa_emergencia_familias(uuid) from public, anon;
+grant execute on function service.mapa_emergencia_familias(uuid) to authenticated;
+
 commit;

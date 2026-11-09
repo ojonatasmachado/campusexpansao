@@ -28,8 +28,8 @@ export function pessoasNaRegiao(n: number): string {
 
 /* Presença da igreja em 5 tons (mapa/PLANO.md §10): "1 a cada X moradores".
    Cortes de X do tom mais claro ao mais escuro: tom 1 é mais de 2.000, tom 5 é
-   200 ou menos (as pontas da legenda). Sem ninguém da igreja, o mais claro. */
-export const CORTES_PRESENCA = [2000, 1000, 500, 200] as const;
+   100 ou menos (as pontas da legenda da prancha P1). Sem ninguém da igreja, o mais claro. */
+export const CORTES_PRESENCA = [2000, 1000, 400, 100] as const;
 export function tomPresenca(x: number | null | undefined): 1 | 2 | 3 | 4 | 5 {
   if (!x) return 1;
   const i = CORTES_PRESENCA.findIndex((c) => x > c);

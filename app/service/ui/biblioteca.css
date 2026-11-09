@@ -809,6 +809,11 @@ body { --graf-neutro: color-mix(in srgb, var(--muted) 38%, transparent); --graf-
 .pm-marca.celula { background: var(--mapa-papel); color: var(--mapa-tinta); box-shadow: inset 0 0 0 1.5px var(--mapa-tinta); border-radius: 12px; }
 .pm-marca.lugar { background: var(--mapa-tinta); color: var(--mapa-papel); }
 .pm-camada-txt { flex: 1; min-width: 0; }
+.pm-amostra { width: 14px; height: 14px; flex-shrink: 0; border-radius: 4px; }
+.pm-amostra.cor-sand { background: var(--mapa-sand); } .pm-amostra.cor-wheat { background: var(--mapa-wheat); }
+.pm-amostra.cor-amber { background: var(--mapa-amber); } .pm-amostra.cor-clay { background: var(--mapa-clay); }
+.pm-amostra.cor-terra { background: var(--mapa-terra); } .pm-amostra.cor-rust { background: var(--mapa-rust); }
+.pm-amostra.cor-cocoa { background: var(--mapa-cocoa); } .pm-amostra.cor-olive { background: var(--mapa-olive); }
 .pm-camada-nome { display: block; font-size: var(--fs-pn-14); font-weight: 600; overflow-wrap: anywhere; }
 .pm-camada-det { display: block; font-size: var(--fs-pn-12); color: var(--muted); }
 .pm-camada-sw { display: inline-block; pointer-events: none; }
@@ -893,12 +898,26 @@ body { --graf-neutro: color-mix(in srgb, var(--muted) 38%, transparent); --graf-
   background: color-mix(in srgb, var(--white) 7%, transparent); color: var(--muted);
   display: inline-flex; align-items: center; justify-content: center;
 }
+.balao-lotacao { padding: 14px; border-radius: 16px; background: color-mix(in srgb, var(--white) 6%, transparent); display: flex; flex-direction: column; gap: 10px; }
+.balao-lotacao-cab { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: var(--fs-pn-13); color: var(--muted); }
+.balao-lotacao-n { font-size: var(--fs-pn-20); font-weight: 800; letter-spacing: -0.02em; color: var(--white); font-variant-numeric: tabular-nums; }
+.balao-lotacao-barra { display: block; height: 8px; border-radius: 8px; background: color-mix(in srgb, var(--white) 10%, transparent); overflow: hidden; }
+.balao-lotacao-barra span { display: block; height: 100%; border-radius: 8px; background: var(--white); transform-origin: left; animation: graf-crescer .9s var(--ease-drawer) .15s backwards; }
+.balao-nota { margin: 0; font-size: var(--fs-pn-13); color: var(--muted); }
+.balao-nota b { color: var(--white); font-weight: 700; font-variant-numeric: tabular-nums; }
 .balao-ponta {
   position: absolute; top: calc(var(--balao-ponta, 40px) - 6px); left: -6px; width: 12px; height: 12px;
   background: var(--graphite); transform: rotate(45deg); border-radius: 2px;
 }
 .balao.esq .balao-ponta { left: auto; right: -6px; }
 .balao.solto { transform-origin: center top; }
+/* celular (G16): o balão vira folha; a folha já dá o respiro das bordas */
+.m6-sheet.balao-folha { padding-left: 0; padding-right: 0; }
+.balao-folha .m6-grab-zona { margin-left: 0; margin-right: 0; }
+.balao-folha .balao-fechar { width: 44px; height: 44px; }
+.balao-folha .balao-cab { padding-top: 4px; }
+.balao-folha .balao-titulo { font-size: var(--fs-app-20, 20px); }
+.balao-folha .balao-corpo { font-size: var(--fs-app-15, 15px); }
 .balao.solto .balao-ponta { display: none; }
 
 @media (max-width: 860px) {
@@ -907,7 +926,18 @@ body { --graf-neutro: color-mix(in srgb, var(--muted) 38%, transparent); --graf-
   .bf-barra { left: 50%; max-width: calc(100% - 32px); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .pm-painel, .pm-trilho, .bf-barra, .balao, .pm-grupo-corpo, .pm-camada-extra, .pm-escala-faixas { animation: none; }
+  .pm-painel, .pm-trilho, .bf-barra, .balao, .pm-grupo-corpo, .pm-camada-extra, .pm-escala-faixas, .balao-lotacao-barra span { animation: none; }
   .pm-seta, .pm-recolher, .pm-voltar, .pm-camada, .pm-camada-linha, .bf-item, .balao-fechar { transition: none; }
   .bf-item:active, .pm-recolher:active, .pm-voltar:active, .balao-fechar:active { transform: none; }
 }
+
+/* termo do mapa no app do membro (G17, prancha P16): os 3 pontos em ícone */
+.aceite-pontos { list-style: none; margin: 14px 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.aceite-pontos li { display: flex; gap: 12px; align-items: flex-start; font-size: var(--fs-app-15); line-height: 1.45; }
+.aceite-ic { width: 40px; height: 40px; flex-shrink: 0; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--white) 8%, transparent); color: var(--white); }
+
+/* pergunta da emergência na conversa do membro (G15): resposta com um toque */
+.m-pergunta { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.m-pergunta-botoes { display: flex; flex-wrap: wrap; gap: 6px; }
+.m-pergunta-botoes > * { min-height: 44px; }
+.m-pergunta-resp { font-size: var(--fs-app-13); color: var(--muted); }

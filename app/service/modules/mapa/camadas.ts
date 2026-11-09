@@ -33,7 +33,7 @@ const vazio = (): GeoJSON.FeatureCollection => ({ type: "FeatureCollection", fea
 const fonte = (map: MlMap, id: string) => map.addSource(id, { type: "geojson", data: vazio() });
 
 export function montarCamadas(map: MlMap, c: Record<CorMapa, string>) {
-  ["mp-regioes", "mp-areas", "mp-mascara", "mp-raios", "mp-calor", "mp-lugares", "mp-locais", "mp-pessoas"].forEach((id) => fonte(map, id));
+  ["mp-regioes", "mp-areas", "mp-mascara", "mp-raios", "mp-calor", "mp-lugares", "mp-locais", "mp-pessoas", "mp-eu"].forEach((id) => fonte(map, id));
 
   const tom: ExpressionSpecification = ["match", ["get", "tom"], 1, c["tom-1"], 2, c["tom-2"], 3, c["tom-3"], 4, c["tom-4"], c["tom-5"]];
   map.addLayer({ id: "mp-regioes-fill", type: "fill", source: "mp-regioes", paint: { "fill-color": tom, "fill-opacity": OPACIDADE.presenca } });
@@ -65,7 +65,7 @@ export function montarCamadas(map: MlMap, c: Record<CorMapa, string>) {
   map.addLayer({ id: "mp-lugares", type: "symbol", source: "mp-lugares", layout: {
     ...marcador, "icon-size": 0.8,
     "icon-image": ["case", ["==", ["get", "grupo"], "igreja"], "mp-lugar-igreja", "mp-lugar-regiao"],
-  } });
+  }, paint: { "icon-opacity": ["case", ["boolean", ["get", "oculto"], false], 0.4, 1] } });
   map.addLayer({ id: "mp-grupos", type: "symbol", source: "mp-locais", filter: ["!", ["get", "igreja"]], layout: {
     ...marcador, "icon-size": 0.72, "icon-image": "mp-celula",
   } });
@@ -75,6 +75,13 @@ export function montarCamadas(map: MlMap, c: Record<CorMapa, string>) {
     "text-field": ["case", ["get", "sede"], "Sede", ""], "text-font": ["Noto Sans Regular"], "text-size": 12,
     "text-anchor": "top", "text-offset": [0, 0.4], "text-allow-overlap": true,
   }, paint: { "text-color": c.tinta, "text-halo-color": c.papel, "text-halo-width": 1.5 } });
+  montarMinhaPosicao(map, c);
+}
+
+/* minha posição (celular, G16): só no aparelho; por cima de tudo */
+export function montarMinhaPosicao(map: MlMap, c: Record<CorMapa, string>) {
+  map.addLayer({ id: "mp-eu-halo", type: "circle", source: "mp-eu", paint: { "circle-radius": 16, "circle-color": c.tinta, "circle-opacity": 0.12 } });
+  map.addLayer({ id: "mp-eu", type: "circle", source: "mp-eu", paint: { "circle-radius": 7, "circle-color": c.tinta, "circle-stroke-color": c.papel, "circle-stroke-width": 3 } });
 }
 
 /* liga e desliga um conjunto de camadas do MapLibre */

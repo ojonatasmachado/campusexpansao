@@ -35,3 +35,35 @@ A medição da primeira dobra usa 1366×860 no painel e 390×844 no app. Em jane
 O seed opcional `npx tsx tools/captura-service/seed-captura.ts` usa apenas as contas de teste local e IDs determinísticos, com datas relativas ao dia atual no fuso de São Paulo. Faz upsert das fixtures: use-o antes da captura, nunca durante outra sessão que use as mesmas fixtures. Guarda um snapshot local ignorado pelo Git; não oferece restauração nem reset. `--status` só inspeciona. Não execute o seed base ou resete o banco para tentar eliminar uma falha sem conferir o estado compartilhado.
 
 Limites atuais: a recuperação não comprova as jornadas ainda incompletas no `resultado.json`. Artefatos e falhas de produto são evidência; não substituem prova de persistência, isolamento de igreja, aparelho real ou leitor de tela. Q3 cuida da matriz autenticada. A entrega da ferramenta não aprova telas com violações: jornadas interrompidas continuam explícitas no resultado, com screenshot e erro para a frente responsável. Consulte a história Q1 e a tabela Captura por etapa de PROGRESSO.md para as execuções conferidas.
+
+## Foto padrão de uma tela
+
+Na raiz do worktree, use sempre `npm run dev:local -- --port 3101`.
+`npm run dev` aponta para produção pelo `.env.local`. Não copie esse arquivo.
+Instale as dependências de captura com `npm ci --prefix tools/captura-service`
+e o navegador com `cd tools/captura-service && npx playwright install chromium`.
+
+```sh
+node tools/captura-service/foto.mjs --porta 3101 \
+  --email membro@teste.local --senha TesteLocal123 --tela agenda \
+  --largura 390 --altura 844 \
+  --saida docs/service-v7/historias/screenshots/X1-agenda.png
+```
+
+Telas: `inicio`, `agenda`, `agenda-igreja`, `mensagens`, `caminhada` e
+`painel-escalas`. Use `master@teste.local` no painel, com 1366×860.
+As dimensões padrão são 390×844 no app e 1366×860 no painel.
+Todos os argumentos aceitam `--nome valor` ou `--nome=valor`.
+
+Cada execução faz login pelo formulário em `http://localhost`, espera hidratação
+(`networkidle`) e conteúdo visível, fecha o tour quando presente e confere que o
+selo Next ficou oculto. Navega por cliques, inclusive nas abas do membro. Agenda
+usa `/service?maba=agenda`, nunca `/service/agenda`.
+A foto corresponde à primeira dobra medida por `scripts/medir-densidade.js`:
+`__medir(44)` no app e `__medir(24)` no painel. A saída imprime a medição,
+os limites da lei 13 (app: 12 ações/80 palavras; painel: 25 ações/100 palavras),
+a classificação de densidade e o MD5 da foto. Dimensões personalizadas são
+impressas junto da medida; os limites continuam os da lei 13.
+Densidade acima do limite é relatada como "fora da lei", sem aprovar a tela.
+Argumento inválido, login ou tela não encontrada falham com código 1.
+Abra cada imagem e descreva o conteúdo antes de usá-la como prova.

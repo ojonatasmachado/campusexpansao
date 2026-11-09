@@ -4,6 +4,7 @@ import { useContext, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createServiceBrowserClient } from "../lib/supabase-browser";
 import { TERMO_MAPA_VERSAO, pontosDoTermo, termoCompleto } from "../lib/termo-mapa";
+import { Icon } from "../lib/icons";
 import { MemberUiContext } from "./comum";
 
 import { Botao } from "../ui/Botao";
@@ -21,8 +22,10 @@ export async function gravarAceiteMapa(memberId: string, aceita: boolean, origem
   return error ? t("Não foi possível salvar agora. Tente de novo.") : null;
 }
 
-export function SheetAceiteMapa({ memberId, churchName, onDecidido }: { memberId: string; churchName?: string; onDecidido: (aceitou: boolean) => void }) {
+export function SheetAceiteMapa({ memberId, churchName, usaGrupos = false, onDecidido }: { memberId: string; churchName?: string; usaGrupos?: boolean; onDecidido: (aceitou: boolean) => void }) {
   const traduzirUi = useTexto();
+  /* G17 (prancha P16): os 3 pontos em ícone, o grupo pelo vocabulário */
+  const pontos = pontosDoTermo(churchName, traduzirUi, usaGrupos);
 
   const ui = useContext(MemberUiContext);
   const router = useRouter();
@@ -41,8 +44,11 @@ export function SheetAceiteMapa({ memberId, churchName, onDecidido }: { memberId
   return (
     <div>
       <h2 className="m6-sh">{traduzirUi("Quase lá")}</h2>
-      <ul className="login-termo">
-        {pontosDoTermo(churchName, traduzirUi).map((p) => <li key={p}>{p}</li>)}
+      <p className="m6-meta">{traduzirUi("Antes de entrar, veja como a igreja usa seus dados.")}</p>
+      <ul className="aceite-pontos">
+        {pontos.map((p) => (
+          <li key={p.icone}><span className="aceite-ic" aria-hidden="true"><Icon name={p.icone} size={20} /></span><span>{p.texto}{p.forte && <> <b>{p.forte}</b></>}</span></li>
+        ))}
       </ul>
       <details className="login-termo-completo">
         <summary>{traduzirUi("Ler o termo completo")}</summary>

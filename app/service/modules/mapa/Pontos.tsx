@@ -5,19 +5,19 @@ import type { GeoJSONSource, MapMouseEvent } from "maplibre-gl";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { avisar } from "../../lib/avisar";
 import { Icon } from "../../lib/icons";
-import { plural } from "../../lib/plural";
 import { limparCamadas, type ContextoMapa } from "./contexto";
 
-import { Botao, BotaoIcone } from "../../ui/Botao";
-import { Interruptor } from "../../ui/Interruptor";
-import { MenuAcoes } from "../../ui/Menu";
-import { confirmar } from "../../ui/confirmar";
-import { Acao } from "../../ui/Acao";
+import { Botao } from "../../ui/Botao";
 import { Campo, Entrada, TextoLongo } from "../../ui/Campo";
-import { Selecao } from "../../ui/Selecao";
-/* Pontos de interesse (tela 10 do design). Desligados por padrão; do
-   OpenStreetMap (atualizados todo mês) ou adicionados à mão. Cada ponto
-   mostra a origem e tem editar, ocultar e excluir (excluir só os manuais). */
+import { Opcao } from "../../ui/Opcao";
+import { Balao } from "../../ui/Balao";
+import { confirmar } from "../../ui/confirmar";
+
+/* Ferramentas › Marcar lugar (G11, mapa/PLANO.md §10, prancha P11). Só marca
+   lugar da igreja: tocar no mapa solta o marcador e abre o balão com nome,
+   tipo, endereço (opcional) e observação. Editar, ocultar e excluir ficam no
+   balão do lugar, na tela principal (MapaIgreja). Os lugares da região vêm do
+   OpenStreetMap: deles só a observação se edita. */
 
 export type Ponto = { id: string; nome: string; categoria: string; origem: "osm" | "manual"; latitude: number; longitude: number; endereco: string | null; observacao: string | null; oculto: boolean; ponto_id: string | null };
 
@@ -31,200 +31,148 @@ export const CATEGORIAS: { id: string; nome: string; grupo: "igrejas" | "onibus"
   { id: "igreja_parceiro", nome: "Pontos da igreja · Parceiro", grupo: "igreja" },
   { id: "igreja_encontro", nome: "Pontos da igreja · Ponto de encontro", grupo: "igreja" },
 ];
-const GRUPOS = [
-  { id: "igrejas", nome: "Igrejas na região" },
-  { id: "onibus", nome: "Ônibus: paradas" },
-  { id: "escolas", nome: "Escolas, praças e quadras" },
-  { id: "saude", nome: "Assistência e saúde" },
-  { id: "igreja", nome: "Pontos da igreja" },
-] as const;
-const grupoDe = (categoria: string) => CATEGORIAS.find((c) => c.id === categoria)?.grupo ?? "igreja";
+/* tipos que a igreja marca (P11) */
+const TIPOS: { id: string; nome: string; icone: string }[] = [
+  { id: "igreja_acao", nome: "Local de ação", icone: "bandeira" },
+  { id: "igreja_casa", nome: "Casa que oferece espaço", icone: "inicio" },
+  { id: "igreja_parceiro", nome: "Parceiro", icone: "ok" },
+  { id: "igreja_encontro", nome: "Ponto de encontro", icone: "mapapin" },
+];
+export const nomeDaCategoria = (id: string) => CATEGORIAS.find((c) => c.id === id)?.nome.replace("Pontos da igreja · ", "") ?? id;
+
+const db = () => createServiceBrowserClient().schema("service");
 
 export async function carregarPontos(org: string): Promise<Ponto[]> {
-  const { data, error } = await createServiceBrowserClient().schema("service").rpc("mapa_pontos", { p_org: org });
+  const { data, error } = await db().rpc("mapa_pontos", { p_org: org });
   if (error) throw new Error(error.message);
   return ((data ?? []) as Ponto[]).filter((p) => typeof p.latitude === "number");
 }
 
-export function Pontos({ ctx }: { ctx: ContextoMapa }) {
-  const [pontos, setPontos] = useState<Ponto[]>([]);
-  const [ligados, setLigados] = useState<Set<string>>(() => new Set(["igreja"]));
-  const [verOcultos, setVerOcultos] = useState(false);
-  const [aberto, setAberto] = useState<Ponto | null>(null);
-  const [form, setForm] = useState<null | { ponto?: Ponto; nome: string; categoria: string; local: [number, number] | null; endereco: string; observacao: string }>(null);
-  const [escolhendo, setEscolhendo] = useState(false);
-  const [salvando, setSalvando] = useState(false);
-  const db = () => createServiceBrowserClient().schema("service");
-  const recarregar = useCallback(() => { carregarPontos(ctx.org).then(setPontos).catch(() => setPontos([])); }, [ctx.org]);
-  useEffect(() => { recarregar(); }, [recarregar]);
-  const estado = useRef({ escolhendo, pontos });
-  useEffect(() => { estado.current = { escolhendo, pontos }; });
+/* ocultar ou mostrar: o lugar do OpenStreetMap ganha uma linha própria na primeira vez */
+export async function ocultarLugar(org: string, pt: Ponto, oculto: boolean) {
+  const r = pt.ponto_id
+    ? await db().from("map_points").update({ oculto, updated_at: new Date().toISOString() }).eq("id", pt.ponto_id)
+    : await db().from("map_points").insert({ organization_id: org, nome: pt.nome || "Sem nome", categoria: pt.categoria, origem: "osm", osm_id: pt.id.replace(/^osm:/, ""), latitude: pt.latitude, longitude: pt.longitude, oculto });
+  if (r.error) { avisar("Não foi possível salvar agora. Tente de novo.", "warn"); return false; }
+  avisar(oculto ? "Lugar oculto do mapa." : "Lugar de volta no mapa.");
+  return true;
+}
 
+/* excluir só o que a igreja marcou à mão */
+export async function excluirLugar(pt: Ponto) {
+  if (!pt.ponto_id || pt.origem !== "manual") return false;
+  if (!(await confirmar({ titulo: `Excluir ${pt.nome || "este lugar"}?`, texto: "O lugar sai do mapa para todos. Não dá para desfazer.", acao: "Excluir" }))) return false;
+  const { error } = await db().from("map_points").delete().eq("id", pt.ponto_id);
+  if (error) { avisar("Não foi possível excluir agora. Tente de novo.", "warn"); return false; }
+  avisar("Lugar excluído.");
+  return true;
+}
+
+type Form = { ponto?: Ponto; nome: string; categoria: string; lnglat: [number, number]; endereco: string; observacao: string };
+
+export function Pontos({ ctx, editar }: { ctx: ContextoMapa; editar?: Ponto | null }) {
+  const [form, setForm] = useState<Form | null>(() => (editar ? { ponto: editar, nome: editar.nome, categoria: editar.categoria, lnglat: [editar.longitude, editar.latitude], endereco: editar.endereco ?? "", observacao: editar.observacao ?? "" } : null));
+  const [salvando, setSalvando] = useState(false);
+  const [marcados, setMarcados] = useState<Ponto[]>([]);
+  const [pos, setPos] = useState<{ x: number; y: number; fora: boolean } | null>(null);
+  const formRef = useRef(form);
+  useEffect(() => { formRef.current = form; });
+  const recarregar = useCallback(() => { carregarPontos(ctx.org).then((x) => setMarcados(x.filter((p) => CATEGORIAS.find((c) => c.id === p.categoria)?.grupo === "igreja" && !p.oculto))).catch(() => setMarcados([])); }, [ctx.org]);
+  useEffect(() => { recarregar(); }, [recarregar]);
+
+  /* camadas: lugares da igreja já marcados e o marcador novo */
   useEffect(() => {
     const { mapa, cores } = ctx;
-    const p = "pm-";
-    mapa.addSource(`${p}pontos`, { type: "geojson", data: { type: "FeatureCollection", features: [] } });
-    mapa.addLayer({ id: `${p}pontos`, type: "circle", source: `${p}pontos`, paint: {
-      "circle-radius": ["case", ["==", ["get", "grupo"], "igreja"], 8, 6],
-      "circle-color": ["case", ["==", ["get", "grupo"], "igreja"], cores.tinta, cores.papel],
-      "circle-stroke-color": ["case", ["==", ["get", "grupo"], "igreja"], cores.papel, cores.poi],
-      "circle-stroke-width": 2, "circle-opacity": ["case", ["get", "oculto"], 0.35, 1],
-    } });
-    const clique = (e: MapMouseEvent & { features?: { properties?: Record<string, unknown> }[] }) => {
-      const id = e.features?.[0]?.properties?.id;
-      const pt = estado.current.pontos.find((x) => x.id === id);
-      if (pt && !estado.current.escolhendo) setAberto(pt);
+    mapa.addSource("ml-lugares", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+    mapa.addLayer({ id: "ml-lugares", type: "symbol", source: "ml-lugares", layout: { "icon-image": "mp-lugar-igreja", "icon-size": 0.8, "icon-allow-overlap": true } });
+    mapa.addSource("ml-novo", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+    mapa.addLayer({ id: "ml-novo-halo", type: "circle", source: "ml-novo", paint: { "circle-radius": 20, "circle-color": cores.tinta, "circle-opacity": 0.14 } });
+    mapa.addLayer({ id: "ml-novo", type: "symbol", source: "ml-novo", layout: { "icon-image": "mp-lugar-igreja", "icon-size": 0.95, "icon-allow-overlap": true } });
+    const clique = (e: MapMouseEvent) => {
+      if (formRef.current?.ponto) return; /* editando: o toque não troca de lugar */
+      setForm((f) => ({ nome: f?.nome ?? "", categoria: f?.categoria ?? "igreja_casa", endereco: f?.endereco ?? "", observacao: f?.observacao ?? "", lnglat: [e.lngLat.lng, e.lngLat.lat] }));
     };
-    mapa.on("click", `${p}pontos`, clique);
-    return () => { mapa.off("click", `${p}pontos`, clique); limparCamadas(mapa, p); };
+    mapa.on("click", clique);
+    mapa.getCanvas().style.cursor = "crosshair";
+    return () => { mapa.off("click", clique); mapa.getCanvas().style.cursor = ""; limparCamadas(mapa, "ml-"); };
   }, [ctx]);
 
   useEffect(() => {
-    const p = "pm-";
-    const vis = pontos.filter((x) => ligados.has(grupoDe(x.categoria)) && (verOcultos || !x.oculto));
-    (ctx.mapa.getSource(`${p}pontos`) as GeoJSONSource | undefined)?.setData({
-      type: "FeatureCollection",
-      features: vis.map((x) => ({ type: "Feature", properties: { id: x.id, grupo: grupoDe(x.categoria), oculto: x.oculto }, geometry: { type: "Point", coordinates: [x.longitude, x.latitude] } })),
-    });
-  }, [ctx, pontos, ligados, verOcultos]);
+    const pt = (ll: [number, number]) => ({ type: "Feature" as const, properties: {}, geometry: { type: "Point" as const, coordinates: ll } });
+    (ctx.mapa.getSource("ml-lugares") as GeoJSONSource | undefined)?.setData({ type: "FeatureCollection", features: marcados.filter((p) => p.ponto_id !== form?.ponto?.ponto_id).map((p) => pt([p.longitude, p.latitude])) });
+    (ctx.mapa.getSource("ml-novo") as GeoJSONSource | undefined)?.setData({ type: "FeatureCollection", features: form ? [pt(form.lnglat)] : [] });
+  }, [ctx, marcados, form]);
 
-  /* "clicar no mapa" do formulário */
+  /* o balão acompanha o marcador quando o mapa se move */
+  const lnglat = form?.lnglat;
   useEffect(() => {
-    if (!escolhendo) return;
+    if (!lnglat) return;
     const { mapa } = ctx;
-    mapa.getCanvas().style.cursor = "crosshair";
-    const pegar = (e: MapMouseEvent) => { setForm((f) => (f ? { ...f, local: [e.lngLat.lng, e.lngLat.lat] } : f)); setEscolhendo(false); };
-    mapa.once("click", pegar);
-    return () => { mapa.off("click", pegar); mapa.getCanvas().style.cursor = ""; };
-  }, [ctx, escolhendo]);
+    const projetar = () => {
+      const p = mapa.project(lnglat);
+      const c = mapa.getContainer();
+      setPos({ x: p.x, y: p.y, fora: p.x < 0 || p.y < 0 || p.x > c.clientWidth || p.y > c.clientHeight });
+    };
+    projetar();
+    mapa.on("move", projetar);
+    return () => { mapa.off("move", projetar); };
+  }, [ctx, lnglat]);
 
-  const ocultar = async (pt: Ponto, oculto: boolean) => {
-    const r = pt.ponto_id
-      ? await db().from("map_points").update({ oculto, updated_at: new Date().toISOString() }).eq("id", pt.ponto_id)
-      : await db().from("map_points").insert({ organization_id: ctx.org, nome: pt.nome || "Sem nome", categoria: pt.categoria, origem: "osm", osm_id: pt.id.replace(/^osm:/, ""), latitude: pt.latitude, longitude: pt.longitude, oculto });
-    if (r.error) { avisar("Não foi possível salvar agora.", "warn"); return; }
-    avisar(oculto ? "Ponto oculto." : "Ponto de volta no mapa.");
-    recarregar();
-  };
-  const excluir = async (pt: Ponto) => {
-    if (!pt.ponto_id || pt.origem !== "manual") return;
-    if (!(await confirmar({ titulo: `Excluir ${pt.nome || "este ponto"}?`, texto: "O ponto sai do mapa para todos. Não dá para desfazer.", acao: "Excluir" }))) return;
-    const { error } = await db().from("map_points").delete().eq("id", pt.ponto_id);
-    if (error) { avisar("Não foi possível excluir agora.", "warn"); return; }
-    setAberto(null);
-    avisar("Ponto excluído.");
-    recarregar();
-  };
   const salvar = async () => {
-    if (!form || !form.nome.trim() || !form.local) return;
+    if (!form || (form.ponto?.origem !== "osm" && !form.nome.trim())) return;
     setSalvando(true);
-    const dados = { nome: form.nome.trim(), categoria: form.categoria, latitude: form.local[1], longitude: form.local[0], endereco: form.endereco.trim() || null, observacao: form.observacao.trim() || null, updated_at: new Date().toISOString() };
-    const r = form.ponto?.ponto_id
-      ? await db().from("map_points").update(form.ponto.origem === "osm" ? { observacao: dados.observacao, updated_at: dados.updated_at } : dados).eq("id", form.ponto.ponto_id)
-      : form.ponto?.origem === "osm"
-        ? await db().from("map_points").insert({ organization_id: ctx.org, origem: "osm", osm_id: form.ponto.id.replace(/^osm:/, ""), ...dados })
+    const agora = new Date().toISOString();
+    const dados = { nome: form.nome.trim(), categoria: form.categoria, latitude: form.lnglat[1], longitude: form.lnglat[0], endereco: form.endereco.trim() || null, observacao: form.observacao.trim() || null, updated_at: agora };
+    const p = form.ponto;
+    const r = p?.ponto_id
+      ? await db().from("map_points").update(p.origem === "osm" ? { observacao: dados.observacao, updated_at: agora } : dados).eq("id", p.ponto_id)
+      : p?.origem === "osm"
+        ? await db().from("map_points").insert({ organization_id: ctx.org, origem: "osm", osm_id: p.id.replace(/^osm:/, ""), ...dados, nome: p.nome, categoria: p.categoria, latitude: p.latitude, longitude: p.longitude })
         : await db().from("map_points").insert({ organization_id: ctx.org, origem: "manual", ...dados });
     setSalvando(false);
-    if (r.error) { avisar("Não foi possível salvar o ponto.", "warn"); return; }
-    avisar(form.ponto ? "Ponto atualizado." : "Ponto adicionado.");
+    if (r.error) { avisar("Não foi possível salvar o lugar. Tente de novo.", "warn"); return; }
+    avisar(p ? "Lugar atualizado." : `${dados.nome} marcado no mapa.`);
+    if (p) { ctx.fechar(); return; }
     setForm(null);
     recarregar();
   };
-  const podeEditar = ctx.acesso.pode_editar;
-  const contagem = (g: string) => pontos.filter((x) => grupoDe(x.categoria) === g && !x.oculto).length;
-  const lista = pontos.filter((x) => ligados.has(grupoDe(x.categoria)) && (verOcultos || !x.oculto)).slice(0, 60);
 
+  const osm = form?.ponto?.origem === "osm";
   return (
     <>
-      <div className="mp-faixa" role="region" aria-label="Pontos de interesse">
-        <strong>Pontos de interesse</strong>
-        {escolhendo && <span className="mp-texto">Clique no mapa onde fica o ponto.</span>}
-        <Botao tamanho="mapa" onClick={ctx.fechar}>Sair</Botao>
+      <div className="mp-dica" role="status">
+        <span className="mp-dica-ic" aria-hidden="true"><Icon name="marcarlugar" size={16} stroke={2} /></span>
+        <span>{form?.ponto ? `Editando ${form.ponto.nome || "o lugar"}.` : "Toque no mapa onde fica o lugar."}</span>
+        <Botao compacto onClick={ctx.fechar}>Concluir</Botao>
       </div>
-      <aside className="mp-painel mp-esq aberto" aria-label="Pontos de interesse">
-        <div className="mp-cab"><h2 className="mp-titulo">Pontos de interesse</h2><p className="mp-fraco" style={{ marginTop: 4 }}>Ligue só o que ajudar agora.</p></div>
-        <div className="mp-corpo">
-          {GRUPOS.map((g) => (
-            <label key={g.id} className="mp-linha"><span>{g.nome}{g.id === "igrejas" ? <span className="mp-fraco"> · só liderança</span> : null}</span>
-              <span style={{ display: "flex", gap: 10, alignItems: "center" }}><span className="mp-num mp-fraco">{contagem(g.id)}</span>
-                <Interruptor ligado={ligados.has(g.id)} rotulo={g.nome} onClick={() => setLigados((atuais) => { const n = new Set(atuais); if (n.has(g.id)) n.delete(g.id); else n.add(g.id); return n; })} />
-              </span>
-            </label>
-          ))}
-          <label className="mp-linha">Mostrar os ocultos<Interruptor ligado={verOcultos} rotulo="Mostrar os ocultos" onClick={() => setVerOcultos((v) => !v)} /></label>
-          {pontos.length === 0 && <p className="mp-fraco">Ainda sem pontos do OpenStreetMap para esta cidade. Eles chegam na próxima atualização mensal. Pontos da igreja você adiciona abaixo.</p>}
-          <div>
-            {lista.map((pt) => (
-              <div key={pt.id} className="mp-lista-pessoa" style={{ position: "relative" }}>
-                <Acao style={{ all: "unset", cursor: "pointer", flex: 1 }} onClick={() => { setAberto(pt); ctx.mapa.easeTo({ center: [pt.longitude, pt.latitude], zoom: 16 }); }}>
-                  <span style={{ display: "block", opacity: pt.oculto ? 0.6 : 1 }}>{pt.nome || "Sem nome"}</span>
-                  <span className="mp-fraco">{CATEGORIAS.find((c) => c.id === pt.categoria)?.nome.replace("Pontos da igreja · ", "")} · {pt.origem === "osm" ? "OpenStreetMap" : "manual"}{pt.oculto ? " · oculto" : ""}</span>
-                </Acao>
-                {podeEditar && <MenuAcoes soIcone rotulo={`Ações de ${pt.nome}`} itens={[
-                  { rotulo: "Editar", icone: "editar", onClick: () => setForm({ ponto: pt, nome: pt.nome, categoria: pt.categoria, local: [pt.longitude, pt.latitude], endereco: pt.endereco ?? "", observacao: pt.observacao ?? "" }) },
-                  { rotulo: pt.oculto ? "Mostrar no mapa" : "Ocultar do mapa", onClick: () => ocultar(pt, !pt.oculto) },
-                  ...(pt.origem === "manual" ? [{ rotulo: "Excluir", icone: "lixeira", perigo: true, onClick: () => { void excluir(pt); } }] : []),
-                ]} />}
+      {form && pos && (
+        <Balao x={pos.x} y={pos.y} oculto={pos.fora && !ctx.celular} folha={ctx.celular} largura={340}
+          sobretitulo={osm ? "OpenStreetMap · só a observação muda" : form.ponto ? "Lugar da igreja" : "Novo lugar da igreja"}
+          titulo={form.nome.trim() || (form.ponto?.nome ?? "") || "Lugar sem nome"}
+          aoFechar={() => (form.ponto ? ctx.fechar() : setForm(null))}
+          rodape={(
+            <>
+              <Botao onClick={() => (form.ponto ? ctx.fechar() : setForm(null))}>Cancelar</Botao>
+              <Botao variante="principal" className="ml-salvar" desativado={salvando || (!osm && !form.nome.trim())} onClick={salvar}>{form.ponto ? "Salvar" : "Marcar lugar"}</Botao>
+            </>
+          )}>
+          {!osm && <Campo rotulo="Nome" obrigatorio id="ml-nome"><Entrada maxLength={80} value={form.nome} placeholder="ex: Casa da Dona Lúcia" onChange={(e) => setForm({ ...form, nome: e.target.value })} /></Campo>}
+          {!osm && (
+            <div className="ml-tipos-campo">
+              <span className="field-label" id="ml-tipo-r">Tipo</span>
+              <div className="ml-tipos" role="group" aria-labelledby="ml-tipo-r">
+                {TIPOS.map((t) => (
+                  <Opcao key={t.id} className="ml-tipo" marcada={form.categoria === t.id} onClick={() => setForm({ ...form, categoria: t.id })}>
+                    <span className="ml-tipo-ic" aria-hidden="true"><Icon name={t.icone} size={16} stroke={2} /></span>{t.nome}
+                  </Opcao>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
-        {podeEditar && <div className="mp-pe"><Botao onClick={() => setForm({ nome: "", categoria: "igreja_acao", local: null, endereco: "", observacao: "" })}>+ Adicionar ponto</Botao></div>}
-      </aside>
-
-      {aberto && !form && (
-        <aside className="mp-painel mp-dir" aria-label={aberto.nome} style={{ bottom: "auto" }}>
-          <div className="mp-cab" style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-            <div><div className="mp-sobre">{CATEGORIAS.find((c) => c.id === aberto.categoria)?.nome.replace("Pontos da igreja · ", "")}</div><h2 className="mp-titulo">{aberto.nome || "Sem nome"}</h2></div>
-            <BotaoIcone className="mp-fechar" rotulo="Fechar" onClick={() => setAberto(null)}><Icon name="recusou" size={14} /></BotaoIcone>
-          </div>
-          <div className="mp-corpo">
-            <dl className="mp-dados">
-              <dt>Origem</dt><dd>{aberto.origem === "osm" ? "OpenStreetMap" : "Adicionado à mão"}</dd>
-              {aberto.endereco && <><dt>Endereço</dt><dd>{aberto.endereco}</dd></>}
-            </dl>
-            {aberto.observacao && <p className="mp-texto">{aberto.observacao}</p>}
-          </div>
-          {podeEditar && (
-            <div className="mp-pe" style={{ flexDirection: "row" }}>
-              <Botao compacto onClick={() => setForm({ ponto: aberto, nome: aberto.nome, categoria: aberto.categoria, local: [aberto.longitude, aberto.latitude], endereco: aberto.endereco ?? "", observacao: aberto.observacao ?? "" })}>Editar</Botao>
-              <Botao compacto onClick={() => ocultar(aberto, !aberto.oculto)}>{aberto.oculto ? "Mostrar" : "Ocultar"}</Botao>
             </div>
           )}
-        </aside>
+          {!osm && <Campo rotulo="Endereço" id="ml-end"><Entrada maxLength={160} placeholder="Opcional" value={form.endereco} onChange={(e) => setForm({ ...form, endereco: e.target.value })} /></Campo>}
+          <Campo rotulo="Observação" id="ml-obs"><TextoLongo rows={2} maxLength={500} placeholder="ex: cabe 20 pessoas, tem quintal" value={form.observacao} onChange={(e) => setForm({ ...form, observacao: e.target.value })} /></Campo>
+        </Balao>
       )}
-
-      {form && !escolhendo && (
-        <div /* lei17-ok: formulário de ponto com cabeçalho e rodapé do mapa */ className="modal-bg" onClick={() => setForm(null)}>
-          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="mp-ponto-t" style={{ width: 520, maxWidth: "calc(100% - 32px)", padding: 0 }} onClick={(e) => e.stopPropagation()}>
-            <div className="mp-cab" style={{ display: "flex", justifyContent: "space-between" }}><h2 id="mp-ponto-t" className="mp-titulo">{form.ponto ? "Editar ponto" : "Adicionar ponto"}</h2><BotaoIcone className="mp-fechar" rotulo="Fechar" onClick={() => setForm(null)}><Icon name="recusou" size={14} /></BotaoIcone></div>
-            <div className="mp-corpo">
-              <Campo rotulo="Nome" obrigatorio id="pt-nome"><Entrada maxLength={80} value={form.nome} disabled={form.ponto?.origem === "osm"} onChange={(e) => setForm({ ...form, nome: e.target.value })} /></Campo>
-              <Campo rotulo="Categoria" id="pt-cat">
-                <Selecao valor={form.categoria} desativado={form.ponto?.origem === "osm"} aoMudar={(v) => setForm({ ...form, categoria: v })}
-                  opcoes={CATEGORIAS.map((c) => ({ v: c.id, l: c.nome }))} />
-              </Campo>
-              {form.ponto?.origem !== "osm" && (
-                <div className="field">
-                  <span className="field-label req">Onde fica</span>
-                  <div className="mp-dados" style={{ alignItems: "center" }}>
-                    <dt>{form.local ? "Marcado no mapa" : "Ainda não marcado"}</dt>
-                    <dd><Botao compacto onClick={() => setEscolhendo(true)}>{form.local ? "Mudar" : "Clicar no mapa"}</Botao></dd>
-                  </div>
-                  <input className="input" style={{ marginTop: 8 }} placeholder="Endereço (opcional)" value={form.endereco} onChange={(e) => setForm({ ...form, endereco: e.target.value })} aria-label="Endereço" />
-                </div>
-              )}
-              <Campo rotulo="Observação" id="pt-obs"><TextoLongo rows={3} maxLength={500} value={form.observacao} onChange={(e) => setForm({ ...form, observacao: e.target.value })} /></Campo>
-              <p className="mp-fraco">Origem: {form.ponto?.origem === "osm" ? "OpenStreetMap (nome e local vêm de lá)" : "adicionado à mão"}</p>
-            </div>
-            <div className="mp-pe" style={{ flexDirection: "row", justifyContent: "flex-end" }}>
-              <Botao onClick={() => setForm(null)}>Cancelar</Botao>
-              <Botao variante="principal" desativado={salvando || !form.nome.trim() || !form.local} onClick={salvar}>{form.ponto ? "Salvar" : "Adicionar"}</Botao>
-            </div>
-          </div>
-        </div>
-      )}
-      {lista.length === 60 && <p className="mp-fraco" style={{ position: "absolute", left: 332, bottom: 16, zIndex: 3 }}>Mostrando 60. Aproxime o mapa ou ligue menos categorias. Total: {plural(pontos.length, "ponto")}.</p>}
     </>
   );
 }

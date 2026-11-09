@@ -2,10 +2,10 @@
 id: G13
 titulo: Mostrar os líderes de área em Quem vê o mapa
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: feita
+quem: claude
+desde: 2026-11-06
+branch: historia/G13-quem-ve-lideres-area
 depende: [G10]
 tamanho: P
 ---
@@ -17,6 +17,10 @@ Referência: mapa/PLANO.md §10 e canvas "Mapa da igreja · evolução" (claude.
 ## Arquivos (trilho)
 - `app/service/modules/mapa/LiberarMapa.tsx`
 - `docs/service-v7/historias/G13-quem-ve-lideres-area.md`
+- `app/service/modules/mapa/mapa.css`
+- `app/service/modules/mapa/manifest.ts`
+- `supabase/migrations/0101_service_mapa_lider_nenhum.sql`
+- `docs/service-v7/producao.sql`
 
 ## Pronto quando
 - Lista em "Liberados pelo pastor" e "Líderes de área" (com a cor e o nome da área), etiqueta "Líder de área" no detalhe.
@@ -28,3 +32,4 @@ Referência: mapa/PLANO.md §10 e canvas "Mapa da igreja · evolução" (claude.
 
 ## Notas
 Criada em 04/11/2026 a partir da evolução da jornada do mapa (decisões do usuário em PLANO §10). Nada de aviso ou sugestão automática de expansão.
+06/11/2026 (claude): lista em "Liberados pelo pastor" e "Líderes de área" (cor e nome da área), etiqueta e motivo no detalhe, permissões com os nomes novos em interruptores. Tirar o acesso de um líder grava 'nenhum' (bloqueia o automático da 0100) e tira o menu; salvar devolve. Testado pela tela e conferido no banco. Densidade com a pessoa aberta: 30 ações e 171 palavras (antes 30, 163 e 1 sobreposição), justificada no manifesto. Fotos G13-0 a G13-2. Revisão: líder no automático só grava se o pastor mudar algo; "Voltar ao automático" apaga a liberação própria; o motivo e a cor seguem a liberação quando ela existe; 0101 tira o 'nenhum' de quem deixou de cuidar da última área.

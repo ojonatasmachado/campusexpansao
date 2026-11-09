@@ -352,6 +352,8 @@ fluxo visual ou experiência nova**, consulte também o Brand Book completo:
 
 ## 13. Service: módulos (lei permanente, v7, revisada em 22/10/2026)
 
+Antes de qualquer história do Service, leia docs/service-v7/REGRAS-DE-TRABALHO.md
+
 > Manifesto completo: `docs/service-v7/MANIFESTO.md`. Leis e checklist também em
 > `app/service/modules/README.md`; exemplo em `app/service/modules/_modelo/`.
 > (No manifesto esta seção se chama "11. Service: módulos"; ficou com o número 13 para
