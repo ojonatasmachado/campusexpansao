@@ -15,6 +15,8 @@ O estado vivo não fica escrito aqui. A trava é o branch `historia/<ID>-<slug>`
 
 ## Como pegar uma história
 
+O campo "quem" é `codex` ou `claude`. As fotos saem de `tools/captura-service/foto.mjs`.
+
 1. Ler `AGENTS.md` inteiro. Rodar `npx tsx scripts/historias.ts livres` e escolher a primeira da ordem abaixo que estiver LIVRE e for do seu tipo (decisão é do usuário; o agente só prepara as opções).
 2. Reservar, num worktree novo a partir do `main` atualizado:
    ```bash
