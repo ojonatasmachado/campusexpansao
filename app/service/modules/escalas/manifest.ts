@@ -26,6 +26,20 @@ export default defineModule({
   historico: ["serviu", "faltou", "trocou"],
   densidade: [
     {
+      tela: "Início do painel: Para resolver, dois cultos com falta (E3)",
+      tamanho: "1366×860",
+      medido: { palavras: 103, acoes: 30, sobreposicoes: 0 },
+      limite: { palavras: 100, acoes: 25, sobreposicoes: 0 },
+      motivo: "Fora dos limites. A captura anterior tinha 29 ações e 85 palavras com uma contagem semanal genérica. As duas linhas agora identificam data, culto e vagas em cada time e abrem o Panorama individualmente, somando uma ação. As três molduras detectadas já existiam na casca. A fila usa linhas sem moldura própria; não esconde cultos para reduzir a medição.",
+    },
+    {
+      tela: "Início do painel: Para resolver, seis cultos e time com nome longo (E3)",
+      tamanho: "1366×860",
+      medido: { palavras: 231, acoes: 34, sobreposicoes: 0 },
+      limite: { palavras: 100, acoes: 25, sobreposicoes: 0 },
+      motivo: "Fora dos limites. O pior caso solicitado tem seis cultos com falta e o nome completo do time em cada linha. Uma linha por culto mantém data e destinatário da ação claros e acessíveis, sem truncar a lista dos 14 dias. A ajuda fixa tem seu espaço reservado na preparação. O detalhe permanece exclusivamente no Panorama, que mede 9 ações e 46 palavras com o mesmo time longo.",
+    },
+    {
       tela: "Agenda: Quando posso servir, lista de ausências",
       tamanho: "390×844",
       medido: { palavras: 67, acoes: 13, sobreposicoes: 0 },

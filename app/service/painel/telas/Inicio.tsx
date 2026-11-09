@@ -1,22 +1,19 @@
 "use client";
 
-import { resumoDaSemana, vagasDaSemana as contarVagasDaSemana } from "../../modules/escalas/semana";
+import { pendenciasDeCobertura } from "../../modules/escalas/pendencias";
 import { plural } from "../../lib/plural";
 import { nomeComparavel } from "../../lib/pessoas";
 import { useCallback, useState } from "react";
 import { Icon } from "../../lib/icons";
 import { useRelogioDaIgreja } from "../../lib/relogio-context";
-import { formatDateBR, joinDot, paraPublico, porPublicacao } from "../../lib/date";
+import { formatDateBR } from "../../lib/date";
 import type { EnqueteElegivelView } from "../../lib/enquetes";
 import type { PesquisaElegivelView } from "../../lib/pesquisas";
 import { textoBuscavel, TERMOS } from "../../lib/vocabulario";
 import { useTermos } from "../../lib/vocabulario-context";
 import { HelpDot, SetupChecklist, type SetupCounts } from "../../HelpSystem";
 import { JRN_STEPS } from "../caminhada";
-import { noAr } from "../../modules/mural/estado";
-import { coberturaPorTime, vagasFaltando, type CoberturaTime } from "../../modules/escalas/cobertura";
-import { CoberturaResumo } from "../../modules/escalas/CoberturaResumo";
-import { linhaDoPainel, semanaDe } from "../../lib/contexto-dia";
+import { semanaDe } from "../../lib/contexto-dia";
 import { type Ausente } from "../../modules/cuidado/cuidado";
 import type { CriancaAusente } from "../../modules/cuidado/Cuidado";
 import { NovosCadastros } from "../../modules/entrada/NovosCadastros";
@@ -31,8 +28,6 @@ import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Cartao } from "../../ui/Cartao";
 import { Linha, linhaClasse } from "../../ui/Linha";
-import { Vazio } from "../../ui/Estados";
-import { Janela } from "../../ui/Janela";
 export function GlobalSearch({
   people,
   members,
@@ -226,41 +221,26 @@ export function buildPesquisaModal(pesquisa: PesquisaElegivelView): NonNullable<
 export function Painel({
   people,
   members,
-  activePeople,
   userName,
   visitantesSemContato,
   visitantesPeloLink,
-  novosNoMes,
-  gaps,
   events,
-  visitorsInCare,
-  announcements,
-  eventAttendance,
   journeyRequests,
-  kidsClasses,
-  kidsChildren,
-  kidsAttendance,
   enqueteElegivel,
   pesquisaElegivel,
   onApproveJourney,
   onRejectJourney,
   setRoute,
   podeAbrir = () => true,
+  modulosPendencias,
   setDrawer,
   setModal,
-  setCheckinEventId,
   setupCounts,
   roster,
   ministries,
   scopeMinistryIds,
-  onAbrirVagas,
   currentRole = "membro",
-  visitors = [],
-  decisions = [],
-  timelineEvents = [],
-  enrollments = [],
   cuidado = null,
-  aniversarios = null,
   setup = null,
   igrejaNova = false,
 }: {
@@ -287,6 +267,7 @@ export function Painel({
   onRejectJourney: (request: JourneyChangeRequestView) => void;
   setRoute: (route: keyof typeof ROUTES) => void;
   podeAbrir?: (route: keyof typeof ROUTES) => boolean;
+  modulosPendencias: Set<string>;
   setDrawer: (drawer: DrawerState) => void;
   setModal: (modal: ModalState) => void;
   setCheckinEventId: (id: string | null) => void;
@@ -309,7 +290,7 @@ export function Painel({
   /* sem times ou sem cultos: a configuração guiada aparece no Início */
   igrejaNova?: boolean;
 }) {
-  const { aindaVaiAcontecer, saudacao, quandoPublicado, todayISO } = useRelogioDaIgreja();
+  const { aindaVaiAcontecer, saudacao, todayISO, fuso } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
   /* v7 I1: contagem de pedidos pendentes de entrada (NovosCadastros) para a fila */
   const [pedidosPendentes, setPedidosPendentes] = useState(0);
@@ -318,30 +299,19 @@ export function Painel({
      "Para resolver" do seu time (vagas só dos times que lidera, sem os números da igreja toda) */
   const gestao = currentRole === "master" || currentRole === "pastor";
   const liderDeTime = !!scopeMinistryIds;
-  if (scopeMinistryIds) gaps = gaps.filter((g) => scopeMinistryIds.includes(g.ministry.id));
   const semProgramacao = !events.some((e) => aindaVaiAcontecer(e.eventDate, e.time, e.timeZone));
   const ativando = gestao && semProgramacao;
   const primeiraProgramacao = events.length === 0;
   const emPreparacao = gestao && setup && !setup.concluido && (igrejaNova || semProgramacao || setup.fase > 1 || setup.feitas.length > 0 || setup.pulou || !!setup.primeiroEventoId);
-  const semana = resumoDaSemana(events, roster, ministries.flatMap((m) => m.positions), scopeMinistryIds, todayISO());
-  const vagasDaSemana = contarVagasDaSemana(events, roster, ministries, scopeMinistryIds);
-  const gapsDaSemana = gaps.filter((g) => g.event.eventDate >= semana.inicio && g.event.eventDate <= semana.fim && aindaVaiAcontecer(g.event.eventDate, g.event.time) && (!scopeMinistryIds || scopeMinistryIds.includes(g.ministry.id)));
-  const recentAnnouncements = porPublicacao(announcements.filter(noAr)).slice(0, 3);
-  /* v7 I1: "Sobre estes números" removido (lei 14). Os números que restam no Início são autoexplicativos; detalhes vivem em Relatórios. */
-  const haPendenciasVisiveis = (podeAbrir("escalas") && vagasDaSemana > 0)
-    || (!liderDeTime && podeAbrir("visitantes") && (visitantesSemContato > 0 || visitantesPeloLink > 0))
-    || (!liderDeTime && journeyRequests.length > 0);
+  const faltas = modulosPendencias.has("escalas") && podeAbrir("escalas")
+    ? pendenciasDeCobertura(events, roster, ministries, scopeMinistryIds, fuso)
+    : [];
   return (
     <div className="content wide painel-inicio">
       <div className="ph">
         <div>
           <h1 className="ph-title">{saudacao()}, {userName?.split(" ")[0] ?? "liderança"} <HelpDot text={ct("Seu resumo da semana: próximos {cultos}, vagas em aberto na escala e o que precisa da sua atenção agora.")} /></h1>
-          <p className="ph-sub">{(() => {
-            /* v7 I1: semana e próximo culto sem vagas (lei 14 — vagas vivem só na fila) */
-            const prox = events.filter((e) => aindaVaiAcontecer(e.eventDate, e.time, e.timeZone)).sort((a, b) => (a.eventDate + a.time).localeCompare(b.eventDate + b.time))[0];
-            const linha = prox ? linhaDoPainel({ nome: prox.name, data: prox.eventDate }, todayISO()) : null;
-            return linha ? `${semanaDe(todayISO())}. ${linha}.` : `${semanaDe(todayISO())}.`;
-          })()}</p>
+          <p className="ph-sub">{semanaDe(todayISO())}.</p>
         </div>
         {/* v7 I1: ações do topo removidas (Lei 15). A fila já contém a ação principal. */}
       </div>
@@ -359,13 +329,19 @@ export function Painel({
           )}
         </section>
       )}
-      {/* v7 I1: Fila "Precisa de você" — primeira coisa visível (decisão 9, LEVEZA §3A).
-         Até 7 linhas-frase com seta; cada uma abre a tela que resolve.
-         Ordem: prioridade descendente, depois prazo (lei 5). Botão cheio só no primeiro (lei 13). */}
+      {/* E3: pendências do módulo Escalas, por prazo; uma linha por culto,
+         sem cortar os próximos 14 dias. A cobertura detalhada vive no Panorama. */}
       {!ativando && (() => {
-        const filas: Array<{ key: string; ic: string; t: string; s: string; go: string; action: () => void; principal?: boolean; botaoPrincipal?: boolean }> = [];
-        if (podeAbrir("escalas") && vagasDaSemana > 0) {
-          filas.push({ key: "vagas", ic: "escalas", t: vagasDaSemana === 1 ? "1 vaga aberta na escala" : `${vagasDaSemana} vagas abertas na escala`, s: " · nesta semana", go: "Escalar", action: () => setRoute("escalas"), principal: true, botaoPrincipal: true });
+        const filas: Array<{ key: string; ic: string; t: string; s: string; go: string; action: () => void }> = [];
+        for (const { conteudo: { evento, resumo } } of faltas) {
+          filas.push({
+            key: `cobertura-${evento.id}`,
+            ic: "escalas",
+            t: `${evento.name} · ${formatDateBR(evento.eventDate)}`,
+            s: ` · ${resumo}`,
+            go: "Ver panorama →",
+            action: () => setDrawer({ kind: "event", id: evento.id, tab: "panorama" }),
+          });
         }
         if (!liderDeTime && podeAbrir("visitantes") && visitantesSemContato > 0) {
           filas.push({ key: "visitantes-contato", ic: "visitante", t: visitantesSemContato === 1 ? "1 visitante sem contato" : `${visitantesSemContato} visitantes sem contato`, s: " · há mais de 48h", go: "Ver →", action: () => setRoute("visitantes") });
@@ -388,22 +364,16 @@ export function Painel({
         if (filas.length > 0) {
           return (
             <>
-              <h2 className="painel-sec-t">{liderDeTime ? "Para resolver no seu time" : "Precisa de você"}</h2>
+              <h2 className="painel-sec-t">{liderDeTime ? "Para resolver no seu time" : "Para resolver"}</h2>
               <div className="agora-list">
-                {filas.slice(0, 7).map((f, i) => (
-                  f.botaoPrincipal ? (
-                    <div className="agora-row agora-principal" key={f.key}>
-                      <span className="agora-ic"><Icon name={f.ic} size={17} /></span>
-                      <span className="agora-main"><span className="agora-t">{f.t}</span><span className="agora-s">{f.s}</span></span>
-                      <Botao variante="principal" compacto onClick={f.action}>{f.go}</Botao>
+                {filas.map((f) => (
+                  <Acao className={linhaClasse({})} key={f.key} onClick={f.action}>
+                    <div className="mini-main">
+                      <div className="mini-title">{f.t}</div>
+                      <div className="mini-sub">{f.s.replace(/^ · /, "")}</div>
                     </div>
-                  ) : (
-                    <Acao className="agora-row" key={f.key} onClick={f.action}>
-                      <span className="agora-ic"><Icon name={f.ic} size={17} /></span>
-                      <span className="agora-main"><span className="agora-t">{f.t}</span><span className="agora-s">{f.s}</span></span>
-                      <span className="agora-go">{f.go}</span>
-                    </Acao>
-                  )
+                    <span className="text-pn-14">{f.go}</span>
+                  </Acao>
                 ))}
               </div>
             </>
@@ -411,7 +381,7 @@ export function Painel({
         }
         return (
           <>
-            <h2 className="painel-sec-t">Precisa de você</h2>
+            <h2 className="painel-sec-t">Para resolver</h2>
             <div className="agora-list"><Linha><div className="mini-main"><div className="mini-title">Tudo em dia</div><div className="mini-sub">Nenhuma pendência agora.</div></div></Linha></div>
           </>
         );
@@ -440,7 +410,7 @@ export function Painel({
       ))}
       {/* v7 I1: KPI row removido (lei 14). Voluntários/confirmação/visitantes repetiam a fila e o saúde-resumo; agora vivem só em Relatórios. */}
       {/* v7 I1: blocos "Pendências da escala" e "Próximos cultos" removidos.
-          Vagas e cobertura vivem agora apenas na fila "Precisa de você" (Lei 14).
+          Vagas e cobertura vivem agora apenas na fila "Para resolver" (Lei 14).
           Próximos cultos sem pendência não aparecem no Início; a tela dona é Cultos. */}
       <div className="flex-col gap-md">
           {enqueteElegivel && (
@@ -491,49 +461,5 @@ export function Painel({
       {/* v7 I1: blocos "Comunicação recente" e "Crianças por turma" removidos.
           Telas donas existem (Mural e Crianças). Pendências reais já estão na fila. */}
     </div>
-  );
-}
-
-export function MiniEvent({
-  event, setDrawer, attendanceCount, onCheckin, cobertura, onAbrirVagas,
-}: {
-  event: EventView;
-  setDrawer: (drawer: DrawerState) => void;
-  attendanceCount?: number;
-  onCheckin?: () => void;
-  cobertura?: CoberturaTime[];
-  onAbrirVagas?: (timeId: string) => void;
-}) {
-  /* div com papel de botão: a cobertura tem botões dentro (não pode botão dentro de botão) */
-  const abrir = () => setDrawer({ kind: "event", id: event.id });
-  return (
-    <Linha className="click" role="button" tabIndex={0} onClick={abrir} onKeyDown={(e) => { if (e.key === "Enter" && e.target === e.currentTarget) abrir(); }}>
-      <div className="mini-main">
-        <div className="mini-title">{event.name}</div>
-        <div className="mini-sub">{joinDot(event.weekday, formatDateBR(event.eventDate), event.location)}</div>
-        {cobertura && cobertura.length > 0 && (
-          <CoberturaResumo
-            cobertura={cobertura}
-            onVerPanorama={() => setDrawer({ kind: "event", id: event.id, tab: "panorama" })}
-          />
-        )}
-      </div>
-      <div className="mini-right flex-row items-center gap-sm">
-        <span>{event.time}</span>
-        {onCheckin && (
-          <span
-            className="painel-qr"
-            role="button"
-            tabIndex={0}
-            title="QR check-in / presença"
-            onClick={(e) => { e.stopPropagation(); onCheckin(); }}
-            onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); onCheckin(); } }}
-          >
-            {!!attendanceCount && <span className="painel-qr-count">{attendanceCount}</span>}
-            <Icon name="cultos" size={14} />
-          </span>
-        )}
-      </div>
-    </Linha>
   );
 }

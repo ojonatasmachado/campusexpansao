@@ -4,7 +4,7 @@
    (CFG_TABS) e as telas do app do membro (MEMBER_MODULES) saem daqui.
    Módulo novo: crie a pasta com manifest.ts e acrescente o import abaixo. */
 
-import { GRUPOS_CONFIG, GRUPOS_PAINEL, type ContextoMembro, type ModuleManifest, type TelaMembro, type Termo } from "./define";
+import { GRUPOS_CONFIG, GRUPOS_PAINEL, type ContextoMembro, type Lugar, type ModuleManifest, type TelaMembro, type Termo } from "./define";
 import inicio from "./inicio/manifest";
 import pessoas from "./pessoas/manifest";
 import visitantes from "./visitantes/manifest";
@@ -175,4 +175,9 @@ export function telasDoMembro(ligados: Set<string> = PADRAO_LIGADOS): TelaDoMemb
   return MODULOS.filter((m) => ligados.has(m.id) && m.membro?.visivel).flatMap((m) =>
     (m.membro?.telas ?? []).map((t) => ({ ...t, modulo: m.id, quem: t.quem ?? (() => true) })),
   );
+}
+
+/** Módulos ligados que declararam participação neste lugar do Início. */
+export function modulosDoInicio(lugar: Extract<Lugar, `painel.inicio.${string}`>, ligados: Set<string> = PADRAO_LIGADOS): Set<string> {
+  return new Set(MODULOS.filter((m) => ligados.has(m.id) && m.painel?.inicio?.includes(lugar)).map((m) => m.id));
 }

@@ -43,7 +43,7 @@ Quase todo o CSS está em `evolucoes/service_app/service-app.css` (~4.000 linhas
 | Seleção | `Selecao` em `app/service/ui/Selecao.tsx` (vazio, desativada, grupos); `SelectField` usa por dentro | sim | ok; CI barra `<select>` | 3, 4 |
 | Interruptor | `Interruptor` em `app/service/ui/Interruptor.tsx` (`.sw`, `.m6-tg`, `.m-toggle`; sempre `role="switch"` com nome falado) | sim | `.acesso-tog` é linha de permissão, usa `Opcao` | 6 |
 | Caixa de marcar | `Marcar` em `app/service/ui/Campo.tsx` (caixa ou bolinha; `lado="direita"`) | sim | ok; CI barra checkbox e radio nativos | 3 |
-| Segmentado | `Segmentado` em `app/service/ui/Segmentado.tsx` com `Opcao` dentro; pílula desliza com mola | sim | ok | 1, 6 |
+| Segmentado | `Segmentado` em `app/service/ui/Segmentado.tsx` com `Opcao` dentro; pílula desliza com mola; `contraste="reforcado"` para texto inativo sobre superfície elevada (drawer do culto) | sim | ok | 1, 6 |
 | Data e hora | `SeletorData`, `SeletorHora` em `app/service/ui/Data.tsx`; `DatePicker`/`TimePicker` antigos no formulário genérico | sim | `datetime-local` em Mural, Rota e PublicPageEditor; CI barra date e time | 4 |
 | Envio de foto/arquivo | `PhotoPicker`, `ImageUpload`, `ImageCropper` | parcial | `type="file"` direto em 3 telas | falta |
 | Busca | `.tb-search` e +4 classes | parcial | sem componente | 6 |

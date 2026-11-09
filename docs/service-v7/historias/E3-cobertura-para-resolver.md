@@ -2,7 +2,7 @@
 id: E3
 titulo: Transformar cobertura em linha no Para resolver
 tipo: codigo
-status: reservada
+status: feita
 quem: codex
 desde: 2026-11-09
 branch: historia/E3-cobertura-para-resolver
@@ -41,7 +41,7 @@ Em origin/main d91e0a2, Próximos cultos já foi retirado do Início. MiniEvent,
 
 - [Planning Center, Home](https://www.planningcenter.com/changelog/people/4412146262939-new-planning-center-home): o widget Schedule: team breakdown mostra na página inicial o estado das posições necessárias dos times liderados; a seleção de times é configurável. No [plano, Needed positions](https://help.planningcenter.com/en/142880-set-up-needed-positions.html), a contagem de vagas abre a seleção de pessoas.
 - [ChurchSuite, Overview](https://support.churchsuite.com/article/300-viewing-multiple-rotas-in-a-single-report): da lista de escalas, Overview reúne datas e times, permite mostrar datas vazias e editar as escalas. A fonte não demonstra alerta de vaga na página inicial.
-- [Elvanto, Dashboard](https://help.elvanto.com/hc/en-us/articles/19208177151127-How-to-Customize-Your-Elvanto-Dashboard): a entrada oferece widgets de próximos eventos e escala pessoal, filtrados pelo acesso. A lista documentada não apresenta um widget de vagas abertas.
+- [TimelyChurch, Need Attention](https://help.timelychurch.com/knowledgebase/articles/tutorial-need-attention-sub-invite-walkthrough): o dashboard de pendências, aberto pelo menu, separa posições sem pessoa, substituições e convites. Uma linha de substituição identifica pessoa, evento e motivo; o toque expande a resolução. A fonte não diz que seja a página padrão ao entrar.
 
 Decisão funcional: antecipar no Início somente os cultos com falta, cada um com data e vagas por time; o detalhe e a resolução permanecem no Panorama. Não atribuímos aos concorrentes uma fila inicial que as fontes não comprovam.
 
@@ -55,6 +55,28 @@ Cada linha usa Acao com linhaClasse(), título, apoio e uma ação. O clique abr
 - A cobertura por time sai de Próximos cultos e da lista de Escalas.
 - Cada culto com falta vira uma linha no Para resolver.
 
+## Provas e crítica de design
+
+Capturas em localhost:3103, master@teste.local, login pelo formulário, hidratação/networkidle, tour fechado e selo Next conferido oculto. Cada imagem foi aberta. Medição da mesma tela com scripts/medir-densidade.js, __medir(24), 1366×860; limites de 25 ações e 100 palavras.
+
+| Foto | O que foi aberto e visto | Ações / 25 | Palavras / 100 | MD5 |
+|---|---|---:|---:|---|
+| [Antes](screenshots/E3-antes.png) | Início com 6 vagas genéricas na semana e badge Escalas repetido | 29 | 85 | b526eb84b8733323f95acf57136de85f |
+| [Depois](screenshots/E3-depois.png) | Dois cultos, data e vagas por time; sem badge de cobertura | 30 | 103 | 84ef82a693ef619779e4ebadc408eef5 |
+| [Panorama](screenshots/E3-panorama.png) | Clique na linha do culto de 11/11 abre Panorama; Recepção 0/2 e time longo 1/2 | 9 | 46 | e333228966265300802a47dcbc4e302d |
+| [Pior caso](screenshots/E3-pior.png) | Seis cultos com falta, nome longo inteiro e preparação fora da área da ajuda | 34 | 231 | 97bff41e8dcc5ae1099e37f041ffc387 |
+
+O Início está fora da lei 13 em ações, e depois da mudança também em palavras. Justificativas explícitas no manifesto de Escalas. Três molduras detectadas tanto antes quanto depois (limite 2), herdadas da casca; as novas linhas não têm moldura própria. O Panorama fica dentro dos limites. As fotos finais têm zero ações sobrepostas, zero alvo abaixo de 24 px, zero texto abaixo de 12 px e nenhuma rolagem lateral. Axe: zero violações no Depois, Panorama e pior caso; no Panorama, uma verificação de contraste ficou incompleta no axe e as opções antes reprovadas passaram após contraste reforçado. Nenhum pageerror nas capturas finais. O aviso existente de múltiplos GoTrueClient é warning, não erro. Não se testou aparelho real ou leitor de tela.
+
+Crítica: a contagem genérica obrigava procurar qual culto precisava de ação. As novas linhas respondem isso e deixam o detalhe no Panorama, sem repetir no menu ou em Próximos cultos. O nome longo permanece legível e a fila não corta cultos para caber no teto. A casca continua densa; trocar sua navegação ou seus indicadores extrapola esta história. A reserva de espaço da ajuda é só na preparação do Início. Segmentado ganhou uma variação compartilhada de contraste, usada só no drawer do culto, sem mudar o padrão das outras telas.
+
+Teste de teclado: foco na última pendência do pior caso, Enter abre Panorama e Fechar retorna ao Início. O teste de contrato cobre 14 dias civis, hora e fuso, ordenação, completo/vazio, recusa, singular/plural, times do culto, escopo, módulo desligado e dependência desligada. Entra no CI Service. Os 26 testes existentes da ferramenta de captura passaram.
+
+Validações locais: npx tsc --noEmit -p . e ESLint dos TS/TSX alterados sem erros ou avisos; check-service-lei12, check-service-componentes e check-service-cobertura aprovados; check-theme-contrast aprovado; check-graficos-contraste com 0 falhas (32 avisos existentes de combinações que exigem rótulo). npm test --prefix tools/captura-service: 26 passaram, 0 falharam. npm run build com variáveis fictícias locais do CI: saída 0.
+
+Banco: scripts temporários em /private/tmp, quatro eventos extras além dos dois futuros existentes e renomeação de Louvor. Restauração: DELETE 4, UPDATE 1, zero eventos temporários; trigger t_ministries_upd reativado (O). cmp dos snapshots de eventos, times, escalas e pessoas sem diferença. SHA256 antes e depois: 40bd78d0df76523cb7fa51e271aa1d9fd8bf6c152e9dfd71dc329c81918bd624. Não houve reset nem alteração de senha.
+
+Servidor encerrado: lsof sem listener e bind localhost:3103 OK, porta livre.
+
 ## Notas
-ABERTO. Depende de E2.
-Tamanho P a M.
+Feita em 09/11/2026 por codex: fluxo testado por cliques e teclado, quatro fotos abertas, densidade explicitada, banco restaurado e verificações locais aprovadas; pronta para revisão, sem merge.

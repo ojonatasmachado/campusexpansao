@@ -941,3 +941,6 @@ body { --graf-neutro: color-mix(in srgb, var(--muted) 38%, transparent); --graf-
 .m-pergunta-botoes { display: flex; flex-wrap: wrap; gap: 6px; }
 .m-pergunta-botoes > * { min-height: 44px; }
 .m-pergunta-resp { font-size: var(--fs-app-13); color: var(--muted); }
+
+/* Segmentado sobre superfície elevada: o texto secundário mantém 4,5:1. */
+.seg.seg-contraste-reforcado > button:not(.on) { color: var(--light); }
