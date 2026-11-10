@@ -4086,11 +4086,6 @@ button.imp-step-btn{cursor:pointer;transition:color .14s ease}
 .mural-revisao-titulo { font-size: var(--fs-pn-20); overflow-wrap: anywhere; }
 .mural-revisao-texto { white-space: pre-wrap; overflow-wrap: anywhere; }
 
-/* E2 Panorama: linha-resumo de cobertura (substitui lista <Cobertura> em Escalas e Início) */
-.esc-cob-resumo{display:flex;align-items:center;gap:12px;padding:6px 0;font-size:var(--fs-pn-13);line-height:1.4}
-.esc-cob-resumo .panel-meta{flex:1;min-width:0}
-.esc-cob-num{color:var(--amber)}
-
 /* ════════ E1 Escalas por time: tabela função × culto ════════ */
 .esc-tbl-wrap{margin-top:16px;overflow-x:auto}
 .esc-tbl thead th.esc-tbl-fn,.esc-tbl td.esc-tbl-fn{position:sticky;left:0;z-index:1;background:var(--ink)}
@@ -4125,4 +4120,9 @@ button.imp-step-btn{cursor:pointer;transition:color .14s ease}
   .esc-tbl-fn{width:auto;min-width:0;padding:10px 0}
   /* Mostrar célula do evento atual como bloco */
   .esc-tbl tbody tr td.esc-tbl-cell-mobile{display:block;padding:8px 0}
+}
+
+/* Início: a preparação preserva o espaço da ajuda fixa no canto inferior. */
+@media (min-width: 981px) {
+  .painel-inicio .service-preparacao { margin-inline-end: calc(120px + var(--safe-right)); }
 }

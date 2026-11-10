@@ -9,7 +9,7 @@ import type { HTMLAttributes } from "react";
 import { useEffect, useState } from "react";
 import { useIndicador } from "./indicador";
 
-export function Segmentado({ className, children, rolavel, esconderEsfumadoNoFim, ...rest }: HTMLAttributes<HTMLDivElement> & { rolavel?: boolean; esconderEsfumadoNoFim?: boolean }) {
+export function Segmentado({ className, children, rolavel, esconderEsfumadoNoFim, contraste = "padrao", ...rest }: HTMLAttributes<HTMLDivElement> & { rolavel?: boolean; esconderEsfumadoNoFim?: boolean; contraste?: "padrao" | "reforcado" }) {
   const { caixa, indicador } = useIndicador<HTMLDivElement, HTMLSpanElement>();
   const [noFim, setNoFim] = useState(false);
 
@@ -31,6 +31,7 @@ export function Segmentado({ className, children, rolavel, esconderEsfumadoNoFim
   const cls = [
     "seg",
     "tem-pilula",
+    contraste === "reforcado" ? "seg-contraste-reforcado" : "",
     rolavel ? "seg-rolavel" : "",
     rolavel && esconderEsfumadoNoFim && noFim ? "seg-no-fade" : "",
     className ?? "",

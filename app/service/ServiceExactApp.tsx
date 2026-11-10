@@ -18,7 +18,6 @@ import { notifyPush } from "./lib/notify-push";
 import { uploadServiceImage, imageExtension } from "./lib/upload-image";
 import { Icon, Caret } from "./lib/icons";
 import { THEME_COOKIE } from "./lib/theme";
-import { vagasDaSemana } from "./modules/escalas/semana";
 import { joinDot, parseISODate } from "./lib/date";
 import MobileOverlay, { type MemberContactInput, type MobileOverlayProps } from "./MobileApp";
 import { QRCheckinModal } from "./CheckIn";
@@ -50,7 +49,7 @@ import { MetricasInternas } from "./modules/relatorios/MetricasInternas";
 import { Secretaria } from "./modules/secretaria/Secretaria";
 import { ativacaoSubstituiTour, SETUP_INICIAL, type SetupEstado } from "./modules/configuracao/setup";
 import { encontroUtil } from "./modules/configuracao/ativacao";
-import { ROTA_GRUPO, navGroups, podeVerRota, rotaLigada } from "./modules/registry";
+import { ROTA_GRUPO, modulosDoInicio, navGroups, podeVerRota, rotaLigada } from "./modules/registry";
 import { CEX_ICON_FOR, ROUTES, VISITOR_STAGES, ligadosDa, matrizComFallback, openMemberInviteWhatsapp, semContato48h, weekdayShortFromDate, writeJourneyStep } from "./painel/comum";
 import { GlobalSearch, Painel } from "./painel/telas/Inicio";
 import { Times } from "./painel/telas/Times";
@@ -898,10 +897,9 @@ export default function ServiceExactApp({
     );
   };
 
-  /* número só quando pede ação: visitante sem contato há 48h, vaga aberta na escala */
+  /* número só quando pede ação: visitante sem contato há 48h. Vagas vivem no Para resolver */
   const navBadge: Partial<Record<keyof typeof ROUTES, number>> = {
     visitantes: visitors.filter((v) => semContato48h(v, visitorNotes)).length,
-    escalas: vagasDaSemana(events, roster, ministries, scopeMinistryIds, fuso),
   };
 
   return (
@@ -1021,6 +1019,7 @@ export default function ServiceExactApp({
             onRejectJourney={rejectJourneyRequest}
             setRoute={setRoute}
             podeAbrir={podeVerItem}
+            modulosPendencias={modulosDoInicio("painel.inicio.pendencias", ligados)}
             setDrawer={setDrawer}
             setModal={setModal}
             setCheckinEventId={setCheckinEventId}
