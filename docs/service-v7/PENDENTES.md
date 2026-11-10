@@ -49,7 +49,8 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 ### 2. Leveza, liberada pelo D1 em 28/10 (maior ganho para quem usa)
 
 ### 3. Qualidade que protege o resto
-- Botao discreto aparece mais forte que o padrão (ex.: Recusar x Aprovar no Início)
+- Links de texto (variante texto, panel-link e m6-link): revisar a hierarquia e o uso da cor da igreja; fora da Q13 por decisão do usuário.
+- No Início do painel, o pedido de conta aparece duas vezes: a linha '1 pedido de conta pendente' no Para resolver e o bloco Novos cadastros (lei 14)
 
 ### 4. Código independente (dá para tocar em paralelo, se os trilhos não esbarrarem)
 - **I2** Ações do Início que não navegam · **I5** Ajuda com menos repetição

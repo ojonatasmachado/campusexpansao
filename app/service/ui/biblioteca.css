@@ -66,11 +66,14 @@
   .btn-sec:hover, .m6-btn.sec:hover { background: color-mix(in srgb, var(--white) 13%, transparent); color: var(--white); border-color: transparent; }
 }
 
-/* discreto: pílula com véu da cor da igreja */
-.btn-ghost { background: color-mix(in srgb, var(--olive) 12%, transparent); color: var(--olive); border: 0; border-radius: var(--r-pill); }
+/* discreto: sem superfície; neutro também em hover, foco e desativado */
+.btn-ghost { background: transparent; color: var(--white); border: 0; border-radius: var(--r-pill); }
 @media (hover:hover) and (pointer:fine) {
-  .btn-ghost:hover { background: color-mix(in srgb, var(--olive) 20%, transparent); color: var(--olive); border-color: transparent; }
+  .btn-ghost:hover { background: color-mix(in srgb, var(--white) 4%, transparent); color: var(--white); border-color: transparent; }
 }
+
+.btn-ghost:focus-visible { outline: 2px solid var(--white); outline-offset: 2px; }
+.btn-ghost:disabled, .btn-ghost[aria-disabled="true"] { background: transparent; color: var(--muted); opacity: 1; }
 
 .btn-danger, .m6-btn.danger { background: var(--danger-dim); color: var(--danger); border-color: transparent; }
 
