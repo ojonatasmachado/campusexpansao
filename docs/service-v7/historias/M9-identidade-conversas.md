@@ -20,7 +20,15 @@ Em Mensagens, conversas a dois aparecem como Conversa e avatar CO em vez de nome
 - `app/service/page.tsx`
 - `app/service/ServiceExactApp.tsx`
 - `app/service/painel/tipos.ts`
-- `app/service/lib/data.ts`
+- `app/service/lib/server/carregar.ts`
+- `app/service/lib/server/tipos.ts`
+- `app/service/membro/tipos.ts`
+- `app/service/modules/conversas/identidade.ts`
+- `supabase/migrations/0105_service_chat_identidades.sql`
+- `docs/service-v7/producao.sql`
+- `scripts/check-service-chat-identidade.ts`
+- `.github/workflows/service.yml`
+- `docs/service-v7/historias/screenshots/M9-*.png`
 - `docs/service-v7/PENDENTES.md`
 
 ## Causa
