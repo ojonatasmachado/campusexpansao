@@ -181,4 +181,3 @@ Etapa 1 de 2 concluída em 10/11/2026 por codex: diagnóstico, inventário, duas
 Escolher A: discreto neutro na peça, abaixo do secundário, com o acento reservado à ação principal.
 Formalizar também a variante texto e validar as telas críticas nos dois modos antes da construção final.
 Usar B apenas como correção localizada de transição, pois mantém o contrato visual contraditório.
-
