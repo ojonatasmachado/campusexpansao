@@ -5,7 +5,7 @@
    Aprovar e Recusar. Aprovar pergunta se a pessoa já tem ficha (sugere as
    parecidas por e-mail, telefone ou nome, e deixa procurar outra) para não
    criar cadastro duplicado. Sem pedidos, o bloco não aparece (lei 6). */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useServiceAccess } from "../../AccessContext";
 import { avisar } from "../../lib/avisar";
@@ -17,6 +17,9 @@ import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Cartao } from "../../ui/Cartao";
+import { Entrada } from "../../ui/Campo";
+import { Carregando, ErroEstado } from "../../ui/Estados";
+type EstadoCarga = "carregando" | "erro" | "pronto";
 type Ficha = { id: string; name: string; phone: string | null; email: string | null };
 type Pedido = { id: string; name: string; email: string; phone: string | null; created_at: string; parecidos: Ficha[] };
 
@@ -36,6 +39,10 @@ const ERRO: Record<string, string> = {
 export function NovosCadastros({ onPedidosChange }: { onPedidosChange?: (count: number) => void } = {}) {
   const router = useRouter();
   const { organizationId } = useServiceAccess();
+  const [estado, setEstado] = useState<EstadoCarga>("carregando");
+  const [estadoBusca, setEstadoBusca] = useState<EstadoCarga>("pronto");
+  const [tentativaBusca, setTentativaBusca] = useState(0);
+  const cargaAtual = useRef(0);
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [aberto, setAberto] = useState<string | null>(null);
   const [recusando, setRecusando] = useState<string | null>(null);
@@ -46,25 +53,50 @@ export function NovosCadastros({ onPedidosChange }: { onPedidosChange?: (count: 
 
   const carregar = useCallback(() => {
     if (!organizationId) return;
-    db().rpc("entrada_pedidos", { p_org: organizationId }).then(({ data }) => {
+    const carga = ++cargaAtual.current;
+    setEstado("carregando");
+    const falhou = () => {
+      if (carga === cargaAtual.current) setEstado("erro");
+    };
+    void db().rpc("entrada_pedidos", { p_org: organizationId }).then(({ data, error }) => {
+      if (carga !== cargaAtual.current) return;
+      if (error) { falhou(); return; }
       const lista = (data ?? []) as Pedido[];
       setPedidos(lista);
+      setEstado("pronto");
       onPedidosChange?.(lista.length);
-    });
+    }, falhou);
   }, [organizationId, db, onPedidosChange]);
-  useEffect(carregar, [carregar]);
-
-  /* busca de ficha sem login, com uma pequena espera entre as teclas */
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- busca com espera entre teclas: sem termo, limpa o resultado
-    if (!aberto || q.trim().length < 2) { setAchados([]); return; }
-    const t = setTimeout(() => {
-      db().rpc("entrada_buscar_fichas", { p_org: organizationId, p_q: q.trim() }).then(({ data }) => setAchados((data ?? []) as Ficha[]));
-    }, 250);
-    return () => clearTimeout(t);
-  }, [q, aberto, organizationId, db]);
+    const atual = cargaAtual;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- consulta externa: informa a carga ao trocar a organização, antes de receber a resposta
+    carregar();
+    return () => { atual.current++; };
+  }, [carregar]);
 
-  if (pedidos.length === 0) return null;
+  /* Busca de ficha: só uma resposta bem-sucedida pode dizer que não há resultado. */
+  useEffect(() => {
+    let ativa = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- busca com espera entre teclas: limpa o resultado anterior e informa a nova carga
+    setAchados([]);
+    if (!aberto || q.trim().length < 2 || !organizationId) {
+      setEstadoBusca("pronto");
+      return;
+    }
+    setEstadoBusca("carregando");
+    const falhou = () => { if (ativa) setEstadoBusca("erro"); };
+    const t = setTimeout(() => {
+      void db().rpc("entrada_buscar_fichas", { p_org: organizationId, p_q: q.trim() }).then(({ data, error }) => {
+        if (!ativa) return;
+        if (error) { falhou(); return; }
+        setAchados((data ?? []) as Ficha[]);
+        setEstadoBusca("pronto");
+      }, falhou);
+    }, 250);
+    return () => { ativa = false; clearTimeout(t); };
+  }, [q, aberto, organizationId, db, tentativaBusca]);
+
+  if (estado === "pronto" && pedidos.length === 0) return null;
 
   const abrir = (id: string | null) => { setAberto(id); setRecusando(null); setQ(""); setAchados([]); };
 
@@ -108,10 +140,12 @@ export function NovosCadastros({ onPedidosChange }: { onPedidosChange?: (count: 
     <Cartao className="entrada-fila" id="novos-cadastros">
       <div className="panel-head">
         <span className="panel-title"><Icon name="membros" size={14} /> Novos cadastros</span>
-        <span className="panel-meta">{`${plural(pedidos.length, "pedido")} pelo link da igreja`}</span>
+        {estado === "pronto" && <span className="panel-meta">{`${plural(pedidos.length, "pedido")} pelo link da igreja`}</span>}
       </div>
       <div className="panel-body flush">
-        {pedidos.map((p) => (
+        {estado === "carregando" && <Carregando forma="linhas" quantos={1} rotulo="Carregando pedidos de conta" />}
+        {estado === "erro" && <ErroEstado titulo="Não conseguimos carregar os pedidos de conta" tentar={carregar} />}
+        {estado === "pronto" && pedidos.map((p) => (
           <div className="cuidado-item" key={p.id}>
             <div className="cuidado-nome" style={{ cursor: "default" }}>
               <span className="mini-title">{p.name}</span>
@@ -140,17 +174,19 @@ export function NovosCadastros({ onPedidosChange }: { onPedidosChange?: (count: 
                 <div className="cfg-row-t">Esta pessoa já tem ficha na igreja?</div>
                 <div className="cfg-row-s">Ligar à ficha que já existe evita cadastro duplicado. A ficha precisa estar sem login.</div>
                 {p.parecidos.length > 0 && <div className="entrada-fichas">{p.parecidos.map((f) => opcaoFicha(p, f))}</div>}
-                <input
+                <Entrada
                   className="input entrada-busca"
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
                   placeholder="Procurar outra ficha pelo nome"
                   aria-label="Procurar ficha pelo nome"
                 />
-                {achados.length > 0 && <div className="entrada-fichas">{achados.filter((f) => !p.parecidos.some((x) => x.id === f.id)).map((f) => opcaoFicha(p, f))}</div>}
-                {q.trim().length >= 2 && achados.length === 0 && <div className="cfg-row-s">Nenhuma ficha sem login com esse nome.</div>}
+                {estadoBusca === "carregando" && <Carregando forma="linhas" quantos={1} rotulo="Procurando fichas" />}
+                {estadoBusca === "erro" && <ErroEstado titulo="Não conseguimos procurar as fichas" tentar={() => setTentativaBusca((n) => n + 1)} />}
+                {estadoBusca === "pronto" && achados.length > 0 && <div className="entrada-fichas">{achados.filter((f) => !p.parecidos.some((x) => x.id === f.id)).map((f) => opcaoFicha(p, f))}</div>}
+                {estadoBusca === "pronto" && q.trim().length >= 2 && achados.length === 0 && <div className="cfg-row-s">Nenhuma ficha sem login com esse nome.</div>}
                 <div className="entrada-acoes">
-                  <Botao compacto desativado={enviando === p.id} onClick={() => aprovar(p, null)}>
+                  <Botao compacto desativado={enviando === p.id || (q.trim().length >= 2 && estadoBusca !== "pronto")} onClick={() => aprovar(p, null)}>
                     {enviando === p.id ? "Aprovando..." : "Não tem: criar ficha nova"}
                   </Botao>
                 </div>
