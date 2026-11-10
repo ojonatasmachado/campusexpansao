@@ -49,6 +49,7 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 ### 2. Leveza, liberada pelo D1 em 28/10 (maior ganho para quem usa)
 
 ### 3. Qualidade que protege o resto
+- **M9** Nome e foto da outra pessoa nas conversas a dois
 - NovosCadastros: erro ao carregar os pedidos some sem aviso
 - Botao discreto aparece mais forte que o padrão (ex.: Recusar x Aprovar no Início)
 
