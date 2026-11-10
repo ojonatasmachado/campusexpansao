@@ -50,7 +50,7 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 
 ### 3. Qualidade que protege o resto
 - EntradaConfig: falha de entrada_config aparece como falta de permissão, sem tentar de novo (app/service/modules/entrada/EntradaConfig.tsx).
-- Botao discreto aparece mais forte que o padrão (ex.: Recusar x Aprovar no Início)
+- **Q13** Botao discreto aparece mais forte que o padrão (ex.: Recusar x Aprovar no Início)
 
 ### 4. Código independente (dá para tocar em paralelo, se os trilhos não esbarrarem)
 - **I2** Ações do Início que não navegam · **I5** Ajuda com menos repetição
