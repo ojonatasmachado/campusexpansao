@@ -17,7 +17,8 @@ import { codigoLegivel, entradaPath } from "../../../lib/service-entrada";
 import { Botao, botaoClasse } from "../../ui/Botao";
 import { Opcao } from "../../ui/Opcao";
 import { Linha } from "../../ui/Linha";
-import { Carregando } from "../../ui/Estados";
+import { Carregando, ErroEstado } from "../../ui/Estados";
+type EstadoCarga = "carregando" | "erro" | "pronto";
 type Regra = "aprovar" | "direto";
 const REGRAS: { id: Regra; t: string; s: string }[] = [
   { id: "aprovar", t: "A gestão aprova cada pessoa", s: "O pedido aparece no Início do painel. Você confere quem é e libera." },
@@ -26,21 +27,46 @@ const REGRAS: { id: Regra; t: string; s: string }[] = [
 
 export function EntradaConfig() {
   const { organizationId } = useServiceAccess();
-  const [cfg, setCfg] = useState<{ code: string; rule: Regra } | null | undefined>(undefined);
+  const [estado, setEstado] = useState<EstadoCarga>("carregando");
+  const [cfg, setCfg] = useState<{ code: string; rule: Regra } | null>(null);
+  const cargaAtual = useRef(0);
   const [trocando, setTrocando] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const origin = useOrigem();
   const qrRef = useRef<HTMLDivElement>(null);
   const db = useCallback(() => createServiceBrowserClient().schema("service"), []);
 
-  useEffect(() => {
+  const carregar = useCallback(() => {
     if (!organizationId) return;
-    db().rpc("entrada_config", { p_org: organizationId }).then(({ data, error }) => {
-      setCfg(error || !data ? null : (data as { code: string; rule: Regra }));
+    const carga = ++cargaAtual.current;
+    setEstado("carregando");
+    void db().rpc("entrada_config", { p_org: organizationId }).then(({ data, error }) => {
+      if (carga !== cargaAtual.current) return;
+      if (error) { setEstado("erro"); return; }
+      /* data é null quando a pessoa não tem permissão ou o link ainda não existe;
+         isso é resposta válida da função, não falha de rede/banco. */
+      setCfg(data as { code: string; rule: Regra } | null);
+      setEstado("pronto");
+    }, () => {
+      if (carga === cargaAtual.current) setEstado("erro");
     });
   }, [organizationId, db]);
 
-  if (cfg === undefined) return <Carregando forma="linhas" />;
+  useEffect(() => {
+    const atual = cargaAtual;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- consulta externa: informa a carga ao trocar a organização, antes de receber a resposta
+    carregar();
+    return () => { atual.current++; };
+  }, [carregar]);
+
+  if (estado === "carregando") return <Carregando forma="linhas" rotulo="Carregando configurações de entrada" />;
+  if (estado === "erro") {
+    return (
+      <div className="cfg-card">
+        <ErroEstado titulo="Não conseguimos carregar as configurações de entrada" tentar={carregar} />
+      </div>
+    );
+  }
   if (cfg === null) {
     return (
       <div className="cfg-card">
