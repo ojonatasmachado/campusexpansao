@@ -214,12 +214,15 @@ export const JORNADA_KIND_INDEX: Record<JourneyStepKind, number> = { decisao: 0,
 export async function writeJourneyStep(organizationId: string, member: MemberView, step: JourneyStepKind, eventDate?: string | null) {
   const stepDef = JRN_STEPS.find((s) => s.kind === step);
   const sb = createServiceBrowserClient().schema("service");
-  await sb.from("timeline_events").insert(
+  const { error: timelineError } = await sb.from("timeline_events").insert(
     timelineEventPayload(organizationId, member.id, step, stepDef?.label ?? step, eventDate),
   );
+  if (timelineError) throw timelineError;
   const journey = [...member.journey];
   journey[JORNADA_KIND_INDEX[step]] = 1;
-  await sb.from("members").update({ journey }).eq("id", member.id);
+  const { data, error } = await sb.from("members").update({ journey }).eq("id", member.id).select("id").maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error("Não conseguimos atualizar a jornada do membro.");
 }
 
 export function fillAcessoMsgTemplate(template: string, vars: { nome: string; igreja: string; link: string; email: string; senha: string }): string {

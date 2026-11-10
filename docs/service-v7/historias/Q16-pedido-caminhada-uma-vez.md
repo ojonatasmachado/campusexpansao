@@ -66,3 +66,11 @@ Construída por codex. Resumo único, revisão na Gaveta do módulo pessoas, sem
 
 ## Referência funcional
 A decisão segue a Q15, sem redesenhar alternativas. Como conferência funcional: Planning Center separa aviso de pedidos pendentes e sua revisão (https://www.planningcenter.com/changelog/people/request-access-to-lists-workflows-and-forms); ChurchSuite mantém inscrições pendentes até ativação ou remoção por pessoa autorizada (https://support.churchsuite.com/article/53-adding-people-to-small-groups). Aplicação: resumo na fila, decisão na Gaveta, item decidido sai imediatamente. Sem material visual de terceiros no git.
+
+## Correção pré-merge do PR #59
+
+`writeJourneyStep` agora propaga erros tanto do evento quanto da atualização da jornada e lança erro se não encontra a linha do membro. Aprovar e rejeitar validam o contexto, o membro, o `update` e a linha atualizada. As notificações de resultado só são enviadas após as gravações. A folha captura a rejeição, mantém o pedido e libera os botões no `finally`.
+
+Reprodução no navegador local: interceptado apenas `PATCH /rest/v1/journey_change_requests` e respondido com 500. A foto `Q16-falha.png` mostra a Gaveta com Maria ainda listada, aviso “Não conseguimos revisar o pedido agora. Tente de novo.” e botões ativos. Removida a interceptação, Aprovar retornou PATCH 200; `Q16-recuperado.png` mostra a Gaveta sem pendências e a linha removida (contagem 1 → 0). Ambas as fotos foram abertas; MD5: falha `0217f8d24dc326bd778eb3398a784a95`, recuperação `b63c74b47da8f5f6bbd41beac12ac4d9`.
+
+Banco após limpeza: pedido criado para o teste removido, dois eventos de integração gerados pelas tentativas removidos, jornada da Maria restaurada em `[1,1,0,0,1]`; contagem global de pedidos `0`. A falha simulada atingiu o PATCH depois da gravação da etapa, por isso os eventos e o índice da jornada precisaram ser restaurados.

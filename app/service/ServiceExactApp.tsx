@@ -597,15 +597,17 @@ export default function ServiceExactApp({
     router.refresh();
   };
   const approveJourneyRequest = async (request: JourneyChangeRequestView) => {
-    if (!firstChurch?.organizationId || !currentPersonId) return;
+    if (!firstChurch?.organizationId || !currentPersonId) throw new Error("Contexto da igreja ou pessoa ausente.");
     const member = members.find((m) => m.id === request.memberId);
-    if (!member) return;
+    if (!member) throw new Error("Membro do pedido não encontrado.");
     await writeJourneyStep(firstChurch.organizationId, member, request.step, request.eventDate);
-    await createServiceBrowserClient().schema("service").from("journey_change_requests").update({
+    const { data, error } = await createServiceBrowserClient().schema("service").from("journey_change_requests").update({
       status: "aprovado",
       reviewed_by: currentPersonId,
       reviewed_at: new Date().toISOString(),
-    }).eq("id", request.id);
+    }).eq("id", request.id).select("id").maybeSingle();
+    if (error) throw error;
+    if (!data) throw new Error("O pedido não foi atualizado.");
     const stepLabel = ct(JRN_STEPS.find((s) => s.kind === request.step)?.label ?? request.step);
     notifyPush(firstChurch.organizationId, [member.id], ct("{Caminhada} aprovada"), ct(`"${stepLabel}" foi confirmado na sua {caminhada}.`), "caminhada");
     router.refresh();
@@ -644,17 +646,18 @@ export default function ServiceExactApp({
     return true;
   };
   const rejectJourneyRequest = async (request: JourneyChangeRequestView, motivo?: string) => {
-    if (!firstChurch?.organizationId || !currentPersonId) return;
-    await createServiceBrowserClient().schema("service").from("journey_change_requests").update({
+    if (!firstChurch?.organizationId || !currentPersonId) throw new Error("Contexto da igreja ou pessoa ausente.");
+    const member = members.find((m) => m.id === request.memberId);
+    if (!member) throw new Error("Membro do pedido não encontrado.");
+    const { data, error } = await createServiceBrowserClient().schema("service").from("journey_change_requests").update({
       status: "rejeitado",
       reviewed_by: currentPersonId,
       reviewed_at: new Date().toISOString(),
-    }).eq("id", request.id);
-    const member = members.find((m) => m.id === request.memberId);
+    }).eq("id", request.id).select("id").maybeSingle();
+    if (error) throw error;
+    if (!data) throw new Error("O pedido não foi atualizado.");
     const stepLabel = ct(JRN_STEPS.find((s) => s.kind === request.step)?.label ?? request.step);
-    if (member) {
-      notifyPush(firstChurch.organizationId, [member.id], ct("{Caminhada}"), `Seu pedido de "${stepLabel}" não foi aprovado.${motivo ? ` Motivo: ${motivo}` : ""}`, "caminhada");
-    }
+    notifyPush(firstChurch.organizationId, [member.id], ct("{Caminhada}"), `Seu pedido de "${stepLabel}" não foi aprovado.${motivo ? ` Motivo: ${motivo}` : ""}`, "caminhada");
     router.refresh();
   };
   const activePeople = people.filter((person) => person.status === "ativo").length;
