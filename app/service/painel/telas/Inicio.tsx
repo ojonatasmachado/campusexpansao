@@ -12,7 +12,7 @@ import type { PesquisaElegivelView } from "../../lib/pesquisas";
 import { textoBuscavel, TERMOS } from "../../lib/vocabulario";
 import { useTermos } from "../../lib/vocabulario-context";
 import { HelpDot, SetupChecklist, type SetupCounts } from "../../HelpSystem";
-import { JRN_STEPS } from "../caminhada";
+import { PedidosCaminhada } from "../../modules/pessoas/PedidosCaminhada";
 import { semanaDe } from "../../lib/contexto-dia";
 import { type Ausente } from "../../modules/cuidado/cuidado";
 import type { CriancaAusente } from "../../modules/cuidado/Cuidado";
@@ -25,7 +25,6 @@ import { REACOES_PESQUISA, ROUTES } from "../comum";
 import { Indicador } from "../../ui/Indicador";
 import type { AnnouncementView, ChildView, DecisionView, DrawerState, EnrollmentView, EventAttendanceView, EventView, FieldDef, JourneyChangeRequestView, KidsAttendanceView, KidsClassView, MemberView, MinistryView, ModalState, PersonView, RosterAssignmentView, TimelineEventView, VisitorView } from "../tipos";
 
-import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Cartao } from "../../ui/Cartao";
 import { Linha, linhaClasse } from "../../ui/Linha";
@@ -264,8 +263,8 @@ export function Painel({
   kidsAttendance: KidsAttendanceView[];
   enqueteElegivel: EnqueteElegivelView | null;
   pesquisaElegivel: PesquisaElegivelView | null;
-  onApproveJourney: (request: JourneyChangeRequestView) => void;
-  onRejectJourney: (request: JourneyChangeRequestView) => void;
+  onApproveJourney: (request: JourneyChangeRequestView) => void | Promise<void>;
+  onRejectJourney: (request: JourneyChangeRequestView) => void | Promise<void>;
   setRoute: (route: keyof typeof ROUTES) => void;
   podeAbrir?: (route: keyof typeof ROUTES) => boolean;
   modulosPendencias: Set<string>;
@@ -296,6 +295,19 @@ export function Painel({
   const gestao = currentRole === "master" || currentRole === "pastor";
   const pedidosConta = usePedidosConta(gestao);
   const [pedidosAbertos, setPedidosAbertos] = useState(false);
+  const [jornadaAberta, setJornadaAberta] = useState(false);
+  const [pedidosResolvidos, setPedidosResolvidos] = useState<{ origem: JourneyChangeRequestView[]; ids: Set<string> } | null>(null);
+  // A atualização local só vale até chegarem novas props da fonte existente.
+  const pedidosJornada = pedidosResolvidos?.origem === journeyRequests
+    ? journeyRequests.filter((pedido) => pedido.status === "pendente" && !pedidosResolvidos.ids.has(pedido.id))
+    : journeyRequests.filter((pedido) => pedido.status === "pendente");
+  const resolverPedido = async (pedido: JourneyChangeRequestView, decidir: (request: JourneyChangeRequestView) => void | Promise<void>) => {
+    await decidir(pedido);
+    setPedidosResolvidos((anteriores) => ({
+      origem: journeyRequests,
+      ids: new Set(anteriores?.origem === journeyRequests ? anteriores.ids : []).add(pedido.id),
+    }));
+  };
   const liderDeTime = !!scopeMinistryIds;
   const semProgramacao = !events.some((e) => aindaVaiAcontecer(e.eventDate, e.time, e.timeZone));
   const ativando = gestao && semProgramacao;
@@ -346,8 +358,8 @@ export function Painel({
         if (!liderDeTime && podeAbrir("visitantes") && visitantesPeloLink > 0) {
           filas.push({ key: "visitantes-link", t: `${plural(visitantesPeloLink, "visitante")} ${visitantesPeloLink === 1 ? "se cadastrou" : "se cadastraram"} pelo link`, s: " · esperando o 1º contato", go: "Ver →", action: () => setRoute("visitantes") });
         }
-        if (!liderDeTime && journeyRequests.length > 0) {
-          filas.push({ key: "jornada", t: journeyRequests.length === 1 ? ct("1 pedido na {caminhada}") : ct(`${journeyRequests.length} pedidos na {caminhada}`), s: " · esperando aprovação", go: "Revisar →", action: () => { const el = document.getElementById("caminhada-pendente"); if (el) el.scrollIntoView({ behavior: "smooth", block: "center" }); else setRoute("membros"); } });
+        if (pedidosJornada.length > 0) {
+          filas.push({ key: "jornada", t: ct(`${plural(pedidosJornada.length, "pedido", "pedidos")} na {caminhada}`), s: " · esperando aprovação", go: "Revisar →", action: () => setJornadaAberta(true) });
         }
         if (gestao && (pedidosConta.estado !== "pronto" || pedidosConta.pedidos.length > 0)) {
           const total = pedidosConta.pedidos.length;
@@ -442,31 +454,14 @@ export function Painel({
             </Cartao>
           )}
       </div>
-      {journeyRequests.length > 0 && (
-        <Cartao id="caminhada-pendente" className="mt-md">
-          <div className="panel-head">
-            <span className="panel-title"><Icon name="membros" size={14} /> {ct("{Caminhada} pendente")}</span>
-          </div>
-          <div className="panel-body flush">
-            {journeyRequests.map((request) => {
-              const member = members.find((m) => m.id === request.memberId);
-              const stepLabel = ct(JRN_STEPS.find((s) => s.kind === request.step)?.label ?? request.step);
-              return (
-                <div className="gap-row" key={request.id}>
-                  <div className="gap-ic wait">!</div>
-                  <div className="mini-main">
-                    <div className="mini-title">{member?.name ?? "Alguém"} <span className="text-muted">· {stepLabel}</span></div>
-                    <div className="mini-sub">{formatDateBR(request.eventDate) || "sem data informada"}{request.note ? ` · ${request.note}` : ""}</div>
-                  </div>
-                  <div className="flex-row gap-sm">
-                    <Botao variante="texto" compacto onClick={() => onRejectJourney(request)}>Rejeitar</Botao>
-                    <Botao variante="secundario" compacto onClick={() => onApproveJourney(request)}>Aprovar</Botao>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </Cartao>
+      {jornadaAberta && (
+        <PedidosCaminhada
+          pedidos={pedidosJornada}
+          members={members}
+          onApproveJourney={(pedido) => resolverPedido(pedido, onApproveJourney)}
+          onRejectJourney={(pedido) => resolverPedido(pedido, onRejectJourney)}
+          aoFechar={() => setJornadaAberta(false)}
+        />
       )}
       {/* v7 I1: blocos "Comunicação recente" e "Crianças por turma" removidos.
           Telas donas existem (Mural e Crianças). Pendências reais já estão na fila. */}
