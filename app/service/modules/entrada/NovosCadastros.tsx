@@ -1,27 +1,23 @@
 "use client";
 
-/* Novos cadastros aguardando (migração 0071), no "Para resolver" do Início
-   do painel, só para a gestão. Cada pedido mostra quem é e duas ações:
-   Aprovar e Recusar. Aprovar pergunta se a pessoa já tem ficha (sugere as
-   parecidas por e-mail, telefone ou nome, e deixa procurar outra) para não
-   criar cadastro duplicado. Sem pedidos, o bloco não aparece (lei 6). */
-import { useCallback, useEffect, useRef, useState } from "react";
+/* Revisão dos pedidos de conta na Gaveta do Início, só para a gestão.
+   A carga vem do hook do Início, sem nova consulta ao abrir a folha.
+   Aprovar mantém a busca de ficha existente para evitar cadastro duplicado. */
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useServiceAccess } from "../../AccessContext";
 import { avisar } from "../../lib/avisar";
 import { formatDateBR, joinDot } from "../../lib/date";
-import { Icon } from "../../lib/icons";
 import { plural } from "../../lib/plural";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 
-import { Botao } from "../../ui/Botao";
+import { BotaoIcone, Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
-import { Cartao } from "../../ui/Cartao";
+import { Gaveta } from "../../ui/Janela";
+import { Linha } from "../../ui/Linha";
+import type { EstadoCarga, Ficha, Pedido, PedidosConta } from "./usePedidosConta";
 import { Entrada } from "../../ui/Campo";
-import { Carregando, ErroEstado } from "../../ui/Estados";
-type EstadoCarga = "carregando" | "erro" | "pronto";
-type Ficha = { id: string; name: string; phone: string | null; email: string | null };
-type Pedido = { id: string; name: string; email: string; phone: string | null; created_at: string; parecidos: Ficha[] };
+import { Carregando, ErroEstado, Vazio } from "../../ui/Estados";
 
 function fone(v: string | null): string | null {
   const d = (v ?? "").replace(/\D/g, "");
@@ -36,43 +32,18 @@ const ERRO: Record<string, string> = {
   nao_pode: "Só a gestão e os pastores aprovam pedidos.",
 };
 
-export function NovosCadastros({ onPedidosChange }: { onPedidosChange?: (count: number) => void } = {}) {
+export function NovosCadastros({ dados, aoFechar }: { dados: PedidosConta; aoFechar: () => void }) {
   const router = useRouter();
   const { organizationId } = useServiceAccess();
-  const [estado, setEstado] = useState<EstadoCarga>("carregando");
+  const { pedidos, estado, carregar, remover } = dados;
   const [estadoBusca, setEstadoBusca] = useState<EstadoCarga>("pronto");
   const [tentativaBusca, setTentativaBusca] = useState(0);
-  const cargaAtual = useRef(0);
-  const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [aberto, setAberto] = useState<string | null>(null);
   const [recusando, setRecusando] = useState<string | null>(null);
   const [enviando, setEnviando] = useState<string | null>(null);
   const [q, setQ] = useState("");
   const [achados, setAchados] = useState<Ficha[]>([]);
   const db = useCallback(() => createServiceBrowserClient().schema("service"), []);
-
-  const carregar = useCallback(() => {
-    if (!organizationId) return;
-    const carga = ++cargaAtual.current;
-    setEstado("carregando");
-    const falhou = () => {
-      if (carga === cargaAtual.current) setEstado("erro");
-    };
-    void db().rpc("entrada_pedidos", { p_org: organizationId }).then(({ data, error }) => {
-      if (carga !== cargaAtual.current) return;
-      if (error) { falhou(); return; }
-      const lista = (data ?? []) as Pedido[];
-      setPedidos(lista);
-      setEstado("pronto");
-      onPedidosChange?.(lista.length);
-    }, falhou);
-  }, [organizationId, db, onPedidosChange]);
-  useEffect(() => {
-    const atual = cargaAtual;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- consulta externa: informa a carga ao trocar a organização, antes de receber a resposta
-    carregar();
-    return () => { atual.current++; };
-  }, [carregar]);
 
   /* Busca de ficha: só uma resposta bem-sucedida pode dizer que não há resultado. */
   useEffect(() => {
@@ -96,8 +67,6 @@ export function NovosCadastros({ onPedidosChange }: { onPedidosChange?: (count: 
     return () => { ativa = false; clearTimeout(t); };
   }, [q, aberto, organizationId, db, tentativaBusca]);
 
-  if (estado === "pronto" && pedidos.length === 0) return null;
-
   const abrir = (id: string | null) => { setAberto(id); setRecusando(null); setQ(""); setAchados([]); };
 
   const aprovar = async (p: Pedido, ficha: Ficha | null) => {
@@ -111,9 +80,7 @@ export function NovosCadastros({ onPedidosChange }: { onPedidosChange?: (count: 
     }
     avisar(ficha ? `${p.name} ligado à ficha de ${ficha.name}` : `${p.name} já pode entrar no app`, "ok");
     abrir(null);
-    const proxima = pedidos.filter((x) => x.id !== p.id);
-    setPedidos(proxima);
-    onPedidosChange?.(proxima.length);
+    remover(p.id);
     router.refresh();
   };
 
@@ -124,9 +91,7 @@ export function NovosCadastros({ onPedidosChange }: { onPedidosChange?: (count: 
     if (error || (data !== "ok" && data !== "ja_decidido")) return avisar("Não conseguimos recusar agora. Tente de novo.", "warn");
     avisar("Pedido recusado", "ok");
     setRecusando(null);
-    const proxima = pedidos.filter((x) => x.id !== p.id);
-    setPedidos(proxima);
-    onPedidosChange?.(proxima.length);
+    remover(p.id);
   };
 
   const opcaoFicha = (p: Pedido, f: Ficha) => (
@@ -137,16 +102,17 @@ export function NovosCadastros({ onPedidosChange }: { onPedidosChange?: (count: 
   );
 
   return (
-    <Cartao className="entrada-fila" id="novos-cadastros">
-      <div className="panel-head">
-        <span className="panel-title"><Icon name="membros" size={14} /> Novos cadastros</span>
-        {estado === "pronto" && <span className="panel-meta">{`${plural(pedidos.length, "pedido")} pelo link da igreja`}</span>}
+    <Gaveta larga rotulo="Pedidos de conta" aoFechar={() => { if (!enviando) aoFechar(); }}>
+      <div className="drawer-head">
+        <BotaoIcone className="drawer-close" rotulo="Fechar" desativado={!!enviando} onClick={aoFechar}>✕</BotaoIcone>
+        <h2 className="profile-name">Pedidos de conta</h2>
       </div>
-      <div className="panel-body flush">
+      <div className="drawer-body">
         {estado === "carregando" && <Carregando forma="linhas" quantos={1} rotulo="Carregando pedidos de conta" />}
         {estado === "erro" && <ErroEstado titulo="Não conseguimos carregar os pedidos de conta" tentar={carregar} />}
+        {estado === "pronto" && pedidos.length === 0 && <Vazio titulo="Nenhum pedido pendente" texto="Todos os pedidos foram revisados." />}
         {estado === "pronto" && pedidos.map((p) => (
-          <div className="cuidado-item" key={p.id}>
+          <Linha estilo="config" className="cuidado-item" key={p.id}>
             <div className="cuidado-nome" style={{ cursor: "default" }}>
               <span className="mini-title">{p.name}</span>
               <span className="mini-sub">{joinDot(fone(p.phone), p.email, `pediu em ${formatDateBR(p.created_at.slice(0, 10))}`)}</span>
@@ -192,9 +158,9 @@ export function NovosCadastros({ onPedidosChange }: { onPedidosChange?: (count: 
                 </div>
               </div>
             )}
-          </div>
+          </Linha>
         ))}
       </div>
-    </Cartao>
+    </Gaveta>
   );
 }

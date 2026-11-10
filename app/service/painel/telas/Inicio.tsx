@@ -3,7 +3,7 @@
 import { pendenciasDeCobertura } from "../../modules/escalas/pendencias";
 import { plural } from "../../lib/plural";
 import { nomeComparavel } from "../../lib/pessoas";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { Icon } from "../../lib/icons";
 import { useRelogioDaIgreja } from "../../lib/relogio-context";
 import { formatDateBR } from "../../lib/date";
@@ -16,6 +16,7 @@ import { JRN_STEPS } from "../caminhada";
 import { semanaDe } from "../../lib/contexto-dia";
 import { type Ausente } from "../../modules/cuidado/cuidado";
 import type { CriancaAusente } from "../../modules/cuidado/Cuidado";
+import { usePedidosConta } from "../../modules/entrada/usePedidosConta";
 import { NovosCadastros } from "../../modules/entrada/NovosCadastros";
 import { numerosDaBase, type DadosSaude } from "../../modules/inicio/saude";
 import { linhaDoSetup, type SetupEstado } from "../../modules/configuracao/setup";
@@ -292,12 +293,9 @@ export function Painel({
 }) {
   const { aindaVaiAcontecer, saudacao, todayISO, fuso } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
-  /* v7 I1: contagem de pedidos pendentes de entrada (NovosCadastros) para a fila */
-  const [pedidosPendentes, setPedidosPendentes] = useState(0);
-  const onPedidosChange = useCallback((count: number) => setPedidosPendentes(count), []);
-  /* v7 4.11: gestão e pastores abrem na Saúde da igreja; líder de time, no
-     "Para resolver" do seu time (vagas só dos times que lidera, sem os números da igreja toda) */
   const gestao = currentRole === "master" || currentRole === "pastor";
+  const pedidosConta = usePedidosConta(gestao);
+  const [pedidosAbertos, setPedidosAbertos] = useState(false);
   const liderDeTime = !!scopeMinistryIds;
   const semProgramacao = !events.some((e) => aindaVaiAcontecer(e.eventDate, e.time, e.timeZone));
   const ativando = gestao && semProgramacao;
@@ -331,7 +329,7 @@ export function Painel({
       )}
       {/* E3: pendências do módulo Escalas, por prazo; uma linha por culto,
          até três prazos à vista e uma entrada para a lista completa. O detalhe vive no Panorama. */}
-      {!ativando && (() => {
+      {(() => {
         const filas: Array<{ key: string; t: string; s: string; go: string; action: () => void }> = [];
         for (const { conteudo: { evento, resumo } } of faltas.slice(0, 3)) {
           filas.push({
@@ -351,8 +349,12 @@ export function Painel({
         if (!liderDeTime && journeyRequests.length > 0) {
           filas.push({ key: "jornada", t: journeyRequests.length === 1 ? ct("1 pedido na {caminhada}") : ct(`${journeyRequests.length} pedidos na {caminhada}`), s: " · esperando aprovação", go: "Revisar →", action: () => { const el = document.getElementById("caminhada-pendente"); if (el) el.scrollIntoView({ behavior: "smooth", block: "center" }); else setRoute("membros"); } });
         }
-        if (!liderDeTime && pedidosPendentes > 0) {
-          filas.push({ key: "novos-cadastros", t: pedidosPendentes === 1 ? "1 pedido de conta pendente" : `${pedidosPendentes} pedidos de conta pendentes`, s: " · aguardando aprovação", go: "Revisar →", action: () => { const el = document.getElementById("novos-cadastros"); if (el) el.scrollIntoView({ behavior: "smooth", block: "center" }); } });
+        if (gestao && (pedidosConta.estado !== "pronto" || pedidosConta.pedidos.length > 0)) {
+          const total = pedidosConta.pedidos.length;
+          const titulo = pedidosConta.estado === "carregando" ? "Carregando pedidos de conta"
+            : pedidosConta.estado === "erro" ? "Não conseguimos carregar os pedidos de conta"
+            : `${plural(total, "pedido", "pedidos")} de conta ${total === 1 ? "pendente" : "pendentes"}`;
+          filas.push({ key: "novos-cadastros", t: titulo, s: pedidosConta.estado === "pronto" ? " · aguardando aprovação" : "", go: "Revisar →", action: () => setPedidosAbertos(true) });
         }
         if (!liderDeTime && cuidado && cuidado.lista.length > 0) {
           filas.push({ key: "cuidado", t: `${plural(cuidado.lista.length, "pessoa")} sem registro`, s: ` · há ${plural(cuidado.semanas, "semana")} ou mais`, go: "Ver →", action: () => setRoute("membros") });
@@ -387,6 +389,7 @@ export function Painel({
             </>
           );
         }
+        if (ativando) return null;
         return (
           <>
             <h2 className="painel-sec-t">Para resolver</h2>
@@ -394,8 +397,7 @@ export function Painel({
           </>
         );
       })()}
-      {/* v7 I1: NovosCadastros — pedidos pendentes de entrada_pedidos (migração 0071). Só gestão; sem pedidos, não aparece (lei 6). */}
-      {gestao && <NovosCadastros onPedidosChange={onPedidosChange} />}
+      {gestao && pedidosAbertos && <NovosCadastros dados={pedidosConta} aoFechar={() => setPedidosAbertos(false)} />}
       {/* v7 I1: Saúde-resumo — 3 números de base via numerosDaBase() (mesma fonte de Relatórios). Indicador cartao, prancha 2. */}
       {gestao && !ativando && (() => {
         const dadosSaude: DadosSaude = { membros: members, pessoas: people, times: ministries, visitantes: [], decisoes: [], fatos: [], matriculas: [] };
