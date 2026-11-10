@@ -1,3 +1,4 @@
+import type { ParticipanteConversa } from "../modules/conversas/identidade";
 import type { AgendaSeg } from "../lib/member-navigation";
 import { type RequirementKind } from "../lib/requirements";
 import { type EstadoModulos } from "../modules/registry";
@@ -141,7 +142,7 @@ export type Announcement = {
   urgent?: boolean | null;
 };
 export type Chat = { id: string; kind: string; ministry_id: string | null; name: string | null };
-export type ChatMember = { chat_id: string; member_id: string; last_read_at?: string | null };
+export type ChatMember = ParticipanteConversa;
 export type Message = { id: string; chat_id: string; sender_id: string | null; body: string; created_at: string };
 export type KidsClass = { id: string; church_id: string; name: string; min_age_months: number | null; max_age_months: number | null };
 export type Child = {

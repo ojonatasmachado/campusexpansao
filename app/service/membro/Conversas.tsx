@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createServiceBrowserClient } from "../lib/supabase-browser";
+import { identidadeConversa } from "../modules/conversas/identidade";
 import { Caret } from "../lib/icons";
 import { useRelogioDaIgreja } from "../lib/relogio-context";
 import { joinDot } from "../lib/date";
@@ -160,9 +161,8 @@ export function naoLidasPorConversa(chatMembers: ChatMember[], messages: Message
 }
 
 export function TabConversas({
-  member, chats, chatMembers, messages, members, ministries, people = [], onSendMessage, onStartChat, openChatId, startNew, onChatOpen, naoLidas, onLida,
+  member, chats, chatMembers, messages, members, ministries, onSendMessage, onStartChat, openChatId, startNew, onChatOpen, naoLidas, onLida,
 }: {
-  people?: P[];
   /* não lidas por conversa e o aviso de que a pessoa abriu uma (v7 4.15) */
   naoLidas?: Map<string, number>;
   onLida?: (chatId: string) => void;
@@ -171,7 +171,7 @@ export function TabConversas({
   /* abre já na escolha de com quem falar ("Nova mensagem → Falar com um líder") */
   startNew?: boolean;
   /* avisa a casca quando entra ou sai de uma conversa (título e voltar) */
-  onChatOpen?: (name: string | null) => void;
+  onChatOpen?: (chatId: string | null) => void;
   member: M | null;
   chats: Chat[];
   chatMembers: ChatMember[];
@@ -220,18 +220,9 @@ export function TabConversas({
       )
     : [];
 
-  /* conversa a dois: nome e foto da outra pessoa; canal e grupo: o nome dado */
-  const outro = (c: Chat) => {
-    if (c.kind !== "dm") return null;
-    const outros = chatMembers.filter((cm) => cm.chat_id === c.id && cm.member_id !== member?.id);
-    if (outros.length !== 1) return null;
-    return members.find((m) => m.id === outros[0].member_id) ?? null;
-  };
-  const nomeDa = (c: Chat) => outro(c)?.name ?? c.name ?? "Conversa";
-  const fotoDa = (c: Chat) => {
-    const o = outro(c);
-    return o?.volunteerId ? people.find((p) => p.id === o.volunteerId)?.photoUrl ?? null : null;
-  };
+  const identidade = (c: Chat) => identidadeConversa(c, chatMembers, member?.id, ministries);
+  const nomeDa = (c: Chat) => identidade(c).nome;
+  const fotoDa = (c: Chat) => identidade(c).fotoUrl;
   const ultimaDe = (id: string) => {
     let last: Message | undefined;
     for (const m of messages) if (m.chat_id === id && (!last || m.created_at > last.created_at)) last = m;
@@ -241,8 +232,7 @@ export function TabConversas({
   const chat = myChats.find((c) => c.id === selId);
   const setSelId = (id: string | null) => {
     setSelIdRaw(id);
-    const c = id ? myChats.find((x) => x.id === id) : undefined;
-    onChatOpen?.(c ? nomeDa(c) : id ? "Conversa" : null);
+    onChatOpen?.(id);
     if (id) onLida?.(id);
   };
   /* aberta direto (depois de "Pedir troca" ou de um aviso): já conta como lida */
@@ -297,7 +287,7 @@ export function TabConversas({
       <div className="m-chat">
         {!onChatOpen && (
           <Acao className="m-chat-back" onClick={() => setSelId(null)}>
-            ← {chat.name ?? "Conversa"}
+            ← {nomeDa(chat)}
           </Acao>
         )}
         <div className="chat-thread">
@@ -395,7 +385,7 @@ export function TabConversas({
         const last = ultimaDe(c.id);
         const n = naoLidas?.get(c.id) ?? 0;
         const nome = nomeDa(c);
-        const autor = last && !outro(c) ? members.find((m) => m.id === last.sender_id)?.name.split(" ")[0] : undefined;
+        const autor = last && c.kind !== "dm" ? members.find((m) => m.id === last.sender_id)?.name.split(" ")[0] : undefined;
         const quem = !last ? "" : last.sender_id === member?.id ? "Você: " : autor ? `${autor}: ` : "";
         return (
           <Acao className={`m-conv${n ? " unread" : ""}`} key={c.id} onClick={() => setSelId(c.id)}

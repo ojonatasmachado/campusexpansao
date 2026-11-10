@@ -1,0 +1,8 @@
+/* A seleção precisa manter contraste também sobre a faixa da igreja. */
+.conversas-painel .chat-row.on .chat-row-prev,
+.conversas-painel .chat-row.on .chat-row-top small { color: var(--light); }
+
+/* Espaço real para a ajuda fixa, sem encobrir campo e Enviar. */
+@media (min-width: 981px) {
+  .conversas-painel .chat-compose { margin-inline-end: calc(120px + var(--safe-right)); }
+}

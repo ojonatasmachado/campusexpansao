@@ -1,3 +1,4 @@
+import type { ParticipanteConversa } from "../modules/conversas/identidade";
 import type { FieldDef } from "./form/tipos";
 import type { DbServiceCurrency } from "../../lib/types";
 export type { FieldDef, ShowIf } from "./form/tipos";
@@ -366,11 +367,7 @@ export type ChatView = {
   name: string | null;
 };
 
-export type ChatMemberView = {
-  chat_id: string;
-  member_id: string;
-  last_read_at?: string | null;
-};
+export type ChatMemberView = ParticipanteConversa;
 
 export type MessageView = {
   id: string;

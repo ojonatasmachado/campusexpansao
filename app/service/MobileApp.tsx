@@ -17,6 +17,7 @@ import { linhaDoMembro, mesmoDiaDaSemana } from "./lib/contexto-dia";
 import { Contribuir } from "./modules/contribuir/Contribuir";
 import { contribuirPronto } from "./modules/contribuir/pix";
 import { InicioV6, SheetArtigo, SheetOracao, SheetPedirAvisos } from "./membro/Inicio";
+import { identidadeConversa } from "./modules/conversas/identidade";
 import { TabConversas, naoLidasPorConversa } from "./membro/Conversas";
 import { Av, JourneyContext, M6Row, M6Sheet, MemberUiContext, UNDO_MS, chegadaDoTime } from "./membro/comum";
 import { AgendaV6, SheetEvento } from "./membro/Agenda";
@@ -213,6 +214,10 @@ function MobileMembro({
   /* conversas não lidas (v7 4.15): lida na hora em que abre, sem esperar o servidor */
   const [conversasLidas, setConversasLidas] = useState<Record<string, string>>({});
   const naoLidas = useMemo(() => naoLidasPorConversa(chatMembers, messages, member?.id, conversasLidas), [chatMembers, messages, member?.id, conversasLidas]);
+  const identidadeAberta = useMemo(() => {
+    const conversa = chats.find((c) => c.id === (chatAberto ?? chatTarget.id));
+    return conversa ? identidadeConversa(conversa, chatMembers, member?.id, ministries) : null;
+  }, [chats, chatAberto, chatTarget.id, chatMembers, member?.id, ministries]);
   const marcarConversaLida = (chatId: string) => {
     setConversasLidas((p) => ({ ...p, [chatId]: new Date().toISOString() }));
     onMarkChatRead?.(chatId);
@@ -365,7 +370,9 @@ function MobileMembro({
   }
 
   const tabTitle = tabLabel(tab, traduzirUi);
-  const subTitle = sub === "chat" ? (chatAberto ?? traduzirUi("Conversa")) : sub ? moduleTitle(sub) : "";
+  const subTitle = sub === "chat"
+    ? identidadeAberta?.nome ?? traduzirUi("Pessoa indisponível")
+    : sub ? moduleTitle(sub) : "";
   const voltar = () => {
     if (sub === "chat") { setChatTarget((c) => ({ id: null, novo: false, n: c.n + 1 })); setChatAberto(null); }
     const from = mode === "self" ? window.history.state?.cexMemberFrom : null;
@@ -487,9 +494,9 @@ function MobileMembro({
               )}
               <div className={sub ? "" : "m6-sec m6-conv"}>
                 <TabConversas key={chatTarget.n} member={member} chats={chats} chatMembers={chatMembers} messages={messages} members={members} ministries={ministries}
-                  people={people} naoLidas={naoLidas} onLida={marcarConversaLida}
+                  naoLidas={naoLidas} onLida={marcarConversaLida}
                   onSendMessage={onSendMessage} onStartChat={onStartChat} openChatId={chatTarget.id} startNew={chatTarget.novo}
-                  onChatOpen={(name) => { setChatAberto(name); setSub(name ? "chat" : null); }} />
+                  onChatOpen={(id) => { setChatAberto(id); setSub(id ? "chat" : null); }} />
               </div>
               {!sub && (
                 <div className="m6-pad">
