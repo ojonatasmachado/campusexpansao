@@ -4,7 +4,10 @@ import { useRelogioDaIgreja } from "../../lib/relogio-context";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
+import { plural } from "../../lib/plural";
 import { notifyPush } from "../../lib/notify-push";
+import "../../modules/conversas/conversas.css";
+import { identidadeConversa } from "../../modules/conversas/identidade";
 import { Icon } from "../../lib/icons";
 import { Av, EmptyState, PageHead } from "../ui";
 import type { ChatMemberView, ChatView, ChurchView, MemberView, MessageView, MinistryView } from "../tipos";
@@ -146,8 +149,6 @@ export function Conversas({
   const [nova, setNova] = useState(false);
   const [texto, setTexto] = useState("");
   const [sending, setSending] = useState(false);
-  const ministryById = new Map(ministries.map((ministry) => [ministry.id, ministry]));
-  const memberById = new Map(members.map((member) => [member.id, member]));
 
   /* privacidade: só quem de fato participa vê a conversa, sem exceção de papel
      (inclusive Direção) : equivalente a S.chatsDaView() em
@@ -179,7 +180,8 @@ export function Conversas({
   const chat = visibleChats.find((item) => item.id === selected) ?? visibleChats[0] ?? null;
   const selectedMessages = chat ? messages.filter((message) => message.chat_id === chat.id) : [];
   const chatCount = (chatId: string) => chatMembers.filter((member) => member.chat_id === chatId).length;
-  const chatName = (item: ChatView) => item.name || (item.ministry_id ? ministryById.get(item.ministry_id)?.name : null) || "Conversa";
+  const identidade = (item: ChatView) => identidadeConversa(item, chatMembers, currentMember?.id, ministries);
+  const chatName = (item: ChatView) => identidade(item).nome;
   const perspectiveText = scopeMinistryIds
     ? `Canal do ${ministries.find((m) => m.id === scopeMinistryIds[0])?.name ?? "seu time"}, grupos e mensagens diretas da sua equipe. Conversas são privadas: só os envolvidos veem.`
     : "Só as conversas das quais você participa aparecem aqui. Conversas são privadas: só os envolvidos veem.";
@@ -203,11 +205,63 @@ export function Conversas({
   };
 
   return (
-    <div className="content wide">
+    <div className="content wide conversas-painel">
       <PageHead title="Conversas" eyebrow="Operação" help={`Um chat simples com seu time e sua liderança, dentro do mesmo app. ${perspectiveText}`} action={<Botao variante="principal" onClick={() => setNova(true)}>+ Nova conversa</Botao>} />
       <div className="chat-layout">
-        <div className="chat-list">{visibleChats.map((item) => <Acao className={`chat-row ${chat?.id === item.id ? "on" : ""}`} key={item.id} onClick={() => setSelected(item.id)}><span className="chat-row-ic"><Icon name={item.kind === "time" ? "times" : "membros"} size={16} /></span><span className="chat-row-main"><span className="chat-row-top"><b>{chatName(item)}</b><small>agora</small></span><span className="chat-row-prev">{messages.find((message) => message.chat_id === item.id)?.body || "Canal de alinhamento"}</span></span><span className="chat-row-count">{chatCount(item.id)}</span></Acao>)}{visibleChats.length === 0 && <Vazio titulo="Nenhuma conversa ainda." />}</div>
-        {chat ? <div className="chat-main"><div className="chat-head"><span className="chat-head-ic"><Icon name={chat?.kind === "time" ? "times" : "membros"} size={16} /></span><div><div className="chat-head-name">{chat ? chatName(chat) : "Nenhuma conversa"}</div><div className="chat-head-sub">{chat?.kind === "time" ? "Canal do time" : "Grupo"} · {chat ? chatCount(chat.id) : 0} pessoas</div></div></div><div className="chat-thread"><div className="chat-msgs">{selectedMessages.map((message) => { const sender = message.sender_id ? memberById.get(message.sender_id) : null; const isMine = currentMember && message.sender_id === currentMember.id; return <div className={`chat-msg${isMine ? " me" : ""}`} key={message.id}>{sender ? <Av name={sender.name} size="xs" /> : null}<div className="chat-bubble-wrap"><div className="chat-bubble">{message.body}</div><div className="chat-when">{new Date(message.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: fuso })}</div></div></div>; })}{chat && selectedMessages.length === 0 ? <Vazio titulo="Nenhuma mensagem nesta conversa." /> : null}</div><div className="chat-compose"><input className="input" placeholder="Escreva uma mensagem..." value={texto} onChange={(e) => setTexto(e.target.value)} onKeyDown={(e) => e.key === "Enter" && enviar()} disabled={!chat} /><Botao variante="principal" compacto desativado={!chat || sending || !texto.trim()} onClick={enviar}>Enviar</Botao></div></div></div> : <div className="chat-main chat-empty"><EmptyState title="Escolha uma conversa" text="Toque numa conversa da lista para ler e responder, ou comece uma nova." /></div>}
+        <div className="chat-list">
+          {visibleChats.map((item) => (
+            <Acao className={`chat-row ${chat?.id === item.id ? "on" : ""}`} key={item.id} onClick={() => setSelected(item.id)}>
+              <span className="chat-row-ic">
+                {item.kind === "dm"
+                  ? <Av name={chatName(item)} photoUrl={identidade(item).fotoUrl} size="sm" />
+                  : <Icon name={item.kind === "time" ? "times" : "membros"} size={16} />}
+              </span>
+              <span className="chat-row-main">
+                <span className="chat-row-top"><b>{chatName(item)}</b><small>agora</small></span>
+                <span className="chat-row-prev">{messages.find((message) => message.chat_id === item.id)?.body || "Canal de alinhamento"}</span>
+              </span>
+              <span className="chat-row-count">{chatCount(item.id)}</span>
+            </Acao>
+          ))}
+          {visibleChats.length === 0 && <Vazio titulo="Nenhuma conversa ainda." />}
+        </div>
+        {chat ? (
+          <div className="chat-main">
+            <div className="chat-head">
+              <span className="chat-head-ic">
+                {chat.kind === "dm"
+                  ? <Av name={chatName(chat)} photoUrl={identidade(chat).fotoUrl} size="sm" />
+                  : <Icon name={chat.kind === "time" ? "times" : "membros"} size={16} />}
+              </span>
+              <div>
+                <div className="chat-head-name">{chatName(chat)}</div>
+                <div className="chat-head-sub">{chat.kind === "time" ? "Canal do time" : chat.kind === "dm" ? "Mensagem direta" : "Grupo"} · {plural(chatCount(chat.id), "pessoa")}</div>
+              </div>
+            </div>
+            <div className="chat-thread">
+              <div className="chat-msgs">
+                {selectedMessages.map((message) => {
+                  const sender = chatMembers.find((p) => p.chat_id === chat.id && p.member_id === message.sender_id);
+                  const isMine = currentMember && message.sender_id === currentMember.id;
+                  return (
+                    <div className={`chat-msg${isMine ? " me" : ""}`} key={message.id}>
+                      {sender?.name ? <Av name={sender.name} photoUrl={sender.photo_url} size="xs" /> : null}
+                      <div className="chat-bubble-wrap">
+                        <div className="chat-bubble">{message.body}</div>
+                        <div className="chat-when">{new Date(message.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: fuso })}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {selectedMessages.length === 0 ? <Vazio titulo="Nenhuma mensagem nesta conversa." /> : null}
+              </div>
+              <div className="chat-compose">
+                <Entrada placeholder="Escreva uma mensagem..." value={texto} onChange={(e) => setTexto(e.target.value)} onKeyDown={(e) => e.key === "Enter" && enviar()} disabled={sending} />
+                <Botao variante="principal" compacto desativado={sending || !texto.trim()} onClick={enviar}>Enviar</Botao>
+              </div>
+            </div>
+          </div>
+        ) : <div className="chat-main chat-empty"><EmptyState title="Escolha uma conversa" text="Toque numa conversa da lista para ler e responder, ou comece uma nova." /></div>}
       </div>
       {nova && (
         <NovaConversaModal

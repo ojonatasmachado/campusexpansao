@@ -1,3 +1,4 @@
+import type { ParticipanteConversa } from "../../modules/conversas/identidade";
 import type { DbChurchClock, DbServiceCurrency, DbServiceOrganizationPreferences } from "../../../lib/types";
 import type { RequirementRow } from "../requirements";
 import type { MissingRequirement, ServeRequest } from "../../MobileApp";
@@ -640,11 +641,7 @@ export type ChatView = {
 };
 
 
-export type ChatMemberView = {
-  chat_id: string;
-  member_id: string;
-  last_read_at?: string | null;
-};
+export type ChatMemberView = ParticipanteConversa;
 
 
 export type MessageView = {

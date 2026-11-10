@@ -15,6 +15,7 @@ on:
       - "app/lib/**"
       - "evolucoes/service_app/**"
       - "supabase/migrations/**"
+      - "supabase/tests/**"
       - "scripts/check-service-*.ts"
       - "scripts/check-theme-contrast.ts"
       - "scripts/lei12-base.json"
@@ -30,6 +31,7 @@ on:
       - "app/lib/**"
       - "evolucoes/service_app/**"
       - "supabase/migrations/**"
+      - "supabase/tests/**"
       - "scripts/**"
 
 jobs:
@@ -77,7 +79,7 @@ jobs:
         run: npx tsx scripts/check-graficos-contraste.ts
       - name: Contratos das jornadas
         run: |
-          for check in internacional fuso avisos-fuso ativacao civil-date cnpj demo-datas endereco geo-cpf member-navigation panel-access semana cobertura telefone times-recebimento; do
+          for check in internacional fuso avisos-fuso ativacao civil-date cnpj demo-datas endereco geo-cpf member-navigation panel-access semana cobertura chat-identidade telefone times-recebimento; do
             npx tsx "scripts/check-service-${check}.ts"
           done
       - name: Migrações num Postgres limpo
@@ -86,7 +88,9 @@ jobs:
           PGPORT: "5432"
           PGUSER: postgres
           PGPASSWORD: postgres
-        run: scripts/ci/aplicar-migracoes.sh
+        run: |
+          scripts/ci/aplicar-migracoes.sh
+          psql -v ON_ERROR_STOP=1 -d v7ci -f supabase/tests/chat_identidades.sql
       - name: Pacote de produção em dia com as migrações
         run: scripts/ci/pacote-producao.sh | diff -q - docs/service-v7/producao.sql || { echo "Rode scripts/ci/pacote-producao.sh > docs/service-v7/producao.sql"; exit 1; }
       - name: Build

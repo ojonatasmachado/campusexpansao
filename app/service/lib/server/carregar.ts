@@ -284,6 +284,7 @@ export async function getServiceDashboardData(): Promise<{
     cardsResult,
     chatsResult,
     chatMembersResult,
+    chatIdentidadesResult,
     messagesResult,
     visitorsResult,
     visitorNotesResult,
@@ -330,6 +331,7 @@ export async function getServiceDashboardData(): Promise<{
     supabase.schema("service").from("chats").select("id,kind,ministry_id,name").order("created_at", { ascending: false }),
     /* "*": lê last_read_at (0060) sem quebrar antes de a migração chegar em produção */
     supabase.schema("service").from("chat_members").select("*"),
+    supabase.schema("service").rpc("chat_identidades"),
     supabase.schema("service").from("messages").select("id,chat_id,sender_id,body,created_at").order("created_at", { ascending: true }),
     /* "*": as colunas do autocadastro (0070) chegam sem quebrar um banco ainda sem a migração */
     supabase.schema("service").from("visitors").select("*").order("created_at", { ascending: false }),
@@ -388,6 +390,7 @@ export async function getServiceDashboardData(): Promise<{
     cardsResult.error,
     chatsResult.error,
     chatMembersResult.error,
+    chatIdentidadesResult.error,
     messagesResult.error,
     visitorsResult.error,
     visitorNotesResult.error,
@@ -420,6 +423,9 @@ export async function getServiceDashboardData(): Promise<{
     missingResult.error,
     serveRequestsResult.error,
   ].find(Boolean);
+
+  const identidades = new Map(((chatIdentidadesResult.data ?? []) as ChatMemberView[])
+    .map((p) => [`${p.chat_id}:${p.member_id}`, p]));
 
   return {
     churches: ((churchesData ?? []) as ChurchRow[]).map(toChurchView),
@@ -458,7 +464,10 @@ export async function getServiceDashboardData(): Promise<{
       boards: ((boardsResult.data ?? []) as BoardView[]),
       cards: ((cardsResult.data ?? []) as CardView[]),
       chats: ((chatsResult.data ?? []) as ChatView[]),
-      chatMembers: ((chatMembersResult.data ?? []) as ChatMemberView[]),
+      chatMembers: ((chatMembersResult.data ?? []) as ChatMemberView[]).map((p) => {
+        const identidade = identidades.get(`${p.chat_id}:${p.member_id}`);
+        return { ...p, name: identidade?.name ?? null, photo_url: identidade?.photo_url ?? null };
+      }),
       messages: ((messagesResult.data ?? []) as MessageView[]),
       meetings: ((meetingsResult.data ?? []) as MeetingView[]),
       meetingActions: ((meetingActionsResult.data ?? []) as MeetingActionView[]),
