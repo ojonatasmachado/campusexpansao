@@ -389,6 +389,7 @@ export function Painel({
             </>
           );
         }
+        if (ativando) return null;
         return (
           <>
             <h2 className="painel-sec-t">Para resolver</h2>

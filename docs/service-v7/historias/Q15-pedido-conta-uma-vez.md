@@ -38,7 +38,7 @@ Decisão do usuário: fica só a linha no Para resolver. Revisar → abre uma fo
 Gestão abre Início, vê a linha de pedidos, toca Revisar e resolve dentro da folha. Depende do link de entrada, de pedidos pendentes e da permissão de gestão. Sem conteúdo, a linha some; sem rede, há erro com nova tentativa; sem permissão, linha e folha não são oferecidas.
 
 ## Construção
-usePedidosConta é a única fonte de entrada_pedidos. O Início carrega para master/pastor e calcula a linha pelo tamanho da própria lista, sem depender de NovosCadastros montado. A folha recebe os dados, carregar e remover; abrir não consulta outra vez. A promessa em andamento é compartilhada também no efeito duplo do Strict Mode, sem cache global; o teste interceptou uma única chamada inicial. A geração da carga descarta resposta antiga e o escopo impede exibir dados da organização anterior. Aprovar/recusar remove o pedido da lista compartilhada após sucesso. Sem pedidos, linha ausente; folha aberta vazia mostra Nenhum pedido pendente. O fallback Tudo em dia permanece para quando a fila toda estiver vazia. Para resolver também fica disponível durante a preparação inicial, evitando esconder pedidos de igrejas ainda sem programação.
+usePedidosConta é a única fonte de entrada_pedidos. O Início carrega para master/pastor e calcula a linha pelo tamanho da própria lista, sem depender de NovosCadastros montado. A folha recebe os dados, carregar e remover; abrir não consulta outra vez. A promessa em andamento é compartilhada também no efeito duplo do Strict Mode, sem cache global; o teste interceptou uma única chamada inicial. A geração da carga descarta resposta antiga e o escopo impede exibir dados da organização anterior. Aprovar/recusar remove o pedido da lista compartilhada após sucesso. Sem pedidos, linha ausente; folha aberta vazia mostra Nenhum pedido pendente. Fora da preparação, o fallback Tudo em dia permanece para quando a fila toda estiver vazia. Durante a preparação inicial, Para resolver só aparece se a fila tiver itens, evitando tanto esconder pedidos quanto contradizer o guia com um estado Tudo em dia.
 
 NovosCadastros usa Gaveta larga, Linha e Botao/BotaoIcone da biblioteca. Preserva busca de ficha, confirmação de recusa, aviso por avisar, erro e nova tentativa. Sem CSS novo, nova peça, migração ou mudança de política. Não sobrou onPedidosChange, entrada-fila ou id novos-cadastros nos dois consumidores; entrada_pedidos aparece apenas no hook.
 
@@ -83,3 +83,25 @@ Feita em 10/11/2026 por codex: decisão construída com hook único e Gaveta exi
 
 ## Referências funcionais (lei 16)
 A decisão de interface já veio do usuário; as fontes servem só para conferir a função. Planning Center separa o aviso de pedidos pendentes do lugar onde são revisados: https://www.planningcenter.com/changelog/people/request-access-to-lists-workflows-and-forms . ChurchSuite mantém inscrições pendentes até alguém autorizado ativar ou remover a pessoa: https://support.churchsuite.com/article/53-adding-people-to-small-groups . Aplicação nesta história: resumo no Início, decisão na folha, item resolvido sai da fila. Nenhum material visual de terceiros no git.
+
+
+## Revisão do PR #58: fila vazia na preparação
+
+Pedido do usuário: durante ativando, só renderizar Para resolver quando houver itens. A correção acrescenta `if (ativando) return null` depois do ramo que renderiza filas não vazias e antes do estado Tudo em dia. Nenhum título ou estado vazio aparece na preparação sem itens; fora da preparação, o fluxo permanece igual. Nenhum outro código de produto mudou nesta revisão.
+
+Prova numa organização local separada, criada por conta nova de teste e bootstrap_church_org_v2: Igreja Preparação Q15, org `126830d5-06ce-4345-8cc9-dcfa6f66d914`, church `595b1350-f056-4144-aa49-0b8880ddd470`. Sem cultos/eventos ou outros itens de fila. Nenhuma alteração de senha existente. Servidor `npm run dev:local -- --port 3115`, Supabase `127.0.0.1:54321`; login apresentou cookie sb-127-auth-token. Scripts e loader de foto.mjs fora do git.
+
+| Foto aberta, 1366×860 | Conteúdo conferido | Ações / limite | Palavras / limite | Classificação | MD5 |
+|---|---|---|---|---|---|
+| [Preparação sem pedidos](screenshots/Q15-preparacao-sem-pedidos.png) | Comece por aqui e guia da fase 1; zero título Para resolver, zero Tudo em dia e zero linhas de fila | 25 / 25 | 114 / 100 | fora da lei | 6c94acad1a418b99edc91915a507c810 |
+| [Preparação com um pedido](screenshots/Q15-preparacao-com-pedido.png) | Comece por aqui e Para resolver com somente a linha 1 pedido de conta pendente, Revisar →; sem bloco Novos cadastros ou Tudo em dia | 26 / 25 | 125 / 100 | fora da lei | bdec42a17176eafd54222e1bc1981edf |
+
+Fotos novas pelo foto.mjs com extensão de destinos somente em memória, abertas antes de usar; __medir(24) no mesmo quadro, tour fechado, selo Next oculto, networkidle e conteúdo esperado visível, retorno ao topo antes de medir/fotografar. Nenhuma sobreposição, alvo abaixo de 24 px ou rolagem lateral; duas molduras. A densidade da preparação continua acima de 25/100, registrada sem recortar conteúdo para forçar medida.
+
+Entre as fotos, q15.preparacao.pedido@teste.local preencheu o formulário real `/service/participar/JKX5E8SP`. POST /api/service/entrada respondeu 200 e estado pendente. A conta gestora q15.preparacao.gestao@teste.local só pertenceu à organização temporária; a igreja principal não foi usada nem modificada no teste.
+
+Limpeza: o primeiro DELETE da organização sofreu rollback por FK da auditoria durante o cascade. A segunda transação removeu filhos temporários antes da organização, sem desligar triggers, e concluiu COMMIT. Depois: organizacoes_fixture=0, contas_fixture=0, pedidos_fixture=0. Nenhum reset ou migração no banco local.
+
+Prova da principal intacta: snapshots de contagem e hash do conteúdo de todas as tabelas/views core/service com organization_id da principal, mais a própria core.organizations. `cmp` antes/depois sem diferenças. SHA256 de ambos: `4cd085f86166d81c78b715ff761fd15dadfb548c7d96c6806a45855954ee2f9c`.
+
+Checks desta revisão: `npx tsc --noEmit -p .`, ESLint de Inicio.tsx, lei 12 estática, componentes, contraste dos temas/gráficos, todos os contratos do service.yml e pacote de produção: exit=0. Captura: 26 pass, 0 fail. Build, migrações e SQL ficam também no CI do novo HEAD, aguardado até encerrar antes da entrega. Servidor encerrado; lsof sem listener e bind localhost:3115 OK, porta livre. Sem merge.
