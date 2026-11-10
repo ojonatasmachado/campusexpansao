@@ -14,6 +14,19 @@ Este arquivo é o índice único das peças de interface do Service. Vale para q
 5. O visual das peças fica em `app/service/ui/biblioteca.css` (pranchas 1 e 6 aplicadas em 2026-10-22); mudar a aparência é mexer só ali.
 6. Nenhuma tela escreve `<button>`: o ponto de partida é `Acao` (ou a peça específica). Peça já centralizada ganha uma regra em `scripts/check-service-componentes.ts`, que o CI roda: escrever a classe à mão volta a falhar.
 
+## Hierarquia de ações (Q13, 10/11/2026)
+
+Principal > secundário > discreto > texto. O padrão de Botao é secundario.
+
+| Variante | Papel e aparência |
+|---|---|
+| principal | Ação preferida, cheia na cor da igreja; texto em accent-ink. |
+| secundario | Alternativa com superfície neutra. |
+| discreto | Ação auxiliar sem superfície, texto neutro. Hover neutro leve, foco visível e alvo preservado. Não usa a cor da igreja. |
+| texto | Aparência de link, sem superfície. A cor atual de panel-link/m6-link permanece fora da Q13; revisão registrada no PENDENTES. |
+
+A regra de cor vale por tela, não por linha repetida. Estado não pode depender só da cor: texto, Selo ou aria-pressed, e disabled/aria-busy nativos pela Acao. Orei já alterna Orei/Você orou e aria-pressed. Entrada/login têm classes próprias, preservadas. A galeria abre na aba Botões, com os quatro níveis lado a lado, estados nativos de hover/foco e linha desativada; Outras peças preserva os exemplos anteriores.
+
 ## Como trocar (regra)
 
 Nada de apagar e recolocar. A tela fica, a peça muda:
