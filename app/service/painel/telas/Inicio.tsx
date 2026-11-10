@@ -330,13 +330,12 @@ export function Painel({
         </section>
       )}
       {/* E3: pendências do módulo Escalas, por prazo; uma linha por culto,
-         sem cortar os próximos 14 dias. A cobertura detalhada vive no Panorama. */}
+         até três prazos à vista e uma entrada para a lista completa. O detalhe vive no Panorama. */}
       {!ativando && (() => {
-        const filas: Array<{ key: string; ic: string; t: string; s: string; go: string; action: () => void }> = [];
-        for (const { conteudo: { evento, resumo } } of faltas) {
+        const filas: Array<{ key: string; t: string; s: string; go: string; action: () => void }> = [];
+        for (const { conteudo: { evento, resumo } } of faltas.slice(0, 3)) {
           filas.push({
             key: `cobertura-${evento.id}`,
-            ic: "escalas",
             t: `${evento.name} · ${formatDateBR(evento.eventDate)}`,
             s: ` · ${resumo}`,
             go: "Ver panorama →",
@@ -344,22 +343,31 @@ export function Painel({
           });
         }
         if (!liderDeTime && podeAbrir("visitantes") && visitantesSemContato > 0) {
-          filas.push({ key: "visitantes-contato", ic: "visitante", t: visitantesSemContato === 1 ? "1 visitante sem contato" : `${visitantesSemContato} visitantes sem contato`, s: " · há mais de 48h", go: "Ver →", action: () => setRoute("visitantes") });
+          filas.push({ key: "visitantes-contato", t: visitantesSemContato === 1 ? "1 visitante sem contato" : `${visitantesSemContato} visitantes sem contato`, s: " · há mais de 48h", go: "Ver →", action: () => setRoute("visitantes") });
         }
         if (!liderDeTime && podeAbrir("visitantes") && visitantesPeloLink > 0) {
-          filas.push({ key: "visitantes-link", ic: "visitante", t: `${plural(visitantesPeloLink, "visitante")} ${visitantesPeloLink === 1 ? "se cadastrou" : "se cadastraram"} pelo link`, s: " · esperando o 1º contato", go: "Ver →", action: () => setRoute("visitantes") });
+          filas.push({ key: "visitantes-link", t: `${plural(visitantesPeloLink, "visitante")} ${visitantesPeloLink === 1 ? "se cadastrou" : "se cadastraram"} pelo link`, s: " · esperando o 1º contato", go: "Ver →", action: () => setRoute("visitantes") });
         }
         if (!liderDeTime && journeyRequests.length > 0) {
-          filas.push({ key: "jornada", ic: "membros", t: journeyRequests.length === 1 ? ct("1 pedido na {caminhada}") : ct(`${journeyRequests.length} pedidos na {caminhada}`), s: " · esperando aprovação", go: "Revisar →", action: () => { const el = document.getElementById("caminhada-pendente"); if (el) el.scrollIntoView({ behavior: "smooth", block: "center" }); else setRoute("membros"); } });
+          filas.push({ key: "jornada", t: journeyRequests.length === 1 ? ct("1 pedido na {caminhada}") : ct(`${journeyRequests.length} pedidos na {caminhada}`), s: " · esperando aprovação", go: "Revisar →", action: () => { const el = document.getElementById("caminhada-pendente"); if (el) el.scrollIntoView({ behavior: "smooth", block: "center" }); else setRoute("membros"); } });
         }
         if (!liderDeTime && pedidosPendentes > 0) {
-          filas.push({ key: "novos-cadastros", ic: "pessoa", t: pedidosPendentes === 1 ? "1 pedido de conta pendente" : `${pedidosPendentes} pedidos de conta pendentes`, s: " · aguardando aprovação", go: "Revisar →", action: () => { const el = document.getElementById("novos-cadastros"); if (el) el.scrollIntoView({ behavior: "smooth", block: "center" }); } });
+          filas.push({ key: "novos-cadastros", t: pedidosPendentes === 1 ? "1 pedido de conta pendente" : `${pedidosPendentes} pedidos de conta pendentes`, s: " · aguardando aprovação", go: "Revisar →", action: () => { const el = document.getElementById("novos-cadastros"); if (el) el.scrollIntoView({ behavior: "smooth", block: "center" }); } });
         }
         if (!liderDeTime && cuidado && cuidado.lista.length > 0) {
-          filas.push({ key: "cuidado", ic: "alerta", t: `${plural(cuidado.lista.length, "pessoa")} sem registro`, s: ` · há ${plural(cuidado.semanas, "semana")} ou mais`, go: "Ver →", action: () => setRoute("membros") });
+          filas.push({ key: "cuidado", t: `${plural(cuidado.lista.length, "pessoa")} sem registro`, s: ` · há ${plural(cuidado.semanas, "semana")} ou mais`, go: "Ver →", action: () => setRoute("membros") });
         }
         if (!liderDeTime && cuidado && (cuidado.criancas?.length ?? 0) > 0) {
-          filas.push({ key: "kids-sumindo", ic: "kids", t: `${plural(cuidado.criancas!.length, "criança")} sem check-in`, s: " · vale um contato", go: "Ver →", action: () => setRoute("criancas") });
+          filas.push({ key: "kids-sumindo", t: `${plural(cuidado.criancas!.length, "criança")} sem check-in`, s: " · vale um contato", go: "Ver →", action: () => setRoute("criancas") });
+        }
+        if (faltas.length > 3) {
+          filas.push({
+            key: "cobertura-todos",
+            t: `${ct("Ver todos os {cultos} com falta")} (${plural(faltas.length, ct("{culto}"))})`,
+            s: "",
+            go: "→",
+            action: () => setRoute("escalas"),
+          });
         }
         if (filas.length > 0) {
           return (
@@ -370,7 +378,7 @@ export function Painel({
                   <Acao className={linhaClasse({})} key={f.key} onClick={f.action}>
                     <div className="mini-main">
                       <div className="mini-title">{f.t}</div>
-                      <div className="mini-sub">{f.s.replace(/^ · /, "")}</div>
+                      {f.s && <div className="mini-sub">{f.s.replace(/^ · /, "")}</div>}
                     </div>
                     <span className="text-pn-14">{f.go}</span>
                   </Acao>
