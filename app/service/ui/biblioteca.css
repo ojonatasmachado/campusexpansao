@@ -73,7 +73,7 @@
 }
 
 .btn-ghost:focus-visible { outline: 2px solid var(--white); outline-offset: 2px; }
-.btn-ghost:disabled, .btn-ghost[aria-disabled="true"] { background: transparent; color: var(--white); opacity: .75; }
+.btn-ghost:disabled, .btn-ghost[aria-disabled="true"] { background: transparent; color: var(--muted); opacity: 1; }
 
 .btn-danger, .m6-btn.danger { background: var(--danger-dim); color: var(--danger); border-color: transparent; }
 

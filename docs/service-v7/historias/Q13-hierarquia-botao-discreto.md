@@ -192,7 +192,7 @@ Usar B apenas como correção localizada de transição, pois mantém o contrato
 
 ## Construção da etapa 2
 
-Apenas .btn-ghost e seus estados mudaram em biblioteca.css: fundo transparente, texto var(--white), hover neutro a 4%, foco com outline neutro de 2 px e offset de 2 px. Desativado mantém disabled e usa opacidade 0,75 para preservar leitura, em vez dos 0,4 herdados de btn. Dimensões, raio, handlers e dados não mudam. Não se adicionou outline:none. public/components.css e a regra antiga em service-app.css ficaram intactos; panel-link e m6-link também.
+Apenas .btn-ghost e seus estados mudaram em biblioteca.css: fundo transparente, texto var(--white), hover neutro a 4%, foco com outline neutro de 2 px e offset de 2 px. Na primeira construção, desativado manteve disabled e usou opacidade 0,75. A revisão do PR #56, registrada abaixo, substitui esse tratamento por var(--muted) e opacidade 1. Dimensões, raio, handlers e dados não mudam. Não se adicionou outline:none. public/components.css e a regra antiga em service-app.css ficaram intactos; panel-link e m6-link também.
 
 Contrato registrado no BIBLIOTECA e comentário de Botao. Galeria usa Abas, PainelAba, Cartao e Botao existentes: Botões mostra as quatro variantes, linha desativada e instrução para hover/foco nativos; Outras peças preserva a galeria anterior. A aba é navegação real por teclado/clique, não recorte ou ocultação por CSS para forçar o medidor. A primeira dobra mantém 10 ações e passa de 91 para 61 palavras. Na galeria há duas amostras de principal (ativa/desativada), justificadas pela demonstração dos estados, não duas ações preferidas de um fluxo do produto. Texto continua com a cor antiga e isso está dito na amostra, conforme o recorte decidido.
 
@@ -247,9 +247,30 @@ Início, Entrada e Escalas continuam fora da lei de densidade por ações; Iníc
 
 Pedido criado por script fora do repositório: BEGIN, INSERT 0 1, COMMIT. Removido: DELETE 1. cmp dos snapshots de service.entry_requests: sem diferenças; SHA256 antes/depois 37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570. Outra cor foi usada só por parâmetro da demo; nenhuma personalização foi gravada. Sem migração, reset ou mudança de senha. As duas pendências solicitadas foram acrescentadas na seção 3: links de texto e pedido de conta duplicado (lei 14).
 
-## Verificações finais e notas
+## Verificações da primeira construção e notas
 
 TypeScript (npx tsc --noEmit -p .), ESLint de Botao.tsx/Galeria.tsx, lei 12 estática, componentes, internacionalização, check-theme-contrast.ts e npm run build: saída 0. No CSS, somente btn-ghost e seus estados mudaram. Os quatro exemplos da galeria geram avisos visíveis; desativados permanecem bloqueados; Outras peças abre Campos e janela, que fecha com Esc; console sem erro inesperado. Hover no desativado conferido neutro. Não houve alteração dos legados, de Orei ou do tema. Servidor encerrado, lsof sem listener e bind localhost:3113 OK, porta livre.
 
 ## Notas
 Feita em 10/11/2026 por codex: opção A construída no recorte decidido, estados auditados, contrato e galeria atualizados, seis fotos de depois e referência da galeria abertas, 512 medições de contraste aprovadas, ações sem aumento, banco restaurado e servidor encerrado. Q13 retirada do PENDENTES; links de texto e pedido duplicado permanecem lá. Densidade e sobreposição herdadas registradas. Aparelho real e leitor de tela ficaram fora. PR para main, sem merge.
+
+
+## Revisão do PR #56: discreto desativado
+
+Decisão do usuário: desativado deve parecer inativo nos dois modos; não precisa atingir 4,5:1, mas deve continuar legível. A regra final de `.btn-ghost:disabled` e `[aria-disabled="true"]` usa `color: var(--muted)` e `opacity: 1`, com fundo transparente. Nenhuma outra regra de produto mudou nesta revisão. O token é o texto secundário do tema. Precisão sobre o diagnóstico: o secundário desativado atual não declara um token especial; herda `--white` e opacidade .4 de `.btn:disabled`. Não se alterou esse botão.
+
+As descrições de opacidade .75 e a matriz de 512 medidas acima são provas da primeira construção, anteriores a esta revisão. Os estados ativos continuam iguais. Na galeria atual, o discreto normal mede 16,64:1 no escuro e 15,96:1 no claro; desativado mede 5,11:1 e 6,30:1, respectivamente. Texto neutro apagado, sem superfície; foco de teclado do ativo permanece visível. Axe sem violações ou contraste incompleto nas duas galerias, console sem erros. Fotos 1366×860 abertas e inspecionadas:
+
+| Foto | Descrição: ativo e desativado | Ações / limite | Palavras / limite | MD5 |
+|---|---|---|---|---|
+| [Galeria escura revisada](screenshots/Q13-revisao-desativado-galeria.png) | Ativo claro com contorno de foco; desativado cinza perceptivelmente mais apagado e legível | 10 / 25 | 61 / 100 | 4ae74cafbb9d0d5b2a7b1dbd5dbd5284 |
+| [Galeria clara revisada](screenshots/Q13-revisao-desativado-claro.png) | Ativo escuro com foco; desativado cinza, mais claro e legível sobre papel | 10 / 25 | 61 / 100 | 7e41c68ce3c2d2bb4b145c9779df7119 |
+
+Capturas seguem o método de foto.mjs, em script temporário fora do repositório: networkidle, fontes/animações prontas, selo Next escondido e conferido, medição `__medir(24)` na mesma tela. Sem aumento de ações ou palavras nas galerias.
+
+
+[Foto da tela real, Página da igreja > Links](screenshots/Q13-revisao-desativado-real.png), aberta: primeira seta ↑ cinza e desativada, ↓ clara e ativa; na segunda linha o estado inverte. CSS computado: desativado rgb(139,140,130), opacity 1; ativo rgb(250,250,247), opacity 1. As duas setas medem 36×32 px. MD5 `4a67c942ebdee8cdf969ed1d13439462`. Login pelo formulário como master@teste.local e navegação por Mais > Comunicação > Página da igreja > Links. Os dois links de demonstração foram interceptados somente no GET church_links do navegador; o banco local tinha zero links e continuou com zero. Nenhuma gravação, senha ou personalização alterada.
+
+A mesma dobra da foto real mede 40 ações / limite 25 e 104 palavras / limite 100: fora da lei, condição da tela existente, sem mudança de conteúdo ou controles nesta revisão. Quatro molduras; sem sobreposições ou rolagem lateral. O medidor aponta um alvo pequeno no crédito do preview (180×15), não nas setas. Auditoria: zero violações Axe, oito verificações de contraste incompletas no preview; não se apresenta essa tela como inteiramente aprovada pela lei 12. Galerias continuam sem verificações incompletas.
+
+Verificação desta revisão: `npx tsc --noEmit -p .` e `npx eslint app/service/ui/Botao.tsx app/service/demo/biblioteca/Galeria.tsx` concluíram sem saída/erro. `npx tsx scripts/check-service-componentes.ts`: Componentes da biblioteca: ok. `npx tsx scripts/check-theme-contrast.ts`: oito famílias ok, acentos e estados aprovados, saída 0. A primeira tentativa dos scripts tsx encontrou bloqueio de rede do sandbox; a execução com acesso ao registro concluiu normalmente. `git diff --check`: sem saída. Três fotos novas abertas, duas galerias sem erros de console. Revisão no mesmo PR #56, sem merge.
