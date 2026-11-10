@@ -3,8 +3,11 @@
    painel (.btn, .btn-pri, .btn-sec, .btn-ghost, .btn-danger, .btn-sm) e
    membro (.m6-btn, .pri, .sec, .danger, .small, .full), mais as telas de entrada
    (.login-btn, .login-link, cores CE.X do AuthShell) e o mapa (.mp-botao).
-   Não traz CSS novo: cada tela continua com o visual que tinha, e unificar o
-   visual daqui pra frente é mexer só neste arquivo. */
+   Hierarquia: principal (cor da igreja, cheio) > secundário (superfície neutra)
+   > discreto (sem superfície, texto neutro) > texto (aparência de link).
+   O padrão é secundário. Visual compartilhado em ui/biblioteca.css; discreto
+   do painel é neutro também no hover e tem foco visível. A cor dos links de
+   texto fica fora da Q13 e segue como pendência, sem mudar entrada ou toque. */
 
 import type { ButtonHTMLAttributes, ReactNode, Ref } from "react";
 import { Acao } from "./Acao";

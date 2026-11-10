@@ -1,8 +1,8 @@
 ---
 id: Q13
 titulo: Corrigir hierarquia visual do botão discreto
-tipo: decisao
-status: reservada
+tipo: codigo
+status: feita
 quem: codex
 desde: 2026-11-10
 branch: historia/Q13-hierarquia-botao-discreto
@@ -11,7 +11,7 @@ tamanho: P
 ---
 
 ## Por quê
-No painel, Recusar em NovosCadastros chama mais atenção que Aprovar. A variante discreto usa a cor da igreja, enquanto secundario é neutro. Origem: seção 3 do PENDENTES. Esta etapa entrega diagnóstico e duas propostas; não muda código de produto.
+No painel, Recusar em NovosCadastros chama mais atenção que Aprovar. A variante discreto usa a cor da igreja, enquanto secundario é neutro. Origem: seção 3 do PENDENTES. A etapa 1 entregou diagnóstico e duas propostas. A etapa 2 constrói a opção A, com links de texto fora por decisão do usuário.
 
 ## Arquivos (trilho)
 - `docs/service-v7/historias/Q13-hierarquia-botao-discreto.md`
@@ -23,11 +23,12 @@ No painel, Recusar em NovosCadastros chama mais atenção que Aprovar. A variant
 - `docs/service-v7/historias/screenshots/Q13-*.png`
 
 ## Pronto quando
-- Intenção documentada na biblioteca e galeria confrontada com CSS computado.
-- Usos contados, vizinhos por linha identificados e cinco telas mais afetadas listadas.
-- Opções A (peça neutra) e B (troca dos usos), com alcance e risco.
-- Fotos de antes de NovosCadastros com pedido e duas outras telas, abertas, medidas e com md5.
-- Dados temporários restaurados, commit documental e fotos publicados, porta livre; sem PR.
+- Discreto sem superfície e texto neutro; hover neutro, foco visível e contraste mínimo 4,5:1 nos temas.
+- Alteração visual restrita a btn-ghost e estados em biblioteca.css; regras antigas não voltam a vencer.
+- Estados auditados sem depender só de cor, contrato e galeria atualizados.
+- Seis fotos de depois abertas, medidas, sem aumentar ações e com md5; dados locais restaurados.
+- Links de texto e pedido duplicado registrados no PENDENTES.
+- tsc, ESLint, lei 12 estática, componentes, contraste e CI Service verdes; PR sem merge e porta livre.
 
 ## Decisão
 Em 10/11/2026, o usuário escolheu a opção A: corrigir a peça. Principal cheio na cor da igreja, secundário com superfície neutra, discreto sem superfície e texto neutro; hover neutro leve e foco visível. Mudar somente as regras btn-ghost e seus estados em biblioteca.css. Links de texto (variante texto, panel-link e m6-link) ficam fora desta construção e vão para o PENDENTES. A galeria documenta os quatro níveis e seus estados reais; nenhum estado pode depender só de cor. O pedido duplicado no Início também fica no PENDENTES. Esta decisão prevalece sobre o alcance sugerido na proposta da etapa 1.
@@ -145,7 +146,7 @@ Critério: consequência da ação e multiplicação do acento, não frequência
 | Financeiro / cadastros e formulários | Oito discretos nos dois arquivos. Cancelar renomeação compete com Salvar na mesma linha; Renomear/Arquivar e ações de comprovante multiplicam o acento. |
 | Escalas | Cinco discretos nos dois arquivos; cabeçalho com Preencher automaticamente e Publicar e avisar, vagas repetidas com Escalar e Cancelar ao lado de Deixar a vaga aberta. O principal domina, mas a cor se espalha. |
 
-## Proposta
+## Proposta da etapa 1 (histórico, subordinado à Decisão)
 
 A contagem de telas abaixo é um mapa de regressão agrupado por tela/fluxo, não a afirmação de que arquivo equivale a rota. Janelas e repetições de uma lista não viram telas novas.
 
@@ -175,16 +176,80 @@ Todas novas, 1366×860, master@teste.local, login pelo formulário em localhost:
 
 Todas fora da lei de densidade por ações; Início e Entrada também por palavras. Três molduras em todas. Zero alvos abaixo de 24 px e zero rolagem lateral. Entrada tem uma sobreposição preexistente entre a opção Entra direto como membro e a ajuda flutuante; Início e Escalas não têm sobreposição. Nada foi corrigido ou escondido nesta etapa. Apenas tema local escuro medido; contraste multitema, aparelho real e leitor de tela ficam para a construção. Não há foto de depois porque o produto não foi alterado.
 
-## Entrega desta etapa
+## Entrega da etapa 1
 
 Dados locais: pedido criado por /private/tmp/Q13-fixture.sql (BEGIN, INSERT 0 1, COMMIT) e removido (DELETE 1). Snapshots de entry_requests idênticos por cmp; SHA256 dos dois: 37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570. Nenhuma aprovação, recusa, troca de regra, reset ou mudança de senha.
 
 Servidor encerrado: lsof sem listener e bind localhost:3113 OK, porta livre. git diff --exit-code origin/main -- app evolucoes public tools scripts supabase: saída 0. Código de produto, CSS, ferramentas e banco estrutural não alterados. Não se executaram tsc, ESLint, build ou CI por ser entrega de diagnóstico/documentação, sem alteração de código. Nenhum PR aberto. O vínculo Q13 no PENDENTES foi commitado na reserva; o commit final contém somente esta história e as três fotos.
 
-## Notas
+## Notas da etapa 1
 Etapa 1 de 2 concluída em 10/11/2026 por codex: diagnóstico, inventário, duas opções e três fotos abertas. História continua reservada e no PENDENTES; construção aguarda decisão do usuário. Nenhuma opção foi aplicada.
 
-## Recomendação
+## Recomendação da etapa 1
 Escolher A: discreto neutro na peça, abaixo do secundário, com o acento reservado à ação principal.
 Formalizar também a variante texto e validar as telas críticas nos dois modos antes da construção final.
 Usar B apenas como correção localizada de transição, pois mantém o contrato visual contraditório.
+
+## Construção da etapa 2
+
+Apenas .btn-ghost e seus estados mudaram em biblioteca.css: fundo transparente, texto var(--white), hover neutro a 4%, foco com outline neutro de 2 px e offset de 2 px. Desativado mantém disabled e usa opacidade 0,75 para preservar leitura, em vez dos 0,4 herdados de btn. Dimensões, raio, handlers e dados não mudam. Não se adicionou outline:none. public/components.css e a regra antiga em service-app.css ficaram intactos; panel-link e m6-link também.
+
+Contrato registrado no BIBLIOTECA e comentário de Botao. Galeria usa Abas, PainelAba, Cartao e Botao existentes: Botões mostra as quatro variantes, linha desativada e instrução para hover/foco nativos; Outras peças preserva a galeria anterior. A aba é navegação real por teclado/clique, não recorte ou ocultação por CSS para forçar o medidor. A primeira dobra mantém 10 ações e passa de 91 para 61 palavras. Na galeria há duas amostras de principal (ativa/desativada), justificadas pela demonstração dos estados, não duas ações preferidas de um fluxo do produto. Texto continua com a cor antiga e isso está dito na amostra, conforme o recorte decidido.
+
+### Estados auditados
+
+| Caso | Evidência | Resultado |
+|---|---|---|
+| Orei, modules/oracao/Oracao.tsx:272 | Alterna Orei/Você orou, ícone e aria-pressed={orei}; tamanho toque gera m6-btn, não btn-ghost | Estado já explícito e fora do seletor alterado; nenhum ajuste necessário. |
+| Entrada/login, ui/Botao.tsx, login/LoginForm.tsx:138-143, onboarding/PedidoEmEspera.tsx:23-28 | Família entrada gera login-btn/login-link; login mostra Aguarde/Enviando e pedido mostra Saindo; usa desativado | Não corresponde a btn-ghost; texto e atributo nativo continuam informando estado. Nenhum ajuste necessário. |
+| Desativado/carregando, ui/Acao.tsx | disabled={desativado || carregando}, aria-busy; setas nos limites, envio e busca usam esses atributos | Estado não depende do matiz; mantém desativação e mudança de opacidade. Na galeria existe a linha Desativados. |
+| Escalas, modules/escalas/Escalas.tsx | Vaga diz Escalar; pessoa ocupante tem nome e Selo Aguardando/estado, separados do ghost | Neutralizar Escalar não apaga o estado da vaga. |
+| Demais 60 locais e seis botaoClasse do inventário | Não há outro discreto com seleção persistente expressa somente por classe de cor; textos de ação e desativado permanecem | Nenhum estado que exigisse novo Selo ou aria-pressed foi encontrado. Não se inventou estado novo. |
+
+### CSS computado depois
+
+No painel, Recusar continua btn btn-ghost btn-sm, mas agora é rgb(250,250,247), fundo rgba(0,0,0,0), borda 0 px. Aprovar permanece secundário, texto branco sobre superfície neutra de 8%. O CSSOM mostra a regra antiga muted/borda 0,5 px seguida pela regra nova white/borda 0; a nova vence. No hover da galeria, texto permanece neutro e o fundo é branco a 4%, sem o antigo vermelho. O foco é solid, 2 px, cor do texto neutro. Hover sobre o ghost desativado também foi conferido: fundo transparente, borda 0, texto neutro, opacity 0.75 e disabled=true. Nenhum estilo do site foi carregado para substituir a peça.
+
+### Contraste e qualidade
+
+scripts/check-theme-contrast.ts: saída 0 para as oito famílias de neutros. Captura com tools/captura-service/lib/auditoria.mjs (axe) e cores computadas no navegador: 32 combinações (oito famílias no modo próprio, quatro cores de igreja: oliva, barro, azul e roxo), quatro superfícies (ink, graphite, graphite-2, card) e quatro estados (normal, hover, foco e desativado), 512 medições. A matriz aplica superfícies do próprio tema à amostra apenas no navegador do teste, sem gravar CSS ou personalização. As fotos são das telas normais. Branco/neutro é resolvido pelo tema em cada modo; a composição inclui opacidade e superfície real no cálculo de contraste.
+
+| Família | Modo | Menor contraste do discreto / mínimo |
+|---|---|---|
+| tinta | escuro | 9,19 / 4,5 |
+| carvao | escuro | 9,12 / 4,5 |
+| noite | escuro | 9,03 / 4,5 |
+| cafe | escuro | 9,17 / 4,5 |
+| papel | claro | 6,14 / 4,5 |
+| branco | claro | 7,19 / 4,5 |
+| gelo | claro | 6,86 / 4,5 |
+| areia | claro | 6,62 / 4,5 |
+
+Saída final da matriz: configuracoes=32, medidas=512, pior=6.136420647814242. Axe: zero violações e zero verificações incompletas de contraste nas 32 combinações e nas seis fotos finais. Nas seis fotos, nenhum texto abaixo de 12 px, alvo abaixo de 24 px ou rolagem lateral. Foco por Tab visível e desativados nativos conferidos. Aparelho real e leitor de tela não testados.
+
+### Fotos de depois e comparação
+
+Login real master@teste.local; localhost:3113, npm run dev:local, 1366×860. Mesmo método de foto.mjs, com destinos extras e auditoria em cópia temporária fora do repositório; nenhum arquivo da ferramenta foi alterado. Tour fechado, Next escondido e conferido, networkidle/fontes/animações concluídas. __medir(24) na mesma primeira dobra da imagem. Entrada foi recapturada com retorno ao topo depois da auditoria, que deslocava a página; a foto final e a medida final são do mesmo quadro. Nenhuma ação aumentou.
+
+| Foto aberta | Comparação com antes | Ações antes → depois / limite | Palavras depois / limite | MD5 |
+|---|---|---|---|---|
+| [Galeria antes, etapa 2](screenshots/Q13-galeria-antes-etapa2.png) | Referência anterior: Campos na primeira dobra | 10 → 10 / 25 | 91 / 100 | d6f3ae724f9b744fb48d92499774b9b0 |
+| [Novos cadastros depois](screenshots/Q13-depois-novos-cadastros.png) | Pedido de teste Q13; Recusar sem pílula colorida, Aprovar mantém superfície | 33 → 33 / 25 | 131 / 100 | 8d7a8d2e7d93bbc7f665f50f738e1ac4 |
+| [Entrada depois](screenshots/Q13-depois-entrada.png) | Copiar código, WhatsApp, Ver a tela e Gerar outro agora neutros | 41 → 41 / 25 | 230 / 100 | caa7a3b20a706ee28bd312c96e45d2fe |
+| [Escalas depois](screenshots/Q13-depois-escalas.png) | Preencher e Escalar neutros; Publicar e avisar conserva a cor | 35 → 35 / 25 | 64 / 100 | 0a11f2f98c6b772602e4319ad06858ea |
+| [Galeria depois](screenshots/Q13-depois-galeria.png) | Quatro variantes lado a lado; foco e hover reais no discreto; linha desativada | 10 → 10 / 25 | 61 / 100 | 14e84c09eb10bc058e63b43e2f176fcb |
+| [Modo claro](screenshots/Q13-depois-claro.png) | Mesma hierarquia em papel; discreto escuro, contorno de foco neutro | 10 → 10 / 25 | 61 / 100 | cb086fd297a905faeac2fa2a759a8c2f |
+| [Outra cor](screenshots/Q13-depois-cor.png) | Demo com cor barro C5805A; principal muda, discreto fica neutro | 10 → 10 / 25 | 61 / 100 | 47e3236b189b73f9a587bb3acf3d1f07 |
+
+Início, Entrada e Escalas continuam fora da lei de densidade por ações; Início e Entrada também por palavras. Três molduras herdadas nessas telas. Entrada mantém a sobreposição já registrada da ajuda com Entra direto como membro; não foi corrigida fora do escopo. Galeria tem duas molduras, sem sobreposição e dentro dos limites numéricos. O medidor conta as amostras principal ativa/desativada como dois botões cheios no escuro; é uma demonstração de estados. Cor de texto permanece pendente por decisão do usuário. Não se apresentou a mudança como correção completa de densidade ou de todos os usos de cor.
+
+### Banco e pendências
+
+Pedido criado por script fora do repositório: BEGIN, INSERT 0 1, COMMIT. Removido: DELETE 1. cmp dos snapshots de service.entry_requests: sem diferenças; SHA256 antes/depois 37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570. Outra cor foi usada só por parâmetro da demo; nenhuma personalização foi gravada. Sem migração, reset ou mudança de senha. As duas pendências solicitadas foram acrescentadas na seção 3: links de texto e pedido de conta duplicado (lei 14).
+
+## Verificações finais e notas
+
+TypeScript (npx tsc --noEmit -p .), ESLint de Botao.tsx/Galeria.tsx, lei 12 estática, componentes, internacionalização, check-theme-contrast.ts e npm run build: saída 0. No CSS, somente btn-ghost e seus estados mudaram. Os quatro exemplos da galeria geram avisos visíveis; desativados permanecem bloqueados; Outras peças abre Campos e janela, que fecha com Esc; console sem erro inesperado. Hover no desativado conferido neutro. Não houve alteração dos legados, de Orei ou do tema. Servidor encerrado, lsof sem listener e bind localhost:3113 OK, porta livre.
+
+## Notas
+Feita em 10/11/2026 por codex: opção A construída no recorte decidido, estados auditados, contrato e galeria atualizados, seis fotos de depois e referência da galeria abertas, 512 medições de contraste aprovadas, ações sem aumento, banco restaurado e servidor encerrado. Q13 retirada do PENDENTES; links de texto e pedido duplicado permanecem lá. Densidade e sobreposição herdadas registradas. Aparelho real e leitor de tela ficaram fora. PR para main, sem merge.
