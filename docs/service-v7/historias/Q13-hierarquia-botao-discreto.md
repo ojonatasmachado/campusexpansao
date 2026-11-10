@@ -16,6 +16,10 @@ No painel, Recusar em NovosCadastros chama mais atenção que Aprovar. A variant
 ## Arquivos (trilho)
 - `docs/service-v7/historias/Q13-hierarquia-botao-discreto.md`
 - `docs/service-v7/PENDENTES.md`
+- `docs/service-v7/BIBLIOTECA.md`
+- `app/service/ui/biblioteca.css`
+- `app/service/ui/Botao.tsx`
+- `app/service/demo/biblioteca/Galeria.tsx`
 - `docs/service-v7/historias/screenshots/Q13-*.png`
 
 ## Pronto quando
@@ -24,6 +28,9 @@ No painel, Recusar em NovosCadastros chama mais atenção que Aprovar. A variant
 - Opções A (peça neutra) e B (troca dos usos), com alcance e risco.
 - Fotos de antes de NovosCadastros com pedido e duas outras telas, abertas, medidas e com md5.
 - Dados temporários restaurados, commit documental e fotos publicados, porta livre; sem PR.
+
+## Decisão
+Em 10/11/2026, o usuário escolheu a opção A: corrigir a peça. Principal cheio na cor da igreja, secundário com superfície neutra, discreto sem superfície e texto neutro; hover neutro leve e foco visível. Mudar somente as regras btn-ghost e seus estados em biblioteca.css. Links de texto (variante texto, panel-link e m6-link) ficam fora desta construção e vão para o PENDENTES. A galeria documenta os quatro níveis e seus estados reais; nenhum estado pode depender só de cor. O pedido duplicado no Início também fica no PENDENTES. Esta decisão prevalece sobre o alcance sugerido na proposta da etapa 1.
 
 ## Diagnóstico: intenção e regra que vence
 
