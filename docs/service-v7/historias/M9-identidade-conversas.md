@@ -84,5 +84,7 @@ Apenas 0105 foi aplicada no banco local; pacote producao.sql regenerado e confer
 
 Servidor encerrado: lsof sem listener e bind localhost:3109 OK, porta livre. TypeScript, ESLint dos arquivos tocados, lei 12, componentes, contraste, contrato de identidade e build final: saída 0. O teste SQL de isolamento também passou com ROLLBACK.
 
+O primeiro CI apontou a tradução ausente de Pessoa indisponível. A fonte e os três catálogos foram completados; o contrato de internacionalização foi executado novamente.
+
 ## Notas
 Feita em 09/11/2026 por codex: causa provada antes da correção, identidade mínima autorizada nos dois lados, fallback honesto, cinco fotos abertas, testes e build locais aprovados, dados restaurados e servidor encerrado; PR para revisão, sem merge.
