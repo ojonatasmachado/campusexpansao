@@ -74,3 +74,9 @@ A decisão segue a Q15, sem redesenhar alternativas. Como conferência funcional
 Reprodução no navegador local: interceptado apenas `PATCH /rest/v1/journey_change_requests` e respondido com 500. A foto `Q16-falha.png` mostra a Gaveta com Maria ainda listada, aviso “Não conseguimos revisar o pedido agora. Tente de novo.” e botões ativos. Removida a interceptação, Aprovar retornou PATCH 200; `Q16-recuperado.png` mostra a Gaveta sem pendências e a linha removida (contagem 1 → 0). Ambas as fotos foram abertas; MD5: falha `0217f8d24dc326bd778eb3398a784a95`, recuperação `b63c74b47da8f5f6bbd41beac12ac4d9`.
 
 Banco após limpeza: pedido criado para o teste removido, dois eventos de integração gerados pelas tentativas removidos, jornada da Maria restaurada em `[1,1,0,0,1]`; contagem global de pedidos `0`. A falha simulada atingiu o PATCH depois da gravação da etapa, por isso os eventos e o índice da jornada precisaram ser restaurados.
+
+## Correção do JornadaEditModal antes do merge
+
+`salvar` agora mantém `onRefresh` e `onClose` no caminho de sucesso, avisa com o termo da igreja em caso de falha e sempre redefine `saving` no `finally`. Teste no painel local, ficha de Maria: interceptado `PATCH /rest/v1/members` com 500. `Q16-modal-falha.png` aberta: modal continua aberto, aviso aparece e Salvar está ativo. Sem interceptação, o PATCH real retornou 200 e o modal fechou; `Q16-modal-salvo.png` aberta mostra a ficha. MD5: falha `4ccdcc959309b5ea256c91fd148efd66`, salvo `375c3f84aca541204f924300b3d3a938`.
+
+Limpeza: os dois eventos da tentativa foram removidos, jornada da Maria restaurada a `[1,1,0,0,1]`, nenhum pedido pendente. O aviso anterior permanece visível sobre o drawer na captura após fechar o modal; o problema de camada foi adicionado ao PENDENTES, sem correção nesta entrega.

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTermos } from "../../../lib/vocabulario-context";
 import { JRN_STEPS } from "../../caminhada";
+import { avisar } from "../../../lib/avisar";
 import { JORNADA_KIND_INDEX, writeJourneyStep } from "../../comum";
 import type { ChurchView, JourneyStepKind, MemberView, TimelineEventView } from "../../tipos";
 import { Botao } from "../../../ui/Botao";
@@ -30,17 +31,22 @@ export function JornadaEditModal({
   const setData = (kind: JourneyStepKind, date: string) => setRows((prev) => ({ ...prev, [kind]: { ...prev[kind], date } }));
 
   const salvar = async () => {
-    if (!church?.organizationId) return;
     setSaving(true);
-    for (const step of JRN_STEPS) {
-      const jaConcluido = !!member.journey[JORNADA_KIND_INDEX[step.kind]];
-      if (!jaConcluido && rows[step.kind].done) {
-        await writeJourneyStep(church.organizationId, member, step.kind, rows[step.kind].date || null);
+    try {
+      if (!church?.organizationId) throw new Error("Organização da igreja ausente.");
+      for (const step of JRN_STEPS) {
+        const jaConcluido = !!member.journey[JORNADA_KIND_INDEX[step.kind]];
+        if (!jaConcluido && rows[step.kind].done) {
+          await writeJourneyStep(church.organizationId, member, step.kind, rows[step.kind].date || null);
+        }
       }
+      onRefresh();
+      onClose();
+    } catch {
+      avisar(ct("Não conseguimos salvar a {caminhada}. Tente de novo."), "warn");
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    onRefresh();
-    onClose();
   };
 
   return (
