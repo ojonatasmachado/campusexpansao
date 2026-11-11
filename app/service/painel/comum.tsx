@@ -6,6 +6,7 @@ import { ICON_PATHS, DEFAULT_ICON, Icon } from "../lib/icons";
 import { parseISODate } from "../lib/date";
 import { ACESSO_MSG_DEFAULT } from "../modules/pessoas/acesso-msg";
 import { modulosLigados } from "../modules/registry";
+import { ORIGEM_AUTOCADASTRO } from "../modules/visitantes/autocadastro";
 import type { ChurchView, JourneyStepKind, MatrizV2, MemberView, PapelV2, PersonView, ReservationView } from "./tipos";
 
 import { Indicador } from "../ui/Indicador";
@@ -68,6 +69,12 @@ export function semContato48h(v: { stage: string; visited_on: string | null; id:
   const visita = parseISODate(v.visited_on);
   if (!visita) return false;
   return Date.now() - visita.getTime() > 48 * 3600 * 1000;
+}
+
+/** Regra única da fila de cadastros recebidos pelo link, usada na contagem e no destino. */
+export function visitantePeloLink(v: { id: string; origin: string | null; stage: string; reply_status?: string | null; visited_on: string | null }, notes: { visitor_id: string }[]) {
+  return v.origin === ORIGEM_AUTOCADASTRO && v.stage === "novo" && !v.reply_status &&
+    !notes.some((n) => n.visitor_id === v.id) && !semContato48h(v, notes);
 }
 
 export function TeamMark({ ministry, size = 16 }: { ministry?: { icon?: string; name?: string }; size?: number }) {

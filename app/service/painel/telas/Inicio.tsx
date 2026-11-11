@@ -21,13 +21,15 @@ import { NovosCadastros } from "../../modules/entrada/NovosCadastros";
 import { numerosDaBase, type DadosSaude } from "../../modules/inicio/saude";
 import { linhaDoSetup, type SetupEstado } from "../../modules/configuracao/setup";
 import { termosDaRota } from "../../modules/registry";
-import { REACOES_PESQUISA, ROUTES } from "../comum";
+import { REACOES_PESQUISA, ROUTES, semContato48h, visitantePeloLink } from "../comum";
 import { Indicador } from "../../ui/Indicador";
-import type { AnnouncementView, ChildView, DecisionView, DrawerState, EnrollmentView, EventAttendanceView, EventView, FieldDef, JourneyChangeRequestView, KidsAttendanceView, KidsClassView, MemberView, MinistryView, ModalState, PersonView, RosterAssignmentView, TimelineEventView, VisitorView } from "../tipos";
+import type { AnnouncementView, ChildView, DecisionView, DrawerState, EnrollmentView, EventAttendanceView, EventView, FieldDef, JourneyChangeRequestView, KidsAttendanceView, KidsClassView, MemberView, MinistryView, ModalState, PersonView, RosterAssignmentView, TimelineEventView, VisitorNoteView, VisitorView } from "../tipos";
 
 import { Acao } from "../../ui/Acao";
 import { Cartao } from "../../ui/Cartao";
 import { Linha, linhaClasse } from "../../ui/Linha";
+import { Gaveta } from "../../ui/Janela";
+import { ListaDeCuidado } from "../../modules/cuidado/Cuidado";
 export function GlobalSearch({
   people,
   members,
@@ -224,6 +226,8 @@ export function Painel({
   userName,
   visitantesSemContato,
   visitantesPeloLink,
+  visitors = [],
+  visitorNotes = [],
   events,
   journeyRequests,
   enqueteElegivel,
@@ -231,6 +235,7 @@ export function Painel({
   onApproveJourney,
   onRejectJourney,
   setRoute,
+  abrirDiretorio,
   podeAbrir = () => true,
   modulosPendencias,
   setDrawer,
@@ -266,6 +271,7 @@ export function Painel({
   onApproveJourney: (request: JourneyChangeRequestView) => void | Promise<void>;
   onRejectJourney: (request: JourneyChangeRequestView) => void | Promise<void>;
   setRoute: (route: keyof typeof ROUTES) => void;
+  abrirDiretorio: (route: "visitantes" | "membros" | "pessoas", filtro?: "sem-contato" | "pelo-link" | "em-grupos" | "servindo" | "membros") => void;
   podeAbrir?: (route: keyof typeof ROUTES) => boolean;
   modulosPendencias: Set<string>;
   setDrawer: (drawer: DrawerState) => void;
@@ -278,6 +284,7 @@ export function Painel({
   onAbrirVagas: (eventId: string, timeId?: string) => void;
   currentRole?: "master" | "pastor" | "lider" | "membro";
   visitors?: VisitorView[];
+  visitorNotes?: VisitorNoteView[];
   decisions?: DecisionView[];
   timelineEvents?: TimelineEventView[];
   enrollments?: EnrollmentView[];
@@ -296,6 +303,8 @@ export function Painel({
   const pedidosConta = usePedidosConta(gestao);
   const [pedidosAbertos, setPedidosAbertos] = useState(false);
   const [jornadaAberta, setJornadaAberta] = useState(false);
+  const [cuidadoAberto, setCuidadoAberto] = useState<"adultos" | "criancas" | null>(null);
+  const [coberturaAberta, setCoberturaAberta] = useState(false);
   const [pedidosResolvidos, setPedidosResolvidos] = useState<{ origem: JourneyChangeRequestView[]; ids: Set<string> } | null>(null);
   // A atualização local só vale até chegarem novas props da fonte existente.
   const pedidosJornada = pedidosResolvidos?.origem === journeyRequests
@@ -353,10 +362,10 @@ export function Painel({
           });
         }
         if (!liderDeTime && podeAbrir("visitantes") && visitantesSemContato > 0) {
-          filas.push({ key: "visitantes-contato", t: visitantesSemContato === 1 ? "1 visitante sem contato" : `${visitantesSemContato} visitantes sem contato`, s: " · há mais de 48h", go: "Ver →", action: () => setRoute("visitantes") });
+          filas.push({ key: "visitantes-contato", t: visitantesSemContato === 1 ? "1 visitante sem contato" : `${visitantesSemContato} visitantes sem contato`, s: " · há mais de 48h", go: "Ver →", action: () => { const alvos = (visitors ?? []).filter((v) => semContato48h(v, visitorNotes)); if (alvos.length === 1) { setRoute("visitantes"); setDrawer({ kind: "visitor", id: alvos[0].id }); } else abrirDiretorio("visitantes", "sem-contato"); } });
         }
         if (!liderDeTime && podeAbrir("visitantes") && visitantesPeloLink > 0) {
-          filas.push({ key: "visitantes-link", t: `${plural(visitantesPeloLink, "visitante")} ${visitantesPeloLink === 1 ? "se cadastrou" : "se cadastraram"} pelo link`, s: " · esperando o 1º contato", go: "Ver →", action: () => setRoute("visitantes") });
+          filas.push({ key: "visitantes-link", t: `${plural(visitantesPeloLink, "visitante")} ${visitantesPeloLink === 1 ? "se cadastrou" : "se cadastraram"} pelo link`, s: " · esperando o 1º contato", go: "Ver →", action: () => { const alvos = (visitors ?? []).filter((v) => visitantePeloLink(v, visitorNotes)); if (alvos.length === 1) { setRoute("visitantes"); setDrawer({ kind: "visitor", id: alvos[0].id }); } else abrirDiretorio("visitantes", "pelo-link"); } });
         }
         if (pedidosJornada.length > 0) {
           filas.push({ key: "jornada", t: ct(`${plural(pedidosJornada.length, "pedido", "pedidos")} na {caminhada}`), s: " · esperando aprovação", go: "Revisar →", action: () => setJornadaAberta(true) });
@@ -369,10 +378,10 @@ export function Painel({
           filas.push({ key: "novos-cadastros", t: titulo, s: pedidosConta.estado === "pronto" ? " · aguardando aprovação" : "", go: "Revisar →", action: () => setPedidosAbertos(true) });
         }
         if (!liderDeTime && cuidado && cuidado.lista.length > 0) {
-          filas.push({ key: "cuidado", t: `${plural(cuidado.lista.length, "pessoa")} sem registro`, s: ` · há ${plural(cuidado.semanas, "semana")} ou mais`, go: "Ver →", action: () => setRoute("membros") });
+          filas.push({ key: "cuidado", t: `${plural(cuidado.lista.length, "pessoa")} sem registro`, s: ` · há ${plural(cuidado.semanas, "semana")} ou mais`, go: "Ver →", action: () => setCuidadoAberto("adultos") });
         }
         if (!liderDeTime && cuidado && (cuidado.criancas?.length ?? 0) > 0) {
-          filas.push({ key: "kids-sumindo", t: `${plural(cuidado.criancas!.length, "criança")} sem check-in`, s: " · vale um contato", go: "Ver →", action: () => setRoute("criancas") });
+          filas.push({ key: "kids-sumindo", t: `${plural(cuidado.criancas!.length, "criança")} sem check-in`, s: " · vale um contato", go: "Ver →", action: () => setCuidadoAberto("criancas") });
         }
         if (faltas.length > 3) {
           filas.push({
@@ -380,7 +389,7 @@ export function Painel({
             t: `${ct("Ver todos os {cultos} com falta")} (${plural(faltas.length, ct("{culto}"))})`,
             s: "",
             go: "→",
-            action: () => setRoute("escalas"),
+            action: () => setCoberturaAberta(true),
           });
         }
         if (filas.length > 0) {
@@ -417,7 +426,7 @@ export function Painel({
         return (
           <div className="kpi-row">
             {base.map((n) => (
-              <Indicador key={n.id} estilo="cartao" icone={n.id === "membros" ? "membros" : n.id === "servindo" ? "escalas" : "grupos"} valor={n.valor} rotulo={ct(n.rotulo)} aoAbrir={() => { if (n.id === "servindo") setRoute("times"); else setRoute("membros"); }} rotuloAcao={`${ct(n.rotulo)}: ${n.valor}. Ver a lista`} />
+              <Indicador key={n.id} estilo="cartao" icone={n.id === "membros" ? "membros" : n.id === "servindo" ? "escalas" : "grupos"} valor={n.valor} rotulo={ct(n.rotulo)} aoAbrir={() => abrirDiretorio(n.id === "servindo" ? "pessoas" : "membros", n.id === "servindo" ? "servindo" : n.id === "grupos" ? "em-grupos" : "membros")} rotuloAcao={`${ct(n.rotulo)}: ${n.valor}. Ver a lista`} />
             ))}
           </div>
         );
@@ -463,6 +472,13 @@ export function Painel({
           aoFechar={() => setJornadaAberta(false)}
         />
       )}
+      {cuidadoAberto && cuidado && <Gaveta larga rotulo={cuidadoAberto === "adultos" ? "Pessoas sem registro" : "Crianças sem check-in"} aoFechar={() => setCuidadoAberto(null)}>
+        <ListaDeCuidado lista={cuidado.lista} criancas={cuidado.criancas} semanas={cuidado.semanas} visaoInicial={cuidadoAberto} onAbrir={(ausente) => { setCuidadoAberto(null); setRoute(ausente.memberId ? "membros" : "pessoas"); setDrawer(ausente.memberId ? { kind: "member", id: ausente.memberId } : { kind: "person", id: ausente.personId }); }} />
+      </Gaveta>}
+      {coberturaAberta && <Gaveta larga rotulo={ct("{Cultos} com vaga aberta")} aoFechar={() => setCoberturaAberta(false)}>
+        <div className="panel-head"><span className="panel-title">{ct("{Cultos} com vaga aberta")}</span></div>
+        <div className="panel-body flush">{faltas.map(({ conteudo: { evento, resumo } }) => <Acao className={linhaClasse({})} key={evento.id} onClick={() => { setCoberturaAberta(false); setDrawer({ kind: "event", id: evento.id, tab: "panorama" }); }}><div className="mini-main"><div className="mini-title">{evento.name} · {formatDateBR(evento.eventDate)}</div><div className="mini-sub">{resumo}</div></div><span className="text-pn-14">Ver panorama →</span></Acao>)}</div>
+      </Gaveta>}
       {/* v7 I1: blocos "Comunicação recente" e "Crianças por turma" removidos.
           Telas donas existem (Mural e Crianças). Pendências reais já estão na fila. */}
     </div>
