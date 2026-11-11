@@ -2,10 +2,10 @@
 id: M5
 titulo: Dar foco por teclado à região rolável do Mural
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: codex
+desde: 2026-11-11
+branch: historia/M5-mural-foco-teclado
 depende: []
 tamanho: P
 ---
