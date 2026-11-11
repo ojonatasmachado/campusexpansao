@@ -25,25 +25,6 @@ export function MuralV6({ announcements, unreadIds, person, onReadAnnouncement, 
   const enviado = useRef(new Set<string>());
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const region = root.current?.closest<HTMLElement>(".m-scroll");
-    if (!region) return;
-    const previous = {
-      role: region.getAttribute("role"),
-      label: region.getAttribute("aria-label"),
-      tabIndex: region.getAttribute("tabindex"),
-    };
-    region.setAttribute("role", "region");
-    region.setAttribute("aria-label", "Publicações do Mural");
-    region.setAttribute("tabindex", "0");
-    region.classList.add("mural-scroll-region");
-    return () => {
-      if (previous.role === null) region.removeAttribute("role"); else region.setAttribute("role", previous.role);
-      if (previous.label === null) region.removeAttribute("aria-label"); else region.setAttribute("aria-label", previous.label);
-      if (previous.tabIndex === null) region.removeAttribute("tabindex"); else region.setAttribute("tabindex", previous.tabIndex);
-      region.classList.remove("mural-scroll-region");
-    };
-  }, []);
-  useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
       for (const entry of entries) {
         const id = (entry.target as HTMLElement).dataset.announcement;
@@ -62,7 +43,7 @@ export function MuralV6({ announcements, unreadIds, person, onReadAnnouncement, 
     article?.focus({ preventScroll: true });
   }, [initialId]);
   if (announcements.length === 0) {
-    return <div className="m6-sec0" ref={root}><Cartao estilo="app"><div className="m6-ct">Nada no Mural ainda</div><div className="m6-meta">As publicações da igreja aparecem aqui.</div></Cartao></div>;
+    return <div className="m6-sec0"><Cartao estilo="app"><div className="m6-ct">Nada no Mural ainda</div><div className="m6-meta">As publicações da igreja aparecem aqui.</div></Cartao></div>;
   }
   return (
     <div className="m6-sec0" ref={root}>

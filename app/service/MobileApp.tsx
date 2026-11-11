@@ -400,12 +400,12 @@ function MobileMembro({
           {sub ? (
             <>
               <Acao className="m6-back" onClick={voltar}><span className="m6-back-ic"><Icon name="voltar" size={22} /></span>{tabTitle}</Acao>
-              <h1 className="m-h1 sub">{subTitle}</h1>
+              <h1 id="m-screen-title" className="m-h1 sub">{subTitle}</h1>
             </>
           ) : tab === "perfil" ? (
             <>
               <Acao className="m6-back" onClick={() => go(tabAntesPerfil)}><span className="m6-back-ic"><Icon name="voltar" size={22} /></span>{tabLabel(tabAntesPerfil, traduzirUi)}</Acao>
-              <h1 className="m-h1 sub">{tabTitle}</h1>
+              <h1 id="m-screen-title" className="m-h1 sub">{tabTitle}</h1>
             </>
           ) : (
             <>
@@ -418,7 +418,7 @@ function MobileMembro({
               </div>
               {tab === "inicio" ? (
                 <>
-                  <h1 className="m-h1">{saudacao() === "Bom dia" ? traduzirUi("Bom dia, {nome}", { nome: person.name.split(" ")[0] }) : saudacao() === "Boa tarde" ? traduzirUi("Boa tarde, {nome}", { nome: person.name.split(" ")[0] }) : traduzirUi("Boa noite, {nome}", { nome: person.name.split(" ")[0] })}</h1>
+                  <h1 id="m-screen-title" className="m-h1">{saudacao() === "Bom dia" ? traduzirUi("Bom dia, {nome}", { nome: person.name.split(" ")[0] }) : saudacao() === "Boa tarde" ? traduzirUi("Boa tarde, {nome}", { nome: person.name.split(" ")[0] }) : traduzirUi("Boa noite, {nome}", { nome: person.name.split(" ")[0] })}</h1>
                   <p className="m-hsub">{(() => {
                     /* v7 4.19: o mais relevante de hoje; sem nada, a data */
                     const doDia = events.filter((e) => e.eventDate === hoje);
@@ -437,14 +437,14 @@ function MobileMembro({
                   })()}</p>
                 </>
               ) : (
-                <h1 className="m-h1">{tabTitle}</h1>
+                <h1 id="m-screen-title" className="m-h1">{tabTitle}</h1>
               )}
             </>
           )}
         </div>
 
         {/* marco principal só no app de verdade; a prévia do líder fica dentro do painel, que já tem o seu */}
-        <div className="m-scroll" ref={scrollRef} role={mode === "self" ? "main" : undefined}>
+        <div className="m-scroll" ref={scrollRef} role={mode === "self" ? "main" : undefined} tabIndex={0} aria-labelledby="m-screen-title">
           {tab === "inicio" && (
             <InicioV6 contribuir={pix} onContribuir={() => go("caminhada", "contribuir")} person={person} member={member} ministries={ministries} members={members} people={people} events={events} roster={roster} cards={cards}
               announcements={muralOn ? announcements : []} unreadIds={unreadIds} kidsChildren={kidsChildren} childGuardians={childGuardians}
