@@ -46,13 +46,19 @@ Maria enviou o pedido de Grupo pelo app (`journey_change_requests` respondeu `20
 
 Limpei os pedidos, o requisito e os quatro fatos de teste. A consulta final mostrou Maria `[1,1,0,0,1]`, Mateus `[1,0,0,0,0]`, zero pedidos e zero fatos de etapa criados no teste. `scripts/ci/pacote-producao.sh > docs/service-v7/producao.sql` e `git diff --check` passaram.
 
-Fotos abertas:
-- `Q18-ficha-tres-etapas.png`, folha de Mateus com Batismo, Fundamentos e Grupo marcados; medição `__medir(24)`: 7 ações, 35 palavras. MD5 `ac941eb5d82e18db50ac8cdc540c42d3`.
-- `Q18-membro-caminhada.png`, Maria vê 3 de 5 etapas concluídas e os estados de cada etapa; `__medir(44)`: 6 ações, 52 palavras. MD5 `325a52194d3347ffa0ecff574cef92dc`.
-- `Q18-pedido-pedir.png`, folha de pedido de Grupo com data e observação; MD5 `1784cd317f050e96e9dd60e068d1c2ce`.
-- `Q18-lider-pedido-aberto.png`, gaveta do líder com o pedido de Maria e os botões Aprovar e Rejeitar; medição `__medir(24)`: 0 ações, 8 palavras, conforme saída do medidor. MD5 `6397ea2eba93670afa3821c52af79eab`.
+Fotos refeitas, abertas e verificadas após a animação terminar (opacidade 1, folha parada); o selo do Next foi ocultado e confirmado ausente:
+- `Q18-ficha-tres-etapas.png`, ficha do Mateus na História, com Grupo em 11/11/2026, Fundamentos em 10/11/2026 e Batismo nas águas em 09/11/2026. `__medir(24)`: 7 ações, 35 palavras. MD5 `8939f7895af072cceee12d9145c27dff`.
+- `Q18-pedido-pedir.png`, folha Grupo da Maria, com data preenchida e botão Enviar inteiro visível. `__medir(44)`: 3 ações, 23 palavras. MD5 `608601a598ae709618b0e6d3ce09d175`.
+- `Q18-lider-pedido-aberto.png`, Início da gestão depois da aprovação; a linha de pedido de Caminhada não aparece. `__medir(24)`: 0 ações, 8 palavras. MD5 `e89368ce0572c3ca102562ce2f2d039f`.
+
+As capturas inválidas anteriores foram removidas, inclusive a foto de formulário vazio e a imagem da Caminhada que não fazia parte desta retificação.
 
 `npx tsc --noEmit -p .` e ESLint nos três arquivos TSX tocados passaram. A checagem local `npx tsx scripts/check-service-lei12.ts` não iniciou: `tsx` não está instalado e o acesso ao npm terminou em `ENOTFOUND registry.npmjs.org`. A checagem de pacote de produção e `git diff --check` passaram. A execução remota de `.github/workflows/service.yml` está em andamento na PR #62; a CI de migrações já passou. PR continua aberto, sem merge.
 
 ## Notas
+
+### Retificação de fotos
+As fotos refeitas foram abertas e verificadas com a folha parada em opacidade 1 e o selo do Next oculto e ausente. Os MD5s e descrições estão na seção Validação. A ficha mostra as três etapas de Mateus e suas datas; a folha de Grupo de Maria mostra Enviar inteiro; o Início da gestão já não mostra a linha de pedido após aprovar.
+
+O banco local foi restaurado após os testes: Maria `[1,1,0,0,1]`, Mateus `[1,0,0,0,0]`; os pedidos e eventos temporários foram removidos. A captura `Q18-membro-caminhada.png` foi apagada por não pertencer a esta retificação.
 Construção concluída por codex; testes e dados temporários foram limpos. A 0106 corrigida está em `docs/service-v7/producao.sql`.
