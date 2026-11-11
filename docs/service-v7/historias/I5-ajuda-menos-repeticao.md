@@ -47,4 +47,4 @@ Escalas já atendia à regra de uma ajuda por seção/tela e o botão flutuante 
 
 `npx tsc --noEmit -p .` e `npx eslint app/service/painel/telas/Relatorios.tsx app/service/painel/telas/Formacao.tsx` passaram (lint tem warnings preexistentes). `npm exec --yes --package=tsx -- tsx scripts/check-service-componentes.ts` passou com `Componentes da biblioteca: ok`; `scripts/check-theme-contrast.ts` passou para todas as famílias e modos.
 
-PENDENTES não foi alterado porque o arquivo está simultaneamente reservado por M5, I5 e I2, conforme `npx tsx scripts/historias.ts`; a linha desta história precisa ser removida quando a colisão de reserva for resolvida.
+PENDENTES não foi alterado porque o arquivo consta no trilho da reserva I2, confirmado por `npx tsx scripts/historias.ts`. A linha I5 permanece até essa sobreposição de trilho ser coordenada.
