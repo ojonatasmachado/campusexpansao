@@ -101,7 +101,7 @@ export function Onboarding({ person, member, churchName, churchLogoUrl, onComple
           </Campo>
         </div>
       ),
-      ok: "Continuar →",
+      ok: "Continuar",
     },
     {
       t: "Tamanho do texto",
@@ -116,7 +116,7 @@ export function Onboarding({ person, member, churchName, churchLogoUrl, onComple
           </Cartao>
         </div>
       ),
-      ok: "Entrar no app →",
+      ok: "Entrar no app",
     },
   ] as const;
 

@@ -127,7 +127,7 @@ export function TabVisitantes({ visitors, onAdvanceVisitorStage, onRegisterVisit
                       setAberto(null);
                     }}
                   >
-                    Avancar para {`"${ETAPAS[etIdx + 1].nome}"`} →
+                    Avancar para {`"${ETAPAS[etIdx + 1].nome}"`}
                   </Botao>
                 )}
                 {etIdx === ETAPAS.length - 1 && (

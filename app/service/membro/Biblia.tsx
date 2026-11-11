@@ -167,7 +167,6 @@ export function TabBiblia({
               <Acao className="bib-marks-cta" onClick={() => setView("marcacoes")}>
                 <span className="bib-marks-cta-ic"><Icon name="estrela" size={16} /></span>
                 <div><b>Minhas marcações</b><small>{bibleMarks.length} {bibleMarks.length === 1 ? "versículo marcado ou anotado" : "versículos marcados ou anotados"}</small></div>
-                <span className="m-alert-go">→</span>
               </Acao>
               <div className="m-section-t">Antigo Testamento</div>
               <div className="bib-books">
@@ -200,11 +199,11 @@ export function TabBiblia({
 
       {view === "leitor" && book && chapter && versesAtuais && (
         <>
-          <Botao tamanho="toque" variante="texto" onClick={() => setView("capitulos")}>← Capitulos</Botao>
+          <Botao tamanho="toque" variante="texto" onClick={() => setView("capitulos")}>← Capítulos</Botao>
           <div className="bib-reader-head">
-            <Acao className="bib-chnav" desativado={chapter <= 1} onClick={() => irPara(book.abbrev, chapter - 1)}>‹</Acao>
+            <Acao className="bib-chnav" aria-label="Capítulo anterior" desativado={chapter <= 1} onClick={() => irPara(book.abbrev, chapter - 1)}>‹</Acao>
             <div className="m-h1" style={{ fontSize: "var(--fs-app-17)" }}>{book.name} {chapter}</div>
-            <Acao className="bib-chnav" desativado={chapter >= book.chapters.length} onClick={() => irPara(book.abbrev, chapter + 1)}>›</Acao>
+            <Acao className="bib-chnav" aria-label="Próximo capítulo" desativado={chapter >= book.chapters.length} onClick={() => irPara(book.abbrev, chapter + 1)}>›</Acao>
           </div>
           <div className="bib-verses">
             {versesAtuais.map((text, i) => {
