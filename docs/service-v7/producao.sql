@@ -6186,6 +6186,7 @@ declare
   v_date date;
   v_church uuid;
   v_org uuid;
+  v_timezone text;
 begin
   v_index := case p_step
     when 'decisao' then 0
@@ -6211,8 +6212,8 @@ begin
   update service.members as m
      set journey = (
        select pg_catalog.jsonb_agg(
-         case when i = v_index then 'true'::jsonb
-              else coalesce(m.journey -> i, 'false'::jsonb)
+         case when i = v_index then '1'::jsonb
+              else coalesce(m.journey -> i, '0'::jsonb)
          end order by i
        )
        from pg_catalog.generate_series(0, 4) as gs(i)
@@ -6224,6 +6225,11 @@ begin
     raise exception 'Membro não encontrado ou sem permissão para atualizar a jornada.' using errcode = '42501';
   end if;
 
+  select coalesce(c.time_zone, 'America/Sao_Paulo') into v_timezone
+    from service.churches as c
+   where c.id = v_church;
+  v_timezone := coalesce(v_timezone, 'America/Sao_Paulo');
+
   insert into service.timeline_events (
     organization_id, member_id, event_type, title, sort_key, when_label
   )
@@ -6232,8 +6238,8 @@ begin
     p_member,
     p_step,
     v_title,
-    pg_catalog.to_char(coalesce(v_date, (pg_catalog.now() at time zone service.church_time_zone(v_church))::date), 'YYYYMMDD')::bigint,
-    pg_catalog.to_char(coalesce(v_date, (pg_catalog.now() at time zone service.church_time_zone(v_church))::date), 'DD/MM/YYYY')
+    pg_catalog.to_char(coalesce(v_date, (pg_catalog.now() at time zone v_timezone)::date), 'YYYYMMDD')::bigint,
+    pg_catalog.to_char(coalesce(v_date, (pg_catalog.now() at time zone v_timezone)::date), 'DD/MM/YYYY')
   );
 
   return 'ok';
@@ -6254,19 +6260,20 @@ declare
   v_reviewer uuid;
   v_org uuid;
 begin
-  select p.id into v_reviewer
-    from service.people as p
-   where p.user_id = auth.uid()
-   limit 1;
-  if v_reviewer is null then
-    raise exception 'Pessoa autenticada não encontrada.' using errcode = '42501';
-  end if;
-
   select r.member_id, r.organization_id into v_member, v_org
     from service.journey_change_requests as r
    where r.id = p_request;
   if not found then
     raise exception 'Pedido ausente ou sem permissão para aprovar.' using errcode = '42501';
+  end if;
+
+  select p.id into v_reviewer
+    from service.people as p
+   where p.user_id = auth.uid()
+     and p.organization_id = v_org
+   limit 1;
+  if v_reviewer is null then
+    raise exception 'Pessoa autenticada não encontrada nesta igreja.' using errcode = '42501';
   end if;
 
   -- A política svc_w_upd de members permite a função lider no tenant inteiro.

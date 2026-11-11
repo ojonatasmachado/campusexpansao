@@ -50,7 +50,6 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 
 ### 3. Qualidade que protege o resto
 - Links de texto (variante texto, panel-link e m6-link): revisar a hierarquia e o uso da cor da igreja; fora da Q13 por decisão do usuário.
-- **Q18** Gravar etapa da Caminhada numa transação só.
 
 ### 4. Código independente (dá para tocar em paralelo, se os trilhos não esbarrarem)
 - **I2** Ações do Início que não navegam · **I5** Ajuda com menos repetição
