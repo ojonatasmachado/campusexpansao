@@ -52,7 +52,6 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 - Links de texto (variante texto, panel-link e m6-link): revisar a hierarquia e o uso da cor da igreja; fora da Q13 por decisão do usuário.
 - Aprovar pedido da {caminhada} grava a etapa e depois o pedido; se o segundo passo falhar e houver nova tentativa, duplica o fato na linha do tempo. Unificar em uma RPC.
 - JornadaEditModal, ao marcar várias etapas, grava cada uma a partir da jornada antiga; em `members.journey` só fica a última etapa.
-- Em Gaveta, o aviso de `avisar()` aparece atrás do escurecido.
 
 ### 4. Código independente (dá para tocar em paralelo, se os trilhos não esbarrarem)
 - **I2** Ações do Início que não navegam · **I5** Ajuda com menos repetição
