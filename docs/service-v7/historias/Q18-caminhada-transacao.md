@@ -52,7 +52,7 @@ Fotos abertas:
 - `Q18-pedido-pedir.png`, folha de pedido de Grupo com data e observação; MD5 `1784cd317f050e96e9dd60e068d1c2ce`.
 - `Q18-lider-pedido-aberto.png`, gaveta do líder com o pedido de Maria e os botões Aprovar e Rejeitar; medição `__medir(24)`: 0 ações, 8 palavras, conforme saída do medidor. MD5 `6397ea2eba93670afa3821c52af79eab`.
 
-TypeScript, ESLint e verificações completas de `.github/workflows/service.yml` serão registrados após a execução final. PR #62 continua aberto, sem merge.
+`npx tsc --noEmit -p .` e ESLint nos três arquivos TSX tocados passaram. A checagem local `npx tsx scripts/check-service-lei12.ts` não iniciou: `tsx` não está instalado e o acesso ao npm terminou em `ENOTFOUND registry.npmjs.org`. A checagem de pacote de produção e `git diff --check` passaram. A execução remota de `.github/workflows/service.yml` está em andamento na PR #62; a CI de migrações já passou. PR continua aberto, sem merge.
 
 ## Notas
 Construção concluída por codex; testes e dados temporários foram limpos. A 0106 corrigida está em `docs/service-v7/producao.sql`.
