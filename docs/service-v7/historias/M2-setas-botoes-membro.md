@@ -24,12 +24,18 @@ Fonte: PLANO_TELA_FORMULARIO.md ("Ficou de fora: o app do membro ainda tem setas
 - `app/service/membro/Inicio.tsx`
 - `app/service/membro/Biblia.tsx`
 - `app/service/MobileApp.tsx` (somente os três rótulos de botão listados na validação)
+- `app/service/lib/internacional/mensagens/fontes.json`
+- `app/service/lib/internacional/mensagens/pt-BR.json`
+- `app/service/lib/internacional/mensagens/en-US.json`
+- `app/service/lib/internacional/mensagens/es-ES.json`
+- `app/service/lib/internacional/mensagens/referencias.json`
 - `docs/service-v7/historias/M2-setas-botoes-membro.md`
 - `docs/service-v7/PENDENTES.md`
 - `docs/service-v7/historias/screenshots/M2-*.png`
 
 ## Pronto quando
 - Nenhum botão do app do membro com seta; setas só em link.
+- As três variantes de rótulo funcionam nos catálogos de todos os idiomas.
 - Outros botões com seta encontrados na varredura removidos.
 
 ## Validação
