@@ -50,7 +50,7 @@ import { Secretaria } from "./modules/secretaria/Secretaria";
 import { ativacaoSubstituiTour, SETUP_INICIAL, type SetupEstado } from "./modules/configuracao/setup";
 import { encontroUtil } from "./modules/configuracao/ativacao";
 import { ROTA_GRUPO, modulosDoInicio, navGroups, podeVerRota, rotaLigada } from "./modules/registry";
-import { CEX_ICON_FOR, ROUTES, VISITOR_STAGES, ligadosDa, matrizComFallback, openMemberInviteWhatsapp, semContato48h, weekdayShortFromDate, writeJourneyStep } from "./painel/comum";
+import { CEX_ICON_FOR, ROUTES, VISITOR_STAGES, ligadosDa, matrizComFallback, openMemberInviteWhatsapp, semContato48h, weekdayShortFromDate } from "./painel/comum";
 import { GlobalSearch, Painel } from "./painel/telas/Inicio";
 import { Times } from "./painel/telas/Times";
 import { Config } from "./painel/telas/Config";
@@ -600,14 +600,12 @@ export default function ServiceExactApp({
     if (!firstChurch?.organizationId || !currentPersonId) throw new Error("Contexto da igreja ou pessoa ausente.");
     const member = members.find((m) => m.id === request.memberId);
     if (!member) throw new Error("Membro do pedido não encontrado.");
-    await writeJourneyStep(firstChurch.organizationId, member, request.step, request.eventDate);
-    const { data, error } = await createServiceBrowserClient().schema("service").from("journey_change_requests").update({
-      status: "aprovado",
-      reviewed_by: currentPersonId,
-      reviewed_at: new Date().toISOString(),
-    }).eq("id", request.id).select("id").maybeSingle();
+    const { data, error } = await createServiceBrowserClient().schema("service").rpc("aprovar_pedido_caminhada", {
+      p_request: request.id,
+    });
     if (error) throw error;
-    if (!data) throw new Error("O pedido não foi atualizado.");
+    if (data === "ja_revisado") throw new Error("Este pedido já foi analisado.");
+    if (data !== "ok") throw new Error("O pedido não foi atualizado.");
     const stepLabel = ct(JRN_STEPS.find((s) => s.kind === request.step)?.label ?? request.step);
     notifyPush(firstChurch.organizationId, [member.id], ct("{Caminhada} aprovada"), ct(`"${stepLabel}" foi confirmado na sua {caminhada}.`), "caminhada");
     router.refresh();

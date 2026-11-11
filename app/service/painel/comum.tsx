@@ -4,7 +4,6 @@ import { telefoneParaWhatsapp } from "../lib/telefone";
 import { createServiceBrowserClient } from "../lib/supabase-browser";
 import { ICON_PATHS, DEFAULT_ICON, Icon } from "../lib/icons";
 import { parseISODate } from "../lib/date";
-import { JRN_STEPS } from "./caminhada";
 import { ACESSO_MSG_DEFAULT } from "../modules/pessoas/acesso-msg";
 import { modulosLigados } from "../modules/registry";
 import type { ChurchView, JourneyStepKind, MatrizV2, MemberView, PapelV2, PersonView, ReservationView } from "./tipos";
@@ -211,18 +210,15 @@ export function timelineEventPayload(organizationId: string, memberId: string, e
 
 export const JORNADA_KIND_INDEX: Record<JourneyStepKind, number> = { decisao: 0, batismo: 1, curso: 2, integracao: 3, time: 4 };
 
-export async function writeJourneyStep(organizationId: string, member: MemberView, step: JourneyStepKind, eventDate?: string | null) {
-  const stepDef = JRN_STEPS.find((s) => s.kind === step);
+export async function writeJourneyStep(member: MemberView, step: JourneyStepKind, eventDate?: string | null) {
   const sb = createServiceBrowserClient().schema("service");
-  const { error: timelineError } = await sb.from("timeline_events").insert(
-    timelineEventPayload(organizationId, member.id, step, stepDef?.label ?? step, eventDate),
-  );
-  if (timelineError) throw timelineError;
-  const journey = [...member.journey];
-  journey[JORNADA_KIND_INDEX[step]] = 1;
-  const { data, error } = await sb.from("members").update({ journey }).eq("id", member.id).select("id").maybeSingle();
+  const { data, error } = await sb.rpc("marcar_etapa_caminhada", {
+    p_member: member.id,
+    p_step: step,
+    p_date: eventDate ?? null,
+  });
   if (error) throw error;
-  if (!data) throw new Error("Não conseguimos atualizar a jornada do membro.");
+  if (data !== "ok") throw new Error("Não conseguimos atualizar a jornada do membro.");
 }
 
 export function fillAcessoMsgTemplate(template: string, vars: { nome: string; igreja: string; link: string; email: string; senha: string }): string {

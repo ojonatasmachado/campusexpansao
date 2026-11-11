@@ -5,12 +5,13 @@ import { useState } from "react";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { Icon } from "../../lib/icons";
 import { formatDateBR, joinDot } from "../../lib/date";
+import { avisar } from "../../lib/avisar";
 
 import { useTermos } from "../../lib/vocabulario-context";
 import { Av } from "../ui";
 import { DrawerSection, DrawerShell } from "../campos";
 import { PersonTimeline } from "./FichaPessoa";
-import { BAT_ST_MAP, timelineEventPayload } from "../comum";
+import { BAT_ST_MAP } from "../comum";
 import type { BaptismCandidateView, BaptismClassView, ChurchView, DecisionView, MemberView, PersonView, TimelineEventView } from "../tipos";
 
 import { Botao, botaoClasse, BotaoIcone } from "../../ui/Botao";
@@ -157,6 +158,7 @@ export function BatismoDrawer({
   decisions: DecisionView[]; church: ChurchView | undefined;
   onClose: () => void; onOpenMember: (id: string) => void; onRefresh: () => void;
 }) {
+  const { comTermos: ct } = useTermos();
   const [showAdd, setShowAdd] = useState(false);
   const [actionMsg, setActionMsg] = useState("");
   const [concluindo, setConcluindo] = useState(false);
@@ -173,23 +175,33 @@ export function BatismoDrawer({
   };
 
   const concluirTurma = async () => {
-    if (!church?.organizationId) return;
+    if (!church?.organizationId) {
+      avisar(ct("Não conseguimos concluir a turma de batismo. Tente de novo."), "warn");
+      return;
+    }
     setConcluindo(true);
     const sb = createServiceBrowserClient().schema("service");
-    await sb.from("baptism_classes").update({ status: "concluida" }).eq("id", classData.id);
-    for (const cand of classCandidates) {
-      if (!cand.member_id) continue;
-      const member = memberById.get(cand.member_id);
-      if (!member) continue;
-      await sb.from("timeline_events").insert(
-        timelineEventPayload(church.organizationId, member.id, "batismo", "Batismo nas águas", classData.baptism_date),
-      );
-      const journey = [...member.journey];
-      journey[1] = 1;
-      await sb.from("members").update({ journey }).eq("id", member.id);
+    try {
+      const { error: classError } = await sb.from("baptism_classes").update({ status: "concluida" }).eq("id", classData.id);
+      if (classError) throw classError;
+      for (const cand of classCandidates) {
+        if (!cand.member_id) continue;
+        const member = memberById.get(cand.member_id);
+        if (!member) continue;
+        const { data, error } = await sb.rpc("marcar_etapa_caminhada", {
+          p_member: member.id,
+          p_step: "batismo",
+          p_date: classData.baptism_date,
+        });
+        if (error) throw error;
+        if (data !== "ok") throw new Error("Não conseguimos atualizar a jornada do membro.");
+      }
+      onRefresh();
+    } catch {
+      avisar(ct("Não conseguimos concluir a turma de batismo. Tente de novo."), "warn");
+    } finally {
+      setConcluindo(false);
     }
-    setConcluindo(false);
-    onRefresh();
   };
 
   return (

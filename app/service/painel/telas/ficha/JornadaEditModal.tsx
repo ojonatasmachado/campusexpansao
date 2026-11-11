@@ -37,7 +37,7 @@ export function JornadaEditModal({
       for (const step of JRN_STEPS) {
         const jaConcluido = !!member.journey[JORNADA_KIND_INDEX[step.kind]];
         if (!jaConcluido && rows[step.kind].done) {
-          await writeJourneyStep(church.organizationId, member, step.kind, rows[step.kind].date || null);
+          await writeJourneyStep(member, step.kind, rows[step.kind].date || null);
         }
       }
       onRefresh();
