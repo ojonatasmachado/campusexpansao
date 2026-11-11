@@ -44,5 +44,7 @@ O Supabase local estava em 0100 (`supabase db query --local "select max(version)
 
 A inspeção de `pg_policies` confirmou que `service.members.svc_w_upd` permite `owner`, `master`, `pastor` e `lider` em todo o tenant; a política não filtra time. Por isso a RPC mantém `security invoker` e acrescenta uma verificação mais restrita para líder, baseada no time ou grupo da pessoa, sem mudar políticas.
 
+PR #62: os dois jobs `service` passaram (execuções 42956485315 e 42956515148), o check de migrações para produção passou (42956515145) e Vercel passou. PR permanece aberto, sem merge. A validação local de fluxos permanece pendente.
+
 ## Notas
 Reserva feita por codex. O main de origem estava em 0105, mas o banco local compartilhado só tinha até 0100. Nenhuma migração foi aplicada ainda.
