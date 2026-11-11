@@ -41,7 +41,7 @@ O destino é aberto por clique, preservando os filtros e os itens já carregados
 | Indicador Saúde: membros, servindo em times ou em grupos | Abre a gaveta com os itens que compõem aquele indicador; selecionar abre a ficha da pessoa/membro exata. | Indicadores de Saúde não são renderizados para líder. |
 | Atalho de preparação | Abre Configurações. A lista Revisar preparação só é montada para gestão com acesso a configurar, Times, Cultos e Pessoas. | Não aparece sem permissão/configuração. |
 | Busca do painel: tela | Só oferece telas presentes no menu autorizado; clique abre a tela dona. | Só telas do menu do líder; não exibe Visitantes, Configurações ou módulos sem acesso. |
-| Busca: pessoa/membro/time/função | Resultado abre ficha da pessoa/membro ou gaveta do time correspondente; funções levam ao time que as contém. | Mesmo comportamento usando somente arrays de dados visíveis já entregues à casca; sem nova permissão. |
+| Busca: pessoa/membro/time/função | Resultado abre ficha da pessoa/membro ou gaveta do time correspondente; funções levam ao time que as contém. | Usa apenas resultados das rotas que o papel vê. Times/funções seguem a mesma lista visível na rota Times; selecionar resultado abre a gaveta daquele time. |
 
 Avaliação de experiência e Pulso da escala abrem seus próprios formulários em modal. Não são atalhos de navegação para outra tela. O bloco Comece por aqui mantém as três rotas de configuração já existentes.
 
@@ -67,8 +67,9 @@ Fotos dos destinos após o clique:
 | Escolher culto da gaveta | [Panorama do culto escolhido](screenshots/I2-depois-panorama-do-culto.png) | `4e68fc4c6657dda7160667e953cde0ca` |
 | Indicador Saúde: membros | [Gaveta com membros do indicador](screenshots/I2-depois-saude-membros.png) | `dbb75f3162374d4eba193b27c0765abf` |
 | Selecionar membro | [Ficha de Ana Brandão](screenshots/I2-depois-ficha-do-membro.png) | `b21e15d00e3329cfdbdb7ae88cffedf5` |
+| Busca do líder: selecionar Louvor | [Gaveta do time Louvor](screenshots/I2-depois-busca-time-lider.png) | `c8481df696737c380c5cb48c0d939232` |
 
-Na tela da gestão, a busca foi conferida no código e pelo clique nas entradas existentes: os resultados de pessoas/membros e times abrem o registro exato; funções abrem o time que as contém; as telas vêm de `telas` já filtradas pelo menu autorizado. Na captura de líder, o menu e a gaveta de cobertura confirmaram o escopo reduzido. No seed local não havia pedido de conta nem pedido da Caminhada para fotografar; os caminhos foram conferidos nas linhas da casca: conta só para gestão via Q15, Caminhada na folha Q16 usando a lista filtrada já fornecida.
+Na tela da gestão, a busca foi conferida no código e pelo clique nas entradas existentes: os resultados de pessoas/membros e times abrem o registro exato; funções abrem o time que as contém; as telas vêm de `telas` já filtradas pelo menu autorizado. No líder, a consulta de “Recepção” retorna o time que também aparece na rota Times, e “Louvor” abre a gaveta da equipe escolhida. A lista não revela rotas sem acesso e nenhuma permissão foi ampliada. No seed local não havia pedido de conta nem pedido da Caminhada para fotografar; os caminhos foram conferidos nas linhas da casca: conta só para gestão via Q15, Caminhada na folha Q16 usando a lista filtrada já fornecida.
 
 As fixtures locais de visitantes, cuidado e cobertura foram removidas depois das fotos. Saída da limpeza: `visitors=0 events=0 eventAttendance=0 kidsAttendance=0 kidsSessions=0 children=0 kidsClasses=0`. Nenhuma senha foi alterada e o banco não foi resetado.
 
