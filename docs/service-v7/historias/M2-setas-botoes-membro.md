@@ -23,6 +23,7 @@ Fonte: PLANO_TELA_FORMULARIO.md ("Ficou de fora: o app do membro ainda tem setas
 - `app/service/membro/Visitantes.tsx`
 - `app/service/membro/Inicio.tsx`
 - `app/service/membro/Biblia.tsx`
+- `app/service/MobileApp.tsx` (somente os três rótulos de botão listados na validação)
 - `docs/service-v7/historias/M2-setas-botoes-membro.md`
 - `docs/service-v7/PENDENTES.md`
 - `docs/service-v7/historias/screenshots/M2-*.png`
@@ -37,7 +38,7 @@ Varredura da base `origin/main` com `git grep -n -e '→' -e '->' -e '›' origi
 | Arquivo:linha | Uso encontrado | Tipo |
 |---|---|---|
 | `MobileApp.tsx:127` | comentário “Perfil › Tamanho do texto” | Comentário, não renderizado |
-| `MobileApp.tsx:631` e `:680` | “Gerenciar →” | Dois `Botao`, permanecem por conflito com G17, que reserva `MobileApp.tsx` |
+| `MobileApp.tsx:631` e `:680` | “Gerenciar →” | Dois `Botao`, remover seta |
 | `Biblia.tsx:170` | seta no fim de “Minhas marcações” | `Acao`, removida |
 | `Biblia.tsx:207` | chevron para capítulo seguinte | `Acao`, substituída por “Próx.” com rótulo acessível |
 | `Caminhada.tsx:187` | ação da etapa | `Botao`, removida somente nesta linha |
@@ -52,7 +53,7 @@ Varredura da base `origin/main` com `git grep -n -e '→' -e '->' -e '›' origi
 | `Onde.tsx:21` | comentário “Agenda › Onde” | Comentário, não renderizado |
 | `Visitantes.tsx:130` | “Avancar para … →” | `Botao`, removida |
 
-Também procurei `←` e `‹`. Removi as setas nos botões de retorno de `Biblia.tsx:191`, `:203` e `:231`, o chevron anterior em `Biblia.tsx:205` e o retorno no título de conversa em `Conversas.tsx:290`. `MobileApp.tsx:617` (“← Voltar ao painel”) é outro `Botao` que permanece no arquivo reservado por G17. Nenhuma ocorrência funcional estava em link.
+Também procurei `←` e `‹`. Removi as setas nos botões de retorno de `Biblia.tsx:191`, `:203` e `:231`, o chevron anterior em `Biblia.tsx:205` e o retorno no título de conversa em `Conversas.tsx:290`. `MobileApp.tsx:617` (“← Voltar ao painel”) é outro `Botao`, remover seta. G17 já está feita no main; a reserva antiga não impede esta alteração. Nenhuma ocorrência funcional estava em link.
 
 Fotos abertas, 390×844. O medidor é `scripts/medir-densidade.js`, `__medir(44)`, limite 12 ações e 80 palavras:
 
