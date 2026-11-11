@@ -2,10 +2,10 @@
 id: I2
 titulo: Fazer ações do Início navegarem
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: codex
+desde: 2026-11-11
+branch: historia/I2-acoes-inicio-navegar
 depende: []
 tamanho: M
 ---
@@ -19,6 +19,8 @@ Fonte: HANDOFF item 2; CONTINUIDADE.md "Próxima investigação".
 - `app/service/modules/inicio/Saude.tsx`
 - `app/service/modules/cuidado/`
 - `app/service/modules/registry.ts`
+- `docs/service-v7/historias/screenshots/I2-*.png`
+- `docs/service-v7/PENDENTES.md`
 
 ## Pronto quando
 - Ações do Início revisadas por papel, módulo e dependência.
