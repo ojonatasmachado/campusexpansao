@@ -1031,6 +1031,7 @@ export default function ServiceExactApp({
             onAbrirVagas={abrirVagas}
             currentRole={currentRole}
             visitors={visitors}
+            visitorNotes={visitorNotes}
             decisions={decisions}
             timelineEvents={timelineEvents}
             enrollments={enrollments}
