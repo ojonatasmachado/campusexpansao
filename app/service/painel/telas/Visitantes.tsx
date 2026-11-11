@@ -10,7 +10,7 @@ import { formatDateBR, joinDot, parseISODate } from "../../lib/date";
 import AutocadastroPainel from "../../modules/visitantes/AutocadastroPainel";
 import { HelpDot } from "../../HelpSystem";
 import { Av, EmptyState, MenuMais, PageHead } from "../ui";
-import { VISITOR_STAGES, semContato48h } from "../comum";
+import { VISITOR_STAGES, semContato48h, visitantePeloLink } from "../comum";
 import { Indicador } from "../../ui/Indicador";
 import type { ChurchView, ContatoCfg, DrawerState, ModalState, PersonView, VisitorNoteView, VisitorView } from "../tipos";
 
@@ -74,6 +74,8 @@ export function Visitantes({
   church,
   setDrawer,
   setModal,
+  filtroInicial = null,
+  onLimparFiltro,
 }: {
   visitors: VisitorView[];
   visitorNotes: VisitorNoteView[];
@@ -81,19 +83,24 @@ export function Visitantes({
   church?: ChurchView;
   setDrawer: (drawer: DrawerState) => void;
   setModal: (modal: ModalState) => void;
+  filtroInicial?: "sem-contato" | "pelo-link" | null;
+  onLimparFiltro?: () => void;
 }) {
   const router = useRouter();
-  const [view, setView] = useState<"pipe" | "list" | "painel" | "regras">("pipe");
+  const [view, setView] = useState<"pipe" | "list" | "painel" | "regras">(filtroInicial ? "list" : "pipe");
+  const [filtro, setFiltro] = useState<"sem-contato" | "pelo-link" | null>(filtroInicial);
   const [cfgOpen, setCfgOpen] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
   const cc: ContatoCfg = { ...CONTATO_CFG_DEFAULT, ...(church?.settings?.contatoCfg ?? {}) };
   const personById = new Map(people.map((person) => [person.id, person]));
-  const contacted = visitors.filter((visitor) => visitor.reply_status);
-  const answered = visitors.filter((visitor) => visitor.reply_status === "respondeu");
-  const members = visitors.filter((visitor) => visitor.stage === "membro");
+  const lista = filtro === "sem-contato" ? visitors.filter((visitor) => semContato48h(visitor, visitorNotes))
+    : filtro === "pelo-link" ? visitors.filter((visitor) => visitantePeloLink(visitor, visitorNotes)) : visitors;
+  const contacted = lista.filter((visitor) => visitor.reply_status);
+  const answered = lista.filter((visitor) => visitor.reply_status === "respondeu");
+  const members = lista.filter((visitor) => visitor.stage === "membro");
   const replyRate = contacted.length ? Math.round((answered.length / contacted.length) * 100) : 0;
-  const integrationRate = visitors.length ? Math.round((members.length / visitors.length) * 100) : 0;
-  const byService = visitors.reduce<Record<string, number>>((acc, visitor) => {
+  const integrationRate = lista.length ? Math.round((members.length / lista.length) * 100) : 0;
+  const byService = lista.reduce<Record<string, number>>((acc, visitor) => {
     const key = visitor.visited_on ? formatDateBR(visitor.visited_on) : "Sem registro";
     acc[key] = (acc[key] ?? 0) + 1;
     return acc;
@@ -105,7 +112,7 @@ export function Visitantes({
       <PageHead
         title="Visitantes"
         eyebrow="Pessoas"
-        subtitle={plural(visitors.length, "visitante")}
+        subtitle={plural(lista.length, "visitante")}
         help="Quem visitou pela primeira vez. Cada visitante tem um próximo passo e o histórico de contato; acompanhe pelas etapas do funil até virar membro."
         action={<><MenuMais rotulo="Mais opções" acoes={[
           { rotulo: "Indicadores de visitantes", onClick: () => setView("painel") },
@@ -113,6 +120,7 @@ export function Visitantes({
           ...(church ? [{ rotulo: "QR e link de visita", onClick: () => setQrOpen(true) }] : []),
         ]} /><Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: "Novo visitante", subtitle: "Quem chegou pela primeira vez. Entra no acompanhamento automaticamente.", saveLabel: "Registrar visitante", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"Quem visitou" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"origem", label:"Como chegou", type:"select", half:true, options:[{v:"Convite de membro",l:"Convite de membro"},{v:"Instagram",l:"Instagram"},{v:"Indicação",l:"Indicação"},{v:"Evangelismo",l:"Evangelismo"},{v:"Tomou decisão no culto",l:"Tomou decisão no culto"},{v:"Passava na rua",l:"Passava na rua"}] }], action: { kind: "visitor" } })}>Registrar visitante</Botao></>}
       />
+      {filtro && <div className="panel-head" role="status"><span className="panel-meta">Filtro: {filtro === "sem-contato" ? "visitantes sem contato há mais de 48h" : "cadastros recebidos pelo link, aguardando contato"}</span><Botao variante="texto" onClick={() => { setFiltro(null); onLimparFiltro?.(); }}>Limpar filtro</Botao></div>}
       <div className="toolbar">
         <Segmentado role="group" aria-label="Acompanhamento de visitantes">
           <Opcao marcada={view === "pipe"} aria-pressed={view === "pipe"} onClick={() => setView("pipe")}>Funil</Opcao>
@@ -135,7 +143,7 @@ export function Visitantes({
 
       {view === "regras" ? null : view === "painel" ? (
         <div className="vpanel">
-          <div className="kpi-row"><Indicador icone="visitante" rotulo="Visitantes" valor={visitors.length} rodape="no acompanhamento" ajuda="Todo mundo que visitou e ainda está sendo acompanhado, antes de virar membro." /><Indicador icone="comunicacao" rotulo="Respondem o contato" valor={contacted.length ? `${replyRate}%` : "Sem dados"} rodape={`${answered.length} de ${contacted.length} contatados`} ajuda="De quem a equipe já contatou, quantos responderam de volta." /><Indicador icone="ok" rotulo="Integram (viram membro)" valor={visitors.length ? `${integrationRate}%` : "Sem dados"} rodape={`${members.length} de ${visitors.length} · ${visitors.filter((v) => v.stage === "integrando" || v.stage === "membro").length} em integração`} ajuda="De todos os visitantes, quantos completaram o caminho até virar membro." /><Indicador icone="alerta" rotulo="Sem resposta" valor={visitors.filter((visitor) => visitor.reply_status === "sem_resposta").length} rodape="precisam de novo contato" tom="pendente" ajuda="Visitantes contatados que ainda não responderam. Vale tentar de novo." /></div>
+          <div className="kpi-row"><Indicador icone="visitante" rotulo="Visitantes" valor={lista.length} rodape="no acompanhamento" ajuda="Todo mundo que visitou e ainda está sendo acompanhado, antes de virar membro." /><Indicador icone="comunicacao" rotulo="Respondem o contato" valor={contacted.length ? `${replyRate}%` : "Sem dados"} rodape={`${answered.length} de ${contacted.length} contatados`} ajuda="De quem a equipe já contatou, quantos responderam de volta." /><Indicador icone="ok" rotulo="Integram (viram membro)" valor={lista.length ? `${integrationRate}%` : "Sem dados"} rodape={`${members.length} de ${lista.length} · ${lista.filter((v) => v.stage === "integrando" || v.stage === "membro").length} em integração`} ajuda="De todos os visitantes, quantos completaram o caminho até virar membro." /><Indicador icone="alerta" rotulo="Sem resposta" valor={lista.filter((visitor) => visitor.reply_status === "sem_resposta").length} rodape="precisam de novo contato" tom="pendente" ajuda="Visitantes contatados que ainda não responderam. Vale tentar de novo." /></div>
           <div className="vpanel-grid">
             <Cartao><div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> Visitantes por culto <HelpDot text="Em qual culto os visitantes mais chegam." /></span></div><div className="panel-body flush">{Object.entries(byService).map(([name, count]) => <div className="dist-row" key={name}><span className="dist-name">{name}</span><div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${(count / maxService) * 100}%` }} /></div><span className="dist-num">{count}</span></div>)}{visitors.length === 0 ? <Vazio titulo="Nenhum visitante ainda." /> : null}</div></Cartao>
             <Cartao>
@@ -175,19 +183,19 @@ export function Visitantes({
             </Cartao>
           </div>
         </div>
-      ) : visitors.length === 0 ? (
-        <EmptyState title="A primeira visita começa o acompanhamento" text="Use Registrar visitante para cadastrar quem chegou. Em Mais opções, você encontra o QR e o link para a própria pessoa preencher." />
+      ) : lista.length === 0 ? (
+        filtro ? <EmptyState title="Nenhum visitante neste filtro" text="O filtro foi mantido para você revisar a lista. Limpe o filtro para ver todos os visitantes." /> : <EmptyState title="A primeira visita começa o acompanhamento" text="Use Registrar visitante para cadastrar quem chegou. Em Mais opções, você encontra o QR e o link para a própria pessoa preencher." />
       ) : view === "pipe" ? (
         <div className="pipe">
           {VISITOR_STAGES.map((stage) => {
-            const items = visitors.filter((visitor) => visitor.stage === stage.id);
+            const items = lista.filter((visitor) => visitor.stage === stage.id);
             return <div className={`pipe-col${items.length ? "" : " vazia"}`} key={stage.id}><div className="pipe-head"><span className="pipe-dot" style={{ background: stage.color }} /><span className="pipe-name">{stage.name}</span><span className="pipe-num">{items.length}</span></div><div className="pipe-body">{items.map((visitor) => <VisitanteCard key={visitor.id} visitor={visitor} notes={visitorNotes} onOpen={() => setDrawer({ kind: "visitor", id: visitor.id })} />)}{items.length === 0 ? <Vazio titulo="vazio" /> : null}</div></div>;
           })}
         </div>
       ) : (
         <div className="tbl">
           <Linha estilo="tabela" className="head" style={{ gridTemplateColumns: "1.4fr 1fr 1fr 1fr 120px" }}><span>Visitante</span><span>Etapa</span><span>Como chegou</span><span>Próximo passo</span><span>Visitou</span></Linha>
-          {visitors.map((visitor) => { const stage = VISITOR_STAGES.find((s) => s.id === visitor.stage); return <Acao className={`${linhaClasse({ estilo: "tabela" })} click`} key={visitor.id} style={{ gridTemplateColumns: "1.4fr 1fr 1fr 1fr 120px" }} onClick={() => setDrawer({ kind: "visitor", id: visitor.id })}><div className="cell-person"><Av name={visitor.name} size="md" /><div><div className="cell-name">{visitor.name}</div><div className="cell-sub">{visitor.phone}</div></div></div><div><Selo style={{ color: stage?.color, borderColor: "var(--border-2)" }}>{stage?.name ?? visitor.stage}</Selo></div><div className="cell-sub">{visitor.origin || "Visitante"}</div><div><span className={`vcard-due ${visitor.due_status || "ok"}`}>{visitor.due || "sem prazo"}</span></div><div className="mini-right">{formatDateBR(visitor.visited_on) || "sem data"}</div></Acao>; })}
+          {lista.map((visitor) => { const stage = VISITOR_STAGES.find((s) => s.id === visitor.stage); return <Acao className={`${linhaClasse({ estilo: "tabela" })} click`} key={visitor.id} style={{ gridTemplateColumns: "1.4fr 1fr 1fr 1fr 120px" }} onClick={() => setDrawer({ kind: "visitor", id: visitor.id })}><div className="cell-person"><Av name={visitor.name} size="md" /><div><div className="cell-name">{visitor.name}</div><div className="cell-sub">{visitor.phone}</div></div></div><div><Selo style={{ color: stage?.color, borderColor: "var(--border-2)" }}>{stage?.name ?? visitor.stage}</Selo></div><div className="cell-sub">{visitor.origin || "Visitante"}</div><div><span className={`vcard-due ${visitor.due_status || "ok"}`}>{visitor.due || "sem prazo"}</span></div><div className="mini-right">{formatDateBR(visitor.visited_on) || "sem data"}</div></Acao>; })}
         </div>
       )}
     </div>

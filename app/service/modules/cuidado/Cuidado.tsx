@@ -25,15 +25,16 @@ const NOME_VIA: Record<string, string> = { ligacao: "ligação", mensagem: "mens
 
 export type CriancaAusente = { id: string; nome: string; ultima: string; semanas: number };
 
-export function ListaDeCuidado({ lista, criancas, semanas, onAbrir, podeAbrirPessoa = () => true }: {
+export function ListaDeCuidado({ lista, criancas, semanas, onAbrir, podeAbrirPessoa = () => true, visaoInicial = "adultos" }: {
   lista: Ausente[];
   criancas: CriancaAusente[] | null;
   semanas: number;
   onAbrir: (a: Ausente) => void;
   podeAbrirPessoa?: (a: Ausente) => boolean;
+  visaoInicial?: "adultos" | "criancas";
 }) {
   const router = useRouter();
-  const [visao, setVisao] = useState<"adultos" | "criancas">("adultos");
+  const [visao, setVisao] = useState<"adultos" | "criancas">(visaoInicial);
   const [escolhendo, setEscolhendo] = useState<string | null>(null);
   const [enviando, setEnviando] = useState<string | null>(null);
   const registrar = async (a: Ausente, kind: "contato" | "justificada", via?: string) => {
