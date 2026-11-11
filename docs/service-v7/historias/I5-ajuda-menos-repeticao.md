@@ -16,9 +16,9 @@ Fonte: LEVEZA D.
 
 ## Arquivos (trilho)
 - `app/service/painel/telas/Relatorios.tsx`
-- `app/service/painel/telas/Cursos.tsx`
-- `app/service/painel/telas/Escalas.tsx`
-- `app/service/painel/HelpSystem.tsx`
+- `app/service/painel/telas/Formacao.tsx` (cursos)
+- `app/service/modules/escalas/Escalas.tsx`
+- `app/service/HelpSystem.tsx`
 - `docs/service-v7/historias/I5-ajuda-menos-repeticao.md`
 - `docs/service-v7/PENDENTES.md`
 - `docs/service-v7/historias/screenshots/I5-*.png`
