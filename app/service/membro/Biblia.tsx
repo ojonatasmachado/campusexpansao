@@ -187,7 +187,7 @@ export function TabBiblia({
 
       {view === "capitulos" && book && (
         <>
-          <Botao tamanho="toque" variante="texto" onClick={() => setView("livros")}>Livros</Botao>
+          <Botao tamanho="toque" variante="texto" onClick={() => setView("livros")}>← Livros</Botao>
           <div className="m-h1" style={{ fontSize: "var(--fs-app-20)", marginBottom: 14 }}>{book.name}</div>
           <div className="bib-chapters">
             {book.chapters.map((_, i) => (
@@ -199,11 +199,11 @@ export function TabBiblia({
 
       {view === "leitor" && book && chapter && versesAtuais && (
         <>
-          <Botao tamanho="toque" variante="texto" onClick={() => setView("capitulos")}>Capítulos</Botao>
+          <Botao tamanho="toque" variante="texto" onClick={() => setView("capitulos")}>← Capítulos</Botao>
           <div className="bib-reader-head">
-            <Acao className="bib-chnav" aria-label="Capítulo anterior" desativado={chapter <= 1} onClick={() => irPara(book.abbrev, chapter - 1)}>Ant.</Acao>
+            <Acao className="bib-chnav" aria-label="Capítulo anterior" desativado={chapter <= 1} onClick={() => irPara(book.abbrev, chapter - 1)}>‹</Acao>
             <div className="m-h1" style={{ fontSize: "var(--fs-app-17)" }}>{book.name} {chapter}</div>
-            <Acao className="bib-chnav" aria-label="Próximo capítulo" desativado={chapter >= book.chapters.length} onClick={() => irPara(book.abbrev, chapter + 1)}>Próx.</Acao>
+            <Acao className="bib-chnav" aria-label="Próximo capítulo" desativado={chapter >= book.chapters.length} onClick={() => irPara(book.abbrev, chapter + 1)}>›</Acao>
           </div>
           <div className="bib-verses">
             {versesAtuais.map((text, i) => {
@@ -227,7 +227,7 @@ export function TabBiblia({
 
       {view === "marcacoes" && (
         <>
-          <Botao tamanho="toque" variante="texto" onClick={() => setView("livros")}>Livros</Botao>
+          <Botao tamanho="toque" variante="texto" onClick={() => setView("livros")}>← Livros</Botao>
           <div className="m-h1" style={{ fontSize: "var(--fs-app-20)", marginBottom: 14 }}>Minhas marcações</div>
           {bibleMarks.length === 0 && <Vazio tamanho="toque" titulo="Toque num versículo na leitura pra marcar ou anotar." />}
           {bibleMarks

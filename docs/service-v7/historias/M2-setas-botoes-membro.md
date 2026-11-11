@@ -23,7 +23,7 @@ Fonte: PLANO_TELA_FORMULARIO.md ("Ficou de fora: o app do membro ainda tem setas
 - `app/service/membro/Visitantes.tsx`
 - `app/service/membro/Inicio.tsx`
 - `app/service/membro/Biblia.tsx`
-- `app/service/MobileApp.tsx` (somente os três rótulos de botão listados na validação)
+- `app/service/MobileApp.tsx` (os rótulos de botão Gerenciar e Voltar ao painel)
 - `app/service/lib/internacional/mensagens/fontes.json`
 - `app/service/lib/internacional/mensagens/pt-BR.json`
 - `app/service/lib/internacional/mensagens/en-US.json`
@@ -34,7 +34,7 @@ Fonte: PLANO_TELA_FORMULARIO.md ("Ficou de fora: o app do membro ainda tem setas
 - `docs/service-v7/historias/screenshots/M2-*.png`
 
 ## Pronto quando
-- Nenhum botão do app do membro com seta; setas só em link.
+- Setas direcionais de navegação preservadas; somente setas decorativas no fim dos rótulos de botão removidas.
 - As três variantes de rótulo funcionam nos catálogos de todos os idiomas.
 - Outros botões com seta encontrados na varredura removidos.
 
@@ -59,7 +59,7 @@ Varredura da base `origin/main` com `git grep -n -e '→' -e '->' -e '›' origi
 | `Onde.tsx:21` | comentário “Agenda › Onde” | Comentário, não renderizado |
 | `Visitantes.tsx:130` | “Avancar para … →” | `Botao`, removida |
 
-Também procurei `←` e `‹`. Removi as setas nos botões de retorno de `Biblia.tsx:191`, `:203` e `:231`, o chevron anterior em `Biblia.tsx:205` e o retorno no título de conversa em `Conversas.tsx:290`. `MobileApp.tsx:617` (“← Voltar ao painel”) é outro `Botao`, remover seta. G17 já está feita no main; a reserva antiga não impede esta alteração. Nenhuma ocorrência funcional estava em link.
+Correção da revisão: setas direcionais voltaram, pois a regra M2 remove apenas a seta decorativa no fim do botão. A biblioteca indica `Botao` para botões e `Acao` para ações de navegação; não foi criada peça nova. Foram restaurados: `app/service/membro/Biblia.tsx:190` e `:230` (“← Livros”), `:202` (“← Capítulos”), `:204` (“‹”, com `aria-label="Capítulo anterior"`) e `:206` (“›”, com `aria-label="Próximo capítulo"`); `app/service/membro/Conversas.tsx:290` (“← {nomeDa(chat)}”, no lugar de “Voltar: nome”); `app/service/MobileApp.tsx:617` (“← Voltar ao painel”). O “← Perfil” existente em Minha história é o padrão visual seguido. Os rótulos “Ant.” e “Próx.” foram removidos. As únicas setas retiradas pela M2 são as decorativas finais descritas na varredura acima.
 
 Fotos abertas, 390×844. O medidor é `scripts/medir-densidade.js`, `__medir(44)`, limite 12 ações e 80 palavras:
 
@@ -69,25 +69,24 @@ Fotos abertas, 390×844. O medidor é `scripts/medir-densidade.js`, `__medir(44)
 | Mensagens | 11 / 77 | 11 / 77 | Mural, conversas existentes e Nova mensagem; sem alteração visível na primeira dobra. MD5 igual. |
 | Caminhada | 6 / 52 | 6 / 51 | “Já participo →” virou “Já participo”; mesma ação, um caractere a menos. |
 | Primeiro acesso | 3 / 40 | 3 / 39 | O botão “Continuar →” passou a “Continuar”. Usei membro2, cujo cadastro já estava incompleto; não salvei o formulário. |
-| Mural | 5 / 19 | 5 / 9 | Estado vazio, sem publicações. As duas imagens são idênticas; o botão condicional “Ver todas” não aparece sem publicação alvo. |
+| Mural | 5 / 19 | 5 / 9 | Estado vazio, sem publicações. A foto não prova o botão condicional “Ver todas”; não foi possível criar uma publicação alvo nesta retificação. |
 | Nova mensagem | 0 / 0 | 0 / 0 | O estado aberto não tinha líder disponível. A foto aberta mostra o formulário e “Nenhum líder disponível ainda”; a linha com seta não foi renderizada. |
-| Bíblia | 37 / 55 | 37 / 54 | Conteúdo carregado. “Minhas marcações →” perdeu a seta. As duas estão fora da lei pelo limite de 12 ações, com contagem de ações igual. |
+| Bíblia, marcações | 6 / 19 | 6 / 20 | “← Livros” restaurado; 390×844. MD5 antes `ea0922ce01881ae19e4c57470181fd37`, depois `39e5a0fdfe1623efc780248cb60eace4`. |
+| Bíblia, capítulos | 51 / 54 | 51 / 55 | “← Livros” restaurado; captura antes tinha o retorno ausente. Fora da lei pelo limite 12 ações, sem aumento de ações. MD5 antes `8052e07f1039ee0209481f77098e2070`, depois `ae6c2a15e3a3823a31f932518db3f810`. |
+| Bíblia, leitor | 14 / 155 | 14 / 156 | “← Capítulos” e ‹ › restaurados, com aria-labels mantidos; fora da lei pelos limites 12/80, sem aumento de ações. MD5 antes `e2a9e852f9e073562059a6e1830608d5`, depois `b9984b35f4cbcf8ca1256bf2f368f3dd`. |
 
 Todas as demais medidas ficaram dentro do limite 12/80. Agenda foi medida em 15/72 antes, fora da lei; não alterei essa tela. Não consegui abrir Visitantes por clique: Maria serve somente em Louvor (consulta local a `person_ministries`) e o líder entra no painel, sem a navegação de membro. Não encontrei cursos nem matrícula para exibir “Abrir meu curso” ou “Quero me inscrever”; nenhum dado foi criado.
 
-MD5 das fotos abertas:
-- Início antes/depois `143ca8b09473d52a6d1e93d9b157a92c` / `143ca8b09473d52a6d1e93d9b157a92c`.
-- Mensagens antes/depois `2d8adf3af460dca5d396f0883cea3207` / `2d8adf3af460dca5d396f0883cea3207`.
+MD5 das fotos pertinentes abertas:
 - Caminhada antes/depois `325a52194d3347ffa0ecff574cef92dc` / `5beab52211bf3ae9d19ffe75191eb398`.
 - Primeiro acesso antes/depois `18d441cefb48747b45715960128b938e` / `46fe2a7e8d9139088e9e59c5c745dccb`.
-- Mural antes/depois `ddb2f9fbfd0d6d343cabb07f0608c7ba` / `ddb2f9fbfd0d6d343cabb07f0608c7ba`.
-- Nova mensagem antes/depois `04f54e1a110c65c2a957aeed9e74ad9f` / `04f54e1a110c65c2a957aeed9e74ad9f`.
-- Bíblia antes/depois `2da11490d388ec62c61434c352e1f361` / `a2afa421fbe690b45fc8d70bbbf62bf0`.
-- Agenda antes, sem alteração de rota `1ba6e87fa86f48d5401bd378114a3346`.
+- Bíblia, marcações/capítulos/leitor: MD5s registrados na tabela acima; cada par antes/depois é distinto.
 
-Também removi as setas de “Voltar ao painel” e dos dois botões “Gerenciar” em `MobileApp.tsx`. As novas chaves de tradução foram incluídas nos catálogos pt-BR, en-US e es-ES e no índice de referências. O botão “Voltar ao painel” pertence ao modo de pré-visualização, que não é instanciado atualmente. Os botões “Gerenciar” aparecem no modo self quando a conta tem permissão de gestão. Tentei capturar por cliques: `lider@teste.local` abriu o app sem o callback de gestão; `master@teste.local` abriu o primeiro acesso incompleto do membro, sem chegar à tela com esses botões. Não alterei o perfil para ultrapassar o primeiro acesso. Portanto, não há foto pós-mudança da ramificação de “Gerenciar”; as fotos e medições documentadas na tabela cobrem as telas já acessíveis da história.
+As chaves de tradução de “← Voltar ao painel” estão nos catálogos pt-BR, en-US e es-ES e no índice de referências. O preview não é instanciado atualmente. Testei gestão com `lider@teste.local` e também com `outra@teste.local`, o outro master listado no seed; não alterei perfil para contornar primeiro acesso. Resultado: “Gerenciar” não verificado na tela, porque as duas sessões não chegaram à condição de `onSwitchToPanel` ativo. O trecho só renderiza no modo self quando esse callback existe (`ServiceExactApp.tsx:877`).
+
+As imagens antigas idênticas foram removidas (Início, Mensagens, Mural vazio e Nova mensagem sem líder). A tela Mural com publicação alvo e as telas de curso em andamento/matrícula não foram verificadas nesta retificação: não foi criado dado temporário para elas, então não há foto válida desses controles.
 
 TypeScript e ESLint passaram sem erros; `Inicio.tsx` mantém quatro avisos preexistentes. A busca de setas e chevrons nos rótulos de botão da trilha não encontrou outros casos funcionais. O status foi concluído com autorização para editar `MobileApp.tsx`, apesar da reserva G17 obsoleta.
 
 ## Notas
-Concluída por codex. As fotos e medições das telas existentes estão documentadas acima; as três mudanças em `MobileApp.tsx` foram validadas por TypeScript, ESLint e revisão dos catálogos de tradução.
+Concluída por codex. Setas de direção foram restauradas; as setas decorativas finais seguem removidas. Fotos bíblicas e medições atualizadas acima.

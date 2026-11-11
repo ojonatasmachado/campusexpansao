@@ -287,7 +287,7 @@ export function TabConversas({
       <div className="m-chat">
         {!onChatOpen && (
           <Acao className="m-chat-back" onClick={() => setSelId(null)}>
-            Voltar: {nomeDa(chat)}
+            ← {nomeDa(chat)}
           </Acao>
         )}
         <div className="chat-thread">

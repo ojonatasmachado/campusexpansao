@@ -614,7 +614,7 @@ export default function MobileOverlay(props: MobileOverlayProps) {
     : null;
 
   const closeAction = isSelf ? onLogout ?? onClose : onClose;
-  const closeLabel = isSelf ? traduzirUi("Sair") : traduzirUi("Voltar ao painel");
+  const closeLabel = isSelf ? traduzirUi("Sair") : traduzirUi("← Voltar ao painel");
 
   if (!person) {
     return (
