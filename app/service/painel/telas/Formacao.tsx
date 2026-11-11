@@ -235,7 +235,7 @@ export function CursosTrilhas({
       <PageHead
         title="Cursos e Trilhas"
         eyebrow={ct("{Caminhada}")}
-        help={ct("Formações da igreja, da decisão à liderança. Cada aula concluída entra na {caminhada} da pessoa.")}
+        help={ct("As trilhas formam a pessoa da decisão à liderança. Cada aula concluída entra na {caminhada} da pessoa.")}
         action={
           <Botao variante="principal" onClick={() => setEditingId("new")}>
             + Nova trilha
@@ -244,10 +244,10 @@ export function CursosTrilhas({
       />
 
       <div className="kpi-row">
-        <Indicador icone="cursos" rotulo="Cursos ativos" valor={courses.length} rodape="trilhas, conteúdo e presenciais" ajuda="Trilhas de formação disponíveis hoje, da decisão à liderança." />
-        <Indicador icone="membros" rotulo="Matrículas" valor={totMatric} rodape="pessoas cursando agora" ajuda="Quantas pessoas estão matriculadas em algum curso neste momento." />
-        <Indicador icone="ok" rotulo="Conclusões" valor={totConcl} rodape={totMatric ? `${Math.round((totConcl / totMatric) * 100)}% de conclusão` : "sem matrículas ainda"} ajuda="Matrículas que já terminaram todas as aulas do curso." />
-        <Indicador icone="times" rotulo="Em formação de líderes" valor={emFormacao} rodape="na trilha de liderança" ajuda="Quem está cursando especificamente a trilha de formação de líderes." />
+        <Indicador icone="cursos" rotulo="Cursos ativos" valor={courses.length} rodape="trilhas, conteúdo e presenciais" />
+        <Indicador icone="membros" rotulo="Matrículas" valor={totMatric} rodape="pessoas cursando agora" />
+        <Indicador icone="ok" rotulo="Conclusões" valor={totConcl} rodape={totMatric ? `${Math.round((totConcl / totMatric) * 100)}% de conclusão` : "sem matrículas ainda"} />
+        <Indicador icone="times" rotulo="Em formação de líderes" valor={emFormacao} rodape="na trilha de liderança" />
       </div>
 
       {/* uma fileira só: os tipos de curso e, no fim, organizar */}
