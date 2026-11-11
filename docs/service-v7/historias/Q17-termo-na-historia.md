@@ -14,7 +14,7 @@ tamanho: P
 Os fatos de integração guardam o marcador `{Grupo}` em `service.timeline_events.title`, mas duas telas exibem o título sem resolver o vocabulário da igreja.
 
 ## Arquivos (trilho)
-- `app/service/lib/historico.ts`
+- `app/service/lib/titulo-historico.ts`
 - `app/service/painel/telas/ficha/PersonTimeline.tsx`
 - `app/service/membro/Caminhada.tsx`
 - `docs/service-v7/historias/Q17-termo-na-historia.md`
