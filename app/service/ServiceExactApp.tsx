@@ -26,7 +26,6 @@ import { VocabularioProvider } from "./lib/vocabulario-context";
 import EventoShare from "./EventoShare";
 import { ServiceAccessProvider } from "./AccessContext";
 import ChurchLockup from "./ChurchLockup";
-import { ORIGEM_AUTOCADASTRO } from "./modules/visitantes/autocadastro";
 import TopUserMenu from "./TopUserMenu";
 import { Coachmark, HelpFab, TOUR_DESKTOP, type SetupCounts } from "./HelpSystem";
 import { EmptyState, RouteGroupContext } from "./painel/ui";
@@ -50,7 +49,7 @@ import { Secretaria } from "./modules/secretaria/Secretaria";
 import { ativacaoSubstituiTour, SETUP_INICIAL, type SetupEstado } from "./modules/configuracao/setup";
 import { encontroUtil } from "./modules/configuracao/ativacao";
 import { ROTA_GRUPO, modulosDoInicio, navGroups, podeVerRota, rotaLigada } from "./modules/registry";
-import { CEX_ICON_FOR, ROUTES, VISITOR_STAGES, ligadosDa, matrizComFallback, openMemberInviteWhatsapp, semContato48h, weekdayShortFromDate } from "./painel/comum";
+import { CEX_ICON_FOR, ROUTES, VISITOR_STAGES, ligadosDa, matrizComFallback, openMemberInviteWhatsapp, semContato48h, visitantePeloLink, weekdayShortFromDate } from "./painel/comum";
 import { GlobalSearch, Painel } from "./painel/telas/Inicio";
 import { Times } from "./painel/telas/Times";
 import { Config } from "./painel/telas/Config";
@@ -774,6 +773,11 @@ export default function ServiceExactApp({
      Sem tela liberada, qualquer papel usa o próprio app, sem painel vazio. */
   const podeGerenciar = temTelaLiberada;
   const [route, setRoute] = usePanelNavigation(initialPanelRoute, (Object.keys(ROUTES) as (keyof typeof ROUTES)[]).filter(podeVerItem), rotasPermitidas[0] ?? "painel", podeGerenciar, podeGerenciar && view === "gestao", setViewState);
+  const [filtroDiretorio, setFiltroDiretorio] = useState<{ route: "visitantes" | "membros" | "pessoas"; filtro: "sem-contato" | "pelo-link" | "em-grupos" | "servindo" | "membros" } | null>(null);
+  const abrirDiretorio = (tela: "visitantes" | "membros" | "pessoas", filtro?: "sem-contato" | "pelo-link" | "em-grupos" | "servindo" | "membros") => {
+    setFiltroDiretorio(filtro ? { route: tela, filtro } : null);
+    setRoute(tela);
+  };
   /* tela nova abre do topo: sem isso, Escalas abria na altura em que o Início estava
      rolado. Layout effect roda antes dos efeitos das telas, então a rolagem até o time
      de Escalas (foco vindo da cobertura) continua valendo. */
@@ -890,7 +894,7 @@ export default function ServiceExactApp({
   const linkDoMenu = (item: NavGroups[number]["items"][number]) => {
     const badge = navBadge[item.id] ?? 0;
     return (
-      <Acao key={item.id} className={`sb-link ${route === item.id ? "on" : ""}`} data-tour={item.id} onClick={() => { setRoute(item.id); if (!showTour) setNavOpen(false); }}>
+      <Acao key={item.id} className={`sb-link ${route === item.id ? "on" : ""}`} data-tour={item.id} onClick={() => { setFiltroDiretorio(null); setRoute(item.id); if (!showTour) setNavOpen(false); }}>
         <span className="sb-ic"><Icon name={CEX_ICON_FOR[item.id] ?? item.icon} size={17} /></span>
         {ct(item.label)}
         {badge > 0 ? <span className="sb-badge">{badge}</span> : null}
@@ -977,7 +981,7 @@ export default function ServiceExactApp({
               people={pessoasNaBusca}
               members={membrosNaBusca}
               ministries={timesNaBusca}
-              setRoute={setRoute}
+              setRoute={(r) => { setFiltroDiretorio(null); setRoute(r); }}
               setDrawer={setDrawer}
               telas={NAV_GROUPS.flatMap((g) => g.items.filter((item) => podeVerItem(item.id)).map((item) => ({ id: item.id, label: item.label, icon: CEX_ICON_FOR[item.id] ?? item.icon, grupo: g.group })))}
             />
@@ -1002,7 +1006,8 @@ export default function ServiceExactApp({
             activePeople={activePeople}
             userName={eu?.name}
             visitantesSemContato={navBadge.visitantes ?? 0}
-            visitantesPeloLink={visitors.filter((v) => v.origin === ORIGEM_AUTOCADASTRO && v.stage === "novo" && !v.reply_status && !visitorNotes.some((n) => n.visitor_id === v.id) && !semContato48h(v, visitorNotes)).length}
+            visitantesPeloLink={visitors.filter((v) => visitantePeloLink(v, visitorNotes)).length}
+            abrirDiretorio={abrirDiretorio}
 
             novosNoMes={people.filter((p) => { const m = members.find((x) => x.volunteerId === p.id); return m ? ehNovo(m) : ehNovo({ createdAt: p.createdAt }); }).length}
             gaps={gaps}
@@ -1041,12 +1046,12 @@ export default function ServiceExactApp({
             cuidado={ligados.has("cuidado") ? { lista: daMinhaLista(listaCuidado, currentPersonId, currentRole === "master" || currentRole === "pastor"), todos: listaCuidado, criancas: criancasAusentes, semanas: semanasCuidado } : null}
           />
         ) : null}
-        {route === "membros" ? <Membros members={members} people={people} ministries={ministries} church={firstChurch} setDrawer={setDrawer} setModal={setModal} soTimes={pessoasSoDoTime ? misteriosQueLidero : null} /> : null}
+        {route === "membros" ? <Membros key={filtroDiretorio?.route === "membros" ? filtroDiretorio.filtro : "todos"} members={members} people={people} ministries={ministries} church={firstChurch} setDrawer={setDrawer} setModal={setModal} filtroInicial={filtroDiretorio?.route === "membros" && (filtroDiretorio.filtro === "em-grupos" || filtroDiretorio.filtro === "membros") ? filtroDiretorio.filtro : undefined} onLimparFiltro={() => setFiltroDiretorio(null)} soTimes={pessoasSoDoTime ? misteriosQueLidero : null} /> : null}
         {route === "aniversariantes" ? <Aniversariantes base={aniversariantesBase} escopo={aniversariosEscopo} comIdade={podePrevisualizar} times={ministries} grupos={fellowshipGroups} onAbrir={abrirAniversariante} podeAbrirPessoa={(p) => podeVerItem(p.tipo === "member" ? "membros" : "pessoas")} /> : null}
-        {route === "pessoas" ? <Pessoas people={people} currentPersonId={currentPersonId} setDrawer={setDrawer} setModal={setModal} /> : null}
+        {route === "pessoas" ? <Pessoas key={filtroDiretorio?.route === "pessoas" ? filtroDiretorio.filtro : "todos"} people={people} ministries={ministries} filtroInicial={filtroDiretorio?.route === "pessoas" && filtroDiretorio.filtro === "servindo" ? "servindo" : undefined} onLimparFiltro={() => setFiltroDiretorio(null)} currentPersonId={currentPersonId} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "times" ? <Times ministries={ministries} people={people} members={members} serveRequests={serveRequests} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "times" ? <details className="teams-config"><summary>Configurações de times e requisitos</summary><Config key={firstChurch?.id} church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} kidsClasses={kidsClasses} currentRole={currentRole} currentExtraAccess={currentExtraAccess} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} only="min" embedded /></details> : null}
-        {route === "visitantes" ? <Visitantes visitors={visitors} visitorNotes={visitorNotes} people={people} church={firstChurch} setDrawer={setDrawer} setModal={setModal} /> : null}
+        {route === "visitantes" ? <Visitantes key={filtroDiretorio?.route === "visitantes" ? filtroDiretorio.filtro : "todos"} visitors={visitors} visitorNotes={visitorNotes} filtroInicial={filtroDiretorio?.route === "visitantes" ? filtroDiretorio.filtro === "sem-contato" || filtroDiretorio.filtro === "pelo-link" ? filtroDiretorio.filtro : null : null} onLimparFiltro={() => setFiltroDiretorio(null)} people={people} church={firstChurch} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "criancas" ? <Criancas kidsChildren={kidsChildren} kidsClasses={kidsClasses} childGuardians={childGuardians} people={people} kidsEvents={kidsEvents} rooms={rooms} church={firstChurch} /> : null}
         {route === "decisoes" ? <Decisoes decisions={decisions} members={members} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "batismos" ? <Batismos baptismClasses={baptismClasses} baptismCandidates={baptismCandidates} decisions={decisions} members={members} rooms={rooms} setDrawer={setDrawer} setModal={setModal} /> : null}

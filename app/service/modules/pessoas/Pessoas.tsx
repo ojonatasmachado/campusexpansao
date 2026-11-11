@@ -99,10 +99,10 @@ async function copiarTelefones(linhas: { member?: MemberView; person?: PersonVie
    a coluna "Serve em". As tabelas do banco continuam separadas; aqui é só a
    tela. */
 type PessoaLinha = { key: string; name: string; sub: string; member?: MemberView; person?: PersonView; mins: MinistryView[]; leader: boolean; novo: boolean; photoUrl?: string | null };
-export function Membros({ members, people = [], ministries, church, setDrawer, setModal, soTimes = null }: { members: MemberView[]; people?: PersonView[]; ministries: MinistryView[]; church?: ChurchView; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void; soTimes?: string[] | null }) {
+export function Membros({ members, people = [], ministries, church, setDrawer, setModal, soTimes = null, filtroInicial, onLimparFiltro }: { members: MemberView[]; people?: PersonView[]; ministries: MinistryView[]; church?: ChurchView; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void; soTimes?: string[] | null; filtroInicial?: "em-grupos" | "membros"; onLimparFiltro?: () => void }) {
   const { comTermos: ct } = useTermos();
   const [q, setQ] = useState("");
-  const [filtro, setFiltro] = useState<"todos" | "membros" | "voluntarios" | "lideres" | "novos">("todos");
+  const [filtro, setFiltro] = useState<"todos" | "membros" | "voluntarios" | "lideres" | "novos" | "em-grupos">(filtroInicial ?? "todos");
   const [importando, setImportando] = useState(false);
   const router = useRouter();
   const minsDe = (personId: string | null | undefined) => (personId ? ministries.filter((min) => min.people.some((p) => p.personId === personId)) : []);
@@ -135,7 +135,7 @@ export function Membros({ members, people = [], ministries, church, setDrawer, s
   };
   const visible = linhas.filter((l) => {
     const okQ = !q || l.name.toLowerCase().includes(q.toLowerCase()) || l.sub.includes(q) || (q.replace(/\D/g, "").length >= 3 && l.sub.replace(/\D/g, "").includes(q.replace(/\D/g, "")));
-    const okF = filtro === "todos" || (filtro === "membros" && !!l.member) || (filtro === "voluntarios" && l.mins.length > 0) || (filtro === "lideres" && l.leader) || (filtro === "novos" && l.novo);
+    const okF = filtro === "todos" || (filtro === "membros" && !!l.member) || (filtro === "voluntarios" && l.mins.length > 0) || (filtro === "lideres" && l.leader) || (filtro === "novos" && l.novo) || (filtro === "em-grupos" && !!l.member?.groupId);
     return okQ && okF;
   });
   const abrir = (l: PessoaLinha) => setDrawer(l.member ? { kind: "member", id: l.member.id } : { kind: "person", id: l.person!.id });
@@ -150,6 +150,7 @@ export function Membros({ members, people = [], ministries, church, setDrawer, s
           ))}
         </Segmentado>
       </div>
+      {filtroInicial && <div className="panel-head" role="status"><span className="panel-meta">Filtro: {filtro === "em-grupos" ? `membros em ${ct("{grupos}")}` : "membros registrados"}</span><Botao variante="texto" onClick={() => { setFiltro("todos"); onLimparFiltro?.(); }}>Limpar filtro</Botao></div>}
       <p className="jrn-legenda"><b>{ct("{Caminhada}")}</b>, uma barra por etapa, na ordem: {JRN_STEPS.map((s) => ct(s.label)).join(" · ")}.</p>
       <Tabela
         rotulo="Pessoas"
@@ -175,14 +176,16 @@ export function Membros({ members, people = [], ministries, church, setDrawer, s
   );
 }
 
-export function Pessoas({ people, currentPersonId, setDrawer, setModal }: { people: PersonView[]; currentPersonId?: string | null; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void }) {
+export function Pessoas({ people, ministries = [], currentPersonId, setDrawer, setModal, filtroInicial, onLimparFiltro }: { people: PersonView[]; ministries?: MinistryView[]; currentPersonId?: string | null; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void; filtroInicial?: "servindo"; onLimparFiltro?: () => void }) {
   const { comTermos: ct } = useTermos();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<"todos" | "ativo" | "pausa">("todos");
+  const [filtroServindo, setFiltroServindo] = useState(filtroInicial === "servindo");
   const visible = people.filter((person) => {
     const okQ = !q || person.name.toLowerCase().includes(q.toLowerCase());
     const okStatus = status === "todos" || person.status === status;
-    return okQ && okStatus;
+    const okServe = !filtroServindo || (person.status === "ativo" && ministries.some((min) => min.people.some((p) => p.personId === person.id)));
+    return okQ && okStatus && okServe;
   });
   return (
     <div className="content">
@@ -197,6 +200,7 @@ export function Pessoas({ people, currentPersonId, setDrawer, setModal }: { peop
         <div className="tb-spacer" />
         <span className="panel-meta">{visible.length} pessoas</span>
       </div>
+      {filtroServindo && <div className="panel-head" role="status"><span className="panel-meta">Filtro: pessoas que servem em times</span><Botao variante="texto" onClick={() => { setFiltroServindo(false); onLimparFiltro?.(); }}>Limpar filtro</Botao></div>}
       <div className="tbl">
         <Linha estilo="tabela" className="head tr-people"><div>{ct("{Voluntario}")}</div><div>Disponibilidade</div><div>Etiquetas</div><div>Status</div></Linha>
         {visible.map((person) => (
@@ -218,4 +222,3 @@ export function Pessoas({ people, currentPersonId, setDrawer, setModal }: { peop
     </div>
   );
 }
-

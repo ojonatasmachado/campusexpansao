@@ -18,11 +18,10 @@ import { type Ausente } from "../../modules/cuidado/cuidado";
 import type { CriancaAusente } from "../../modules/cuidado/Cuidado";
 import { usePedidosConta } from "../../modules/entrada/usePedidosConta";
 import { NovosCadastros } from "../../modules/entrada/NovosCadastros";
-import { numerosDaBase, type DadosSaude, type ItemPessoa } from "../../modules/inicio/saude";
+import { numerosDaBase, type DadosSaude } from "../../modules/inicio/saude";
 import { linhaDoSetup, type SetupEstado } from "../../modules/configuracao/setup";
 import { termosDaRota } from "../../modules/registry";
-import { REACOES_PESQUISA, ROUTES, semContato48h } from "../comum";
-import { ORIGEM_AUTOCADASTRO } from "../../modules/visitantes/autocadastro";
+import { REACOES_PESQUISA, ROUTES, semContato48h, visitantePeloLink } from "../comum";
 import { Indicador } from "../../ui/Indicador";
 import type { AnnouncementView, ChildView, DecisionView, DrawerState, EnrollmentView, EventAttendanceView, EventView, FieldDef, JourneyChangeRequestView, KidsAttendanceView, KidsClassView, MemberView, MinistryView, ModalState, PersonView, RosterAssignmentView, TimelineEventView, VisitorNoteView, VisitorView } from "../tipos";
 
@@ -236,6 +235,7 @@ export function Painel({
   onApproveJourney,
   onRejectJourney,
   setRoute,
+  abrirDiretorio,
   podeAbrir = () => true,
   modulosPendencias,
   setDrawer,
@@ -271,6 +271,7 @@ export function Painel({
   onApproveJourney: (request: JourneyChangeRequestView) => void | Promise<void>;
   onRejectJourney: (request: JourneyChangeRequestView) => void | Promise<void>;
   setRoute: (route: keyof typeof ROUTES) => void;
+  abrirDiretorio: (route: "visitantes" | "membros" | "pessoas", filtro?: "sem-contato" | "pelo-link" | "em-grupos" | "servindo" | "membros") => void;
   podeAbrir?: (route: keyof typeof ROUTES) => boolean;
   modulosPendencias: Set<string>;
   setDrawer: (drawer: DrawerState) => void;
@@ -304,7 +305,6 @@ export function Painel({
   const [jornadaAberta, setJornadaAberta] = useState(false);
   const [cuidadoAberto, setCuidadoAberto] = useState<"adultos" | "criancas" | null>(null);
   const [coberturaAberta, setCoberturaAberta] = useState(false);
-  const [saudeAberta, setSaudeAberta] = useState<{ titulo: string; itens: ItemPessoa[] } | null>(null);
   const [pedidosResolvidos, setPedidosResolvidos] = useState<{ origem: JourneyChangeRequestView[]; ids: Set<string> } | null>(null);
   // A atualização local só vale até chegarem novas props da fonte existente.
   const pedidosJornada = pedidosResolvidos?.origem === journeyRequests
@@ -362,10 +362,10 @@ export function Painel({
           });
         }
         if (!liderDeTime && podeAbrir("visitantes") && visitantesSemContato > 0) {
-          filas.push({ key: "visitantes-contato", t: visitantesSemContato === 1 ? "1 visitante sem contato" : `${visitantesSemContato} visitantes sem contato`, s: " · há mais de 48h", go: "Ver →", action: () => { const alvo = visitors?.find((v) => semContato48h(v, visitorNotes)); if (!alvo) return; setRoute("visitantes"); setDrawer({ kind: "visitor", id: alvo.id }); } });
+          filas.push({ key: "visitantes-contato", t: visitantesSemContato === 1 ? "1 visitante sem contato" : `${visitantesSemContato} visitantes sem contato`, s: " · há mais de 48h", go: "Ver →", action: () => { const alvos = (visitors ?? []).filter((v) => semContato48h(v, visitorNotes)); if (alvos.length === 1) { setRoute("visitantes"); setDrawer({ kind: "visitor", id: alvos[0].id }); } else abrirDiretorio("visitantes", "sem-contato"); } });
         }
         if (!liderDeTime && podeAbrir("visitantes") && visitantesPeloLink > 0) {
-          filas.push({ key: "visitantes-link", t: `${plural(visitantesPeloLink, "visitante")} ${visitantesPeloLink === 1 ? "se cadastrou" : "se cadastraram"} pelo link`, s: " · esperando o 1º contato", go: "Ver →", action: () => { const alvo = visitors?.find((v) => v.origin === ORIGEM_AUTOCADASTRO && v.stage === "novo" && !v.reply_status && !visitorNotes.some((n) => n.visitor_id === v.id) && !semContato48h(v, visitorNotes)); if (!alvo) return; setRoute("visitantes"); setDrawer({ kind: "visitor", id: alvo.id }); } });
+          filas.push({ key: "visitantes-link", t: `${plural(visitantesPeloLink, "visitante")} ${visitantesPeloLink === 1 ? "se cadastrou" : "se cadastraram"} pelo link`, s: " · esperando o 1º contato", go: "Ver →", action: () => { const alvos = (visitors ?? []).filter((v) => visitantePeloLink(v, visitorNotes)); if (alvos.length === 1) { setRoute("visitantes"); setDrawer({ kind: "visitor", id: alvos[0].id }); } else abrirDiretorio("visitantes", "pelo-link"); } });
         }
         if (pedidosJornada.length > 0) {
           filas.push({ key: "jornada", t: ct(`${plural(pedidosJornada.length, "pedido", "pedidos")} na {caminhada}`), s: " · esperando aprovação", go: "Revisar →", action: () => setJornadaAberta(true) });
@@ -426,7 +426,7 @@ export function Painel({
         return (
           <div className="kpi-row">
             {base.map((n) => (
-              <Indicador key={n.id} estilo="cartao" icone={n.id === "membros" ? "membros" : n.id === "servindo" ? "escalas" : "grupos"} valor={n.valor} rotulo={ct(n.rotulo)} aoAbrir={() => setSaudeAberta({ titulo: ct(n.rotulo), itens: n.itens })} rotuloAcao={`${ct(n.rotulo)}: ${n.valor}. Ver a lista`} />
+              <Indicador key={n.id} estilo="cartao" icone={n.id === "membros" ? "membros" : n.id === "servindo" ? "escalas" : "grupos"} valor={n.valor} rotulo={ct(n.rotulo)} aoAbrir={() => abrirDiretorio(n.id === "servindo" ? "pessoas" : "membros", n.id === "servindo" ? "servindo" : n.id === "grupos" ? "em-grupos" : "membros")} rotuloAcao={`${ct(n.rotulo)}: ${n.valor}. Ver a lista`} />
             ))}
           </div>
         );
@@ -475,13 +475,9 @@ export function Painel({
       {cuidadoAberto && cuidado && <Gaveta larga rotulo={cuidadoAberto === "adultos" ? "Pessoas sem registro" : "Crianças sem check-in"} aoFechar={() => setCuidadoAberto(null)}>
         <ListaDeCuidado lista={cuidado.lista} criancas={cuidado.criancas} semanas={cuidado.semanas} visaoInicial={cuidadoAberto} onAbrir={(ausente) => { setCuidadoAberto(null); setRoute(ausente.memberId ? "membros" : "pessoas"); setDrawer(ausente.memberId ? { kind: "member", id: ausente.memberId } : { kind: "person", id: ausente.personId }); }} />
       </Gaveta>}
-      {coberturaAberta && <Gaveta larga rotulo="Cultos com vaga aberta" aoFechar={() => setCoberturaAberta(false)}>
-        <div className="panel-head"><span className="panel-title">Cultos com vaga aberta</span></div>
+      {coberturaAberta && <Gaveta larga rotulo={ct("{Cultos} com vaga aberta")} aoFechar={() => setCoberturaAberta(false)}>
+        <div className="panel-head"><span className="panel-title">{ct("{Cultos} com vaga aberta")}</span></div>
         <div className="panel-body flush">{faltas.map(({ conteudo: { evento, resumo } }) => <Acao className={linhaClasse({})} key={evento.id} onClick={() => { setCoberturaAberta(false); setDrawer({ kind: "event", id: evento.id, tab: "panorama" }); }}><div className="mini-main"><div className="mini-title">{evento.name} · {formatDateBR(evento.eventDate)}</div><div className="mini-sub">{resumo}</div></div><span className="text-pn-14">Ver panorama →</span></Acao>)}</div>
-      </Gaveta>}
-      {saudeAberta && <Gaveta larga rotulo={saudeAberta.titulo} aoFechar={() => setSaudeAberta(null)}>
-        <div className="panel-head"><span className="panel-title">{saudeAberta.titulo}</span></div>
-        <div className="panel-body flush">{saudeAberta.itens.map((item) => <Acao className={linhaClasse({})} key={`${item.tipo}-${item.id}`} onClick={() => { setSaudeAberta(null); setRoute(item.tipo === "member" ? "membros" : "pessoas"); setDrawer(item.tipo === "member" ? { kind: "member", id: item.id } : { kind: "person", id: item.id }); }}><span className="mini-title">{item.nome}</span><span className="text-pn-14">Abrir →</span></Acao>)}</div>
       </Gaveta>}
       {/* v7 I1: blocos "Comunicação recente" e "Crianças por turma" removidos.
           Telas donas existem (Mural e Crianças). Pendências reais já estão na fila. */}

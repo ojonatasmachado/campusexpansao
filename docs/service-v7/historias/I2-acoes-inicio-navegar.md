@@ -15,7 +15,10 @@ As linhas, indicadores e atalhos do Início precisam abrir a unidade que resolve
 
 ## Arquivos (trilho)
 - `app/service/painel/telas/Inicio.tsx`
-- `app/service/ServiceExactApp.tsx` (passa visitorNotes existente ao Início)
+- `app/service/painel/telas/Visitantes.tsx`
+- `app/service/painel/comum.tsx`
+- `app/service/modules/pessoas/Pessoas.tsx`
+- `app/service/ServiceExactApp.tsx`
 - `app/service/modules/cuidado/`
 - `docs/service-v7/historias/I2-acoes-inicio-navegar.md`
 - `docs/service-v7/historias/screenshots/I2-*.png`
@@ -26,64 +29,49 @@ As linhas, indicadores e atalhos do Início precisam abrir a unidade que resolve
 - Nenhuma permissão ampliada.
 
 ## Inventário de ações
-O destino é aberto por clique, preservando os filtros e os itens já carregados pela casca. Não foi acrescentada consulta ao banco nem permissão.
+O destino abre por clique e usa estado/dados já carregados pela casca. Não foi acrescentada consulta ao banco nem permissão.
 
-| Ação do Início | Gestão (master) | Líder de time |
+| Ação | Gestão (master) | Líder de time |
 |---|---|---|
-| Para resolver: culto com vaga, até os três primeiros | Abre o culto exato na gaveta Panorama. | Abre o culto exato na gaveta Panorama, limitado aos times de `scopeMinistryIds`. |
-| Ver todos os cultos com falta | Abre a gaveta com todas as faltas calculadas; tocar uma linha abre o Panorama daquele culto. | Só aparece se houver mais de três faltas dentro dos times visíveis; mesmos destinos filtrados. |
-| Visitante sem contato há 48h | Abre a ficha do visitante elegível na rota Visitantes. | Não aparece, como antes, pois o papel não vê Visitantes. |
-| Visitante cadastrado pelo link | Abre a ficha do visitante que corresponde à fila de novos cadastros por link. | Não aparece. |
-| Pedido de mudança da Caminhada | Abre a folha de pedidos já filtrada por `visibleJourneyRequests`; o escopo segue a permissão existente. | Só pedidos que já chegam em `visibleJourneyRequests` para a liderança; não amplia o acesso. A linha já abria essa folha. |
-| Pedido de conta | Gestão vê a linha e abre a lista de Novos cadastros. | Não aparece. |
-| Pessoa sem registro de cuidado | Abre gaveta na visão Pessoas sem registro; selecionar abre a ficha exata de membro/pessoa. | Não aparece, como antes. |
-| Criança sem check-in | Abre gaveta diretamente na visão Crianças sem check-in; selecionar abre a ficha associada. | Não aparece, como antes. |
-| Indicador Saúde: membros, servindo em times ou em grupos | Abre a gaveta com os itens que compõem aquele indicador; selecionar abre a ficha da pessoa/membro exata. | Indicadores de Saúde não são renderizados para líder. |
-| Atalho de preparação | Abre Configurações. A lista Revisar preparação só é montada para gestão com acesso a configurar, Times, Cultos e Pessoas. | Não aparece sem permissão/configuração. |
-| Busca do painel: tela | Só oferece telas presentes no menu autorizado; clique abre a tela dona. | Só telas do menu do líder; não exibe Visitantes, Configurações ou módulos sem acesso. |
-| Busca: pessoa/membro/time/função | Resultado abre ficha da pessoa/membro ou gaveta do time correspondente; funções levam ao time que as contém. | Usa apenas resultados das rotas que o papel vê. Times/funções seguem a mesma lista visível na rota Times; selecionar resultado abre a gaveta daquele time. |
+| Culto com vaga, até três primeiros | Abre o culto exato na gaveta Panorama. | Abre o culto exato no Panorama, limitado a `scopeMinistryIds`. |
+| Ver todos os cultos com falta | Abre a gaveta; tocar uma linha abre o Panorama daquele culto. O título e rótulo usam `ct("{Cultos} com vaga aberta")`. | Só aparece se houver faltas nos times visíveis; abre a mesma gaveta filtrada. |
+| Visitante sem contato há 48h | 1 resultado abre a ficha; 2 ou mais abrem Visitantes filtrada com aviso e Limpar filtro; sem resultado abre a lista com estado vazio. | Não aparece, pois o papel não vê Visitantes. |
+| Visitante recebido pelo link | Mesma regra 1/2+/0. A contagem e o filtro usam a função comum `visitantePeloLink` em `painel/comum.tsx`. | Não aparece. |
+| Pedido de mudança da Caminhada | Abre a folha com `visibleJourneyRequests`. | Só os pedidos já recebidos em `visibleJourneyRequests`, sem ampliar escopo. |
+| Pedido de conta | Linha abre a lista de Novos cadastros. | Não aparece. |
+| Pessoa sem registro de cuidado | Abre a gaveta de cuidado; selecionar abre a ficha exata. | Não aparece, como antes. |
+| Criança sem check-in | Abre a gaveta de crianças sem check-in; selecionar abre a ficha associada. | Não aparece, como antes. |
+| Saúde: membros registrados | Abre Membros no filtro de membros registrados. | Indicadores não são renderizados. |
+| Saúde: Em grupos | Abre Membros filtrada para quem está em grupo. | Indicadores não são renderizados. |
+| Saúde: Servindo em times | Abre Pessoas filtrada para quem serve. | Indicadores não são renderizados. |
+| Preparação | Abre Configurações. “Revisar preparação” só aparece para gestão com acesso a configurar, Times, Cultos e Pessoas. | Não aparece sem permissão/configuração. |
+| Busca: tela | Só oferece telas do menu autorizado; abre a tela dona. | Só oferece as telas disponíveis ao líder. |
+| Busca: pessoa, membro, time ou função | Abre ficha da pessoa/membro; time/função abre a gaveta do time correspondente. | Usa só resultados visíveis no papel; time/função abre a equipe disponível. |
 
-Avaliação de experiência e Pulso da escala abrem seus próprios formulários em modal. Não são atalhos de navegação para outra tela. O bloco Comece por aqui mantém as três rotas de configuração já existentes.
+Avaliação de experiência e Pulso da escala abrem seus formulários em modal. Comece por aqui mantém as rotas de configuração existentes. Não há ação silenciosa com lista vazia: se a linha ficou desatualizada antes do clique, o destino abre a lista e informa o filtro sem resultados.
 
 ## Provas pela tela
-Fotos de antes e depois do Início foram medidas na primeira dobra com `__medir(24)`. A captura depois da gestão usou dados temporários para exercitar filas que não existiam no seed; o aumento é consequência desses quatro itens de fixture e não uma mudança no desenho da tela.
+Para comparar main e branch, quatro visitantes temporários foram criados na igreja de `master@teste.local`: dois sem contato e dois recebidos pelo link. Os dois Inícios mediram `__medir(24)` em **32 ações e 126 palavras**, frente ao limite **25/100**, fora por 7 ações e 26 palavras. A imagem do Início do branch era pixel a pixel igual à do main (mesmo MD5), pois a mudança só aparece após o clique; por isso a prova depois é a tela de destino aberta já filtrada, não uma cópia idêntica da tela inicial.
 
-| Captura | Evidência visual | Medida | MD5 |
+| Foto | O que mostra | __medir(24) | MD5 |
 |---|---|---:|---|
-| [Gestão antes](screenshots/I2-antes-gestao.png) | Início com os dados do seed | 30 ações, 103 palavras | `d5c5c2f387b95fb192c08bf7632834a8` |
-| [Líder antes](screenshots/I2-antes-lider.png) | Início de Lucas; menu sem Visitantes e Configurações | 21 ações, 73 palavras | `5f2011fe0125677f84c022735e8396b7` |
-| [Gestão depois, fixtures](screenshots/I2-depois-inicio-gestao-com-fixture.png) | Quatro linhas temporárias acrescentadas para testar filas/destinos | 35 ações, 172 palavras, +5 ações e +69 palavras perante o seed, por causa dos itens de teste | `7a38726328ab6446d794647fd514a156` |
-| [Líder depois, cultos filtrados](screenshots/I2-depois-lider-cultos-filtrados.png) | Gaveta mostra só Louvor, o time dentro do escopo do líder | 23 ações, 98 palavras | `1e6dfd6d9865b097b61ac058562a9953` |
+| [Início main antes](screenshots/I2-qa-main-before.png) | Gestão com os mesmos quatro visitantes temporários e filas de culto | 32 ações, 126 palavras | `63cc2bafc8fd9fd008aafdd91f43baea` |
+| [Visitantes sem contato](screenshots/I2-qa-visitantes-sem-contato-filtrado.png) | Dois registros, filtro visível e ação Limpar filtro | após clique | `a8f2b88157ae2c1cf980dac6cf1d1b87` |
+| [Visitantes pelo link](screenshots/I2-qa-visitantes-link-filtrado.png) | Dois registros, filtro visível e ação Limpar filtro | após clique | `09b09ec6d19c2222efc281eb2a174e77` |
+| [Único visitante sem contato](screenshots/I2-qa-visitante-sem-contato-unico-ficha.png) | Um resultado abre diretamente a ficha | após clique | `aede901a30acdf159e6557cf1145c3c5` |
+| [Único visitante pelo link](screenshots/I2-qa-visitante-link-unico-ficha.png) | Um resultado abre diretamente a ficha | após clique | `256e695ca76f87c0286dd0807eb7e7eb` |
+| [Saúde: membros](screenshots/I2-qa-saude-membros-filtrados.png) | Membros, filtro de membros registrados | após clique | `7a660ab58569699fc03c024668c230c4` |
+| [Saúde: grupos](screenshots/I2-qa-saude-grupos-filtrados.png) | Membros, filtro de pessoas em grupo | após clique | `00317e22ef50b730c0515e56b55be0ff` |
+| [Saúde: servindo](screenshots/I2-qa-saude-servindo-filtrado.png) | Pessoas, filtro de quem serve | após clique | `2e5d5d5e22cecc140843ab1822efa929` |
 
-Fotos dos destinos após o clique:
+Fotos anteriores adicionais preservadas da entrega: `I2-antes-lider.png` (21 ações/73 palavras, MD5 `5f2011fe0125677f84c022735e8396b7`) e `I2-depois-lider-cultos-filtrados.png` (23 ações/98 palavras, MD5 `1e6dfd6d9865b097b61ac058562a9953`). A gaveta da Caminhada já abria a lista filtrada por `visibleJourneyRequests`; conferido em código e na tela de gestão/líder. O menu do líder não oferece Visitantes nem Configurações. Nenhuma permissão foi ampliada.
 
-| Clique exercitado | Destino aberto | MD5 |
-|---|---|---|
-| Visitante sem contato | [Ficha do visitante 48h](screenshots/I2-depois-visitante-sem-contato.png) | `ae2958bffa05be4c48411d41cecd3b13` |
-| Cadastro pelo link | [Ficha do visitante do link](screenshots/I2-depois-visitante-link.png) | `65a62b4263dbc152ae41fc64c24376f6` |
-| Pessoas sem registro | [Gaveta de cuidado, adultos](screenshots/I2-depois-cuidado-adultos.png) | `9b12cd4a2f5ca6e359fc0b477c42ca30` |
-| Crianças sem check-in | [Gaveta de cuidado, crianças](screenshots/I2-depois-cuidado-criancas.png) | `9e9f1b7661187908b1242b9ee7f3adb4` |
-| Ver todas as faltas | [Gaveta com quatro cultos](screenshots/I2-depois-folha-cultos-com-falta.png) | `224a63a9f22961e0781512bbe977154e` |
-| Escolher culto da gaveta | [Panorama do culto escolhido](screenshots/I2-depois-panorama-do-culto.png) | `4e68fc4c6657dda7160667e953cde0ca` |
-| Indicador Saúde: membros | [Gaveta com membros do indicador](screenshots/I2-depois-saude-membros.png) | `dbb75f3162374d4eba193b27c0765abf` |
-| Selecionar membro | [Ficha de Ana Brandão](screenshots/I2-depois-ficha-do-membro.png) | `b21e15d00e3329cfdbdb7ae88cffedf5` |
-| Busca do líder: selecionar Louvor | [Gaveta do time Louvor](screenshots/I2-depois-busca-time-lider.png) | `c8481df696737c380c5cb48c0d939232` |
-
-Na tela da gestão, a busca foi conferida no código e pelo clique nas entradas existentes: os resultados de pessoas/membros e times abrem o registro exato; funções abrem o time que as contém; as telas vêm de `telas` já filtradas pelo menu autorizado. No líder, a consulta de “Recepção” retorna o time que também aparece na rota Times, e “Louvor” abre a gaveta da equipe escolhida. A lista não revela rotas sem acesso e nenhuma permissão foi ampliada. No seed local não havia pedido de conta nem pedido da Caminhada para fotografar; os caminhos foram conferidos nas linhas da casca: conta só para gestão via Q15, Caminhada na folha Q16 usando a lista filtrada já fornecida.
-
-As fixtures locais de visitantes, cuidado e cobertura foram removidas depois das fotos. Saída da limpeza: `visitors=0 events=0 eventAttendance=0 kidsAttendance=0 kidsSessions=0 children=0 kidsClasses=0`. Nenhuma senha foi alterada e o banco não foi resetado.
+A limpeza das fixtures locais confirmou `deleted=4, remaining=0`. Nenhuma senha foi alterada e não houve `db reset`.
 
 ## Validação
-- `npx tsc --noEmit -p .`: passou.
-- `eslint` nos três arquivos de código tocados: passou sem erros.
-- `scripts/check-service-componentes.ts`: passou.
-- `scripts/check-theme-contrast.ts`: passou nas oito famílias e dois modos.
-- `scripts/check-service-lei12.ts`: passou.
-- `scripts/check-graficos-contraste.ts`: 0 falhas e 32 avisos esperados.
-- Contratos Service: internacional, fuso, avisos-fuso, ativacao, civil-date, cnpj, demo-datas, endereco, geo-cpf, member-navigation, panel-access, semana, cobertura, chat-identidade, telefone e times-recebimento passaram.
-- `npm --prefix tools/captura-service test`: 20/26 passaram; 6 testes Playwright falharam ao iniciar Chromium no sandbox (`MachPortRendezvousServer ... Permission denied (1100)`). As capturas manuais da história foram abertas e inspecionadas.
-- `npx tsx scripts/historias.ts`: após remover o rascunho duplicado `I1-inicio-precisa-de-voce.md`, I1 desapareceu da lista; I2 permanece como a história deste branch.
-- Servidor local encerrado; porta 3137 livre.
+- Nesta revisão: `npx tsc --noEmit -p .` e ESLint dos cinco arquivos de código passaram sem erros. `scripts/check-service-componentes.ts` e `scripts/check-service-lei12.ts` passaram. `scripts/check-theme-contrast.ts` não é pertinente ao diff da I2.
+- As oito fotos listadas foram abertas e visualmente conferidas; as duas fotos únicas mostram ficha direta, as duas listas mostram filtro e opção para limpar, e os três indicadores abrem suas listas donas filtradas.
+- A imagem duplicada `I2-qa-branch-after.png` foi descartada: MD5 igual ao main (`63cc2bafc8fd9fd008aafdd91f43baea`).
 
 ## Notas
-O rascunho I1 duplicado foi removido. I2 fica fora do trilho de PENDENTES, que é atualizado no fechamento e não reserva arquivo.
+I2 não altera PENDENTES. Reutiliza os dados já carregados, com estado de filtro na tela dona.
