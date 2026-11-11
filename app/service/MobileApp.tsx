@@ -614,7 +614,7 @@ export default function MobileOverlay(props: MobileOverlayProps) {
     : null;
 
   const closeAction = isSelf ? onLogout ?? onClose : onClose;
-  const closeLabel = isSelf ? traduzirUi("Sair") : traduzirUi("← Voltar ao painel");
+  const closeLabel = isSelf ? traduzirUi("Sair") : traduzirUi("Voltar ao painel");
 
   if (!person) {
     return (
@@ -628,7 +628,7 @@ export default function MobileOverlay(props: MobileOverlayProps) {
               : traduzirUi("Cadastre {voluntarios} em Pessoas para pré-visualizar o app deles aqui.")}
           </p>
           <Botao variante="discreto" compacto className="mob-close" onClick={closeAction}>{closeLabel}</Botao>
-          {isSelf && onSwitchToPanel && <Botao variante="discreto" compacto className="mob-close mob-to-panel" onClick={onSwitchToPanel}>{traduzirUi("Gerenciar →")}</Botao>}
+          {isSelf && onSwitchToPanel && <Botao variante="discreto" compacto className="mob-close mob-to-panel" onClick={onSwitchToPanel}>{traduzirUi("Gerenciar")}</Botao>}
         </div>
       </div>
     );
@@ -677,7 +677,7 @@ export default function MobileOverlay(props: MobileOverlayProps) {
         )}
 
         <Botao variante="discreto" compacto className="mob-close" onClick={closeAction}>{closeLabel}</Botao>
-        {isSelf && onSwitchToPanel && <Botao variante="discreto" compacto className="mob-close mob-to-panel" onClick={onSwitchToPanel}>{traduzirUi("Gerenciar →")}</Botao>}
+        {isSelf && onSwitchToPanel && <Botao variante="discreto" compacto className="mob-close mob-to-panel" onClick={onSwitchToPanel}>{traduzirUi("Gerenciar")}</Botao>}
       </div>
 
       <div className="mob-phone-wrap" onClick={(e) => e.stopPropagation()}>

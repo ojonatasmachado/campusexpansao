@@ -233,12 +233,6 @@
       "line": 428
     }
   ],
-  "m1eduoq0": [
-    {
-      "file": "app/service/MobileApp.tsx",
-      "line": 610
-    }
-  ],
   "m1xy4b74": [
     {
       "file": "app/service/MobileApp.tsx",
@@ -269,14 +263,14 @@
       "line": 621
     }
   ],
-  "m16k1fpv": [
+  "m1wkjfxd": [
     {
       "file": "app/service/MobileApp.tsx",
-      "line": 624
+      "line": 631
     },
     {
       "file": "app/service/MobileApp.tsx",
-      "line": 673
+      "line": 680
     }
   ],
   "m1ucfej2": [
@@ -3205,6 +3199,12 @@
     {
       "file": "app/api/service/entrada/route.ts",
       "line": 82
+    }
+  ],
+  "mn4f66o": [
+    {
+      "file": "app/service/MobileApp.tsx",
+      "line": 617
     }
   ],
   "m1jjk8of": [

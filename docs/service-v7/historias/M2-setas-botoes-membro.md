@@ -2,7 +2,7 @@
 id: M2
 titulo: Remover setas dos botões do app do membro
 tipo: codigo
-status: reservada
+status: feita
 quem: codex
 desde: 2026-11-11
 branch: historia/M2-setas-botoes-membro
@@ -44,7 +44,7 @@ Varredura da base `origin/main` com `git grep -n -e '→' -e '->' -e '›' origi
 | Arquivo:linha | Uso encontrado | Tipo |
 |---|---|---|
 | `MobileApp.tsx:127` | comentário “Perfil › Tamanho do texto” | Comentário, não renderizado |
-| `MobileApp.tsx:631` e `:680` | “Gerenciar →” | Dois `Botao`, remover seta |
+| `MobileApp.tsx:631` e `:680` | “Gerenciar →” | Dois `Botao`, removida a seta |
 | `Biblia.tsx:170` | seta no fim de “Minhas marcações” | `Acao`, removida |
 | `Biblia.tsx:207` | chevron para capítulo seguinte | `Acao`, substituída por “Próx.” com rótulo acessível |
 | `Caminhada.tsx:187` | ação da etapa | `Botao`, removida somente nesta linha |
@@ -85,7 +85,9 @@ MD5 das fotos abertas:
 - Bíblia antes/depois `2da11490d388ec62c61434c352e1f361` / `a2afa421fbe690b45fc8d70bbbf62bf0`.
 - Agenda antes, sem alteração de rota `1ba6e87fa86f48d5401bd378114a3346`.
 
-TypeScript passou. ESLint dos oito arquivos passou sem erros; `Inicio.tsx` mantém quatro avisos preexistentes. O status permanece reservado porque três rótulos de botão em `MobileApp.tsx` não puderam ser alterados sem resolver a reserva G17.
+Também removi as setas de “Voltar ao painel” e dos dois botões “Gerenciar” em `MobileApp.tsx`. As novas chaves de tradução foram incluídas nos catálogos pt-BR, en-US e es-ES e no índice de referências. O botão “Voltar ao painel” pertence ao modo de pré-visualização, que não é instanciado atualmente; os dois botões “Gerenciar” ficam no modo self em desktop. A captura manual dessa tela não foi gerada: o navegador local encerrou antes de completar a inicialização do app. Não alterei os dados para forçar a pré-visualização.
+
+TypeScript e ESLint passaram sem erros; `Inicio.tsx` mantém quatro avisos preexistentes. A busca de setas e chevrons nos rótulos de botão da trilha não encontrou outros casos funcionais. O status foi concluído com autorização para editar `MobileApp.tsx`, apesar da reserva G17 obsoleta.
 
 ## Notas
-Construção parcial por codex. Os botões dos módulos M2 perderam as setas, e as ações permanecem clicáveis. PENDENTES e status ainda aguardam a resolução da sobreposição com G17.
+Concluída por codex. As fotos e medições das telas existentes estão documentadas acima; as três mudanças em `MobileApp.tsx` foram validadas por TypeScript, ESLint e revisão dos catálogos de tradução.
