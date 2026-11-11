@@ -3,6 +3,7 @@
 import { useTermos } from "../../../lib/vocabulario-context";
 import { JRN_STEPS } from "../../caminhada";
 import { porData, tipoDoFato } from "../../../lib/historico";
+import { tituloDoFato } from "../../../lib/titulo-historico";
 import type { MemberView, TimelineEventView } from "../../tipos";
 import { Etapas, type Etapa } from "../../../ui/Etapas";
 
@@ -19,7 +20,7 @@ export function PersonTimeline({ member, events, compact }: { member: MemberView
     <Etapas compacto={compact} rotulo={ct("{Caminhada}")} itens={[
       ...sorted.map((event): Etapa => {
         const step = JRN_STEPS.find((s) => s.kind === event.event_type);
-        return { id: event.id, estado: "feito", titulo: event.title, detalhe: event.body || undefined, icone: step?.icon ?? tipoDoFato(event.event_type).icone, quando: event.when_label ?? new Date(event.created_at).toLocaleDateString("pt-BR") };
+        return { id: event.id, estado: "feito", titulo: tituloDoFato(event.title, ct), detalhe: event.body || undefined, icone: step?.icon ?? tipoDoFato(event.event_type).icone, quando: event.when_label ?? new Date(event.created_at).toLocaleDateString("pt-BR") };
       }),
       ...stepsWithoutEvent.map((step): Etapa => ({ id: step.kind, estado: "feito", titulo: ct(step.label), icone: step.icon })),
     ]} />

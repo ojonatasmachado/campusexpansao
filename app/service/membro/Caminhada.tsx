@@ -8,6 +8,7 @@ import { joinDot } from "../lib/date";
 import { useTermos } from "../lib/vocabulario-context";
 import { useRelogioDaIgreja } from "../lib/relogio-context";
 import { porData, quandoFoi, tipoDoFato, type FatoView } from "../lib/historico";
+import { tituloDoFato } from "../lib/titulo-historico";
 import { listaFinalidades, type ContribuirCfg } from "../modules/contribuir/pix";
 import { JourneyContext, M6Row, MemberUiContext, mensagemAcao, useFaltas } from "./comum";
 import type { JourneyStep, M, Ministry, P, StepView } from "./tipos";
@@ -113,7 +114,7 @@ export function MinhaHistoria({ fatos }: { fatos: FatoView[] }) {
             <Linha estilo="app" key={f.id}>
               <span className="m6-ic"><Icon name={t.icone} size={22} /></span>
               <span className="m6-rb">
-                <span className="m6-rt">{f.title}</span>
+                <span className="m6-rt">{tituloDoFato(f.title, ct)}</span>
                 <span className="m6-rs">{joinDot(quandoFoi(f, fuso), f.body)}</span>
               </span>
             </Linha>
