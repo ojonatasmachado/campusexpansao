@@ -48,7 +48,7 @@ Consulta antes da limpeza confirmou `timeline_events.title = {Grupo}` e a jornad
 - `Q17-ficha-celula.png`: a mesma ficha mostra “Célula”; md5 `b287077ffd6894d840c654f9a4fcc65f`.
 - `Q17-app-grupo.png`: Minha história mostra “Grupo”; md5 `818dd52ca93601b7da323f635414c5fa`.
 
-Typecheck, verificações do Service, CI e PR serão registrados após a execução.
+CI do PR #61: ambos os jobs `service` passaram (execuções 42954229551 e 42954249455); Vercel Preview passou. O PR #61 está aberto, sem merge. O servidor iniciado neste worktree foi encerrado; `lsof -nP -iTCP:3117 -sTCP:LISTEN` não retornou processo.
 
 ## Notas
 Reserva feita por codex. O helper isolado evita alterar `historico.ts`, que estava reservado para E7; `Caminhada.tsx` recebeu somente a troca de exibição necessária e também aparece no trilho O8. Nenhuma outra exibição de título de `timeline_events` foi encontrada.
