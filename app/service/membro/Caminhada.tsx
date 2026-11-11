@@ -184,7 +184,7 @@ export function CaminhadaV6({ steps, courses, purpose, contribuir }: { steps: St
         <Etapas estilo="app" rotulo="Etapas" itens={steps.map((s): Etapa => ({
           id: s.id, titulo: s.nome, estado: ESTADO_ETAPA[s.st],
           quando: <><b>{STW[s.st]}</b>{s.info ? ` · ${s.info}` : ""}</>,
-          acao: s.acao && s.run ? <Botao tamanho="toque" compacto variante={s.st === "andamento" ? "principal" : "secundario"} onClick={s.run}>{s.acao} →</Botao> : undefined,
+          acao: s.acao && s.run ? <Botao tamanho="toque" compacto variante={s.st === "andamento" ? "principal" : "secundario"} onClick={s.run}>{s.acao}</Botao> : undefined,
         }))} />
         )}
       </div>

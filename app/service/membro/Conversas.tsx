@@ -287,7 +287,7 @@ export function TabConversas({
       <div className="m-chat">
         {!onChatOpen && (
           <Acao className="m-chat-back" onClick={() => setSelId(null)}>
-            ← {nomeDa(chat)}
+            Voltar: {nomeDa(chat)}
           </Acao>
         )}
         <div className="chat-thread">
@@ -363,7 +363,6 @@ export function TabConversas({
           />
           {candidatos.map((m) => (
             <Acao className="m-conv" key={m.id} onClick={() => abrir(m.id)} desativado={starting}>
-              <span className="m-conv-ic">→</span>
               <div className="m-conv-main">
                 <div className="m-conv-name">{m.name}</div>
                 <div className="m-conv-prev">{nomeTimeDoLider(m.id)}</div>

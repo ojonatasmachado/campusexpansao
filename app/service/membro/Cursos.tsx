@@ -235,7 +235,7 @@ export function TabBatismo({ baptismClasses, memberId }: { baptismClasses: Bapti
                   else setErro((p) => ({ ...p, [b.id]: mensagemAcao(r) }));
                 }}
               >
-                Quero me inscrever →
+                Quero me inscrever
               </Botao>
             )
           ) : (
@@ -272,7 +272,7 @@ export function CursosResumo({ member, courses, enrollments, courseModules, cour
             return prox ? <div className="m6-meta">Próxima aula: {prox.aula.name}</div> : null;
           })()}
           {total > 0 ? <div className="m6-prog"><i style={{ width: `${pct}%` }} /></div> : <div className="m6-meta">As aulas ainda não foram publicadas.</div>}
-          <Botao tamanho="toque" largo style={{ marginTop: 12 }} onClick={() => ui.go("caminhada", "cursos")}>Abrir meu curso →</Botao>
+          <Botao tamanho="toque" largo style={{ marginTop: 12 }} onClick={() => ui.go("caminhada", "cursos")}>Abrir meu curso</Botao>
         </Cartao>
       )}
       <Lista>

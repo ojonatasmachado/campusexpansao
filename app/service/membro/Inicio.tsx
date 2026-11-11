@@ -339,7 +339,7 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
             <div className="m6-kick">{c.step.inscricao ? "Inscrições abertas" : "Seu próximo passo"}</div>
             <div className="m6-ct">{c.step.nome}</div>
             {(c.step.inscricao ?? c.step.info) && <div className="m6-meta">{c.step.inscricao ?? c.step.info}</div>}
-            <div className="m6-btns"><Botao tamanho="toque" variante={variante} onClick={() => (c.step.run ? c.step.run() : ui.go("caminhada"))}>{c.step.acao ?? ct("Ver a {caminhada}")} →</Botao></div>
+            <div className="m6-btns"><Botao tamanho="toque" variante={variante} onClick={() => (c.step.run ? c.step.run() : ui.go("caminhada"))}>{c.step.acao ?? ct("Ver a {caminhada}")}</Botao></div>
           </Cartao>
         );
       case "cadastro":
@@ -349,7 +349,7 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
             <div className="m6-ct">Complete seus dados</div>
             <div className="m6-meta">{`Falta ${c.falta.join(", ").replace(/, ([^,]*)$/, " e $1")}. Ajuda a igreja a cuidar de você.`}</div>
             <div className="m6-btns">
-              <Botao tamanho="toque" variante={variante} onClick={() => ui.go("perfil", "dados")}>Completar →</Botao>
+              <Botao tamanho="toque" variante={variante} onClick={() => ui.go("perfil", "dados")}>Completar</Botao>
               <Botao tamanho="toque" variante="texto" data-dispensa="1" onClick={() => adiar("dados", 30)}>Agora não</Botao>
             </div>
           </Cartao>
@@ -449,7 +449,7 @@ export function InicioV6({ contribuir, onContribuir, person, member, ministries,
         ) : (
           <div className="service-home-empty"><div className="m6-ct">Nenhum encontro publicado por enquanto</div><p className="m6-meta">{ct("Quando a igreja publicar os próximos {cultos} e eventos, você encontra aqui as datas, os horários e como participar.")}</p></div>
         )}
-        <div className="m6-more"><Botao tamanho="toque" variante="texto" onClick={() => ui.go("agenda", null, { agSeg: "igreja" })}>Ver a agenda completa →</Botao></div>
+        <div className="m6-more"><Botao tamanho="toque" variante="texto" onClick={() => ui.go("agenda", null, { agSeg: "igreja" })}>Ver a agenda completa</Botao></div>
       </div>
 
       {member && ((destOracao && onStartChat) || oracaoOn) && (
@@ -501,7 +501,7 @@ export function DestaqueCard({ a, onAbrir }: { a: Announcement; onAbrir: () => v
       <span className="m6-kick">{video ? "Destaque · vídeo" : "Destaque"}</span>
       <span className="m6-ct">{a.title}</span>
       {a.body && <span className="m6-meta m6-2l">{a.body}</span>}
-      <span className={botaoClasse({ tamanho: "toque", variante: "texto" })}>{video ? "Assistir" : "Ler"} →</span>
+      <span className={botaoClasse({ tamanho: "toque", variante: "texto" })}>{video ? "Assistir" : "Ler"}</span>
     </Acao>
   );
 }

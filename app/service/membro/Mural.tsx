@@ -47,7 +47,7 @@ export function MuralV6({ announcements, unreadIds, person, onReadAnnouncement, 
   }
   return (
     <div className="m6-sec0" ref={root}>
-      {onlyTarget && target && <div className="m6-pad"><Botao tamanho="toque" variante="texto" onClick={() => setOnlyTarget(false)}>Ver todas as publicações →</Botao></div>}
+      {onlyTarget && target && <div className="m6-pad"><Botao tamanho="toque" variante="texto" onClick={() => setOnlyTarget(false)}>Ver todas as publicações</Botao></div>}
       {visible.map((a) => (
         <Cartao estilo="app" como="article" key={a.id} data-announcement={a.id} tabIndex={-1} aria-label={a.title}>
           {novas.has(a.id) && <span className="m6-new">Nova</span>}
