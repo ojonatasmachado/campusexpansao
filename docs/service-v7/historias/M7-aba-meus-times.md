@@ -2,10 +2,10 @@
 id: M7
 titulo: Criar a aba Meus times para quem lidera
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: codex
+desde: 2026-11-11
+branch: historia/M7-aba-meus-times
 depende: []
 tamanho: G
 ---
