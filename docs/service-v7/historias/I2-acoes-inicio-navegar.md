@@ -69,9 +69,23 @@ Fotos anteriores adicionais preservadas da entrega: `I2-antes-lider.png` (21 aç
 A limpeza das fixtures locais confirmou `deleted=4, remaining=0`. Nenhuma senha foi alterada e não houve `db reset`.
 
 ## Validação
+
+Fotos adicionais antigas que ainda representam destinos válidos, abertas e conferidas:
+
+| Foto | Evidência visual | MD5 |
+|---|---|---|
+| `I2-depois-busca-time-lider.png` | Busca do líder abre a gaveta do time Louvor | `c8481df696737c380c5cb48c0d939232` |
+| `I2-depois-cuidado-adultos.png` | Gaveta de cuidado, aba Pessoas | `9b12cd4a2f5ca6e359fc0b477c42ca30` |
+| `I2-depois-cuidado-criancas.png` | Gaveta de cuidado, aba Crianças | `9e9f1b7661187908b1242b9ee7f3adb4` |
+| `I2-depois-ficha-do-membro.png` | Ficha de Ana Brandão aberta a partir da lista | `b21e15d00e3329cfdbdb7ae88cffedf5` |
+| `I2-depois-folha-cultos-com-falta.png` | Gaveta com quatro cultos com falta | `224a63a9f22961e0781512bbe977154e` |
+| `I2-depois-panorama-do-culto.png` | Panorama do culto após selecionar a linha | `4e68fc4c6657dda7160667e953cde0ca` |
+
+Removi `I2-antes-gestao.png` e `I2-depois-inicio-gestao-com-fixture.png`: eram capturas de conjuntos de dados diferentes do fixture comparável desta revisão. Também removi as fotos antigas da gaveta de saúde com 156 nomes e das fichas diretas substituídas pelas capturas `qa-...-unico-ficha`.
+
 - Nesta revisão: `npx tsc --noEmit -p .` e ESLint dos cinco arquivos de código passaram sem erros. `scripts/check-service-componentes.ts` e `scripts/check-service-lei12.ts` passaram. `scripts/check-theme-contrast.ts` não é pertinente ao diff da I2.
 - As oito fotos listadas foram abertas e visualmente conferidas; as duas fotos únicas mostram ficha direta, as duas listas mostram filtro e opção para limpar, e os três indicadores abrem suas listas donas filtradas.
 - A imagem duplicada `I2-qa-branch-after.png` foi descartada: MD5 igual ao main (`63cc2bafc8fd9fd008aafdd91f43baea`).
 
 ## Notas
-I2 não altera PENDENTES. Reutiliza os dados já carregados, com estado de filtro na tela dona.
+I2 reutiliza os dados já carregados, com estado de filtro na tela dona. O inventário após o rebase não lista I2. Ele ainda lista I5 e M5 como reservadas; confirmei que origin/main está em `41839bf` e o PR #65 continua aberto. Não alterei os arquivos ou branches dessas histórias fora do trilho.
