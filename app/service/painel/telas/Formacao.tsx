@@ -235,7 +235,7 @@ export function CursosTrilhas({
       <PageHead
         title="Cursos e Trilhas"
         eyebrow={ct("{Caminhada}")}
-        help={ct("Formações da igreja, da decisão à liderança. Cada aula concluída entra na {caminhada} da pessoa. Cursos ativos contam trilhas disponíveis; matrículas são pessoas cursando; conclusões são cursos terminados; em formação de líderes conta quem está nessa trilha.")}
+        help={ct("As trilhas formam a pessoa da decisão à liderança. Cada aula concluída entra na {caminhada} da pessoa.")}
         action={
           <Botao variante="principal" onClick={() => setEditingId("new")}>
             + Nova trilha

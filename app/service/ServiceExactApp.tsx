@@ -1204,7 +1204,7 @@ export default function ServiceExactApp({
         </main>
       </div>
 
-      <HelpFab onTour={abrirTourAjuda} onSetup={podeVerItem("configurar") ? abrirSetupAjuda : undefined} />
+      <HelpFab reservarRolagem={route === "relatorios" || route === "escalas"} onTour={abrirTourAjuda} onSetup={podeVerItem("configurar") ? abrirSetupAjuda : undefined} />
       {showTour ? (
         <Coachmark
           steps={tourSteps}

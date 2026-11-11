@@ -193,7 +193,7 @@ export function Coachmark({ steps, go, onDone, startAt = 0, onStepChange }: { st
 
 /* lugar: "flutuante" (computador, canto de baixo) ou "barra" (celular, na barra
    do topo, para não cobrir o conteúdo; v7 2.11). O CSS mostra um ou outro. */
-export function HelpFab({ onTour, onSetup, lugar = "flutuante" }: { onTour: () => void; onSetup?: () => void; lugar?: "flutuante" | "barra" }) {
+export function HelpFab({ onTour, onSetup, lugar = "flutuante", reservarRolagem = false }: { onTour: () => void; onSetup?: () => void; lugar?: "flutuante" | "barra"; reservarRolagem?: boolean }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -202,6 +202,17 @@ export function HelpFab({ onTour, onSetup, lugar = "flutuante" }: { onTour: () =
     document.addEventListener("mousedown", onClickAway);
     return () => document.removeEventListener("mousedown", onClickAway);
   }, []);
+
+  useEffect(() => {
+    if (!reservarRolagem || lugar === "barra") return;
+    const body = document.body;
+    const anterior = body.style.paddingBottom;
+    const desktop = window.matchMedia("(min-width: 741px)");
+    const sync = () => { body.style.paddingBottom = desktop.matches ? "calc(86px + var(--safe-bottom, 0px))" : anterior; };
+    sync();
+    desktop.addEventListener("change", sync);
+    return () => { desktop.removeEventListener("change", sync); body.style.paddingBottom = anterior; };
+  }, [reservarRolagem, lugar]);
 
   return (
     <div className={`help-fab-wrap ${lugar === "barra" ? "na-barra" : "flutuante"}`} ref={ref}>

@@ -19,6 +19,7 @@ Fonte: LEVEZA D.
 - `app/service/painel/telas/Formacao.tsx` (cursos)
 - `app/service/modules/escalas/Escalas.tsx`
 - `app/service/HelpSystem.tsx`
+- `app/service/ServiceExactApp.tsx` (prop de reserva de rolagem só em Relatórios e Escalas)
 - `docs/service-v7/historias/I5-ajuda-menos-repeticao.md`
 - `docs/service-v7/PENDENTES.md`
 - `docs/service-v7/historias/screenshots/I5-*.png`
@@ -29,22 +30,22 @@ Fonte: LEVEZA D.
 
 ## Validação
 
-Contagem de "?" visíveis inclui HelpDot e o botão flutuante visível. Antes foi capturado no HEAD reservado, antes das alterações.
+Capturas 1366×860. Selo do Next oculto e animações paradas antes de cada foto. Os textos das duas ajudas de Relatórios foram abertos juntos na mesma captura; a ajuda do título mostra “cultos” e a da seção 01 é curta. Cursos foi capturado com a ajuda aberta e o rodapé “pessoas cursando agora” visível, sem repetição na ajuda. As ajudas explicam a seção em até duas frases e não enumeram cartões.
 
-| Tela | Antes: ? | Depois: ? | __medir(24) antes | __medir(24) depois | Limite 25 ações/100 palavras | Resultado |
-|---|---:|---:|---|---|---|
-| Relatórios | 12 | 4 | 37 ações, 121 palavras | 33 ações, 117 palavras | Antes fora (12 ações e 21 palavras acima); depois fora (8 ações e 17 palavras acima). | Ajuda geral e uma por seção, menos 8 interrogações. |
-| Cursos | 6 | 2 | 35 ações, 98 palavras | 31 ações, 94 palavras | Antes fora (10 ações acima); depois fora (6 ações acima). | Uma ajuda no título explica os quatro indicadores, menos 4 interrogações. |
-| Escalas | 2 | sem alteração | 35 ações, 64 palavras | sem alteração | Fora por 10 ações, 36 palavras. | Sem mudança: uma ajuda de tela e uma flutuante. A tela inteira já cabe sem rolagem, conteúdo termina em y=414; botão flutuante em y=790–834, sem sobreposição. |
+| Tela | Antes: ? | Depois: ? | __medir(24) antes | __medir(24) na foto depois | Limite 25 ações/100 palavras | Resultado |
+|---|---:|---:|---|---|---|---|
+| Relatórios | 12 | 4 | 37 ações, 121 palavras, fora | 33 ações, 153 palavras, fora | Acima por 8 ações e 53 palavras | Foto com ambas as ajudas abertas, texto de “cultos” substituído e uma única seta em “Ver panorama completo”. As ajudas não duplicam legenda de cartão. |
+| Cursos | 6 | 2 | 35 ações, 98 palavras, fora | 31 ações, 111 palavras, fora | Acima por 6 ações e 11 palavras | Ajuda curta sobre a trilha e aulas; não repete “pessoas cursando agora”. |
+| Escalas | 2 | 2 | 35 ações, 64 palavras, fora | 59 ações, 121 palavras, fora | Acima por 34 ações e 21 palavras | Cenário temporário com 15 funções, um culto no domingo e 15 alocações distribuídas por cinco pessoas locais. No fim da rolagem, o último “Escalar” ficou em x=732, y=630, 70×32. `elementFromPoint(767,646)` retornou o próprio botão `Escalar`; o botão de ajuda ficou abaixo à direita, sem cobrir conteúdo. Espaço final reservado: 86px mais a área segura. |
 
-Capturas 1366×860, abertas e conferidas. Selo Next escondido e contagem visível zero. MD5: Relatórios antes `be5f9c67e96bff7a77292da092c19eb3`, depois `05f531c953e0a0f5d33c16291b69192e`; Cursos antes `0329d4056cc0ee62a5150eaf3f1a734e`, depois `c3bd4eb32b772c68509228b156c52c11`; Escalas antes `169775297f519ed20f94da9b5984563e`; sem foto de depois porque não houve alteração na tela. A captura do fim de Escalas é `007291dbaa48a5f8bdd4a816585ab051`.
+Fotos de antes, abertas: Relatórios `I5-antes-relatorios.png`, MD5 `c40c1e2de70e932237575fc1cd5bbcd4`; Cursos `I5-antes-cursos.png`, MD5 `0329d4056cc0ee62a5150eaf3f1a734e`; Escalas `I5-antes-escalas.png`, MD5 `169775297f519ed20f94da9b5984563e`. Fotos de depois, abertas e descritas: `I5-qa-depois-relatorios-ajudas.png`, MD5 `72ac0fb76f1973258508997092058ef1`; `I5-qa-depois-cursos.png`, MD5 `da1b2c1208c92093c5bf57faee26ca11`; fim de Relatórios `I5-qa-depois-relatorios-fim.png`, MD5 `2f73ed31d7a990bdaf2b9ef559d442fa`; fim de Escalas `I5-qa-depois-escalas-fim.png`, MD5 `f07bf787e1fcca0c05abf0b19f303611`. O Next não aparece nas fotos.
 
-Antes: Relatórios mostra ajudas em cartões; Cursos mostra interrogações nas métricas e no título; Escalas mostra tabela curta com botão flutuante no espaço inferior. Depois: Relatórios tem uma ajuda nos Números de base e outra na situação semanal; Cursos tem só a ajuda do título, aberta para exibir o texto agregado.
+O dado temporário foi removido do banco local. Consulta final: 0 escalas, 0 culto, 0 funções e 0 time com os IDs criados.
+
+Validação técnica: typecheck, ESLint dos arquivos tocados, check de componentes e contraste foram executados após a correção; resultados registrados no fechamento do branch.
 
 ## Notas
 
-Escalas já atendia à regra de uma ajuda por seção/tela e o botão flutuante não cobre conteúdo; não foi alterada. A ajuda “Operação conectada” foi agregada à ajuda da seção semanal. Trilho inclui Relatorios.tsx e Formacao.tsx, que mudaram; Escalas.tsx e HelpSystem.tsx foram inspecionados. História, PENDENTES e capturas também estão no trilho. HelpSystem.tsx e Escalas.tsx não precisaram de mudança.
+A ajuda flutuante mantém sua posição. Em Relatórios e Escalas, o conteúdo ganha espaço final pela prop do HelpFab e só em telas largas; a regra global de posição não muda. A linha I5 foi removida de PENDENTES, mantendo a linha I2.
 
-`npx tsc --noEmit -p .` e `npx eslint app/service/painel/telas/Relatorios.tsx app/service/painel/telas/Formacao.tsx` passaram (lint tem warnings preexistentes). `npm exec --yes --package=tsx -- tsx scripts/check-service-componentes.ts` passou com `Componentes da biblioteca: ok`; `scripts/check-theme-contrast.ts` passou para todas as famílias e modos.
-
-PENDENTES não foi alterado porque o arquivo consta no trilho da reserva I2, confirmado por `npx tsx scripts/historias.ts`. A linha I5 permanece até essa sobreposição de trilho ser coordenada.
+`./node_modules/.bin/tsc --noEmit -p .` passou. ESLint nos quatro arquivos tocados terminou sem erros e com cinco warnings preexistentes de variáveis não usadas em Formacao.tsx e Relatorios.tsx. `npm exec --yes --package=tsx -- tsx scripts/check-service-componentes.ts` passou com `Componentes da biblioteca: ok`; `npm exec --yes --package=tsx -- tsx scripts/check-theme-contrast.ts` passou nas oito famílias e nos dois modos.
