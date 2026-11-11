@@ -16,6 +16,9 @@ Fonte: AUDITORIA-UI-2026-10-20.md seção 4.
 
 ## Arquivos (trilho)
 - `app/service/membro/Mural.tsx`
+- `evolucoes/service_app/service-app.css` (somente foco da região do Mural)
+- `docs/service-v7/historias/M5-mural-foco-teclado.md`
+- `docs/service-v7/historias/screenshots/M5-*.png`
 
 ## Pronto quando
 - Região rolável do Mural alcançável por teclado, depois de confirmada.
