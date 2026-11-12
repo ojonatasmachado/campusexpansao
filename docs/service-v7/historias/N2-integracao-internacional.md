@@ -2,11 +2,8 @@
 id: N2
 titulo: Concluir integração de idiomas e moeda nas telas
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
-depende: [N1]
+status: reservada
+quem: claudedesde: 2026-11-12branch: historia/N2-integracao-internacionaldepende: [N1]
 tamanho: G
 ---
 
