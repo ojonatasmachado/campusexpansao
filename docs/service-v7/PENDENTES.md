@@ -55,7 +55,7 @@ A ordem vai do que destrava mais para o que destrava menos. Decisões do usuári
 - **N2** Integração final de idiomas e moeda (base N1 entregue com recursos desativados) · **F1** Financeiro fases 3 e 4
 - **I3** Revisão de UI das telas densas (I9 e D1 feitos)
 - **M7** Aba Meus times para quem lidera (decisão D2) · **E7** Faltou pelo check-in (decisão D5)
-- **Onda 1 da D6:** **O8** Quero fazer parte · **O9** Convidar amigo · **O11** Juntar duplicados
+- **Onda 1 da D6:** **O8** Quero fazer parte · **O11** Juntar duplicados
 
 ### 4b. Evolução da jornada do mapa (decisões de 04/11, `mapa/PLANO.md` §10)
 Ordem por dependência; G3 cancelada (sem avisos automáticos de expansão).

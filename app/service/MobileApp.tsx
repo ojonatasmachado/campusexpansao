@@ -16,6 +16,7 @@ import { modulosLigados, telasDoMembro } from "./modules/registry";
 import { horaDeChegada } from "./lib/agenda";
 import { linhaDoMembro, mesmoDiaDaSemana } from "./lib/contexto-dia";
 import { Contribuir } from "./modules/contribuir/Contribuir";
+import { Convidar } from "./modules/visitantes/Convidar";
 import { contribuirPronto } from "./modules/contribuir/pix";
 import { InicioV6, SheetArtigo, SheetOracao, SheetPedirAvisos } from "./membro/Inicio";
 import { identidadeConversa } from "./modules/conversas/identidade";
@@ -167,7 +168,7 @@ function MobileMembro({
           kidsClasses = [], kidsChildren = [], childGuardians = [], kidsSessions = [], kidsAttendance = [],
           kidsEvents = [], kidsEventEnrollments = [], wallPosts = [], bibleMarks = [], onSaveBibleMark,
           missingRequirements = [], serveRequests = [], baptismCandidates = [], onEnrollCourse, onRequestBaptism, onRequestServe,
-          mode, onLogout, onSwitchToPanel, readAnnouncementIds = [], churchPurpose, contribuir: contribuirCfg,
+          mode, onLogout, onSwitchToPanel, readAnnouncementIds = [], churchPurpose, contribuir: contribuirCfg, convite: conviteCfg,
           onSaveAvailability, onRespondAnnouncement, announcementResponses = [],
           eventRsvps = [], onRespondEvent, meetings = [], rehearsals = [], paginaUrl, timelineEvents = [], fellowshipGroups = [], onMarkChatRead } = rest;
   /* Mural sempre do mais recente para o mais antigo, pela data de publicação */
@@ -195,6 +196,9 @@ function MobileMembro({
   const pix = subAllowed("contribuir") ? contribuirPronto(contribuirCfg) : null;
   const oracaoOn = subAllowed("oracao") && !!member;
   const pixOn = !!pix;
+  /* Convidar um amigo só com o autocadastro ligado e o módulo visitantes (lei 6) */
+  const convite = subAllowed("convidar") ? conviteCfg ?? null : null;
+  const conviteOn = !!convite;
   const pedirOracao = member && ((destOracao && onStartChat) || oracaoOn)
     ? () => setSheetEl(<SheetOracao member={member} dest={destOracao ?? null} onStartChat={onStartChat} organizationId={organizationId} muralOn={oracaoOn} />)
     : null;
@@ -298,7 +302,7 @@ function MobileMembro({
     if (extra.chatId !== undefined || extra.newChat) setChatTarget((c) => ({ id: extra.chatId ?? null, novo: !!extra.newChat, n: c.n + 1 }));
     else if (t === "mensagens" && !s) setChatTarget((c) => ({ id: null, novo: false, n: c.n + 1 }));
     setChatAberto(null);
-    const accepted = s && modulosMembro.some((m) => m.id === s && m.home === t && m.visible(ctx)) && (s !== "contribuir" || pix) && (s !== "oracao" || oracaoOn) ? s : null;
+    const accepted = s && modulosMembro.some((m) => m.id === s && m.home === t && m.visible(ctx)) && (s !== "contribuir" || pix) && (s !== "convidar" || convite) && (s !== "oracao" || oracaoOn) ? s : null;
     const destination = t === "agenda" && accepted === "tarefas" ? null : accepted;
     setTab(t);
     setSub(destination);
@@ -319,9 +323,9 @@ function MobileMembro({
      (que perde ?maba da URL) NÃO deve disparar o restore de novo, senão o
      app volta sozinho para o Início. Os valores que mudam com o refresh ficam
      em refs para o listener de popstate ler sem depender deles no useEffect. */
-  const navCtxRef = useRef({ modulosMembro, serves, isRecep, isKids, isGuardian, pixOn, oracaoOn, chats });
+  const navCtxRef = useRef({ modulosMembro, serves, isRecep, isKids, isGuardian, pixOn, conviteOn, oracaoOn, chats });
   useEffect(() => {
-    navCtxRef.current = { modulosMembro, serves, isRecep, isKids, isGuardian, pixOn, oracaoOn, chats };
+    navCtxRef.current = { modulosMembro, serves, isRecep, isKids, isGuardian, pixOn, conviteOn, oracaoOn, chats };
   });
   /* a folha do evento é montada com os dados da hora: a restauração deixa o pedido aqui */
   const eventoPendente = useRef<string | null>(null);
@@ -329,7 +333,7 @@ function MobileMembro({
   const applyLocation = useCallback((url: URL) => {
     const ctx = navCtxRef.current;
     const next = readMemberLocation(url, (t, s) =>
-      ctx.modulosMembro.some((m) => m.id === s && m.home === t && m.visible({ serves: ctx.serves, isRecep: ctx.isRecep, isKids: ctx.isKids, isGuardian: ctx.isGuardian })) && (s !== "contribuir" || ctx.pixOn) && (s !== "oracao" || ctx.oracaoOn));
+      ctx.modulosMembro.some((m) => m.id === s && m.home === t && m.visible({ serves: ctx.serves, isRecep: ctx.isRecep, isKids: ctx.isKids, isGuardian: ctx.isGuardian })) && (s !== "contribuir" || ctx.pixOn) && (s !== "convidar" || ctx.conviteOn) && (s !== "oracao" || ctx.oracaoOn));
     const canonical = writeMemberLocation(url, next);
     window.history.replaceState(window.history.state, "", canonical.pathname + canonical.search + canonical.hash);
     setTab(next.tab);
@@ -618,8 +622,10 @@ function MobileMembro({
               openSub={(s) => go("perfil", s)}
               contribuir={pix}
               onContribuir={() => go("caminhada", "contribuir")}
+              onConvidar={convite ? () => go("perfil", "convidar") : undefined}
             />
           )}
+          {tab === "perfil" && sub === "convidar" && convite && <Convidar cfg={convite} />}
           {tab === "perfil" && sub === "minha-historia" && <MinhaHistoria fatos={member ? timelineEvents.filter((f) => f.member_id === member.id) : []} />}
           {tab === "perfil" && sub === "familia" && (
             <div className="m6-legacy">

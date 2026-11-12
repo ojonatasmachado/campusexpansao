@@ -8,6 +8,7 @@
 import { useEffect, useRef, useState } from "react";
 import QRCode from "react-qr-code";
 import { avisar } from "../../lib/avisar";
+import { copiarTexto } from "../../lib/copiar";
 import { Icon } from "../../lib/icons";
 import { chaveLegivel, codigoPix, normalizarChave, rotuloDoTipo, type ContribuirCfg } from "./pix";
 
@@ -15,28 +16,6 @@ import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
 import { Cartao } from "../../ui/Cartao";
-async function copiar(texto: string): Promise<boolean> {
-  try {
-    await navigator.clipboard.writeText(texto);
-    return true;
-  } catch {
-    /* navegador sem permissão de área de transferência: cópia à moda antiga */
-    try {
-      const ta = document.createElement("textarea");
-      ta.value = texto;
-      ta.setAttribute("readonly", "");
-      ta.style.position = "fixed";
-      ta.style.opacity = "0";
-      document.body.appendChild(ta);
-      ta.select();
-      const ok = document.execCommand("copy");
-      ta.remove();
-      return ok;
-    } catch {
-      return false;
-    }
-  }
-}
 
 export function Contribuir({ cfg }: { cfg: ContribuirCfg }) {
   const finalidades = cfg.finalidades.filter((f) => f.trim());
@@ -52,7 +31,7 @@ export function Contribuir({ cfg }: { cfg: ContribuirCfg }) {
   const legivel = chaveLegivel(cfg.tipo, cfg.chave);
 
   const copiarEAvisar = async (qual: "codigo" | "chave") => {
-    const ok = await copiar(qual === "codigo" ? codigo : normalizarChave(cfg.tipo, cfg.chave));
+    const ok = await copiarTexto(qual === "codigo" ? codigo : normalizarChave(cfg.tipo, cfg.chave));
     if (!ok) { avisar("Não consegui copiar. Toque e segure a chave para copiar.", "warn"); return; }
     avisar(qual === "codigo" ? "Código Pix copiado. Cole no app do seu banco." : "Chave Pix copiada.");
     setCopiado(qual);

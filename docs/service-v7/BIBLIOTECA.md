@@ -65,7 +65,7 @@ Quase todo o CSS está em `evolucoes/service_app/service-app.css` (~4.000 linhas
 | Gaveta | `Gaveta` em `app/service/ui/Janela.tsx`; `DrawerShell` usa por dentro | sim | ok | 5 |
 | Barra de salvar | `BarraSalvar` em `app/service/ui/BarraSalvar.tsx` | sim | ok | 5 |
 | Menu lateral | `ServiceExactApp.tsx` (`.sb-*`) | sim | ok | 5 |
-| Janela (modal) | `Janela` em `app/service/ui/Janela.tsx` (vira folha no celular); `confirmar()` para risco | sim | ver PR do I8 para as que ficaram por estrutura própria | 3, 5 |
+| Janela (modal) | `Janela` em `app/service/ui/Janela.tsx` (vira folha no celular; `telaCheia` ocupa a tela toda, para mostrar um QR); `confirmar()` para risco | sim | ver PR do I8 para as que ficaram por estrutura própria | 3, 5 |
 | Folha inferior | `Folha` em `app/service/ui/Janela.tsx`; `M6Sheet` usa por dentro | sim | ok | 1, 5 |
 | Confirmação | `confirmar()` em `app/service/ui/confirmar.ts` (diálogo de risco) | sim | ok; CI barra `confirm()` | 3 |
 | Aviso (toast) | `avisar()` em `app/service/lib/avisar.ts`, com Desfazer (`acao`); o app do membro usa o mesmo | sim | ok | 3, 6 |

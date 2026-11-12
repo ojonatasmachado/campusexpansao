@@ -7,9 +7,11 @@ export default defineModule({
   permissoes: ["visitantes"],
   membro: {
     visivel: true,
-    lugares: ["agenda.minha", "painel.inicio.pendencias"],
+    lugares: ["agenda.minha", "perfil.linhas", "painel.inicio.pendencias"],
     telas: [
       { id: "visitantes", aba: "agenda", titulo: "Visitantes", quem: (c) => c.isRecep },
+      /* O9: o link leva ao autocadastro; sem ele ligado, a entrada some (MobileApp) */
+      { id: "convidar", aba: "perfil", titulo: "Convidar um amigo" },
     ],
   },
   painel: {
