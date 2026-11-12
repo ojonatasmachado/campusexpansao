@@ -8,7 +8,6 @@
 
 import { useId, useMemo, useRef, useState } from "react";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
-import { plural } from "../../lib/plural";
 import { baixarCsv } from "../../lib/csv";
 import { Icon } from "../../lib/icons";
 import { FormScreen, FormSection, type FormScreenHandle } from "../../painel/form/FormScreen";
@@ -25,8 +24,16 @@ import { Opcao } from "../../ui/Opcao";
 import { Linha } from "../../ui/Linha";
 import { Campo as CampoForm, Entrada } from "../../ui/Campo";
 import { Selecao } from "../../ui/Selecao";
+import { useTexto } from "../../lib/internacional/contexto";
+import type { Text } from "../../lib/internacional/mensagens";
 type Etapa = 1 | 2 | 3 | 4;
-const ETAPAS = ["Arquivo", "Colunas", "Conferir", "Importar"] as const;
+const etapasDe = (traduzirUi: Text) => [traduzirUi("Arquivo"), traduzirUi("Colunas"), traduzirUi("Conferir"), traduzirUi("Importar")];
+/* CAMPOS (lib/planilha) guarda o rótulo pt-BR; a tela mostra o rótulo no idioma da pessoa, o id não muda */
+const rotulosCampo = (traduzirUi: Text): Record<Campo, string> => ({
+  nome: traduzirUi("Nome"), telefone: traduzirUi("Telefone"), email: traduzirUi("E-mail"), nascimento: traduzirUi("Nascimento"),
+  sexo: traduzirUi("Sexo"), estadoCivil: traduzirUi("Estado civil"), rua: traduzirUi("Endereço (rua e número)"), bairro: traduzirUi("Bairro"),
+  cidade: traduzirUi("Cidade"), estado: traduzirUi("Estado (UF)"), cep: traduzirUi("CEP"), situacao: traduzirUi("Situação"), membroDesde: traduzirUi("Membro desde (ano)"),
+});
 type Grupo = "nova" | "existe" | "repete" | "erro";
 type Filtro = Grupo | "aviso";
 
@@ -38,14 +45,16 @@ function grupoDe(l: Conferida): Grupo {
   return "nova";
 }
 
-function motivoDe(l: Conferida): string {
-  if (l.erro) return "Sem nome: não entra. Coloque o nome na planilha e importe de novo.";
-  if (l.repeteLinha !== null) return `Repete a linha ${l.repeteLinha} da planilha`;
-  if (l.existente) return `${l.existente.pessoa.name} já tem ${l.existente.motivo === "e-mail" ? "o mesmo e-mail" : l.existente.motivo === "telefone" ? "o mesmo telefone" : l.existente.motivo === "nome" ? "o mesmo nome. A linha não tem telefone, e-mail nem nascimento para conferir" : "o mesmo nome e nascimento"}`;
-  return l.avisos.length ? l.avisos.join(" · ") : "Pronta para entrar";
+function motivoDe(l: Conferida, traduzirUi: Text): string {
+  if (l.erro) return traduzirUi("Sem nome: não entra. Coloque o nome na planilha e importe de novo.");
+  if (l.repeteLinha !== null) return traduzirUi("Repete a linha {linha} da planilha", { linha: String(l.repeteLinha) });
+  if (l.existente) return traduzirUi("{nome} já tem {motivo, select, email {o mesmo e-mail} telefone {o mesmo telefone} nome {o mesmo nome. A linha não tem telefone, e-mail nem nascimento para conferir} other {o mesmo nome e nascimento}}", { nome: l.existente.pessoa.name, motivo: l.existente.motivo === "e-mail" ? "email" : l.existente.motivo === "telefone" ? "telefone" : l.existente.motivo === "nome" ? "nome" : "outro" });
+  return l.avisos.length ? l.avisos.join(" · ") : traduzirUi("Pronta para entrar");
 }
 
 export function ImportarMembros({ church, members, onClose, onDone }: { church: ChurchView; members: MemberView[]; onClose: () => void; onDone: () => void }) {
+  const traduzirUi = useTexto();
+  const ETAPAS = etapasDe(traduzirUi);
   const fid = useId();
   const telaRef = useRef<FormScreenHandle>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -63,7 +72,7 @@ export function ImportarMembros({ church, members, onClose, onDone }: { church: 
   const [progresso, setProgresso] = useState<{ feito: number; total: number } | null>(null);
   const [resumo, setResumo] = useState<ResumoImportacao | null>(null);
 
-  const linhas = useMemo(() => (arquivo ? arquivo.linhas.map((l, i) => lerLinha(l, i + 2, mapa, { ddd })) : []), [arquivo, mapa, ddd]);
+  const linhas = useMemo(() => (arquivo ? arquivo.linhas.map((l, i) => lerLinha(l, i + 2, mapa, { ddd }, traduzirUi)) : []), [arquivo, mapa, ddd, traduzirUi]);
   const conferidas = useMemo(() => (existentes ? conferir(linhas, existentes) : []), [linhas, existentes]);
   const grupos = useMemo(() => {
     const g: Record<Grupo, Conferida[]> = { nova: [], existe: [], repete: [], erro: [] };
@@ -87,7 +96,7 @@ export function ImportarMembros({ church, members, onClose, onDone }: { church: 
     setErro("");
     setLendo(true);
     try {
-      const lido = await lerArquivo(arq);
+      const lido = await lerArquivo(arq, traduzirUi);
       const palpite = palpiteColunas(lido.cabecalho);
       setArquivo(lido);
       setMapa(palpite);
@@ -95,7 +104,7 @@ export function ImportarMembros({ church, members, onClose, onDone }: { church: 
       setExistentes(null);
     } catch (e) {
       setArquivo(null);
-      setErro(e instanceof Error ? e.message : "Não conseguimos ler este arquivo.");
+      setErro(e instanceof Error ? e.message : traduzirUi("Não conseguimos ler este arquivo."));
     } finally {
       setLendo(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -110,14 +119,14 @@ export function ImportarMembros({ church, members, onClose, onDone }: { church: 
     setErro("");
     setLendo(true);
     try {
-      const r = await carregarExistentes(createServiceBrowserClient().schema("service"), church.organizationId);
+      const r = await carregarExistentes(createServiceBrowserClient().schema("service"), church.organizationId, traduzirUi);
       setExistentes(r.lista);
       setColunasNovas(r.colunasNovas);
     } catch {
       /* fora da demonstração, conferir com a lista já carregada deixaria passar duplicados
          (pode estar velha ou incompleta): para e pede para tentar de novo */
       if (church.organizationId !== "org-demo") {
-        setErro("Não foi possível conferir quem já está cadastrado. Confira a conexão e tente de novo.");
+        setErro(traduzirUi("Não foi possível conferir quem já está cadastrado. Confira a conexão e tente de novo."));
         setLendo(false);
         return;
       }
@@ -144,7 +153,7 @@ export function ImportarMembros({ church, members, onClose, onDone }: { church: 
       colunasNovas,
       arquivo: arquivo.nome,
       aoAvancar: (feito, total) => setProgresso({ feito, total }),
-    });
+    }, traduzirUi);
     setResumo(r);
   }
 
@@ -158,14 +167,14 @@ export function ImportarMembros({ church, members, onClose, onDone }: { church: 
   const nomeMapeado = mapa.includes("nome");
   const importando = etapa === 4 && !resumo;
   const falta: string[] =
-    etapa === 1 ? (arquivo ? [] : ["escolher a planilha"])
-    : etapa === 2 ? (nomeMapeado ? [] : ["dizer qual coluna tem o nome"])
-    : etapa === 3 ? (vaiImportar + vaiAtualizar > 0 ? [] : ["uma pessoa nova ou uma ficha para completar"])
+    etapa === 1 ? (arquivo ? [] : [traduzirUi("escolher a planilha")])
+    : etapa === 2 ? (nomeMapeado ? [] : [traduzirUi("dizer qual coluna tem o nome")])
+    : etapa === 3 ? (vaiImportar + vaiAtualizar > 0 ? [] : [traduzirUi("uma pessoa nova ou uma ficha para completar")])
     : [];
   const saveLabel =
-    etapa === 3 ? (vaiImportar + vaiAtualizar > 0 ? `Importar ${plural(vaiImportar + vaiAtualizar, "pessoa")}` : "Importar")
-    : etapa === 4 ? "Concluir"
-    : lendo ? "Lendo…" : "Continuar";
+    etapa === 3 ? (vaiImportar + vaiAtualizar > 0 ? traduzirUi("Importar {count, plural, =1 {# pessoa} other {# pessoas}}", { count: vaiImportar + vaiAtualizar }) : traduzirUi("Importar"))
+    : etapa === 4 ? traduzirUi("Concluir")
+    : lendo ? traduzirUi("Lendo…") : traduzirUi("Continuar");
   const onSave = () => {
     if (etapa === 1) setEtapa(2);
     else if (etapa === 2) void irParaConferir();
@@ -184,11 +193,11 @@ export function ImportarMembros({ church, members, onClose, onDone }: { church: 
 
   const LISTA_MAX = 50;
   const filtros: [Filtro, string, number][] = [
-    ["nova", "Novas", grupos.nova.length],
-    ["existe", "Já cadastradas", grupos.existe.length],
-    ["repete", "Repetidas", grupos.repete.length],
-    ["erro", "Com erro", grupos.erro.length],
-    ["aviso", "Com aviso", comAviso.length],
+    ["nova", traduzirUi("Novas"), grupos.nova.length],
+    ["existe", traduzirUi("Já cadastradas"), grupos.existe.length],
+    ["repete", traduzirUi("Repetidas"), grupos.repete.length],
+    ["erro", traduzirUi("Com erro"), grupos.erro.length],
+    ["aviso", traduzirUi("Com aviso"), comAviso.length],
   ];
   const filtroAtivo: Filtro = filtro ?? (grupos.erro.length ? "erro" : grupos.existe.length ? "existe" : "nova");
   const listaFiltro = filtroAtivo === "aviso" ? comAviso : grupos[filtroAtivo];
@@ -196,8 +205,8 @@ export function ImportarMembros({ church, members, onClose, onDone }: { church: 
   return (
     <FormScreen
       ref={telaRef}
-      eyebrow="Pessoas"
-      title="Importar planilha"
+      eyebrow={traduzirUi("Pessoas")}
+      title={traduzirUi("Importar planilha")}
       saveLabel={saveLabel}
       saving={lendo || importando}
       missing={falta}
@@ -206,11 +215,11 @@ export function ImportarMembros({ church, members, onClose, onDone }: { church: 
       onSave={onSave}
       onClose={fecharTela}
     >
-      <Etapas estilo="faixa" rotulo="Etapas" className="imp-etapas" aoEscolher={etapa < 4 ? (id) => setEtapa(Number(id) as Etapa) : undefined}
+      <Etapas estilo="faixa" rotulo={traduzirUi("Etapas")} className="imp-etapas" aoEscolher={etapa < 4 ? (id) => setEtapa(Number(id) as Etapa) : undefined}
         itens={ETAPAS.map((rotulo, i) => ({ id: String(i + 1), titulo: rotulo, estado: i + 1 < etapa ? "feito" : i + 1 === etapa ? "atual" : "futuro" }))} />
 
       {etapa === 1 ? (
-        <FormSection title="Planilha">
+        <FormSection title={traduzirUi("Planilha")}>
           <label
             className={`imp-drop${arrastando ? " on" : ""}`}
             htmlFor={`${fid}-arq`}
@@ -222,12 +231,12 @@ export function ImportarMembros({ church, members, onClose, onDone }: { church: 
             {arquivo ? (
               <>
                 <span className="imp-drop-t">{arquivo.nome}</span>
-                <span className="imp-drop-s">{plural(arquivo.linhas.length, "pessoa")} · {plural(arquivo.cabecalho.length, "coluna")}. Toque para trocar o arquivo.</span>
+                <span className="imp-drop-s">{traduzirUi("{pessoas, plural, =1 {# pessoa} other {# pessoas}} · {colunas, plural, =1 {# coluna} other {# colunas}}. Toque para trocar o arquivo.", { pessoas: arquivo.linhas.length, colunas: arquivo.cabecalho.length })}</span>
               </>
             ) : (
               <>
-                <span className="imp-drop-t">{lendo ? "Lendo a planilha…" : "Escolher planilha"}</span>
-                <span className="imp-drop-s">CSV ou Excel (.xlsx), até {plural(5000, "linha")}. Uma pessoa por linha, com os nomes das colunas na primeira.</span>
+                <span className="imp-drop-t">{lendo ? traduzirUi("Lendo a planilha…") : traduzirUi("Escolher planilha")}</span>
+                <span className="imp-drop-s">{traduzirUi("CSV ou Excel (.xlsx), até {limite, plural, =1 {# linha} other {# linhas}}. Uma pessoa por linha, com os nomes das colunas na primeira.", { limite: 5000 })}</span>
               </>
             )}
             <input
@@ -240,15 +249,15 @@ export function ImportarMembros({ church, members, onClose, onDone }: { church: 
             />
           </label>
           <div className="imp-modelo">
-            <p className="fs-note">Não tem uma planilha pronta? Baixe o modelo, preencha no Excel ou no Google Planilhas e envie aqui.</p>
-            <Botao compacto onClick={baixarModelo}><Icon name="baixar" size={14} /> Baixar modelo</Botao>
+            <p className="fs-note">{traduzirUi("Não tem uma planilha pronta? Baixe o modelo, preencha no Excel ou no Google Planilhas e envie aqui.")}</p>
+            <Botao compacto onClick={baixarModelo}><Icon name="baixar" size={14} /> {traduzirUi("Baixar modelo")}</Botao>
           </div>
         </FormSection>
       ) : null}
 
       {etapa === 2 && arquivo ? (
-        <FormSection title="O que tem em cada coluna">
-          <p className="fs-note imp-intro">Já ligamos as colunas que reconhecemos. Confira e ajuste o que estiver errado. Só o nome é obrigatório.</p>
+        <FormSection title={traduzirUi("O que tem em cada coluna")}>
+          <p className="fs-note imp-intro">{traduzirUi("Já ligamos as colunas que reconhecemos. Confira e ajuste o que estiver errado. Só o nome é obrigatório.")}</p>
           <div className="tbl imp-cols">
             {arquivo.cabecalho.map((cab, col) => {
               const ex = exemplos(col);
@@ -256,61 +265,61 @@ export function ImportarMembros({ church, members, onClose, onDone }: { church: 
                 <Linha estilo="tabela" className="imp-col" key={col}>
                   <div className="imp-col-info">
                     <div className="cell-name">{cab}</div>
-                    <div className="cell-sub">{ex.length ? ex.join(" · ") : "coluna vazia"}</div>
+                    <div className="cell-sub">{ex.length ? ex.join(" · ") : traduzirUi("coluna vazia")}</div>
                   </div>
                   <Selecao
-                    rotulo={`O que tem na coluna ${cab}`}
+                    rotulo={traduzirUi("O que tem na coluna {coluna}", { coluna: cab })}
                     valor={mapa[col] ?? ""}
                     aoMudar={(v) => trocarCampo(col, v as Campo | "")}
-                    vazio="Não importar"
-                    opcoes={CAMPOS.map((c) => ({ v: c.id, l: c.rotulo }))}
+                    vazio={traduzirUi("Não importar")}
+                    opcoes={CAMPOS.map((c) => ({ v: c.id, l: rotulosCampo(traduzirUi)[c.id] ?? c.rotulo }))}
                   />
                 </Linha>
               );
             })}
           </div>
-          {!nomeMapeado ? <p className="fs-note imp-alerta">Escolha qual coluna tem o nome da pessoa para continuar.</p> : null}
+          {!nomeMapeado ? <p className="fs-note imp-alerta">{traduzirUi("Escolha qual coluna tem o nome da pessoa para continuar.")}</p> : null}
         </FormSection>
       ) : null}
 
       {etapa === 3 && arquivo ? (
         <>
-          <FormSection title="Resultado da conferência">
+          <FormSection title={traduzirUi("Resultado da conferência")}>
             <div className="imp-nums">
-              <div className="imp-num"><span className="imp-num-v">{grupos.nova.length.toLocaleString("pt-BR")}</span><span className="imp-num-l">{grupos.nova.length === 1 ? "pessoa nova" : "pessoas novas"}</span></div>
-              <div className="imp-num"><span className="imp-num-v">{grupos.existe.length.toLocaleString("pt-BR")}</span><span className="imp-num-l">já {grupos.existe.length === 1 ? "cadastrada" : "cadastradas"}</span></div>
-              <div className="imp-num"><span className="imp-num-v">{(grupos.erro.length + grupos.repete.length).toLocaleString("pt-BR")}</span><span className="imp-num-l">não {grupos.erro.length + grupos.repete.length === 1 ? "entra" : "entram"}</span></div>
+              <div className="imp-num"><span className="imp-num-v">{grupos.nova.length.toLocaleString("pt-BR")}</span><span className="imp-num-l">{traduzirUi("{count, plural, =1 {pessoa nova} other {pessoas novas}}", { count: grupos.nova.length })}</span></div>
+              <div className="imp-num"><span className="imp-num-v">{grupos.existe.length.toLocaleString("pt-BR")}</span><span className="imp-num-l">{traduzirUi("{count, plural, =1 {já cadastrada} other {já cadastradas}}", { count: grupos.existe.length })}</span></div>
+              <div className="imp-num"><span className="imp-num-v">{(grupos.erro.length + grupos.repete.length).toLocaleString("pt-BR")}</span><span className="imp-num-l">{traduzirUi("{count, plural, =1 {não entra} other {não entram}}", { count: grupos.erro.length + grupos.repete.length })}</span></div>
             </div>
             {!colunasNovas && (mapa.includes("sexo") || mapa.includes("estadoCivil")) ? (
-              <p className="fs-note imp-alerta">Sexo e estado civil ainda não podem ser gravados nesta versão do banco. O resto entra normalmente.</p>
+              <p className="fs-note imp-alerta">{traduzirUi("Sexo e estado civil ainda não podem ser gravados nesta versão do banco. O resto entra normalmente.")}</p>
             ) : null}
           </FormSection>
 
           {semDdd > 0 ? (
-            <FormSection title="Telefones sem DDD">
-              <CampoForm rotulo="DDD para completar" id={`${fid}-ddd`} ajuda={`${plural(semDdd, "telefone veio", "telefones vieram")} sem DDD. Usamos este na frente. Deixe vazio para manter como está.`}>
+            <FormSection title={traduzirUi("Telefones sem DDD")}>
+              <CampoForm rotulo={traduzirUi("DDD para completar")} id={`${fid}-ddd`} ajuda={traduzirUi("{count, plural, =1 {# telefone veio} other {# telefones vieram}} sem DDD. Usamos este na frente. Deixe vazio para manter como está.", { count: semDdd })}>
                 <Entrada className="imp-ddd" inputMode="numeric" maxLength={2} value={ddd} onChange={(e) => setDdd(e.target.value.replace(/\D/g, "").slice(0, 2))} placeholder="11" />
               </CampoForm>
             </FormSection>
           ) : null}
 
           {grupos.existe.length > 0 ? (
-            <FormSection title="Quem já está cadastrado">
-              <div className="opt-row imp-opts" role="radiogroup" aria-label="O que fazer com quem já está cadastrado">
+            <FormSection title={traduzirUi("Quem já está cadastrado")}>
+              <div className="opt-row imp-opts" role="radiogroup" aria-label={traduzirUi("O que fazer com quem já está cadastrado")}>
                 <Opcao role="radio" aria-checked={dupAcao === "pular"} marcada={dupAcao === "pular"} estilo="opt" onClick={() => setDupAcao("pular")}>
-                  <div className="opt-t">Pular</div>
-                  <div className="opt-s">A ficha atual fica como está.</div>
+                  <div className="opt-t">{traduzirUi("Pular")}</div>
+                  <div className="opt-s">{traduzirUi("A ficha atual fica como está.")}</div>
                 </Opcao>
                 <Opcao role="radio" aria-checked={dupAcao === "completar"} marcada={dupAcao === "completar"} estilo="opt" onClick={() => setDupAcao("completar")}>
-                  <div className="opt-t">Completar o que falta</div>
-                  <div className="opt-s">{completaveis.length ? `Preenche só campos vazios em ${plural(completaveis.length, "ficha", "fichas")}. Nada é trocado.` : "Nenhuma ficha tem campo vazio que a planilha preencha."}</div>
+                  <div className="opt-t">{traduzirUi("Completar o que falta")}</div>
+                  <div className="opt-s">{completaveis.length ? traduzirUi("Preenche só campos vazios em {count, plural, =1 {# ficha} other {# fichas}}. Nada é trocado.", { count: completaveis.length }) : traduzirUi("Nenhuma ficha tem campo vazio que a planilha preencha.")}</div>
                 </Opcao>
               </div>
             </FormSection>
           ) : null}
 
-          <FormSection title="Linha a linha">
-            <div className="fs-chips imp-filtros" role="group" aria-label="Mostrar">
+          <FormSection title={traduzirUi("Linha a linha")}>
+            <div className="fs-chips imp-filtros" role="group" aria-label={traduzirUi("Mostrar")}>
               {filtros.filter(([, , n]) => n > 0).map(([id, rotulo, n]) => (
                 <Opcao key={id} marcada={filtroAtivo === id} estilo="seg-chip" aria-pressed={filtroAtivo === id} onClick={() => setFiltro(id)}>
                   {rotulo} <span className="seg-n">{n.toLocaleString("pt-BR")}</span>
@@ -322,36 +331,36 @@ export function ImportarMembros({ church, members, onClose, onDone }: { church: 
                 <Linha estilo="tabela" className="imp-linha" key={l.n}>
                   <span className="imp-linha-n">{l.n}</span>
                   <div className="imp-col-info">
-                    <div className="cell-name">{l.valores.nome || "Sem nome"}</div>
-                    <div className={`cell-sub${l.erro ? " imp-erro" : ""}`}>{filtroAtivo === "aviso" ? l.avisos.join(" · ") : motivoDe(l)}</div>
+                    <div className="cell-name">{l.valores.nome || traduzirUi("Sem nome")}</div>
+                    <div className={`cell-sub${l.erro ? " imp-erro" : ""}`}>{filtroAtivo === "aviso" ? l.avisos.join(" · ") : motivoDe(l, traduzirUi)}</div>
                   </div>
                 </Linha>
               ))}
             </div>
-            {listaFiltro.length > LISTA_MAX ? <p className="fs-note">Mostrando {LISTA_MAX} de {listaFiltro.length.toLocaleString("pt-BR")}. O número à esquerda é a linha na planilha.</p> : <p className="fs-note">O número à esquerda é a linha na planilha.</p>}
+            {listaFiltro.length > LISTA_MAX ? <p className="fs-note">{traduzirUi("Mostrando {max} de {total}. O número à esquerda é a linha na planilha.", { max: String(LISTA_MAX), total: listaFiltro.length.toLocaleString("pt-BR") })}</p> : <p className="fs-note">{traduzirUi("O número à esquerda é a linha na planilha.")}</p>}
           </FormSection>
         </>
       ) : null}
 
       {etapa === 4 ? (
-        <FormSection title={resumo ? "Resumo" : "Importando"}>
+        <FormSection title={resumo ? traduzirUi("Resumo") : traduzirUi("Importando")}>
           {progresso ? (
             <div className="imp-prog" aria-live="polite">
-              <div className="bar" role="progressbar" aria-valuemin={0} aria-valuemax={progresso.total} aria-valuenow={progresso.feito} aria-label="Progresso da importação">
+              <div className="bar" role="progressbar" aria-valuemin={0} aria-valuemax={progresso.total} aria-valuenow={progresso.feito} aria-label={traduzirUi("Progresso da importação")}>
                 <div className="bar-fill imp-prog-fill" style={{ width: `${progresso.total ? Math.round((progresso.feito / progresso.total) * 100) : 100}%` }} />
               </div>
-              <p className="imp-prog-t">{resumo ? "Importação concluída." : `${progresso.feito.toLocaleString("pt-BR")} de ${plural(progresso.total, "pessoa")}. Não feche esta tela.`}</p>
+              <p className="imp-prog-t">{resumo ? traduzirUi("Importação concluída.") : traduzirUi("{feito} de {total, plural, =1 {# pessoa} other {# pessoas}}. Não feche esta tela.", { feito: progresso.feito.toLocaleString("pt-BR"), total: progresso.total })}</p>
             </div>
           ) : null}
           {resumo ? (
             <div className="imp-resumo">
-              <p className="imp-resumo-t">{[plural(resumo.importados, "importado"), resumo.atualizados ? plural(resumo.atualizados, "atualizado") : "", plural(resumo.pulados, "pulado")].filter(Boolean).join(", ")}.</p>
-              {resumo.importados ? <p className="fs-note">Quem entrou já aparece em Pessoas. O convite do app não sai sozinho: envie pela ficha de cada pessoa quando quiser.</p> : null}
-              {resumo.semHistorico ? <p className="fs-note imp-alerta">{plural(resumo.semHistorico, "pessoa entrou", "pessoas entraram")}, mas sem o registro &quot;importado&quot; na linha do tempo. As fichas estão certas; só falta esse registro.</p> : null}
+              <p className="imp-resumo-t">{traduzirUi("{importados, plural, =1 {# importado} other {# importados}}{atualizou, select, sim {, {atualizados, plural, =1 {# atualizado} other {# atualizados}}} other {}}, {pulados, plural, =1 {# pulado} other {# pulados}}.", { importados: resumo.importados, atualizou: resumo.atualizados ? "sim" : "nao", atualizados: resumo.atualizados, pulados: resumo.pulados })}</p>
+              {resumo.importados ? <p className="fs-note">{traduzirUi("Quem entrou já aparece em Pessoas. O convite do app não sai sozinho: envie pela ficha de cada pessoa quando quiser.")}</p> : null}
+              {resumo.semHistorico ? <p className="fs-note imp-alerta">{traduzirUi("{count, plural, =1 {# pessoa entrou} other {# pessoas entraram}}, mas sem o registro \"importado\" na linha do tempo. As fichas estão certas; só falta esse registro.", { count: resumo.semHistorico })}</p> : null}
               {resumo.falhas.length ? (
                 <div className="imp-falhas">
-                  <p className="fs-note imp-alerta">{plural(resumo.falhas.length, "linha não entrou", "linhas não entraram")}. Corrija na planilha e importe só elas de novo.</p>
-                  <Botao compacto onClick={baixarFalhas}><Icon name="baixar" size={14} /> Baixar a lista</Botao>
+                  <p className="fs-note imp-alerta">{traduzirUi("{count, plural, =1 {# linha não entrou} other {# linhas não entraram}}. Corrija na planilha e importe só elas de novo.", { count: resumo.falhas.length })}</p>
+                  <Botao compacto onClick={baixarFalhas}><Icon name="baixar" size={14} /> {traduzirUi("Baixar a lista")}</Botao>
                 </div>
               ) : null}
             </div>
@@ -361,7 +370,7 @@ export function ImportarMembros({ church, members, onClose, onDone }: { church: 
 
       {etapa === 2 || etapa === 3 ? (
         <Botao variante="discreto" compacto className="imp-voltar" onClick={() => setEtapa((etapa - 1) as Etapa)} desativado={lendo}>
-          <Icon name="voltar" size={14} /> Voltar para {ETAPAS[etapa - 2].toLowerCase()}
+          <Icon name="voltar" size={14} /> {traduzirUi("Voltar para {etapa}", { etapa: ETAPAS[etapa - 2].toLowerCase() })}
         </Botao>
       ) : null}
     </FormScreen>

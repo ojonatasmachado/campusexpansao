@@ -18,11 +18,13 @@ import { Linha, linhaClasse } from "../../ui/Linha";
 import { Segmentado } from "../../ui/Segmentado";
 import { Indicador } from "../../ui/Indicador";
 import { SeletorData } from "../../ui/Data";
-const PRESETS: { v: Preset; l: string }[] = [
-  { v: "30", l: "30 dias" },
-  { v: "90", l: "90 dias" },
-  { v: "365", l: "12 meses" },
-  { v: "datas", l: "Datas" },
+import { useTexto } from "../../lib/internacional/contexto";
+import type { Text } from "../../lib/internacional/mensagens";
+const presetsDe = (traduzirUi: Text): { v: Preset; l: string }[] => [
+  { v: "30", l: traduzirUi("30 dias") },
+  { v: "90", l: traduzirUi("90 dias") },
+  { v: "365", l: traduzirUi("12 meses") },
+  { v: "datas", l: traduzirUi("Datas") },
 ];
 
 export function SaudeDaIgreja({ dados, etapas, onAbrir, podeAbrirPessoa = () => true, extras = [] }: {
@@ -33,6 +35,7 @@ export function SaudeDaIgreja({ dados, etapas, onAbrir, podeAbrirPessoa = () => 
   onAbrir: (item: ItemPessoa) => void;
   podeAbrirPessoa?: (item: ItemPessoa) => boolean;
 }) {
+  const traduzirUi = useTexto();
   const { todayISO } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
   const [preset, setPreset] = useState<Preset>("30");
@@ -65,19 +68,19 @@ export function SaudeDaIgreja({ dados, etapas, onAbrir, podeAbrirPessoa = () => 
         const mudou = n.anterior !== undefined && n.anterior !== n.valor;
         return (
           <Indicador key={n.id} estilo="numero" valor={n.valor} rotulo={ct(n.rotulo)} rodape={cmp && mudou ? cmp : undefined}
-            aoAbrir={n.itens.length ? () => setLista(n) : undefined} rotuloAcao={`${ct(n.rotulo)}: ${n.valor}${cmp ? `, ${cmp}` : ""}. Ver a lista`} />
+            aoAbrir={n.itens.length ? () => setLista(n) : undefined} rotuloAcao={traduzirUi("{rotulo}: {valor}{temComparacao, select, sim {, {comparacao}} other {}}. Ver a lista", { rotulo: ct(n.rotulo), valor: String(n.valor), temComparacao: cmp ? "sim" : "nao", comparacao: cmp || "" })} />
         );
       })}
     </div>
   );
 
   return (
-    <section className="saude" aria-label="Saúde da igreja">
+    <section className="saude" aria-label={traduzirUi("Saúde da igreja")}>
       <div className="saude-head">
-        <h2 className="saude-t">Saúde da igreja</h2>
+        <h2 className="saude-t">{traduzirUi("Saúde da igreja")}</h2>
         {panorama && (
-          <Segmentado className="seg-sm" role="radiogroup" aria-label="Período">
-            {PRESETS.map((p) => (
+          <Segmentado className="seg-sm" role="radiogroup" aria-label={traduzirUi("Período")}>
+            {presetsDe(traduzirUi).map((p) => (
               <Opcao key={p.v} role="radio" aria-checked={preset === p.v} marcada={preset === p.v} onClick={() => setPreset(p.v)}>{p.l}</Opcao>
             ))}
           </Segmentado>
@@ -85,27 +88,27 @@ export function SaudeDaIgreja({ dados, etapas, onAbrir, podeAbrirPessoa = () => 
       </div>
       {panorama && preset === "datas" && (
         <div className="saude-datas">
-          <div>De <SeletorData rotulo="De" valor={datas.ini} aoMudar={(v) => setDatas((d) => ({ ...d, ini: v }))} /></div>
-          <div>até <SeletorData rotulo="Até" valor={datas.fim} aoMudar={(v) => setDatas((d) => ({ ...d, fim: v }))} /></div>
+          <div>{traduzirUi("De")} <SeletorData rotulo={traduzirUi("De")} valor={datas.ini} aoMudar={(v) => setDatas((d) => ({ ...d, ini: v }))} /></div>
+          <div>{traduzirUi("até")} <SeletorData rotulo={traduzirUi("Até")} valor={datas.fim} aoMudar={(v) => setDatas((d) => ({ ...d, fim: v }))} /></div>
         </div>
       )}
-      <div className="saude-grp">Hoje</div>
+      <div className="saude-grp">{traduzirUi("Hoje")}</div>
       {grade([...numerosDaBase(dados), ...extras])}
       {panorama && (
         <>
-          <div className="saude-grp">{`De ${formatDateBR(periodo.ini)} a ${formatDateBR(periodo.fim)}`}<span className="saude-grp-s">{` · comparado a ${formatDateBR(ant.ini)} a ${formatDateBR(ant.fim)}`}</span></div>
+          <div className="saude-grp">{traduzirUi("De {inicio} a {fim}", { inicio: formatDateBR(periodo.ini), fim: formatDateBR(periodo.fim) })}<span className="saude-grp-s">{" "}{traduzirUi("· comparado a {inicio} a {fim}", { inicio: formatDateBR(ant.ini), fim: formatDateBR(ant.fim) })}</span></div>
           {grade(numerosDoPeriodo(dados, periodo))}
-          <div className="saude-grp">{ct("Etapas da {caminhada}")}<span className="saude-grp-s"> · membros que já fizeram cada uma</span></div>
+          <div className="saude-grp">{traduzirUi("Etapas da {caminhada}")}<span className="saude-grp-s">{" "}{traduzirUi("· membros que já fizeram cada uma")}</span></div>
           {grade(etapasDaCaminhada(dados.membros, etapas))}
         </>
       )}
       <Botao variante="texto" className="saude-mais" aria-expanded={panorama} onClick={alternarPanorama}>
-        {panorama ? "Mostrar só o de hoje" : ct("Ver o panorama: período, visitantes, decisões e {caminhada}")}
+        {panorama ? traduzirUi("Mostrar só o de hoje") : traduzirUi("Ver o panorama: período, visitantes, decisões e {caminhada}")}
       </Botao>
 
       {lista && (
-        <Janela titulo={ct(lista.rotulo)} texto={lista.itens.length === 1 ? "1 pessoa" : `${lista.itens.length} pessoas`} aoFechar={() => setLista(null)} corpoBloco
-          rodape={<Botao variante="principal" onClick={() => setLista(null)}>Fechar</Botao>}>
+        <Janela titulo={ct(lista.rotulo)} texto={traduzirUi("{count, plural, =1 {1 pessoa} other {{n} pessoas}}", { count: lista.itens.length, n: String(lista.itens.length) })} aoFechar={() => setLista(null)} corpoBloco
+          rodape={<Botao variante="principal" onClick={() => setLista(null)}>{traduzirUi("Fechar")}</Botao>}>
               {[...lista.itens].sort((a, b) => a.nome.localeCompare(b.nome)).map((it) => podeAbrirPessoa(it) ? (
                 <Acao key={`${it.tipo}-${it.id}`} className={`${linhaClasse({})} click`} onClick={() => { setLista(null); onAbrir(it); }}>
                   <div className="mini-main"><div className="mini-title">{it.nome}</div></div>

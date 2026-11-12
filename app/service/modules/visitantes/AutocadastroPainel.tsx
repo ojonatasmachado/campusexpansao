@@ -16,6 +16,7 @@ import { Linha } from "../../ui/Linha";
 import { Campo } from "../../ui/Campo";
 import { Selecao } from "../../ui/Selecao";
 import { Vazio } from "../../ui/Estados";
+import { useTexto } from "../../lib/internacional/contexto";
 const PADRAO: AutocadastroCfg = { ativo: false, responsavelId: null };
 
 /* Visitantes › QR e link: liga o autocadastro, escolhe quem recebe os
@@ -31,6 +32,7 @@ export default function AutocadastroPainel({
   onClose: () => void;
   onRefresh: () => void;
 }) {
+  const traduzirUi = useTexto();
   const [cfg, , save] = useChurchSettingsField<AutocadastroCfg>("autocadastro", PADRAO, church, onRefresh);
   const origin = useOrigem();
   const qrRef = useRef<HTMLDivElement>(null);
@@ -42,9 +44,9 @@ export default function AutocadastroPainel({
   const copiar = async () => {
     try {
       await navigator.clipboard.writeText(link);
-      avisar("Link copiado.");
+      avisar(traduzirUi("Link copiado."));
     } catch {
-      avisar("Não deu para copiar. Selecione o endereço e copie à mão.", "warn");
+      avisar(traduzirUi("Não deu para copiar. Selecione o endereço e copie à mão."), "warn");
     }
   };
 
@@ -59,24 +61,24 @@ export default function AutocadastroPainel({
       a.download = `qr-visitante-${church.slug}.png`;
       a.click();
     } catch {
-      avisar("Não deu para gerar o QR agora. Tente de novo.", "warn");
+      avisar(traduzirUi("Não deu para gerar o QR agora. Tente de novo."), "warn");
     }
   };
 
   return (
-    <Janela larga sobretitulo="Visitantes" titulo="QR e link do visitante" texto="Quem visita preenche o próprio contato no celular e entra no funil como Novo, com a origem QR/link." aoFechar={onClose} corpoBloco
-      rodape={<Botao variante="principal" onClick={onClose}>Pronto</Botao>}>
+    <Janela larga sobretitulo={traduzirUi("Visitantes")} titulo={traduzirUi("QR e link do visitante")} texto={traduzirUi("Quem visita preenche o próprio contato no celular e entra no funil como Novo, com a origem QR/link.")} aoFechar={onClose} corpoBloco
+      rodape={<Botao variante="principal" onClick={onClose}>{traduzirUi("Pronto")}</Botao>}>
           <Linha estilo="config">
             <div className="cfg-row-main">
-              <div className="cfg-row-t">Receber cadastros pelo link</div>
-              <div className="cfg-row-s">{cfg.ativo ? "Ligado. O link e o QR já aceitam cadastros." : "Desligado. Quem abrir o link vê um aviso para procurar a recepção."}</div>
+              <div className="cfg-row-t">{traduzirUi("Receber cadastros pelo link")}</div>
+              <div className="cfg-row-s">{cfg.ativo ? traduzirUi("Ligado. O link e o QR já aceitam cadastros.") : traduzirUi("Desligado. Quem abrir o link vê um aviso para procurar a recepção.")}</div>
             </div>
-            <Interruptor ligado={cfg.ativo} rotulo="Receber cadastros pelo link" onClick={() => save({ ativo: !cfg.ativo })} />
+            <Interruptor ligado={cfg.ativo} rotulo={traduzirUi("Receber cadastros pelo link")} onClick={() => save({ ativo: !cfg.ativo })} />
           </Linha>
 
           <div style={{ marginTop: 14 }}>
-            <Campo rotulo="Quem recebe os novos cadastros" id="vis-resp">
-              <Selecao valor={cfg.responsavelId ?? ""} aoMudar={(v) => save({ responsavelId: v || null })} vazio="Ninguém fixo (a equipe distribui)"
+            <Campo rotulo={traduzirUi("Quem recebe os novos cadastros")} id="vis-resp">
+              <Selecao valor={cfg.responsavelId ?? ""} aoMudar={(v) => save({ responsavelId: v || null })} vazio={traduzirUi("Ninguém fixo (a equipe distribui)")}
                 opcoes={pessoas.map((p) => ({ v: p.id, l: p.name }))} />
             </Campo>
           </div>
@@ -84,12 +86,12 @@ export default function AutocadastroPainel({
           {church.slug ? (
             <>
               <div className="field">
-                <span className="field-label">Endereço para divulgar</span>
+                <span className="field-label">{traduzirUi("Endereço para divulgar")}</span>
                 <div className="vis-link">
                   <span className="vis-link-url">{curto}</span>
                   <div className="vis-link-acts">
-                    <Botao compacto onClick={copiar} desativado={!link}><Icon name="copiar" size={13} /> Copiar link</Botao>
-                    <a className={botaoClasse({ variante: "discreto", compacto: true })} href={whatsapp} target="_blank" rel="noopener noreferrer">Mandar no WhatsApp</a>
+                    <Botao compacto onClick={copiar} desativado={!link}><Icon name="copiar" size={13} /> {traduzirUi("Copiar link")}</Botao>
+                    <a className={botaoClasse({ variante: "discreto", compacto: true })} href={whatsapp} target="_blank" rel="noopener noreferrer">{traduzirUi("Mandar no WhatsApp")}</a>
                   </div>
                 </div>
               </div>
@@ -99,14 +101,14 @@ export default function AutocadastroPainel({
                   {link ? <QRCode value={link} size={132} style={{ height: "auto", maxWidth: "100%", width: 132 }} viewBox="0 0 132 132" /> : null}
                 </div>
                 <div className="vis-qr-txt">
-                  <div className="cfg-row-t">QR para o telão, boletim ou cartaz</div>
-                  <div className="cfg-row-s">Aponte a câmera do celular e o formulário abre na hora. {cfg.ativo ? null : "Ligue o recebimento antes de divulgar."}</div>
-                  <Botao compacto style={{ marginTop: 10 }} onClick={baixarQr} desativado={!link}>Baixar QR code</Botao>
+                  <div className="cfg-row-t">{traduzirUi("QR para o telão, boletim ou cartaz")}</div>
+                  <div className="cfg-row-s">{traduzirUi("Aponte a câmera do celular e o formulário abre na hora.")} {cfg.ativo ? null : traduzirUi("Ligue o recebimento antes de divulgar.")}</div>
+                  <Botao compacto style={{ marginTop: 10 }} onClick={baixarQr} desativado={!link}>{traduzirUi("Baixar QR code")}</Botao>
                 </div>
               </div>
             </>
           ) : (
-            <Vazio titulo="A igreja ainda não tem endereço. Defina em Comunicação › Página da igreja e o link aparece aqui." />
+            <Vazio titulo={traduzirUi("A igreja ainda não tem endereço. Defina em Comunicação › Página da igreja e o link aparece aqui.")} />
           )}
     </Janela>
   );

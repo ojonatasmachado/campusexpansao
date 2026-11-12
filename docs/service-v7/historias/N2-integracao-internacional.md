@@ -71,6 +71,30 @@ Continuidade explícita da entrega parcial N1, autorizada pelo usuário em 25/10
 - `app/service/modules/mapa/Pontos.tsx` (fatia 4a)
 - `app/service/modules/mapa/AreaDesenhada.tsx` (fatia 4a)
 - `app/service/modules/mapa/MapaBase.tsx` (fatia 4a)
+- `app/service/modules/pessoas/Pessoas.tsx` (fatia 4b)
+- `app/service/modules/pessoas/ImportarMembros.tsx` (fatia 4b)
+- `app/service/modules/pessoas/Duplicados.tsx` (fatia 4b)
+- `app/service/modules/pessoas/acesso-msg.tsx` (fatia 4b)
+- `app/service/modules/pessoas/PedidosCaminhada.tsx` (fatia 4b)
+- `app/service/modules/configuracao/Assistente.tsx` (fatia 4b)
+- `app/service/modules/configuracao/FusoField.tsx` (fatia 4b)
+- `app/service/modules/secretaria/RegistroForm.tsx` (fatia 4b)
+- `app/service/modules/secretaria/Carteirinha.tsx` (fatia 4b)
+- `app/service/modules/secretaria/Secretaria.tsx` (fatia 4b)
+- `app/service/modules/contribuir/ContribuirConfig.tsx` (fatia 4b)
+- `app/service/modules/contribuir/Contribuir.tsx` (fatia 4b)
+- `app/service/modules/entrada/NovosCadastros.tsx` (fatia 4b)
+- `app/service/modules/entrada/EntradaConfig.tsx` (fatia 4b)
+- `app/service/modules/aniversarios/Aniversariantes.tsx` (fatia 4b)
+- `app/service/modules/aniversarios/CartaoDoTime.tsx` (fatia 4b)
+- `app/service/modules/cuidado/Cuidado.tsx` (fatia 4b)
+- `app/service/modules/visitantes/AutocadastroPainel.tsx` (fatia 4b)
+- `app/service/modules/visitantes/AutocadastroForm.tsx` (fatia 4b)
+- `app/service/modules/visitantes/Convidar.tsx` (fatia 4b)
+- `app/service/modules/visitantes/AutocadastroDados.tsx` (fatia 4b)
+- `app/service/modules/grupos/GrupoEditModal.tsx` (fatia 4b)
+- `app/service/modules/inicio/Saude.tsx` (fatia 4b)
+- `app/service/modules/relatorios/MetricasInternas.tsx` (fatia 4b)
 
 Definir na reserva, conferindo especialmente I10: ui/, painel/comum.tsx, modules/inicio/Saude.tsx, modules/financeiro/ e modules/relatorios/. Não trabalhar simultaneamente no branch de outra frente.
 
@@ -93,3 +117,5 @@ Fatia 2 (12/11, PR próprio, rollout desligado): tradutor em 8 telas do painel (
 Fatia 3 (12/11, PR próprio, rollout desligado): tradutor nos 19 arquivos restantes do painel (telas Inicio, Times, Pesquisas, Relatorios, Conversas, Caminhada, Panorama, ServiceModal, FichaPessoa, `ficha/`, três de `configuracao/`, `form/FField` e `form/FormScreen`). Catálogos de 1494 para 1966 chaves, nenhuma vazia. Prova: texto de 13 telas (inclusive a ficha da pessoa) igual ao do main, exceto dados vivos. Pesquisas e os modais não entraram na comparação de tela. O revisor achou "Inserir num {grupo}" (saía "grupo" em vez de "Grupo"): corrigido para `{Grupo}`. Ficam em pt-BR, por virem de arquivos fora da fatia: `saudacao()` e `semanaDe()` (por isso o Início em en/es mistura "Bom dia"), `modules/inicio/saude`, `requirementLabel`, `VISITOR_STAGES`, `BAT_ST_MAP`, `JRN_STEPS`, `PAPEIS_V2`, `identidadeConversa`, datas (`MES_CURTO`, `formatDateBR`) e o CSV de Relatórios. "culto" fixo em "Sem times neste culto." (Panorama) e "{n} grupos" (Relatorios) já eram fixos antes; trocar pelo termo da igreja fica para quando o pt-BR puder mudar.
 
 Fatia 4a (12/11, PR próprio, rollout desligado): tradutor em `modules/mural` (Mural, Boletim), `modules/escalas` (Escalas, GerarPeriodo, EscalaExtra, PublicarEscala) e 10 arquivos de `modules/mapa`. Catálogos de 1966 para 2647 chaves, nenhuma vazia. Prova: texto de 9 telas (membro, Escalas, Mural, Mapa) igual ao do main, exceto os contadores animados do Início; 258 frases com plural, termo ou dados conferidas em 0, 1, 2 e 1284. O revisor corrigiu o sentido de três traduções ("Actuación", "Close" em Encerrar emergência, "1 from church in every") e um caso de nome de time vazio em Escalas. Ficam em pt-BR: push, WhatsApp e aviso de emergência enviados, público do Mural gravado, CSV, e datas montadas por funções fora da fatia (`nomeDoMes`, `DIA_LONGO`, `formatDateBR`, `linguagem.ts`).
+
+Fatia 4b (12/11, PR próprio, rollout desligado): tradutor em 24 arquivos de `modules/` (pessoas, configuracao/Assistente e FusoField, secretaria, contribuir, entrada, aniversarios, cuidado, visitantes/Autocadastro e Convidar, grupos/GrupoEditModal, inicio/Saude, relatorios/MetricasInternas). Catálogos de 2647 para 3259 chaves, nenhuma vazia. Prova: texto de 10 telas igual ao do main, exceto os contadores animados do Início (Aniversariantes e Secretaria fora da comparação, por estarem em grupo recolhido do menu); 150 frases conferidas em 0, 1, 2 e 1284. Revisor: "Saída" compartilhada entre a rota e o rol saía "Start" em inglês (agora "Departure"), uma frase do Kids em inglês reescrita. Ficam em pt-BR: mensagens de WhatsApp (acesso, parabéns, convite, autocadastro), carteirinha e folha impressa, cabeçalhos e valores da importação, e textos de arquivos fora da fatia (`setup.ts`, `livros.ts`, `saude.ts`, Pix). A página pública `/[slug]/visita` não tem `ServiceLocaleProvider`: fica em pt-BR até ganhar um. Plurais errados do pt-BR antigo mantidos para não mudar o pt-BR: "# encontro preparados", "# time preparados" (Assistente), "1 pessoas" (Pessoas).

@@ -24,6 +24,7 @@ import { Abas } from "../../ui/Abas";
 import { Linha, linhaClasse } from "../../ui/Linha";
 import { Selo } from "../../ui/Selo";
 import { Selecao } from "../../ui/Selecao";
+import { useTexto } from "../../lib/internacional/contexto";
 const PAGINA = 200;
 
 /** org de demonstração ("org-demo") não é uuid: lê e grava só na memória */
@@ -51,6 +52,7 @@ export function Secretaria({ church, churches, members, people, kidsChildren, ch
   childGuardians: ChildGuardianView[];
   currentPersonId?: string | null;
 }) {
+  const traduzirUi = useTexto();
   const { todayISO } = useRelogioDaIgreja();
   const demo = ehDemo(church.organizationId);
   /* a cor da igreja mora na sede (matriz); o logo, na congregação ou na sede */
@@ -102,55 +104,55 @@ export function Secretaria({ church, churches, members, people, kidsChildren, ch
   const ordemDoPapel = [...visiveis].sort((a, b) => a.numero - b.numero);
 
   const acao = livro === "rol"
-    ? <Botao variante="principal" onClick={() => setCartao({ memberId: null })}>Emitir carteirinha</Botao>
+    ? <Botao variante="principal" onClick={() => setCartao({ memberId: null })}>{traduzirUi("Emitir carteirinha")}</Botao>
     : LANCA_A_MAO.includes(livro)
-      ? <Botao variante="principal" onClick={() => setEditando("novo")}>{livro === "casamento" ? "Registrar casamento" : "Registrar apresentação"}</Botao>
+      ? <Botao variante="principal" onClick={() => setEditando("novo")}>{livro === "casamento" ? traduzirUi("Registrar casamento") : traduzirUi("Registrar apresentação")}</Botao>
       : undefined;
 
   return (
     <div className="content wide">
       <PageHead
-        title="Secretaria"
-        eyebrow="Gestão"
-        subtitle={regs ? (livro === "rol" ? `${plural(ativos, "membro ativo", "membros ativos")} no rol` : plural(doLivro.length, "registro")) : undefined}
-        help="Os livros da igreja num lugar só. Batismos e Rol de membros se preenchem sozinhos a partir da ficha e da etapa Batismo de cada pessoa, com número de registro em sequência. Casamentos e Apresentações você registra aqui. Livro e folha são opcionais, para quem também mantém o livro de papel."
+        title={traduzirUi("Secretaria")}
+        eyebrow={traduzirUi("Gestão")}
+        subtitle={regs ? (livro === "rol" ? traduzirUi("{count, plural, =1 {# membro ativo} other {# membros ativos}} no rol", { count: ativos }) : traduzirUi("{count, plural, =1 {# registro} other {# registros}}", { count: doLivro.length })) : undefined}
+        help={traduzirUi("Os livros da igreja num lugar só. Batismos e Rol de membros se preenchem sozinhos a partir da ficha e da etapa Batismo de cada pessoa, com número de registro em sequência. Casamentos e Apresentações você registra aqui. Livro e folha são opcionais, para quem também mantém o livro de papel.")}
         action={acao}
       />
       <div className="toolbar">
-        <Abas rotulo="Livro" ativa={livro} aoMudar={(v) => trocarLivro(v as typeof livro)}
+        <Abas rotulo={traduzirUi("Livro")} ativa={livro} aoMudar={(v) => trocarLivro(v as typeof livro)}
           abas={LIVROS.map((l) => ({ id: l.id, rotulo: l.rotulo, contador: regs ? contagem(l.id) : undefined }))} />
       </div>
       <div className="toolbar sec-filtros">
-        <div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input aria-label="Buscar no livro" placeholder="Buscar nome, nº ou oficiante" value={q} onChange={(e) => { setQ(e.target.value); setMostrar(PAGINA); }} /></div>
-        <Selecao className="sec-ano" rotulo="Ano" valor={String(ano)} aoMudar={(v) => { setAno(v === "todos" ? "todos" : Number(v)); setMostrar(PAGINA); }}
-          opcoes={[{ v: "todos", l: "Todos os anos" }, ...anosDoLivro.map((a) => ({ v: String(a), l: String(a) }))]} />
+        <div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input aria-label={traduzirUi("Buscar no livro")} placeholder={traduzirUi("Buscar nome, nº ou oficiante")} value={q} onChange={(e) => { setQ(e.target.value); setMostrar(PAGINA); }} /></div>
+        <Selecao className="sec-ano" rotulo={traduzirUi("Ano")} valor={String(ano)} aoMudar={(v) => { setAno(v === "todos" ? "todos" : Number(v)); setMostrar(PAGINA); }}
+          opcoes={[{ v: "todos", l: traduzirUi("Todos os anos") }, ...anosDoLivro.map((a) => ({ v: String(a), l: String(a) }))]} />
         <div className="sec-saidas">
-          <Botao compacto desativado={!visiveis.length} onClick={() => imprimir("livro", livro === "casamento" || livro === "rol" ? "landscape" : "portrait")}><Icon name="documento" size={14} /> Imprimir</Botao>
-          <Botao compacto desativado={!visiveis.length} onClick={() => baixarCsv(arquivo, linhasCsv(livro, ordemDoPapel))}><Icon name="baixar" size={14} /> Baixar CSV</Botao>
+          <Botao compacto desativado={!visiveis.length} onClick={() => imprimir("livro", livro === "casamento" || livro === "rol" ? "landscape" : "portrait")}><Icon name="documento" size={14} /> {traduzirUi("Imprimir")}</Botao>
+          <Botao compacto desativado={!visiveis.length} onClick={() => baixarCsv(arquivo, linhasCsv(livro, ordemDoPapel))}><Icon name="baixar" size={14} /> {traduzirUi("Baixar CSV")}</Botao>
         </div>
       </div>
 
-      {erro ? <EmptyState title="Não deu para abrir os livros" text="Confira a conexão e abra a Secretaria de novo. Se continuar, peça a quem cuida das permissões para conferir seu acesso." /> : null}
-      {!regs && !erro ? <div className="tbl" aria-busy="true"><Linha estilo="tabela"><span className="cell-sub">Abrindo os livros...</span></Linha></div> : null}
+      {erro ? <EmptyState title={traduzirUi("Não deu para abrir os livros")} text={traduzirUi("Confira a conexão e abra a Secretaria de novo. Se continuar, peça a quem cuida das permissões para conferir seu acesso.")} /> : null}
+      {!regs && !erro ? <div className="tbl" aria-busy="true"><Linha estilo="tabela"><span className="cell-sub">{traduzirUi("Abrindo os livros...")}</span></Linha></div> : null}
 
       {regs && !erro ? (
         doLivro.length === 0 ? (
-          <EmptyState title={`Nenhum registro em ${def.rotulo}`} text={def.vazio} action={LANCA_A_MAO.includes(livro) ? { label: livro === "casamento" ? "Registrar casamento" : "Registrar apresentação", onClick: () => setEditando("novo") } : undefined} />
+          <EmptyState title={traduzirUi("Nenhum registro em {livro}", { livro: def.rotulo })} text={def.vazio} action={LANCA_A_MAO.includes(livro) ? { label: livro === "casamento" ? traduzirUi("Registrar casamento") : traduzirUi("Registrar apresentação"), onClick: () => setEditando("novo") } : undefined} />
         ) : (
           <div className="tbl sec-tbl">
             <Linha estilo="tabela" className={`head sec-tr sec-tr-${livro}`}>
-              <span>Registro</span>
-              {livro === "batismo" ? <><span>Oficiante</span><span>Local</span></> : null}
-              {livro === "casamento" ? <><span>Oficiante</span><span>Testemunhas</span></> : null}
-              {livro === "apresentacao" ? <><span>Pais</span><span>Oficiante</span></> : null}
-              {livro === "rol" ? <><span>Entrada</span><span>Situação</span></> : null}
+              <span>{traduzirUi("Registro")}</span>
+              {livro === "batismo" ? <><span>{traduzirUi("Oficiante")}</span><span>{traduzirUi("Local")}</span></> : null}
+              {livro === "casamento" ? <><span>{traduzirUi("Oficiante")}</span><span>{traduzirUi("Testemunhas")}</span></> : null}
+              {livro === "apresentacao" ? <><span>{traduzirUi("Pais")}</span><span>{traduzirUi("Oficiante")}</span></> : null}
+              {livro === "rol" ? <><span>{traduzirUi("Entrada")}</span><span>{traduzirUi("Situação")}</span></> : null}
             </Linha>
             {visiveis.slice(0, mostrar).map((r) => <LinhaRegistro key={r.id} r={r} onAbrir={() => setEditando(r)} />)}
-            {visiveis.length === 0 ? <EmptyState title="Nada encontrado" text="Nenhum registro com essa busca ou nesse ano. Tente limpar a busca ou escolher Todos os anos." /> : null}
+            {visiveis.length === 0 ? <EmptyState title={traduzirUi("Nada encontrado")} text={traduzirUi("Nenhum registro com essa busca ou nesse ano. Tente limpar a busca ou escolher Todos os anos.")} /> : null}
             {visiveis.length > mostrar ? (
               <Linha estilo="tabela" className="sec-mais">
-                <Botao compacto onClick={() => setMostrar((n) => n + PAGINA)}>Mostrar mais {Math.min(PAGINA, visiveis.length - mostrar)}</Botao>
-                <span className="cell-sub">{mostrar} de {plural(visiveis.length, "registro")}</span>
+                <Botao compacto onClick={() => setMostrar((n) => n + PAGINA)}>{traduzirUi("Mostrar mais {n}", { n: String(Math.min(PAGINA, visiveis.length - mostrar)) })}</Botao>
+                <span className="cell-sub">{traduzirUi("{mostrar} de {count, plural, =1 {# registro} other {# registros}}", { mostrar: String(mostrar), count: visiveis.length })}</span>
               </Linha>
             ) : null}
           </div>
@@ -205,22 +207,23 @@ export function Secretaria({ church, churches, members, people, kidsChildren, ch
 }
 
 function LinhaRegistro({ r, onAbrir }: { r: Registro; onAbrir: () => void }) {
+  const traduzirUi = useTexto();
   const fl = folhaLivro(r);
   const sub = r.livro === "rol" ? fl : joinDot(formatDateBR(r.data), fl);
   const nome = r.livro === "casamento" ? [r.dados.noivo?.nome, r.dados.noiva?.nome].filter(Boolean).join(" e ") || r.nome : r.nome;
   return (
     <Acao className={`${linhaClasse({ estilo: "tabela" })} click sec-tr sec-tr-${r.livro}`} onClick={onAbrir}>
       <div className="sec-reg">
-        <span className="sec-num" aria-label={`Registro ${r.numero}`}>{numeroFmt(r.numero)}</span>
+        <span className="sec-num" aria-label={traduzirUi("Registro {numero}", { numero: String(r.numero) })}>{numeroFmt(r.numero)}</span>
         <div className="sec-reg-main"><div className="cell-name">{nome}</div>{sub ? <div className="cell-sub">{sub}</div> : null}</div>
       </div>
-      {r.livro === "batismo" ? <><Celula t="Oficiante" v={r.oficiante} /><Celula t="Local" v={r.local} /></> : null}
-      {r.livro === "casamento" ? <><Celula t="Oficiante" v={r.oficiante} /><Celula t="Testemunhas" v={(r.dados.testemunhas ?? []).join(", ")} /></> : null}
-      {r.livro === "apresentacao" ? <><Celula t="Pais" v={r.dados.pais} /><Celula t="Oficiante" v={r.oficiante} /></> : null}
+      {r.livro === "batismo" ? <><Celula t={traduzirUi("Oficiante")} v={r.oficiante} /><Celula t={traduzirUi("Local")} v={r.local} /></> : null}
+      {r.livro === "casamento" ? <><Celula t={traduzirUi("Oficiante")} v={r.oficiante} /><Celula t={traduzirUi("Testemunhas")} v={(r.dados.testemunhas ?? []).join(", ")} /></> : null}
+      {r.livro === "apresentacao" ? <><Celula t={traduzirUi("Pais")} v={r.dados.pais} /><Celula t={traduzirUi("Oficiante")} v={r.oficiante} /></> : null}
       {r.livro === "rol" ? (
         <>
-          <Celula t="Entrada" v={joinDot(formatDateBR(r.data), r.dados.forma)} />
-          <div>{r.saida ? <Selo>Saiu em {formatDateBR(r.saida)}{r.saida_motivo ? ` · ${r.saida_motivo}` : ""}</Selo> : <Selo tom="ok">Ativo</Selo>}</div>
+          <Celula t={traduzirUi("Entrada")} v={joinDot(formatDateBR(r.data), r.dados.forma)} />
+          <div>{r.saida ? <Selo>{traduzirUi("Saiu em {data}{temMotivo, select, sim { · {motivo}} other {}}", { data: formatDateBR(r.saida), temMotivo: r.saida_motivo ? "sim" : "nao", motivo: r.saida_motivo ?? "" })}</Selo> : <Selo tom="ok">{traduzirUi("Ativo")}</Selo>}</div>
         </>
       ) : null}
     </Acao>
@@ -229,5 +232,6 @@ function LinhaRegistro({ r, onAbrir }: { r: Registro; onAbrir: () => void }) {
 
 /** célula com o rótulo escondido na tabela e visível no celular (onde o cabeçalho some) */
 function Celula({ t, v }: { t: string; v?: string | null }) {
-  return <div className="sec-cel"><span className="sec-cel-t">{t}</span><span className={v ? "sec-cel-v" : "sec-cel-v vazio"}>{v || "Não informado"}</span></div>;
+  const traduzirUi = useTexto();
+  return <div className="sec-cel"><span className="sec-cel-t">{t}</span><span className={v ? "sec-cel-v" : "sec-cel-v vazio"}>{v || traduzirUi("Não informado")}</span></div>;
 }
