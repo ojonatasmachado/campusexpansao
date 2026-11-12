@@ -28,6 +28,14 @@ Continuidade explícita da entrega parcial N1, autorizada pelo usuário em 25/10
 - `app/service/membro/Onboarding.tsx` (fatia 1)
 - `app/service/membro/Onde.tsx` (fatia 1)
 - `app/service/membro/Visitantes.tsx` (fatia 1)
+- `app/service/painel/telas/Agenda.tsx` (fatia 2)
+- `app/service/painel/telas/Evento.tsx` (fatia 2)
+- `app/service/painel/telas/EventoSerie.tsx` (fatia 2)
+- `app/service/painel/telas/Visitantes.tsx` (fatia 2)
+- `app/service/painel/telas/Reunioes.tsx` (fatia 2)
+- `app/service/painel/telas/Identidade.tsx` (fatia 2)
+- `app/service/painel/telas/Kids.tsx` (fatia 2)
+- `app/service/painel/telas/Formacao.tsx` (fatia 2)
 
 Definir na reserva, conferindo especialmente I10: ui/, painel/comum.tsx, modules/inicio/Saude.tsx, modules/financeiro/ e modules/relatorios/. Não trabalhar simultaneamente no branch de outra frente.
 
