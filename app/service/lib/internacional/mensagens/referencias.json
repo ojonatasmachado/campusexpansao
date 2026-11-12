@@ -1,4 +1,956 @@
 {
+  "m1j0if94": [
+    {
+      "file": "app/service/AccentField.tsx",
+      "line": 79
+    }
+  ],
+  "m1wa1yum": [
+    {
+      "file": "app/service/AccentField.tsx",
+      "line": 79
+    }
+  ],
+  "m1xgbabh": [
+    {
+      "file": "app/service/AccentField.tsx",
+      "line": 79
+    }
+  ],
+  "m1glny3t": [
+    {
+      "file": "app/service/AccentField.tsx",
+      "line": 114
+    }
+  ],
+  "my08rc0": [
+    {
+      "file": "app/service/AccentField.tsx",
+      "line": 119
+    },
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 174
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 245
+    },
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 101
+    },
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 184
+    },
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 303
+    },
+    {
+      "file": "app/service/EventoShare.tsx",
+      "line": 274
+    },
+    {
+      "file": "app/service/membro/Biblia.tsx",
+      "line": 283
+    },
+    {
+      "file": "app/service/membro/Onboarding.tsx",
+      "line": 60
+    },
+    {
+      "file": "app/service/modules/entrada/NovosCadastros.tsx",
+      "line": 109
+    },
+    {
+      "file": "app/service/modules/escalas/Escalas.tsx",
+      "line": 599
+    },
+    {
+      "file": "app/service/modules/escalas/Escalas.tsx",
+      "line": 747
+    },
+    {
+      "file": "app/service/modules/escalas/PublicarEscala.tsx",
+      "line": 95
+    },
+    {
+      "file": "app/service/modules/escalas/PublicarEscala.tsx",
+      "line": 95
+    },
+    {
+      "file": "app/service/modules/inicio/Saude.tsx",
+      "line": 111
+    },
+    {
+      "file": "app/service/modules/mapa/MapaIgreja.tsx",
+      "line": 479
+    },
+    {
+      "file": "app/service/modules/mural/Mural.tsx",
+      "line": 347
+    },
+    {
+      "file": "app/service/modules/pessoas/PedidosCaminhada.tsx",
+      "line": 42
+    },
+    {
+      "file": "app/service/painel/telas/Caminhada.tsx",
+      "line": 70
+    },
+    {
+      "file": "app/service/painel/telas/Caminhada.tsx",
+      "line": 218
+    },
+    {
+      "file": "app/service/painel/telas/Evento.tsx",
+      "line": 88
+    },
+    {
+      "file": "app/service/painel/telas/FichaPessoa.tsx",
+      "line": 171
+    },
+    {
+      "file": "app/service/painel/telas/FichaPessoa.tsx",
+      "line": 247
+    },
+    {
+      "file": "app/service/painel/telas/FichaPessoa.tsx",
+      "line": 407
+    },
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 236
+    },
+    {
+      "file": "app/service/painel/telas/Reunioes.tsx",
+      "line": 356
+    },
+    {
+      "file": "app/service/painel/telas/Reunioes.tsx",
+      "line": 492
+    },
+    {
+      "file": "app/service/painel/telas/ficha/AddToMinistryModal.tsx",
+      "line": 62
+    },
+    {
+      "file": "app/service/painel/telas/ficha/VisitanteDrawer.tsx",
+      "line": 74
+    },
+    {
+      "file": "app/service/ui/Balao.tsx",
+      "line": 55
+    },
+    {
+      "file": "app/service/ui/Balao.tsx",
+      "line": 140
+    },
+    {
+      "file": "app/service/ui/Janela.tsx",
+      "line": 63
+    }
+  ],
+  "m11edk7b": [
+    {
+      "file": "app/service/AccentField.tsx",
+      "line": 133
+    }
+  ],
+  "m1aalr0w": [
+    {
+      "file": "app/service/AccentField.tsx",
+      "line": 146
+    }
+  ],
+  "m1k8ohgt": [
+    {
+      "file": "app/service/AccentField.tsx",
+      "line": 149
+    }
+  ],
+  "mjplhtq": [
+    {
+      "file": "app/service/AccentField.tsx",
+      "line": 154
+    }
+  ],
+  "m17nwfkz": [
+    {
+      "file": "app/service/AccentField.tsx",
+      "line": 154
+    },
+    {
+      "file": "app/service/ImageCropper.tsx",
+      "line": 178
+    }
+  ],
+  "m117l953": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 95
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 125
+    }
+  ],
+  "m1uzni0r": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 102
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 132
+    }
+  ],
+  "mlhxeh1": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 103
+    }
+  ],
+  "mq5u7yv": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 107
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 139
+    }
+  ],
+  "mfxhn4t": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 108
+    }
+  ],
+  "m4zvl45": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 112
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 144
+    }
+  ],
+  "mdaeqha": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 117
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 149
+    }
+  ],
+  "m1d1x1ht": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 131
+    },
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 378
+    }
+  ],
+  "m10oi1ss": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 147
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 198
+    },
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 188
+    },
+    {
+      "file": "app/service/modules/mapa/Pontos.tsx",
+      "line": 155
+    },
+    {
+      "file": "app/service/modules/pessoas/ImportarMembros.tsx",
+      "line": 176
+    }
+  ],
+  "m1wl4gop": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 147
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 198
+    },
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 187
+    },
+    {
+      "file": "app/service/membro/Onboarding.tsx",
+      "line": 167
+    },
+    {
+      "file": "app/service/modules/entrada/NovosCadastros.tsx",
+      "line": 127
+    }
+  ],
+  "m156yxbu": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 173
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 243
+    }
+  ],
+  "m203uua": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 173
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 243
+    }
+  ],
+  "m16kw4w0": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 173
+    }
+  ],
+  "m3beyka": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 177
+    }
+  ],
+  "m1hi2i2l": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 180
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 257
+    },
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 112
+    },
+    {
+      "file": "app/service/painel/telas/ficha/AddToMinistryModal.tsx",
+      "line": 79
+    }
+  ],
+  "m1xxy0y0": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 180
+    }
+  ],
+  "mafz7kb": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 239
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 457
+    }
+  ],
+  "m1r2g4g3": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 240
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 458
+    }
+  ],
+  "mvspc1f": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 242
+    },
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 253
+    }
+  ],
+  "m1m9f4ll": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 243
+    }
+  ],
+  "m1ooz011": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 254
+    },
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 452
+    },
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 466
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 472
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 664
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 687
+    }
+  ],
+  "mmol5mm": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 348
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 539
+    }
+  ],
+  "m39btzt": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 360
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 551
+    },
+    {
+      "file": "app/service/KidsCheckin.tsx",
+      "line": 116
+    }
+  ],
+  "m1d7q6lh": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 360
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 551
+    },
+    {
+      "file": "app/service/KidsCheckin.tsx",
+      "line": 116
+    }
+  ],
+  "m3z6o4t": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 360
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 551
+    },
+    {
+      "file": "app/service/KidsCheckin.tsx",
+      "line": 116
+    }
+  ],
+  "mb60ayx": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 372
+    }
+  ],
+  "mvn87av": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 379
+    }
+  ],
+  "mpmh10v": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 382
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 575
+    },
+    {
+      "file": "app/service/KidsCheckin.tsx",
+      "line": 160
+    }
+  ],
+  "mg5ugtf": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 383
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 576
+    },
+    {
+      "file": "app/service/KidsCheckin.tsx",
+      "line": 161
+    }
+  ],
+  "mukhl32": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 383
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 576
+    }
+  ],
+  "mctn313": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 385
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 578
+    },
+    {
+      "file": "app/service/KidsCheckin.tsx",
+      "line": 163
+    },
+    {
+      "file": "app/service/membro/Cursos.tsx",
+      "line": 123
+    },
+    {
+      "file": "app/service/modules/escalas/Escalas.tsx",
+      "line": 112
+    },
+    {
+      "file": "app/service/modules/escalas/Escalas.tsx",
+      "line": 172
+    },
+    {
+      "file": "app/service/painel/telas/Caminhada.tsx",
+      "line": 139
+    },
+    {
+      "file": "app/service/painel/telas/FichaPessoa.tsx",
+      "line": 344
+    },
+    {
+      "file": "app/service/painel/telas/Reunioes.tsx",
+      "line": 255
+    },
+    {
+      "file": "app/service/painel/telas/configuracao/TagElencoModal.tsx",
+      "line": 74
+    },
+    {
+      "file": "app/service/painel/telas/ficha/JornadaEditModal.tsx",
+      "line": 69
+    }
+  ],
+  "m1evpzvq": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 394
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 592
+    },
+    {
+      "file": "app/service/KidsCheckin.tsx",
+      "line": 170
+    }
+  ],
+  "mxn9y1h": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 401
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 600
+    },
+    {
+      "file": "app/service/KidsCheckin.tsx",
+      "line": 174
+    }
+  ],
+  "m5d1xjt": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 401
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 600
+    },
+    {
+      "file": "app/service/KidsCheckin.tsx",
+      "line": 174
+    },
+    {
+      "file": "app/service/painel/telas/Config.tsx",
+      "line": 539
+    }
+  ],
+  "mk4ndlg": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 405
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 608
+    },
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 598
+    },
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 697
+    },
+    {
+      "file": "app/service/membro/Biblia.tsx",
+      "line": 284
+    },
+    {
+      "file": "app/service/membro/Kids.tsx",
+      "line": 421
+    },
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 295
+    },
+    {
+      "file": "app/service/membro/Visitantes.tsx",
+      "line": 79
+    },
+    {
+      "file": "app/service/modules/escalas/Escalas.tsx",
+      "line": 226
+    },
+    {
+      "file": "app/service/modules/grupos/GrupoEditModal.tsx",
+      "line": 79
+    },
+    {
+      "file": "app/service/modules/mapa/Pontos.tsx",
+      "line": 165
+    },
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 176
+    },
+    {
+      "file": "app/service/modules/pessoas/acesso-msg.tsx",
+      "line": 42
+    },
+    {
+      "file": "app/service/modules/secretaria/RegistroForm.tsx",
+      "line": 160
+    },
+    {
+      "file": "app/service/painel/telas/Evento.tsx",
+      "line": 213
+    },
+    {
+      "file": "app/service/painel/telas/EventoSerie.tsx",
+      "line": 109
+    },
+    {
+      "file": "app/service/painel/telas/Identidade.tsx",
+      "line": 72
+    },
+    {
+      "file": "app/service/painel/telas/Identidade.tsx",
+      "line": 105
+    },
+    {
+      "file": "app/service/painel/telas/Identidade.tsx",
+      "line": 158
+    },
+    {
+      "file": "app/service/painel/telas/Identidade.tsx",
+      "line": 253
+    },
+    {
+      "file": "app/service/painel/telas/Kids.tsx",
+      "line": 41
+    },
+    {
+      "file": "app/service/painel/telas/Kids.tsx",
+      "line": 328
+    },
+    {
+      "file": "app/service/painel/telas/ServiceModal.tsx",
+      "line": 126
+    },
+    {
+      "file": "app/service/painel/telas/ServiceModal.tsx",
+      "line": 587
+    },
+    {
+      "file": "app/service/painel/telas/ServiceModal.tsx",
+      "line": 638
+    },
+    {
+      "file": "app/service/painel/telas/Times.tsx",
+      "line": 172
+    },
+    {
+      "file": "app/service/painel/telas/Visitantes.tsx",
+      "line": 246
+    },
+    {
+      "file": "app/service/painel/telas/configuracao/CongregacaoEditModal.tsx",
+      "line": 74
+    },
+    {
+      "file": "app/service/painel/telas/ficha/JornadaEditModal.tsx",
+      "line": 59
+    },
+    {
+      "file": "app/service/painel/telas/ficha/MemberEditModal.tsx",
+      "line": 59
+    },
+    {
+      "file": "app/service/ui/BarraSalvar.tsx",
+      "line": 27
+    }
+  ],
+  "mj61lco": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 406
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 609
+    },
+    {
+      "file": "app/service/modules/secretaria/Carteirinha.tsx",
+      "line": 152
+    },
+    {
+      "file": "app/service/modules/secretaria/Secretaria.tsx",
+      "line": 130
+    }
+  ],
+  "mot0oh5": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 407
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 610
+    },
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 354
+    },
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 370
+    },
+    {
+      "file": "app/service/modules/entrada/EntradaConfig.tsx",
+      "line": 141
+    },
+    {
+      "file": "app/service/modules/visitantes/AutocadastroPainel.tsx",
+      "line": 93
+    },
+    {
+      "file": "app/service/modules/visitantes/Convidar.tsx",
+      "line": 93
+    }
+  ],
+  "m1o9x2l2": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 408
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 612
+    },
+    {
+      "file": "app/service/KidsCheckin.tsx",
+      "line": 177
+    }
+  ],
+  "m163msuw": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 408
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 612
+    },
+    {
+      "file": "app/service/KidsCheckin.tsx",
+      "line": 177
+    }
+  ],
+  "mnlxiua": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 409
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 614
+    },
+    {
+      "file": "app/service/KidsCheckin.tsx",
+      "line": 178
+    }
+  ],
+  "m1m84b1l": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 411
+    }
+  ],
+  "m1k8mxjo": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 412
+    }
+  ],
+  "ml5aryg": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 420
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 637
+    }
+  ],
+  "m1n8w9p7": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 421
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 641
+    }
+  ],
+  "m18hfh77": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 422
+    }
+  ],
+  "m15mv41n": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 427
+    }
+  ],
+  "m9baacj": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 438
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 348
+    },
+    {
+      "file": "app/service/KidsCheckin.tsx",
+      "line": 217
+    },
+    {
+      "file": "app/service/membro/Kids.tsx",
+      "line": 194
+    }
+  ],
+  "myogl4a": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 438
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 348
+    },
+    {
+      "file": "app/service/KidsCheckin.tsx",
+      "line": 217
+    },
+    {
+      "file": "app/service/membro/Kids.tsx",
+      "line": 194
+    }
+  ],
+  "m19kq0ss": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 440
+    },
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 440
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 355
+    }
+  ],
+  "m1k3ubci": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 450
+    }
+  ],
+  "mohtpjz": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 452
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 379
+    }
+  ],
+  "msabl9z": [
+    {
+      "file": "app/service/AulaCheckin.tsx",
+      "line": 457
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 672
+    }
+  ],
   "m1atk7hs": [
     {
       "file": "app/service/CepInput.tsx",
@@ -79,6 +1031,1920 @@
     {
       "file": "app/service/convite/ConviteForm.tsx",
       "line": 128
+    }
+  ],
+  "m7v3tvt": [
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 132
+    }
+  ],
+  "m1y092ss": [
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 134
+    }
+  ],
+  "m1c8r7el": [
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 135
+    }
+  ],
+  "m1uiyxwx": [
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 140
+    }
+  ],
+  "mq0qcbb": [
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 171
+    }
+  ],
+  "m1il1ouw": [
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 244
+    }
+  ],
+  "m1lzoety": [
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 249
+    },
+    {
+      "file": "app/service/painel/telas/configuracao/TagElencoModal.tsx",
+      "line": 78
+    },
+    {
+      "file": "app/service/painel/telas/ficha/AddToMinistryModal.tsx",
+      "line": 70
+    }
+  ],
+  "mjwa3in": [
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 258
+    }
+  ],
+  "m1e0vrwb": [
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 278
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 346
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 374
+    }
+  ],
+  "mmg7p0e": [
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 279
+    }
+  ],
+  "m14v0hh3": [
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 329
+    }
+  ],
+  "m1arq7zd": [
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 343
+    }
+  ],
+  "m1m1i20i": [
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 346
+    }
+  ],
+  "mfe8cy5": [
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 374
+    }
+  ],
+  "m1cfvb87": [
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 460
+    },
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 471
+    }
+  ],
+  "m18boiwh": [
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 462
+    }
+  ],
+  "m563xmd": [
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 563
+    }
+  ],
+  "mvjjlq9": [
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 570
+    }
+  ],
+  "m1b687ah": [
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 572
+    }
+  ],
+  "m1v25clz": [
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 618
+    }
+  ],
+  "m1d0kntg": [
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 626
+    }
+  ],
+  "myc46ew": [
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 645
+    }
+  ],
+  "m1vxxlri": [
+    {
+      "file": "app/service/CheckIn.tsx",
+      "line": 650
+    }
+  ],
+  "m1ii1t7l": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 75
+    }
+  ],
+  "mdhx52p": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 75
+    },
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 580
+    }
+  ],
+  "m60tux9": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 75
+    },
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 76
+    },
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 77
+    },
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 79
+    },
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 89
+    },
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 580
+    },
+    {
+      "file": "app/service/painel/telas/Visitantes.tsx",
+      "line": 37
+    }
+  ],
+  "mzfxt5k": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 76
+    },
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 78
+    },
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 86
+    },
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 93
+    }
+  ],
+  "m1t4z3fn": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 76
+    },
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 78
+    },
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 87
+    },
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 95
+    },
+    {
+      "file": "app/service/IdentidadeFields.tsx",
+      "line": 145
+    },
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 706
+    },
+    {
+      "file": "app/service/modules/mural/Boletim.tsx",
+      "line": 138
+    }
+  ],
+  "m1v3i5ox": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 76
+    },
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 88
+    }
+  ],
+  "mwz5m4b": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 77
+    },
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 80
+    }
+  ],
+  "mzpb2gw": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 77
+    },
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 81
+    }
+  ],
+  "mfs9c2c": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 77
+    },
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 82
+    }
+  ],
+  "m7u3toq": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 78
+    },
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 94
+    }
+  ],
+  "m1y2infv": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 100
+    }
+  ],
+  "mc5816c": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 100
+    }
+  ],
+  "m1ycmcg4": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 105
+    }
+  ],
+  "mv1x2u9": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 112
+    }
+  ],
+  "m1xkeqi7": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 193
+    }
+  ],
+  "m1d2s3if": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 200
+    }
+  ],
+  "mymeeal": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 226
+    },
+    {
+      "file": "app/service/painel/telas/FichaPessoa.tsx",
+      "line": 450
+    }
+  ],
+  "m15rj39q": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 234
+    },
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 631
+    }
+  ],
+  "m7h2u1v": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 257
+    },
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 712
+    }
+  ],
+  "mrpxtcc": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 258
+    },
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 713
+    }
+  ],
+  "mxm43fe": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 262
+    }
+  ],
+  "m1t5q9ht": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 268
+    }
+  ],
+  "mfttcrl": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 273
+    }
+  ],
+  "m1v8gvgq": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 277
+    }
+  ],
+  "m1hhnp7d": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 287
+    }
+  ],
+  "m10eig3t": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 290
+    }
+  ],
+  "m16h36lq": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 297
+    }
+  ],
+  "mab9cl": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 298
+    }
+  ],
+  "m1gv8ncy": [
+    {
+      "file": "app/service/CursoDrawer.tsx",
+      "line": 302
+    },
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 547
+    },
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 548
+    }
+  ],
+  "m39vnds": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 99
+    },
+    {
+      "file": "app/service/membro/Biblia.tsx",
+      "line": 38
+    }
+  ],
+  "m10nxsd8": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 100
+    },
+    {
+      "file": "app/service/membro/Biblia.tsx",
+      "line": 32
+    }
+  ],
+  "mz6pzpx": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 101
+    },
+    {
+      "file": "app/service/membro/Biblia.tsx",
+      "line": 34
+    }
+  ],
+  "m1a4q4np": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 102
+    }
+  ],
+  "m1oj9ys7": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 103
+    },
+    {
+      "file": "app/service/membro/Biblia.tsx",
+      "line": 31
+    }
+  ],
+  "m1ehrfgd": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 104
+    }
+  ],
+  "m1plwj97": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 143
+    }
+  ],
+  "m1hwo9ic": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 152
+    },
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 219
+    },
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 602
+    },
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 701
+    },
+    {
+      "file": "app/service/modules/mural/Mural.tsx",
+      "line": 225
+    },
+    {
+      "file": "app/service/painel/telas/Agenda.tsx",
+      "line": 312
+    },
+    {
+      "file": "app/service/painel/telas/Identidade.tsx",
+      "line": 220
+    },
+    {
+      "file": "app/service/painel/telas/Identidade.tsx",
+      "line": 253
+    },
+    {
+      "file": "app/service/painel/telas/Kids.tsx",
+      "line": 182
+    },
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 379
+    },
+    {
+      "file": "app/service/painel/telas/Reunioes.tsx",
+      "line": 138
+    }
+  ],
+  "mgywvbh": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 153
+    }
+  ],
+  "m1a696j1": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 154
+    }
+  ],
+  "mtj8cxv": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 155
+    }
+  ],
+  "mnbmka0": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 162
+    }
+  ],
+  "m86hv08": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 195
+    }
+  ],
+  "msh6nr1": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 204
+    },
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 298
+    },
+    {
+      "file": "app/service/ImageUpload.tsx",
+      "line": 69
+    },
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 222
+    },
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 255
+    },
+    {
+      "file": "app/service/RequisitosEditor.tsx",
+      "line": 71
+    },
+    {
+      "file": "app/service/membro/Disponibilidade.tsx",
+      "line": 94
+    },
+    {
+      "file": "app/service/membro/Kids.tsx",
+      "line": 467
+    },
+    {
+      "file": "app/service/painel/telas/Config.tsx",
+      "line": 186
+    },
+    {
+      "file": "app/service/painel/telas/Config.tsx",
+      "line": 519
+    },
+    {
+      "file": "app/service/painel/telas/Config.tsx",
+      "line": 565
+    },
+    {
+      "file": "app/service/painel/telas/Evento.tsx",
+      "line": 338
+    },
+    {
+      "file": "app/service/painel/telas/Evento.tsx",
+      "line": 338
+    },
+    {
+      "file": "app/service/painel/telas/Kids.tsx",
+      "line": 382
+    },
+    {
+      "file": "app/service/painel/telas/Pesquisas.tsx",
+      "line": 433
+    }
+  ],
+  "mcrduh9": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 211
+    }
+  ],
+  "mmj0wd9": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 226
+    }
+  ],
+  "muzjlgj": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 231
+    }
+  ],
+  "m1eomnd6": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 271
+    }
+  ],
+  "m3gu4fw": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 271
+    },
+    {
+      "file": "app/service/membro/Agenda.tsx",
+      "line": 198
+    }
+  ],
+  "m1cjmodd": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 272
+    }
+  ],
+  "m1szqwr8": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 274
+    },
+    {
+      "file": "app/service/ImageCropper.tsx",
+      "line": 176
+    },
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 597
+    },
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 696
+    },
+    {
+      "file": "app/service/membro/Kids.tsx",
+      "line": 212
+    },
+    {
+      "file": "app/service/membro/Kids.tsx",
+      "line": 503
+    },
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 294
+    },
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 432
+    },
+    {
+      "file": "app/service/membro/Visitantes.tsx",
+      "line": 80
+    },
+    {
+      "file": "app/service/modules/aniversarios/Aniversariantes.tsx",
+      "line": 50
+    },
+    {
+      "file": "app/service/modules/cuidado/Cuidado.tsx",
+      "line": 82
+    },
+    {
+      "file": "app/service/modules/entrada/NovosCadastros.tsx",
+      "line": 132
+    },
+    {
+      "file": "app/service/modules/escalas/Escalas.tsx",
+      "line": 225
+    },
+    {
+      "file": "app/service/modules/escalas/Escalas.tsx",
+      "line": 793
+    },
+    {
+      "file": "app/service/modules/escalas/GerarPeriodo.tsx",
+      "line": 513
+    },
+    {
+      "file": "app/service/modules/escalas/PublicarEscala.tsx",
+      "line": 95
+    },
+    {
+      "file": "app/service/modules/mapa/CriarArea.tsx",
+      "line": 97
+    },
+    {
+      "file": "app/service/modules/mapa/Emergencia.tsx",
+      "line": 293
+    },
+    {
+      "file": "app/service/modules/mapa/LiberarMapa.tsx",
+      "line": 203
+    },
+    {
+      "file": "app/service/modules/mapa/Pontos.tsx",
+      "line": 164
+    },
+    {
+      "file": "app/service/modules/pessoas/acesso-msg.tsx",
+      "line": 41
+    },
+    {
+      "file": "app/service/painel/form/FormScreen.tsx",
+      "line": 181
+    },
+    {
+      "file": "app/service/painel/telas/Agenda.tsx",
+      "line": 309
+    },
+    {
+      "file": "app/service/painel/telas/Conversas.tsx",
+      "line": 91
+    },
+    {
+      "file": "app/service/painel/telas/EventoSerie.tsx",
+      "line": 109
+    },
+    {
+      "file": "app/service/painel/telas/EventoSerie.tsx",
+      "line": 188
+    },
+    {
+      "file": "app/service/painel/telas/Formacao.tsx",
+      "line": 462
+    },
+    {
+      "file": "app/service/painel/telas/Pesquisas.tsx",
+      "line": 301
+    },
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 73
+    },
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 376
+    },
+    {
+      "file": "app/service/painel/telas/ServiceModal.tsx",
+      "line": 637
+    },
+    {
+      "file": "app/service/painel/telas/Visitantes.tsx",
+      "line": 245
+    },
+    {
+      "file": "app/service/painel/telas/ficha/JornadaEditModal.tsx",
+      "line": 58
+    },
+    {
+      "file": "app/service/painel/telas/ficha/MemberEditModal.tsx",
+      "line": 58
+    }
+  ],
+  "mabupee": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 274
+    }
+  ],
+  "myo0u1z": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 277
+    }
+  ],
+  "m14n30ym": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 278
+    }
+  ],
+  "m1slcwau": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 285
+    }
+  ],
+  "m15llv88": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 287
+    }
+  ],
+  "m10hruyk": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 294
+    }
+  ],
+  "mdf7i0l": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 305
+    }
+  ],
+  "m1erw41w": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 311
+    }
+  ],
+  "m84mm2m": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 319
+    }
+  ],
+  "mbrbbfq": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 450
+    }
+  ],
+  "m16m6pv6": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 538
+    }
+  ],
+  "m10jh4zt": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 547
+    },
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 548
+    }
+  ],
+  "mf0zc3c": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 549
+    }
+  ],
+  "m1ujubgo": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 549
+    },
+    {
+      "file": "app/service/painel/telas/Formacao.tsx",
+      "line": 293
+    }
+  ],
+  "m1qo6rip": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 551
+    }
+  ],
+  "m18qskwn": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 557
+    }
+  ],
+  "m8sh9tz": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 558
+    },
+    {
+      "file": "app/service/membro/Cursos.tsx",
+      "line": 121
+    },
+    {
+      "file": "app/service/membro/Cursos.tsx",
+      "line": 140
+    }
+  ],
+  "mbqastt": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 559
+    }
+  ],
+  "m25o43u": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 560
+    }
+  ],
+  "m1pf5or0": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 565
+    }
+  ],
+  "mlmp8nj": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 567
+    }
+  ],
+  "m1hryvgx": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 568
+    }
+  ],
+  "m1xt9pfu": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 570
+    }
+  ],
+  "m18ki17r": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 578
+    }
+  ],
+  "m4y1tef": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 580
+    }
+  ],
+  "m1wxjmh": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 585
+    }
+  ],
+  "m1tuhgl4": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 592
+    },
+    {
+      "file": "app/service/painel/telas/Identidade.tsx",
+      "line": 158
+    },
+    {
+      "file": "app/service/painel/telas/Identidade.tsx",
+      "line": 184
+    },
+    {
+      "file": "app/service/painel/telas/Kids.tsx",
+      "line": 182
+    },
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 380
+    },
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 636
+    }
+  ],
+  "m621nia": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 593
+    }
+  ],
+  "mtzlksl": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 597
+    },
+    {
+      "file": "app/service/painel/telas/Times.tsx",
+      "line": 205
+    }
+  ],
+  "mov7mpb": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 600
+    },
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 603
+    }
+  ],
+  "mgdve3r": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 601
+    }
+  ],
+  "m1e1flxi": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 601
+    }
+  ],
+  "m1nnt9p2": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 608
+    }
+  ],
+  "mrtfo5p": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 609
+    }
+  ],
+  "m6mpuem": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 611
+    }
+  ],
+  "m1b22smx": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 615
+    }
+  ],
+  "m1szkt4s": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 620
+    }
+  ],
+  "m1mvj6nm": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 626
+    }
+  ],
+  "mb5awed": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 641
+    }
+  ],
+  "m1h7mljc": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 648
+    }
+  ],
+  "mzjo7dv": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 654
+    }
+  ],
+  "mbh9wqv": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 665
+    }
+  ],
+  "mdnz69q": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 672
+    }
+  ],
+  "m1qksgq1": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 679
+    }
+  ],
+  "mqhpzah": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 680
+    }
+  ],
+  "moamwkl": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 681
+    }
+  ],
+  "m12uk0bb": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 681
+    }
+  ],
+  "m120t7bc": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 686
+    }
+  ],
+  "m632j56": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 690
+    }
+  ],
+  "m163qpm5": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 697
+    }
+  ],
+  "m14lrbah": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 701
+    }
+  ],
+  "m1pzg1au": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 714
+    }
+  ],
+  "m9h71fs": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 718
+    }
+  ],
+  "m1jsddyx": [
+    {
+      "file": "app/service/CursoEditor.tsx",
+      "line": 721
+    }
+  ],
+  "m1b5v4ag": [
+    {
+      "file": "app/service/EventoShare.tsx",
+      "line": 70
+    }
+  ],
+  "m1k2kid8": [
+    {
+      "file": "app/service/EventoShare.tsx",
+      "line": 112
+    },
+    {
+      "file": "app/service/EventoShare.tsx",
+      "line": 114
+    }
+  ],
+  "m1157rnr": [
+    {
+      "file": "app/service/EventoShare.tsx",
+      "line": 228
+    }
+  ],
+  "mi0ro6c": [
+    {
+      "file": "app/service/EventoShare.tsx",
+      "line": 229
+    }
+  ],
+  "mx8z8z1": [
+    {
+      "file": "app/service/EventoShare.tsx",
+      "line": 232
+    }
+  ],
+  "mq8i5au": [
+    {
+      "file": "app/service/EventoShare.tsx",
+      "line": 233
+    }
+  ],
+  "mqnhhoo": [
+    {
+      "file": "app/service/EventoShare.tsx",
+      "line": 244
+    }
+  ],
+  "mqjnjmj": [
+    {
+      "file": "app/service/EventoShare.tsx",
+      "line": 265
+    }
+  ],
+  "m1j30q7u": [
+    {
+      "file": "app/service/EventoShare.tsx",
+      "line": 269
+    }
+  ],
+  "m1gzwmec": [
+    {
+      "file": "app/service/EventoShare.tsx",
+      "line": 278
+    }
+  ],
+  "mfl8r2g": [
+    {
+      "file": "app/service/EventoShare.tsx",
+      "line": 279
+    }
+  ],
+  "m1qa4qju": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 84
+    }
+  ],
+  "mdejbau": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 94
+    },
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 218
+    },
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 218
+    }
+  ],
+  "m1nh0nd5": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 113
+    }
+  ],
+  "m1cknd3i": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 113
+    }
+  ],
+  "m1p891ep": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 114
+    },
+    {
+      "file": "app/service/modules/aniversarios/Aniversariantes.tsx",
+      "line": 152
+    },
+    {
+      "file": "app/service/modules/mapa/Emergencia.tsx",
+      "line": 128
+    },
+    {
+      "file": "app/service/modules/mapa/Mesa.tsx",
+      "line": 140
+    },
+    {
+      "file": "app/service/modules/pessoas/Duplicados.tsx",
+      "line": 66
+    },
+    {
+      "file": "app/service/modules/pessoas/ImportarMembros.tsx",
+      "line": 208
+    },
+    {
+      "file": "app/service/modules/pessoas/Pessoas.tsx",
+      "line": 148
+    },
+    {
+      "file": "app/service/modules/pessoas/Pessoas.tsx",
+      "line": 148
+    },
+    {
+      "file": "app/service/modules/pessoas/Pessoas.tsx",
+      "line": 161
+    },
+    {
+      "file": "app/service/modules/pessoas/Pessoas.tsx",
+      "line": 197
+    },
+    {
+      "file": "app/service/painel/telas/Kids.tsx",
+      "line": 120
+    },
+    {
+      "file": "app/service/painel/telas/Times.tsx",
+      "line": 85
+    },
+    {
+      "file": "app/service/painel/telas/Visitantes.tsx",
+      "line": 124
+    }
+  ],
+  "m51rs4m": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 114
+    }
+  ],
+  "m1ar5yjj": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 115
+    },
+    {
+      "file": "app/service/modules/escalas/EscalaExtra.tsx",
+      "line": 69
+    },
+    {
+      "file": "app/service/modules/escalas/GerarPeriodo.tsx",
+      "line": 249
+    }
+  ],
+  "mnicxid": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 115
+    }
+  ],
+  "m7jd23q": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 116
+    }
+  ],
+  "m18yul7x": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 116
+    }
+  ],
+  "m1foeh5u": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 117
+    },
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 506
+    },
+    {
+      "file": "app/service/modules/mural/Boletim.tsx",
+      "line": 100
+    },
+    {
+      "file": "app/service/modules/mural/Mural.tsx",
+      "line": 193
+    },
+    {
+      "file": "app/service/modules/mural/Mural.tsx",
+      "line": 455
+    }
+  ],
+  "m14gad0x": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 117
+    }
+  ],
+  "mojqc5j": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 118
+    },
+    {
+      "file": "app/service/ServiceExactApp.tsx",
+      "line": 976
+    },
+    {
+      "file": "app/service/painel/telas/Config.tsx",
+      "line": 320
+    },
+    {
+      "file": "app/service/painel/telas/Config.tsx",
+      "line": 321
+    }
+  ],
+  "mcas2jp": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 118
+    }
+  ],
+  "m1qhr91e": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 119
+    }
+  ],
+  "m15cy5f7": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 119
+    }
+  ],
+  "m1qa0aar": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 181
+    }
+  ],
+  "m1651kb1": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 185
+    }
+  ],
+  "m87s4eh": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 188
+    }
+  ],
+  "mgrd1g9": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 214
+    }
+  ],
+  "mrui8f4": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 215
+    }
+  ],
+  "mpvt9sx": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 231
+    },
+    {
+      "file": "app/service/painel/telas/Config.tsx",
+      "line": 355
+    }
+  ],
+  "m2g06c9": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 231
+    }
+  ],
+  "m62z26t": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 232
+    }
+  ],
+  "memnug7": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 232
+    }
+  ],
+  "m1ng8ceh": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 233
+    }
+  ],
+  "mxlhwkg": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 233
+    }
+  ],
+  "mbfpmbi": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 234
+    }
+  ],
+  "m1o5psaj": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 234
+    }
+  ],
+  "mejgc2d": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 235
+    }
+  ],
+  "m1hmnr7f": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 235
+    }
+  ],
+  "m1xa56oe": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 283
+    }
+  ],
+  "m10vtljs": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 284
+    },
+    {
+      "file": "app/service/modules/configuracao/Assistente.tsx",
+      "line": 290
+    },
+    {
+      "file": "app/service/painel/telas/Inicio.tsx",
+      "line": 445
+    }
+  ],
+  "mk5rb4d": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 290
+    }
+  ],
+  "m1y9znfd": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 291
+    }
+  ],
+  "m1lurf52": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 293
+    }
+  ],
+  "m1pf2tab": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 295
+    },
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 295
+    }
+  ],
+  "m16vnos3": [
+    {
+      "file": "app/service/HelpSystem.tsx",
+      "line": 306
+    }
+  ],
+  "myn7jty": [
+    {
+      "file": "app/service/IdentidadeFields.tsx",
+      "line": 41
+    },
+    {
+      "file": "app/service/IdentidadeFields.tsx",
+      "line": 55
+    }
+  ],
+  "my1myq3": [
+    {
+      "file": "app/service/IdentidadeFields.tsx",
+      "line": 44
+    }
+  ],
+  "mvf75c8": [
+    {
+      "file": "app/service/IdentidadeFields.tsx",
+      "line": 47
+    }
+  ],
+  "mait239": [
+    {
+      "file": "app/service/IdentidadeFields.tsx",
+      "line": 50
+    },
+    {
+      "file": "app/service/IdentidadeFields.tsx",
+      "line": 142
+    }
+  ],
+  "m1m819fw": [
+    {
+      "file": "app/service/IdentidadeFields.tsx",
+      "line": 61
+    }
+  ],
+  "mtf4367": [
+    {
+      "file": "app/service/IdentidadeFields.tsx",
+      "line": 62
+    }
+  ],
+  "mhv0z92": [
+    {
+      "file": "app/service/IdentidadeFields.tsx",
+      "line": 64
+    }
+  ],
+  "muz0uxq": [
+    {
+      "file": "app/service/IdentidadeFields.tsx",
+      "line": 84
+    }
+  ],
+  "m19fwjgy": [
+    {
+      "file": "app/service/IdentidadeFields.tsx",
+      "line": 85
+    }
+  ],
+  "m1jmhm01": [
+    {
+      "file": "app/service/IdentidadeFields.tsx",
+      "line": 97
+    }
+  ],
+  "mufdz22": [
+    {
+      "file": "app/service/IdentidadeFields.tsx",
+      "line": 139
+    },
+    {
+      "file": "app/service/modules/configuracao/Assistente.tsx",
+      "line": 206
+    }
+  ],
+  "mqfphel": [
+    {
+      "file": "app/service/IdentidadeFields.tsx",
+      "line": 151
+    }
+  ],
+  "m6cmrzn": [
+    {
+      "file": "app/service/IdentidadeFields.tsx",
+      "line": 152
+    }
+  ],
+  "m1gnsb15": [
+    {
+      "file": "app/service/IdentidadeFields.tsx",
+      "line": 163
+    },
+    {
+      "file": "app/service/modules/configuracao/Assistente.tsx",
+      "line": 192
+    },
+    {
+      "file": "app/service/painel/telas/Config.tsx",
+      "line": 357
+    }
+  ],
+  "m1kuqb0c": [
+    {
+      "file": "app/service/IdentidadeFields.tsx",
+      "line": 181
+    }
+  ],
+  "ml3eptb": [
+    {
+      "file": "app/service/ImageCropper.tsx",
+      "line": 172
+    }
+  ],
+  "mhkrbsu": [
+    {
+      "file": "app/service/ImageCropper.tsx",
+      "line": 172
+    }
+  ],
+  "m8fi7uf": [
+    {
+      "file": "app/service/ImageCropper.tsx",
+      "line": 172
+    }
+  ],
+  "m1jbl4zk": [
+    {
+      "file": "app/service/ImageCropper.tsx",
+      "line": 178
+    }
+  ],
+  "m8xpyyh": [
+    {
+      "file": "app/service/ImageCropper.tsx",
+      "line": 200
+    }
+  ],
+  "m1847fy3": [
+    {
+      "file": "app/service/ImageCropper.tsx",
+      "line": 203
+    }
+  ],
+  "mr953rm": [
+    {
+      "file": "app/service/ImageCropper.tsx",
+      "line": 225
+    }
+  ],
+  "m7lz89y": [
+    {
+      "file": "app/service/ImageUpload.tsx",
+      "line": 44
+    }
+  ],
+  "m1qy2co1": [
+    {
+      "file": "app/service/ImageUpload.tsx",
+      "line": 66
+    },
+    {
+      "file": "app/service/PhotoPicker.tsx",
+      "line": 56
+    },
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 125
+    },
+    {
+      "file": "app/service/login/LoginForm.tsx",
+      "line": 143
+    },
+    {
+      "file": "app/service/membro/Agenda.tsx",
+      "line": 383
+    },
+    {
+      "file": "app/service/modules/mapa/Emergencia.tsx",
+      "line": 294
+    },
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 145
+    },
+    {
+      "file": "app/service/modules/visitantes/AutocadastroForm.tsx",
+      "line": 261
+    },
+    {
+      "file": "app/service/painel/telas/Identidade.tsx",
+      "line": 238
+    }
+  ],
+  "mphlru": [
+    {
+      "file": "app/service/ImageUpload.tsx",
+      "line": 66
+    }
+  ],
+  "m1v5j2o": [
+    {
+      "file": "app/service/ImageUpload.tsx",
+      "line": 66
+    }
+  ],
+  "mepk4nw": [
+    {
+      "file": "app/service/KidsCheckin.tsx",
+      "line": 155
+    },
+    {
+      "file": "app/service/membro/Kids.tsx",
+      "line": 151
+    },
+    {
+      "file": "app/service/membro/Kids.tsx",
+      "line": 512
+    },
+    {
+      "file": "app/service/painel/telas/Agenda.tsx",
+      "line": 96
+    }
+  ],
+  "mm8zlle": [
+    {
+      "file": "app/service/KidsCheckin.tsx",
+      "line": 157
+    }
+  ],
+  "m1l1dp3r": [
+    {
+      "file": "app/service/KidsCheckin.tsx",
+      "line": 161
+    }
+  ],
+  "m1a1vnl8": [
+    {
+      "file": "app/service/KidsCheckin.tsx",
+      "line": 161
+    }
+  ],
+  "m1xo9mt7": [
+    {
+      "file": "app/service/KidsCheckin.tsx",
+      "line": 180
+    }
+  ],
+  "mx69bws": [
+    {
+      "file": "app/service/KidsCheckin.tsx",
+      "line": 189
+    }
+  ],
+  "mxmmza4": [
+    {
+      "file": "app/service/KidsCheckin.tsx",
+      "line": 197
+    },
+    {
+      "file": "app/service/KidsCheckin.tsx",
+      "line": 216
+    },
+    {
+      "file": "app/service/modules/secretaria/RegistroForm.tsx",
+      "line": 182
+    },
+    {
+      "file": "app/service/painel/telas/Kids.tsx",
+      "line": 137
+    },
+    {
+      "file": "app/service/painel/telas/Kids.tsx",
+      "line": 336
+    }
+  ],
+  "m1ajgwqq": [
+    {
+      "file": "app/service/KidsCheckin.tsx",
+      "line": 198
+    }
+  ],
+  "m1pqtfq4": [
+    {
+      "file": "app/service/KidsCheckin.tsx",
+      "line": 200
+    },
+    {
+      "file": "app/service/membro/Kids.tsx",
+      "line": 177
+    }
+  ],
+  "m1xadk13": [
+    {
+      "file": "app/service/KidsCheckin.tsx",
+      "line": 208
+    },
+    {
+      "file": "app/service/membro/Kids.tsx",
+      "line": 185
+    }
+  ],
+  "mj8mtzi": [
+    {
+      "file": "app/service/KidsCheckin.tsx",
+      "line": 216
+    }
+  ],
+  "mu5xjz9": [
+    {
+      "file": "app/service/KidsCheckin.tsx",
+      "line": 225
+    }
+  ],
+  "m1t4oriy": [
+    {
+      "file": "app/service/KidsCheckin.tsx",
+      "line": 231
+    },
+    {
+      "file": "app/service/membro/Kids.tsx",
+      "line": 207
     }
   ],
   "m1toz8dq": [
@@ -225,6 +3091,10 @@
     {
       "file": "app/service/MobileApp.tsx",
       "line": 571
+    },
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 120
     }
   ],
   "mhv998e": [
@@ -247,6 +3117,10 @@
     {
       "file": "app/service/MobileApp.tsx",
       "line": 587
+    },
+    {
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 364
     }
   ],
   "maehxh": [
@@ -259,6 +3133,14 @@
     {
       "file": "app/service/MobileApp.tsx",
       "line": 589
+    },
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 103
+    },
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 104
     }
   ],
   "mh57vk8": [
@@ -295,6 +3177,10 @@
     {
       "file": "app/service/MobileApp.tsx",
       "line": 700
+    },
+    {
+      "file": "app/service/TopUserMenu.tsx",
+      "line": 93
     },
     {
       "file": "app/service/membro/Perfil.tsx",
@@ -377,6 +3263,10 @@
       "line": 747
     },
     {
+      "file": "app/service/ServiceExactApp.tsx",
+      "line": 82
+    },
+    {
       "file": "app/service/membro/Perfil.tsx",
       "line": 320
     },
@@ -457,22 +3347,814 @@
       "line": 322
     }
   ],
+  "myn0e1w": [
+    {
+      "file": "app/service/PhotoPicker.tsx",
+      "line": 42
+    }
+  ],
+  "m193y0mv": [
+    {
+      "file": "app/service/PhotoPicker.tsx",
+      "line": 52
+    },
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 630
+    }
+  ],
+  "m1bc6fa6": [
+    {
+      "file": "app/service/PhotoPicker.tsx",
+      "line": 56
+    }
+  ],
+  "m3vvszo": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 94
+    }
+  ],
+  "mui83d4": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 94
+    }
+  ],
+  "m1vd4acw": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 95
+    }
+  ],
+  "ma8mncp": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 95
+    }
+  ],
+  "mlhybum": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 96
+    }
+  ],
+  "mj267xv": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 96
+    }
+  ],
+  "m17guhrn": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 101
+    },
+    {
+      "file": "app/service/modules/escalas/PublicarEscala.tsx",
+      "line": 90
+    },
+    {
+      "file": "app/service/modules/mural/Mural.tsx",
+      "line": 195
+    }
+  ],
+  "m3tuv7z": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 102
+    },
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 392
+    }
+  ],
+  "m1f2jlau": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 103
+    },
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 408
+    }
+  ],
+  "m14ifkpa": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 104
+    },
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 447
+    }
+  ],
+  "m1d9i2ph": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 105
+    },
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 483
+    }
+  ],
+  "mr9i8sp": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 106
+    }
+  ],
+  "m1pof89g": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 222
+    }
+  ],
+  "m1jitw2l": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 255
+    }
+  ],
+  "m10q1bqe": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 291
+    },
+    {
+      "file": "app/service/modules/entrada/EntradaConfig.tsx",
+      "line": 124
+    }
+  ],
+  "m45sc0e": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 313
+    }
+  ],
+  "m1850c9n": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 330
+    }
+  ],
+  "mzpt4ve": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 331
+    }
+  ],
+  "m1e5jvdo": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 334
+    }
+  ],
+  "mjnmkby": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 334
+    }
+  ],
+  "mh68m0a": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 335
+    }
+  ],
+  "m1ioo4i0": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 335
+    }
+  ],
+  "m1swahy": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 337
+    }
+  ],
+  "mxizn59": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 340
+    }
+  ],
+  "m15tmu4z": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 351
+    }
+  ],
+  "mmpx801": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 358
+    }
+  ],
+  "m13m20f7": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 359
+    }
+  ],
+  "m1l0s8q8": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 360
+    }
+  ],
+  "m1d4inyk": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 361
+    }
+  ],
+  "m1620gbr": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 366
+    }
+  ],
+  "m1on0h8g": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 381
+    }
+  ],
+  "m12hkz1y": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 382
+    },
+    {
+      "file": "app/service/modules/visitantes/AutocadastroPainel.tsx",
+      "line": 106
+    }
+  ],
+  "m3mgud6": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 393
+    }
+  ],
+  "mdipn3f": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 409
+    }
+  ],
+  "migczcp": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 412
+    }
+  ],
+  "m1vt2eee": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 419
+    }
+  ],
+  "m1a44nlh": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 426
+    }
+  ],
+  "msou6yb": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 427
+    }
+  ],
+  "m9icsoa": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 439
+    }
+  ],
+  "m72rx12": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 452
+    }
+  ],
+  "m1e945g9": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 456
+    }
+  ],
+  "me63w1i": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 466
+    }
+  ],
+  "m1xkbtub": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 466
+    }
+  ],
+  "mfo9a2m": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 467
+    }
+  ],
+  "mfw3ajq": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 472
+    },
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 528
+    },
+    {
+      "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
+      "line": 76
+    },
+    {
+      "file": "app/service/modules/mapa/MapaIgreja.tsx",
+      "line": 602
+    },
+    {
+      "file": "app/service/modules/mural/Mural.tsx",
+      "line": 486
+    },
+    {
+      "file": "app/service/painel/telas/Config.tsx",
+      "line": 446
+    },
+    {
+      "file": "app/service/painel/telas/Config.tsx",
+      "line": 518
+    },
+    {
+      "file": "app/service/painel/telas/Config.tsx",
+      "line": 564
+    },
+    {
+      "file": "app/service/painel/telas/EventoSerie.tsx",
+      "line": 36
+    },
+    {
+      "file": "app/service/painel/telas/EventoSerie.tsx",
+      "line": 108
+    },
+    {
+      "file": "app/service/painel/telas/FichaPessoa.tsx",
+      "line": 457
+    },
+    {
+      "file": "app/service/painel/telas/Identidade.tsx",
+      "line": 105
+    },
+    {
+      "file": "app/service/painel/telas/Identidade.tsx",
+      "line": 105
+    },
+    {
+      "file": "app/service/painel/telas/Identidade.tsx",
+      "line": 158
+    },
+    {
+      "file": "app/service/painel/telas/Identidade.tsx",
+      "line": 253
+    },
+    {
+      "file": "app/service/painel/telas/Identidade.tsx",
+      "line": 253
+    },
+    {
+      "file": "app/service/painel/telas/Kids.tsx",
+      "line": 38
+    },
+    {
+      "file": "app/service/painel/telas/Kids.tsx",
+      "line": 326
+    },
+    {
+      "file": "app/service/painel/telas/Pesquisas.tsx",
+      "line": 289
+    }
+  ],
+  "mlzgwt2": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 484
+    }
+  ],
+  "m3y70e7": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 486
+    }
+  ],
+  "m1c18fnj": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 489
+    }
+  ],
+  "m1oy9i1q": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 492
+    }
+  ],
+  "m1ll7gft": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 495
+    }
+  ],
+  "mllbafr": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 498
+    }
+  ],
+  "m1f0u84u": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 501
+    }
+  ],
+  "m5qmniz": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 512
+    }
+  ],
+  "m1uyop0d": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 517
+    }
+  ],
+  "m1007umi": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 520
+    }
+  ],
+  "m3mvppi": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 525
+    }
+  ],
+  "m1yfnwtz": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 538
+    }
+  ],
+  "m15cs3e8": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 539
+    }
+  ],
+  "m1svj83r": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 592
+    }
+  ],
+  "m1wkozu2": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 592
+    }
+  ],
+  "my51jqq": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 592
+    }
+  ],
+  "m1nlp5t9": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 595
+    },
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 694
+    },
+    {
+      "file": "app/service/modules/mapa/MapaIgreja.tsx",
+      "line": 605
+    },
+    {
+      "file": "app/service/modules/mapa/Pontos.tsx",
+      "line": 71
+    },
+    {
+      "file": "app/service/modules/mural/Mural.tsx",
+      "line": 482
+    },
+    {
+      "file": "app/service/modules/mural/Mural.tsx",
+      "line": 487
+    },
+    {
+      "file": "app/service/painel/telas/Pesquisas.tsx",
+      "line": 293
+    }
+  ],
+  "m12i2h8j": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 603
+    }
+  ],
+  "m13equ89": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 607
+    }
+  ],
+  "mvbclij": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 612
+    }
+  ],
+  "mzcvdae": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 627
+    }
+  ],
+  "m1wxxtap": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 628
+    }
+  ],
+  "mto2n0g": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 643
+    }
+  ],
+  "mbe3agc": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 644
+    }
+  ],
+  "m1nt6fcm": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 650
+    }
+  ],
+  "mcn7ozy": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 654
+    }
+  ],
+  "m1d190ja": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 661
+    }
+  ],
+  "m6fe0jm": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 663
+    }
+  ],
+  "m1ol2qjc": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 691
+    }
+  ],
+  "mn6r8ft": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 691
+    }
+  ],
+  "ma4vc53": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 691
+    }
+  ],
+  "m8ahkn": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 702
+    }
+  ],
+  "m1k94vax": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 707
+    }
+  ],
+  "m8ipwvl": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 713
+    },
+    {
+      "file": "app/service/modules/mural/Mural.tsx",
+      "line": 319
+    }
+  ],
+  "mjee3am": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 727
+    }
+  ],
+  "m1ryejn8": [
+    {
+      "file": "app/service/PublicPageEditor.tsx",
+      "line": 729
+    }
+  ],
+  "mpcf2z6": [
+    {
+      "file": "app/service/RequisitosEditor.tsx",
+      "line": 42
+    },
+    {
+      "file": "app/service/modules/inicio/Saude.tsx",
+      "line": 101
+    },
+    {
+      "file": "app/service/painel/telas/Relatorios.tsx",
+      "line": 255
+    }
+  ],
+  "mndybox": [
+    {
+      "file": "app/service/RequisitosEditor.tsx",
+      "line": 54
+    }
+  ],
+  "m1ewpow6": [
+    {
+      "file": "app/service/RequisitosEditor.tsx",
+      "line": 67
+    }
+  ],
+  "m1poh18m": [
+    {
+      "file": "app/service/RequisitosEditor.tsx",
+      "line": 79
+    }
+  ],
+  "m1rz0884": [
+    {
+      "file": "app/service/RequisitosEditor.tsx",
+      "line": 82
+    }
+  ],
+  "m39oj": [
+    {
+      "file": "app/service/RequisitosEditor.tsx",
+      "line": 89
+    }
+  ],
+  "m1tzuknm": [
+    {
+      "file": "app/service/ServiceExactApp.tsx",
+      "line": 82
+    }
+  ],
+  "md5zaek": [
+    {
+      "file": "app/service/ServiceExactApp.tsx",
+      "line": 82
+    },
+    {
+      "file": "app/service/painel/telas/Caminhada.tsx",
+      "line": 233
+    }
+  ],
+  "m1avrgid": [
+    {
+      "file": "app/service/ServiceExactApp.tsx",
+      "line": 82
+    },
+    {
+      "file": "app/service/modules/grupos/GrupoEditModal.tsx",
+      "line": 90
+    },
+    {
+      "file": "app/service/modules/pessoas/Pessoas.tsx",
+      "line": 169
+    },
+    {
+      "file": "app/service/painel/telas/Config.tsx",
+      "line": 570
+    },
+    {
+      "file": "app/service/painel/telas/FichaPessoa.tsx",
+      "line": 322
+    },
+    {
+      "file": "app/service/painel/telas/FichaPessoa.tsx",
+      "line": 478
+    },
+    {
+      "file": "app/service/painel/telas/FichaPessoa.tsx",
+      "line": 495
+    }
+  ],
+  "m16mih0o": [
+    {
+      "file": "app/service/ServiceExactApp.tsx",
+      "line": 109
+    },
+    {
+      "file": "app/service/modules/configuracao/Assistente.tsx",
+      "line": 219
+    }
+  ],
+  "m1tfivqq": [
+    {
+      "file": "app/service/ServiceExactApp.tsx",
+      "line": 110
+    },
+    {
+      "file": "app/service/ServiceExactApp.tsx",
+      "line": 123
+    }
+  ],
+  "m19c5vev": [
+    {
+      "file": "app/service/ServiceExactApp.tsx",
+      "line": 110
+    },
+    {
+      "file": "app/service/painel/telas/configuracao/CongregacaoEditModal.tsx",
+      "line": 72
+    }
+  ],
+  "m14heqs0": [
+    {
+      "file": "app/service/ServiceExactApp.tsx",
+      "line": 110
+    },
+    {
+      "file": "app/service/membro/Onde.tsx",
+      "line": 190
+    },
+    {
+      "file": "app/service/membro/Onde.tsx",
+      "line": 230
+    },
+    {
+      "file": "app/service/modules/mapa/MapaIgreja.tsx",
+      "line": 573
+    },
+    {
+      "file": "app/service/painel/telas/configuracao/CongregacaoEditModal.tsx",
+      "line": 72
+    },
+    {
+      "file": "app/service/painel/telas/configuracao/CongregacaoEditModal.tsx",
+      "line": 82
+    }
+  ],
+  "m46rfw5": [
+    {
+      "file": "app/service/ServiceExactApp.tsx",
+      "line": 138
+    }
+  ],
   "mx12l02": [
     {
       "file": "app/service/ServiceExactApp.tsx",
-      "line": 364
+      "line": 366
     }
   ],
   "m1ogddko": [
     {
       "file": "app/service/ServiceExactApp.tsx",
-      "line": 368
+      "line": 370
     }
   ],
   "m17fxwvt": [
     {
       "file": "app/service/ServiceExactApp.tsx",
-      "line": 410
+      "line": 412
     },
     {
       "file": "app/service/membro/comum.tsx",
@@ -482,19 +4164,19 @@
   "mbkmnta": [
     {
       "file": "app/service/ServiceExactApp.tsx",
-      "line": 410
+      "line": 412
     }
   ],
   "m1lm6y1p": [
     {
       "file": "app/service/ServiceExactApp.tsx",
-      "line": 438
+      "line": 440
     }
   ],
   "mhz91f6": [
     {
       "file": "app/service/ServiceExactApp.tsx",
-      "line": 446
+      "line": 448
     },
     {
       "file": "app/service/nova-senha/NovaSenhaForm.tsx",
@@ -504,7 +4186,7 @@
   "mcktiza": [
     {
       "file": "app/service/ServiceExactApp.tsx",
-      "line": 446
+      "line": 448
     },
     {
       "file": "app/service/nova-senha/NovaSenhaForm.tsx",
@@ -514,13 +4196,13 @@
   "m1iyc0vh": [
     {
       "file": "app/service/ServiceExactApp.tsx",
-      "line": 533
+      "line": 535
     }
   ],
   "mhopb5f": [
     {
       "file": "app/service/ServiceExactApp.tsx",
-      "line": 633
+      "line": 635
     },
     {
       "file": "app/service/membro/Disponibilidade.tsx",
@@ -530,71 +4212,225 @@
   "m1ktj0wg": [
     {
       "file": "app/service/ServiceExactApp.tsx",
-      "line": 639
+      "line": 641
     },
     {
       "file": "app/service/ServiceExactApp.tsx",
-      "line": 645
+      "line": 647
+    }
+  ],
+  "m2l89fr": [
+    {
+      "file": "app/service/ServiceExactApp.tsx",
+      "line": 931
+    }
+  ],
+  "mhboncv": [
+    {
+      "file": "app/service/ServiceExactApp.tsx",
+      "line": 959
+    },
+    {
+      "file": "app/service/modules/mapa/MapaIgreja.tsx",
+      "line": 603
+    },
+    {
+      "file": "app/service/ui/Menu.tsx",
+      "line": 48
+    }
+  ],
+  "m1xqy4am": [
+    {
+      "file": "app/service/ServiceExactApp.tsx",
+      "line": 963
+    }
+  ],
+  "m19d0x3y": [
+    {
+      "file": "app/service/ServiceExactApp.tsx",
+      "line": 984
+    }
+  ],
+  "m1e9qogh": [
+    {
+      "file": "app/service/ServiceExactApp.tsx",
+      "line": 988
+    }
+  ],
+  "m970wgt": [
+    {
+      "file": "app/service/ServiceExactApp.tsx",
+      "line": 988
+    }
+  ],
+  "mluymq3": [
+    {
+      "file": "app/service/ServiceExactApp.tsx",
+      "line": 1004
+    },
+    {
+      "file": "app/service/TopUserMenu.tsx",
+      "line": 53
+    },
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 335
+    },
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 261
+    }
+  ],
+  "m1snja1e": [
+    {
+      "file": "app/service/ServiceExactApp.tsx",
+      "line": 1004
+    },
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 320
+    },
+    {
+      "file": "app/service/modules/mural/Mural.tsx",
+      "line": 542
+    },
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 80
+    },
+    {
+      "file": "app/service/painel/telas/Reunioes.tsx",
+      "line": 189
+    },
+    {
+      "file": "app/service/painel/telas/Reunioes.tsx",
+      "line": 231
+    }
+  ],
+  "m18uow0x": [
+    {
+      "file": "app/service/ServiceExactApp.tsx",
+      "line": 1013
+    }
+  ],
+  "m11pyfm8": [
+    {
+      "file": "app/service/ServiceExactApp.tsx",
+      "line": 1013
+    }
+  ],
+  "mnpf12q": [
+    {
+      "file": "app/service/ServiceExactApp.tsx",
+      "line": 1013
+    }
+  ],
+  "m1xyno6h": [
+    {
+      "file": "app/service/ServiceExactApp.tsx",
+      "line": 1066
     }
   ],
   "mkehbzq": [
     {
       "file": "app/service/ServiceExactApp.tsx",
-      "line": 1142
+      "line": 1144
     }
   ],
   "m1a52mns": [
     {
       "file": "app/service/ServiceExactApp.tsx",
-      "line": 1151
+      "line": 1153
     }
   ],
   "m113j4ek": [
     {
       "file": "app/service/ServiceExactApp.tsx",
-      "line": 1161
+      "line": 1163
     }
   ],
   "m1es304m": [
     {
       "file": "app/service/ServiceExactApp.tsx",
-      "line": 1162
+      "line": 1164
     }
   ],
   "m2pog45": [
     {
       "file": "app/service/ServiceExactApp.tsx",
-      "line": 1181
+      "line": 1183
     }
   ],
   "ma0bqb4": [
     {
       "file": "app/service/ServiceExactApp.tsx",
-      "line": 1184
+      "line": 1186
     }
   ],
   "m16rnpej": [
     {
       "file": "app/service/ServiceExactApp.tsx",
-      "line": 1185
+      "line": 1187
     }
   ],
   "madkry9": [
     {
       "file": "app/service/ServiceExactApp.tsx",
-      "line": 1188
+      "line": 1190
     }
   ],
   "m8z5gg3": [
     {
       "file": "app/service/ServiceExactApp.tsx",
-      "line": 1198
+      "line": 1200
     }
   ],
   "m1dbst3r": [
     {
       "file": "app/service/ServiceExactApp.tsx",
-      "line": 1200
+      "line": 1202
+    }
+  ],
+  "m1snqasi": [
+    {
+      "file": "app/service/ServiceExactApp.tsx",
+      "line": 1239
+    }
+  ],
+  "m1u6m4aw": [
+    {
+      "file": "app/service/ServiceExactApp.tsx",
+      "line": 1240
+    }
+  ],
+  "m1w1khgn": [
+    {
+      "file": "app/service/ServiceExactApp.tsx",
+      "line": 1241
+    }
+  ],
+  "mat11ja": [
+    {
+      "file": "app/service/ServiceExactApp.tsx",
+      "line": 1243
+    }
+  ],
+  "m1fjg3xa": [
+    {
+      "file": "app/service/ServiceExactApp.tsx",
+      "line": 1245
+    },
+    {
+      "file": "app/service/membro/Onboarding.tsx",
+      "line": 109
+    },
+    {
+      "file": "app/service/modules/mural/Mural.tsx",
+      "line": 486
+    },
+    {
+      "file": "app/service/modules/pessoas/ImportarMembros.tsx",
+      "line": 177
     }
   ],
   "m1isrhn6": [
@@ -683,6 +4519,210 @@
     {
       "file": "app/service/painel/telas/Config.tsx",
       "line": 504
+    }
+  ],
+  "mfoosjm": [
+    {
+      "file": "app/service/ThemePicker.tsx",
+      "line": 42
+    },
+    {
+      "file": "app/service/modules/configuracao/Assistente.tsx",
+      "line": 208
+    },
+    {
+      "file": "app/service/modules/configuracao/Assistente.tsx",
+      "line": 209
+    }
+  ],
+  "m1w232f5": [
+    {
+      "file": "app/service/ThemePicker.tsx",
+      "line": 43
+    }
+  ],
+  "mkb266y": [
+    {
+      "file": "app/service/ThemePicker.tsx",
+      "line": 56
+    }
+  ],
+  "mhuc142": [
+    {
+      "file": "app/service/ThemePicker.tsx",
+      "line": 59
+    }
+  ],
+  "m1tloyxt": [
+    {
+      "file": "app/service/ThemePicker.tsx",
+      "line": 65
+    }
+  ],
+  "m1lueebm": [
+    {
+      "file": "app/service/ThemePicker.tsx",
+      "line": 66
+    }
+  ],
+  "m1jnpd9a": [
+    {
+      "file": "app/service/ThemePicker.tsx",
+      "line": 75
+    }
+  ],
+  "mabk3cb": [
+    {
+      "file": "app/service/ThemePicker.tsx",
+      "line": 76
+    }
+  ],
+  "m1cx3fyn": [
+    {
+      "file": "app/service/ThemePicker.tsx",
+      "line": 77
+    },
+    {
+      "file": "app/service/ThemePicker.tsx",
+      "line": 141
+    }
+  ],
+  "m1vo6i6h": [
+    {
+      "file": "app/service/ThemePicker.tsx",
+      "line": 78
+    },
+    {
+      "file": "app/service/ThemePicker.tsx",
+      "line": 141
+    }
+  ],
+  "m26jn83": [
+    {
+      "file": "app/service/ThemePicker.tsx",
+      "line": 82
+    }
+  ],
+  "mpoy991": [
+    {
+      "file": "app/service/ThemePicker.tsx",
+      "line": 83
+    }
+  ],
+  "mpd5hya": [
+    {
+      "file": "app/service/ThemePicker.tsx",
+      "line": 87
+    },
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 362
+    }
+  ],
+  "mj51w0i": [
+    {
+      "file": "app/service/ThemePicker.tsx",
+      "line": 87
+    },
+    {
+      "file": "app/service/membro/Perfil.tsx",
+      "line": 362
+    }
+  ],
+  "meukcji": [
+    {
+      "file": "app/service/ThemePicker.tsx",
+      "line": 88
+    }
+  ],
+  "muxyf4u": [
+    {
+      "file": "app/service/ThemePicker.tsx",
+      "line": 88
+    }
+  ],
+  "m2ojy6b": [
+    {
+      "file": "app/service/ThemePicker.tsx",
+      "line": 140
+    }
+  ],
+  "m1h6ydpc": [
+    {
+      "file": "app/service/ThemePicker.tsx",
+      "line": 146
+    }
+  ],
+  "ma5o6ej": [
+    {
+      "file": "app/service/ThemePicker.tsx",
+      "line": 147
+    }
+  ],
+  "me2vt4s": [
+    {
+      "file": "app/service/ThemePicker.tsx",
+      "line": 149
+    }
+  ],
+  "m1gtlzbx": [
+    {
+      "file": "app/service/ThemePicker.tsx",
+      "line": 150
+    }
+  ],
+  "m9hsvoo": [
+    {
+      "file": "app/service/ThemePicker.tsx",
+      "line": 152
+    }
+  ],
+  "m1sp4213": [
+    {
+      "file": "app/service/ThemePicker.tsx",
+      "line": 153
+    }
+  ],
+  "m1sl7ofj": [
+    {
+      "file": "app/service/ThemePicker.tsx",
+      "line": 157
+    }
+  ],
+  "ma1r23d": [
+    {
+      "file": "app/service/ThemePicker.tsx",
+      "line": 158
+    }
+  ],
+  "mag8ae0": [
+    {
+      "file": "app/service/TopUserMenu.tsx",
+      "line": 70
+    }
+  ],
+  "m1ha9o71": [
+    {
+      "file": "app/service/TopUserMenu.tsx",
+      "line": 76
+    }
+  ],
+  "ms5xmr5": [
+    {
+      "file": "app/service/TopUserMenu.tsx",
+      "line": 82
+    }
+  ],
+  "m73a421": [
+    {
+      "file": "app/service/TopUserMenu.tsx",
+      "line": 88
+    }
+  ],
+  "my2o6q7": [
+    {
+      "file": "app/service/TopUserMenu.tsx",
+      "line": 88
     }
   ],
   "mzsvd1j": [
@@ -940,7 +4980,7 @@
     },
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 182
+      "line": 180
     },
     {
       "file": "app/service/modules/pessoas/ImportarMembros.tsx",
@@ -1411,6 +5451,12 @@
       "line": 53
     }
   ],
+  "m1cx8f05": [
+    {
+      "file": "app/service/loading.tsx",
+      "line": 8
+    }
+  ],
   "m1hrc14r": [
     {
       "file": "app/service/login/LoginForm.tsx",
@@ -1543,32 +5589,6 @@
       "line": 120
     }
   ],
-  "m1qy2co1": [
-    {
-      "file": "app/service/login/LoginForm.tsx",
-      "line": 125
-    },
-    {
-      "file": "app/service/login/LoginForm.tsx",
-      "line": 143
-    },
-    {
-      "file": "app/service/membro/Agenda.tsx",
-      "line": 383
-    },
-    {
-      "file": "app/service/modules/mapa/Emergencia.tsx",
-      "line": 294
-    },
-    {
-      "file": "app/service/modules/visitantes/AutocadastroForm.tsx",
-      "line": 261
-    },
-    {
-      "file": "app/service/painel/telas/Identidade.tsx",
-      "line": 238
-    }
-  ],
   "m1ecjkwm": [
     {
       "file": "app/service/login/LoginForm.tsx",
@@ -1691,6 +5711,14 @@
     {
       "file": "app/service/modules/mapa/Pontos.tsx",
       "line": 63
+    },
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 172
+    },
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 210
     }
   ],
   "m1y3pn81": [
@@ -1807,6 +5835,18 @@
     {
       "file": "app/service/modules/mapa/AreaDesenhada.tsx",
       "line": 166
+    },
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 175
+    },
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 209
+    },
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 215
     }
   ],
   "m9wb94c": [
@@ -1961,12 +6001,6 @@
       "line": 137
     }
   ],
-  "m3gu4fw": [
-    {
-      "file": "app/service/membro/Agenda.tsx",
-      "line": 198
-    }
-  ],
   "m16jsu5u": [
     {
       "file": "app/service/membro/Agenda.tsx",
@@ -2023,6 +6057,10 @@
     {
       "file": "app/service/membro/Agenda.tsx",
       "line": 216
+    },
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 232
     }
   ],
   "m1c6fz98": [
@@ -2285,28 +6323,10 @@
       "line": 417
     }
   ],
-  "m1oj9ys7": [
-    {
-      "file": "app/service/membro/Biblia.tsx",
-      "line": 31
-    }
-  ],
-  "m10nxsd8": [
-    {
-      "file": "app/service/membro/Biblia.tsx",
-      "line": 32
-    }
-  ],
   "m86y7x8": [
     {
       "file": "app/service/membro/Biblia.tsx",
       "line": 33
-    }
-  ],
-  "mz6pzpx": [
-    {
-      "file": "app/service/membro/Biblia.tsx",
-      "line": 34
     }
   ],
   "m1af5td4": [
@@ -2325,12 +6345,6 @@
     {
       "file": "app/service/membro/Biblia.tsx",
       "line": 37
-    }
-  ],
-  "m39vnds": [
-    {
-      "file": "app/service/membro/Biblia.tsx",
-      "line": 38
     }
   ],
   "mtsw40d": [
@@ -2465,208 +6479,214 @@
       "line": 280
     }
   ],
-  "my08rc0": [
+  "m1mmrwdd": [
     {
-      "file": "app/service/membro/Biblia.tsx",
-      "line": 283
-    },
-    {
-      "file": "app/service/membro/Onboarding.tsx",
-      "line": 60
-    },
-    {
-      "file": "app/service/modules/entrada/NovosCadastros.tsx",
-      "line": 109
-    },
-    {
-      "file": "app/service/modules/escalas/Escalas.tsx",
-      "line": 599
-    },
-    {
-      "file": "app/service/modules/escalas/Escalas.tsx",
-      "line": 747
-    },
-    {
-      "file": "app/service/modules/escalas/PublicarEscala.tsx",
-      "line": 95
-    },
-    {
-      "file": "app/service/modules/escalas/PublicarEscala.tsx",
-      "line": 95
-    },
-    {
-      "file": "app/service/modules/inicio/Saude.tsx",
-      "line": 111
-    },
-    {
-      "file": "app/service/modules/mapa/MapaIgreja.tsx",
-      "line": 479
-    },
-    {
-      "file": "app/service/modules/mural/Mural.tsx",
-      "line": 347
-    },
-    {
-      "file": "app/service/modules/pessoas/PedidosCaminhada.tsx",
-      "line": 42
-    },
-    {
-      "file": "app/service/painel/telas/Caminhada.tsx",
-      "line": 70
-    },
-    {
-      "file": "app/service/painel/telas/Caminhada.tsx",
-      "line": 218
-    },
-    {
-      "file": "app/service/painel/telas/Evento.tsx",
-      "line": 88
-    },
-    {
-      "file": "app/service/painel/telas/FichaPessoa.tsx",
-      "line": 171
-    },
-    {
-      "file": "app/service/painel/telas/FichaPessoa.tsx",
-      "line": 247
-    },
-    {
-      "file": "app/service/painel/telas/FichaPessoa.tsx",
-      "line": 407
-    },
-    {
-      "file": "app/service/painel/telas/Reunioes.tsx",
-      "line": 356
-    },
-    {
-      "file": "app/service/painel/telas/Reunioes.tsx",
-      "line": 492
-    },
-    {
-      "file": "app/service/painel/telas/ficha/AddToMinistryModal.tsx",
-      "line": 62
-    },
-    {
-      "file": "app/service/painel/telas/ficha/VisitanteDrawer.tsx",
-      "line": 74
-    },
-    {
-      "file": "app/service/ui/Balao.tsx",
-      "line": 55
-    },
-    {
-      "file": "app/service/ui/Balao.tsx",
-      "line": 140
-    },
-    {
-      "file": "app/service/ui/Janela.tsx",
-      "line": 63
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 89
     }
   ],
-  "mk4ndlg": [
+  "mipyho8": [
     {
-      "file": "app/service/membro/Biblia.tsx",
-      "line": 284
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 89
+    }
+  ],
+  "myfrnrl": [
+    {
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 89
+    }
+  ],
+  "m1crmbr2": [
+    {
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 89
+    }
+  ],
+  "m13ame62": [
+    {
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 115
+    }
+  ],
+  "milciao": [
+    {
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 124
     },
     {
-      "file": "app/service/membro/Kids.tsx",
-      "line": 421
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 351
     },
     {
-      "file": "app/service/membro/Perfil.tsx",
-      "line": 295
+      "file": "app/service/painel/telas/Conversas.tsx",
+      "line": 265
     },
     {
-      "file": "app/service/membro/Visitantes.tsx",
-      "line": 79
+      "file": "app/service/painel/telas/Inicio.tsx",
+      "line": 200
     },
     {
-      "file": "app/service/modules/escalas/Escalas.tsx",
-      "line": 226
+      "file": "app/service/painel/telas/Inicio.tsx",
+      "line": 223
     },
     {
-      "file": "app/service/modules/grupos/GrupoEditModal.tsx",
-      "line": 79
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 315
+    }
+  ],
+  "m1hx4zg3": [
+    {
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 135
+    }
+  ],
+  "m180zcyl": [
+    {
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 136
+    }
+  ],
+  "m1oc2lyb": [
+    {
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 140
+    }
+  ],
+  "m1hnwdp2": [
+    {
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 214
+    }
+  ],
+  "m1h1ljth": [
+    {
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 214
+    }
+  ],
+  "mhwqqaj": [
+    {
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 214
+    }
+  ],
+  "m1nyhqyd": [
+    {
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 218
+    }
+  ],
+  "m29jgsk": [
+    {
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 218
+    }
+  ],
+  "mn0jsc7": [
+    {
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 269
+    }
+  ],
+  "m1s1xfdw": [
+    {
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 279
+    }
+  ],
+  "mbxyxr9": [
+    {
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 304
+    }
+  ],
+  "md2g5je": [
+    {
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 330
+    }
+  ],
+  "m1ji0jv3": [
+    {
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 333
+    }
+  ],
+  "m64lpjv": [
+    {
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 334
+    }
+  ],
+  "m1wjr4sg": [
+    {
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 346
     },
     {
-      "file": "app/service/modules/mapa/Pontos.tsx",
-      "line": 165
+      "file": "app/service/painel/telas/Conversas.tsx",
+      "line": 264
+    }
+  ],
+  "m1mjatad": [
+    {
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 360
     },
     {
-      "file": "app/service/modules/pessoas/acesso-msg.tsx",
-      "line": 42
+      "file": "app/service/painel/telas/Conversas.tsx",
+      "line": 214
     },
     {
-      "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 157
+      "file": "app/service/painel/telas/Relatorios.tsx",
+      "line": 287
+    }
+  ],
+  "m5bu1vr": [
+    {
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 364
+    }
+  ],
+  "metfwu9": [
+    {
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 367
     },
     {
-      "file": "app/service/painel/telas/Evento.tsx",
-      "line": 213
-    },
+      "file": "app/service/painel/telas/Conversas.tsx",
+      "line": 118
+    }
+  ],
+  "m1yjw028": [
     {
-      "file": "app/service/painel/telas/EventoSerie.tsx",
-      "line": 109
-    },
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 381
+    }
+  ],
+  "mjz9v1d": [
     {
-      "file": "app/service/painel/telas/Identidade.tsx",
-      "line": 72
-    },
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 388
+    }
+  ],
+  "m1b037mx": [
     {
-      "file": "app/service/painel/telas/Identidade.tsx",
-      "line": 105
-    },
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 396
+    }
+  ],
+  "mlzycy7": [
     {
-      "file": "app/service/painel/telas/Identidade.tsx",
-      "line": 158
-    },
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 399
+    }
+  ],
+  "m8zpds9": [
     {
-      "file": "app/service/painel/telas/Identidade.tsx",
-      "line": 253
-    },
-    {
-      "file": "app/service/painel/telas/Kids.tsx",
-      "line": 41
-    },
-    {
-      "file": "app/service/painel/telas/Kids.tsx",
-      "line": 328
-    },
-    {
-      "file": "app/service/painel/telas/ServiceModal.tsx",
-      "line": 126
-    },
-    {
-      "file": "app/service/painel/telas/ServiceModal.tsx",
-      "line": 587
-    },
-    {
-      "file": "app/service/painel/telas/ServiceModal.tsx",
-      "line": 638
-    },
-    {
-      "file": "app/service/painel/telas/Times.tsx",
-      "line": 172
-    },
-    {
-      "file": "app/service/painel/telas/Visitantes.tsx",
-      "line": 246
-    },
-    {
-      "file": "app/service/painel/telas/configuracao/CongregacaoEditModal.tsx",
-      "line": 74
-    },
-    {
-      "file": "app/service/painel/telas/ficha/JornadaEditModal.tsx",
-      "line": 59
-    },
-    {
-      "file": "app/service/painel/telas/ficha/MemberEditModal.tsx",
-      "line": 59
-    },
-    {
-      "file": "app/service/ui/BarraSalvar.tsx",
-      "line": 27
+      "file": "app/service/membro/Conversas.tsx",
+      "line": 403
     }
   ],
   "m1pditmw": [
@@ -2727,50 +6747,6 @@
     {
       "file": "app/service/membro/Cursos.tsx",
       "line": 111
-    }
-  ],
-  "m8sh9tz": [
-    {
-      "file": "app/service/membro/Cursos.tsx",
-      "line": 121
-    },
-    {
-      "file": "app/service/membro/Cursos.tsx",
-      "line": 140
-    }
-  ],
-  "mctn313": [
-    {
-      "file": "app/service/membro/Cursos.tsx",
-      "line": 123
-    },
-    {
-      "file": "app/service/modules/escalas/Escalas.tsx",
-      "line": 112
-    },
-    {
-      "file": "app/service/modules/escalas/Escalas.tsx",
-      "line": 172
-    },
-    {
-      "file": "app/service/painel/telas/Caminhada.tsx",
-      "line": 139
-    },
-    {
-      "file": "app/service/painel/telas/FichaPessoa.tsx",
-      "line": 344
-    },
-    {
-      "file": "app/service/painel/telas/Reunioes.tsx",
-      "line": 255
-    },
-    {
-      "file": "app/service/painel/telas/configuracao/TagElencoModal.tsx",
-      "line": 74
-    },
-    {
-      "file": "app/service/painel/telas/ficha/JornadaEditModal.tsx",
-      "line": 69
     }
   ],
   "mn6bfns": [
@@ -2973,44 +6949,6 @@
       "line": 92
     }
   ],
-  "msh6nr1": [
-    {
-      "file": "app/service/membro/Disponibilidade.tsx",
-      "line": 94
-    },
-    {
-      "file": "app/service/membro/Kids.tsx",
-      "line": 467
-    },
-    {
-      "file": "app/service/painel/telas/Config.tsx",
-      "line": 186
-    },
-    {
-      "file": "app/service/painel/telas/Config.tsx",
-      "line": 519
-    },
-    {
-      "file": "app/service/painel/telas/Config.tsx",
-      "line": 565
-    },
-    {
-      "file": "app/service/painel/telas/Evento.tsx",
-      "line": 338
-    },
-    {
-      "file": "app/service/painel/telas/Evento.tsx",
-      "line": 338
-    },
-    {
-      "file": "app/service/painel/telas/Kids.tsx",
-      "line": 382
-    },
-    {
-      "file": "app/service/painel/telas/Pesquisas.tsx",
-      "line": 433
-    }
-  ],
   "m1bv4ak4": [
     {
       "file": "app/service/membro/Disponibilidade.tsx",
@@ -3082,7 +7020,7 @@
     },
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 201
+      "line": 204
     },
     {
       "file": "app/service/painel/telas/Agenda.tsx",
@@ -3181,6 +7119,10 @@
       "line": 106
     },
     {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 80
+    },
+    {
       "file": "app/service/painel/telas/Reunioes.tsx",
       "line": 198
     },
@@ -3265,20 +7207,6 @@
       "line": 144
     }
   ],
-  "mepk4nw": [
-    {
-      "file": "app/service/membro/Kids.tsx",
-      "line": 151
-    },
-    {
-      "file": "app/service/membro/Kids.tsx",
-      "line": 512
-    },
-    {
-      "file": "app/service/painel/telas/Agenda.tsx",
-      "line": 96
-    }
-  ],
   "m19ndwhy": [
     {
       "file": "app/service/membro/Kids.tsx",
@@ -3343,37 +7271,13 @@
       "line": 176
     }
   ],
-  "m1pqtfq4": [
-    {
-      "file": "app/service/membro/Kids.tsx",
-      "line": 177
-    }
-  ],
   "m1btotye": [
     {
       "file": "app/service/membro/Kids.tsx",
       "line": 184
     }
   ],
-  "m1xadk13": [
-    {
-      "file": "app/service/membro/Kids.tsx",
-      "line": 185
-    }
-  ],
   "mc867v5": [
-    {
-      "file": "app/service/membro/Kids.tsx",
-      "line": 194
-    }
-  ],
-  "m9baacj": [
-    {
-      "file": "app/service/membro/Kids.tsx",
-      "line": 194
-    }
-  ],
-  "myogl4a": [
     {
       "file": "app/service/membro/Kids.tsx",
       "line": 194
@@ -3389,126 +7293,6 @@
     {
       "file": "app/service/membro/Kids.tsx",
       "line": 202
-    }
-  ],
-  "m1t4oriy": [
-    {
-      "file": "app/service/membro/Kids.tsx",
-      "line": 207
-    }
-  ],
-  "m1szqwr8": [
-    {
-      "file": "app/service/membro/Kids.tsx",
-      "line": 212
-    },
-    {
-      "file": "app/service/membro/Kids.tsx",
-      "line": 503
-    },
-    {
-      "file": "app/service/membro/Perfil.tsx",
-      "line": 294
-    },
-    {
-      "file": "app/service/membro/Perfil.tsx",
-      "line": 432
-    },
-    {
-      "file": "app/service/membro/Visitantes.tsx",
-      "line": 80
-    },
-    {
-      "file": "app/service/modules/aniversarios/Aniversariantes.tsx",
-      "line": 50
-    },
-    {
-      "file": "app/service/modules/cuidado/Cuidado.tsx",
-      "line": 82
-    },
-    {
-      "file": "app/service/modules/entrada/NovosCadastros.tsx",
-      "line": 132
-    },
-    {
-      "file": "app/service/modules/escalas/Escalas.tsx",
-      "line": 225
-    },
-    {
-      "file": "app/service/modules/escalas/Escalas.tsx",
-      "line": 793
-    },
-    {
-      "file": "app/service/modules/escalas/GerarPeriodo.tsx",
-      "line": 513
-    },
-    {
-      "file": "app/service/modules/escalas/PublicarEscala.tsx",
-      "line": 95
-    },
-    {
-      "file": "app/service/modules/mapa/CriarArea.tsx",
-      "line": 97
-    },
-    {
-      "file": "app/service/modules/mapa/Emergencia.tsx",
-      "line": 293
-    },
-    {
-      "file": "app/service/modules/mapa/LiberarMapa.tsx",
-      "line": 203
-    },
-    {
-      "file": "app/service/modules/mapa/Pontos.tsx",
-      "line": 164
-    },
-    {
-      "file": "app/service/modules/pessoas/acesso-msg.tsx",
-      "line": 41
-    },
-    {
-      "file": "app/service/painel/form/FormScreen.tsx",
-      "line": 181
-    },
-    {
-      "file": "app/service/painel/telas/Agenda.tsx",
-      "line": 309
-    },
-    {
-      "file": "app/service/painel/telas/Conversas.tsx",
-      "line": 91
-    },
-    {
-      "file": "app/service/painel/telas/EventoSerie.tsx",
-      "line": 109
-    },
-    {
-      "file": "app/service/painel/telas/EventoSerie.tsx",
-      "line": 188
-    },
-    {
-      "file": "app/service/painel/telas/Formacao.tsx",
-      "line": 462
-    },
-    {
-      "file": "app/service/painel/telas/Pesquisas.tsx",
-      "line": 301
-    },
-    {
-      "file": "app/service/painel/telas/ServiceModal.tsx",
-      "line": 637
-    },
-    {
-      "file": "app/service/painel/telas/Visitantes.tsx",
-      "line": 245
-    },
-    {
-      "file": "app/service/painel/telas/ficha/JornadaEditModal.tsx",
-      "line": 58
-    },
-    {
-      "file": "app/service/painel/telas/ficha/MemberEditModal.tsx",
-      "line": 58
     }
   ],
   "m1rkcd63": [
@@ -3542,7 +7326,7 @@
     },
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 184
+      "line": 187
     },
     {
       "file": "app/service/painel/telas/Kids.tsx",
@@ -3564,7 +7348,7 @@
     },
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 185
+      "line": 188
     },
     {
       "file": "app/service/painel/telas/Kids.tsx",
@@ -4080,7 +7864,7 @@
     },
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 199
+      "line": 202
     },
     {
       "file": "app/service/painel/telas/Relatorios.tsx",
@@ -4185,20 +7969,6 @@
       "line": 121
     }
   ],
-  "m1fjg3xa": [
-    {
-      "file": "app/service/membro/Onboarding.tsx",
-      "line": 109
-    },
-    {
-      "file": "app/service/modules/mural/Mural.tsx",
-      "line": 486
-    },
-    {
-      "file": "app/service/modules/pessoas/ImportarMembros.tsx",
-      "line": 177
-    }
-  ],
   "m3ikauf": [
     {
       "file": "app/service/membro/Onboarding.tsx",
@@ -4215,16 +7985,6 @@
     {
       "file": "app/service/membro/Onboarding.tsx",
       "line": 160
-    }
-  ],
-  "m1wl4gop": [
-    {
-      "file": "app/service/membro/Onboarding.tsx",
-      "line": 167
-    },
-    {
-      "file": "app/service/modules/entrada/NovosCadastros.tsx",
-      "line": 127
     }
   ],
   "m1k1tgfx": [
@@ -4259,6 +8019,10 @@
     {
       "file": "app/service/modules/mapa/LiberarMapa.tsx",
       "line": 204
+    },
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 176
     },
     {
       "file": "app/service/nova-senha/NovaSenhaForm.tsx",
@@ -4457,28 +8221,6 @@
       "line": 573
     }
   ],
-  "m14heqs0": [
-    {
-      "file": "app/service/membro/Onde.tsx",
-      "line": 190
-    },
-    {
-      "file": "app/service/membro/Onde.tsx",
-      "line": 230
-    },
-    {
-      "file": "app/service/modules/mapa/MapaIgreja.tsx",
-      "line": 573
-    },
-    {
-      "file": "app/service/painel/telas/configuracao/CongregacaoEditModal.tsx",
-      "line": 72
-    },
-    {
-      "file": "app/service/painel/telas/configuracao/CongregacaoEditModal.tsx",
-      "line": 82
-    }
-  ],
   "m17e110v": [
     {
       "file": "app/service/membro/Onde.tsx",
@@ -4513,6 +8255,14 @@
     {
       "file": "app/service/membro/Onde.tsx",
       "line": 221
+    },
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 93
+    },
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 98
     }
   ],
   "mu6wv9y": [
@@ -4593,6 +8343,10 @@
     {
       "file": "app/service/membro/Onde.tsx",
       "line": 240
+    },
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 67
     }
   ],
   "mr9hhgw": [
@@ -4719,34 +8473,10 @@
       "line": 132
     }
   ],
-  "m1snja1e": [
-    {
-      "file": "app/service/membro/Perfil.tsx",
-      "line": 320
-    },
-    {
-      "file": "app/service/modules/mural/Mural.tsx",
-      "line": 542
-    },
-    {
-      "file": "app/service/painel/telas/Reunioes.tsx",
-      "line": 189
-    },
-    {
-      "file": "app/service/painel/telas/Reunioes.tsx",
-      "line": 231
-    }
-  ],
   "mocp2d": [
     {
       "file": "app/service/membro/Perfil.tsx",
       "line": 329
-    }
-  ],
-  "mluymq3": [
-    {
-      "file": "app/service/membro/Perfil.tsx",
-      "line": 335
     }
   ],
   "m67crxc": [
@@ -4780,7 +8510,7 @@
     },
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 161
+      "line": 159
     }
   ],
   "ml0sftl": [
@@ -4857,18 +8587,6 @@
     {
       "file": "app/service/painel/telas/Identidade.tsx",
       "line": 184
-    }
-  ],
-  "mj51w0i": [
-    {
-      "file": "app/service/membro/Perfil.tsx",
-      "line": 362
-    }
-  ],
-  "mpd5hya": [
-    {
-      "file": "app/service/membro/Perfil.tsx",
-      "line": 362
     }
   ],
   "m2m8apc": [
@@ -5117,24 +8835,6 @@
     {
       "file": "app/service/membro/Perfil.tsx",
       "line": 505
-    }
-  ],
-  "m1foeh5u": [
-    {
-      "file": "app/service/membro/Perfil.tsx",
-      "line": 506
-    },
-    {
-      "file": "app/service/modules/mural/Boletim.tsx",
-      "line": 100
-    },
-    {
-      "file": "app/service/modules/mural/Mural.tsx",
-      "line": 193
-    },
-    {
-      "file": "app/service/modules/mural/Mural.tsx",
-      "line": 455
     }
   ],
   "mnpw9kh": [
@@ -5695,56 +9395,6 @@
       "line": 151
     }
   ],
-  "m1p891ep": [
-    {
-      "file": "app/service/modules/aniversarios/Aniversariantes.tsx",
-      "line": 152
-    },
-    {
-      "file": "app/service/modules/mapa/Emergencia.tsx",
-      "line": 128
-    },
-    {
-      "file": "app/service/modules/mapa/Mesa.tsx",
-      "line": 140
-    },
-    {
-      "file": "app/service/modules/pessoas/Duplicados.tsx",
-      "line": 66
-    },
-    {
-      "file": "app/service/modules/pessoas/ImportarMembros.tsx",
-      "line": 208
-    },
-    {
-      "file": "app/service/modules/pessoas/Pessoas.tsx",
-      "line": 148
-    },
-    {
-      "file": "app/service/modules/pessoas/Pessoas.tsx",
-      "line": 148
-    },
-    {
-      "file": "app/service/modules/pessoas/Pessoas.tsx",
-      "line": 161
-    },
-    {
-      "file": "app/service/modules/pessoas/Pessoas.tsx",
-      "line": 197
-    },
-    {
-      "file": "app/service/painel/telas/Kids.tsx",
-      "line": 120
-    },
-    {
-      "file": "app/service/painel/telas/Times.tsx",
-      "line": 85
-    },
-    {
-      "file": "app/service/painel/telas/Visitantes.tsx",
-      "line": 124
-    }
-  ],
   "m1o6460g": [
     {
       "file": "app/service/modules/aniversarios/Aniversariantes.tsx",
@@ -6049,16 +9699,6 @@
       "line": 188
     }
   ],
-  "m1gnsb15": [
-    {
-      "file": "app/service/modules/configuracao/Assistente.tsx",
-      "line": 192
-    },
-    {
-      "file": "app/service/painel/telas/Config.tsx",
-      "line": 357
-    }
-  ],
   "m7ckf0z": [
     {
       "file": "app/service/modules/configuracao/Assistente.tsx",
@@ -6091,38 +9731,16 @@
       "line": 205
     }
   ],
-  "mufdz22": [
-    {
-      "file": "app/service/modules/configuracao/Assistente.tsx",
-      "line": 206
-    }
-  ],
   "mlk1qeg": [
     {
       "file": "app/service/modules/configuracao/Assistente.tsx",
       "line": 206
     }
   ],
-  "mfoosjm": [
-    {
-      "file": "app/service/modules/configuracao/Assistente.tsx",
-      "line": 208
-    },
-    {
-      "file": "app/service/modules/configuracao/Assistente.tsx",
-      "line": 209
-    }
-  ],
   "mwsi595": [
     {
       "file": "app/service/modules/configuracao/Assistente.tsx",
       "line": 215
-    }
-  ],
-  "m16mih0o": [
-    {
-      "file": "app/service/modules/configuracao/Assistente.tsx",
-      "line": 219
     }
   ],
   "m1o45zgx": [
@@ -6391,16 +10009,6 @@
       "line": 290
     }
   ],
-  "m10vtljs": [
-    {
-      "file": "app/service/modules/configuracao/Assistente.tsx",
-      "line": 290
-    },
-    {
-      "file": "app/service/painel/telas/Inicio.tsx",
-      "line": 445
-    }
-  ],
   "m3znaa2": [
     {
       "file": "app/service/modules/configuracao/Assistente.tsx",
@@ -6534,309 +10142,243 @@
   "mwaqg1z": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 38
+      "line": 36
     }
   ],
   "mmdtmld": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 39
+      "line": 37
+    },
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 213
     }
   ],
   "mt7pkce": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 45
+      "line": 43
     }
   ],
   "mu940hd": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 46
+      "line": 44
     }
   ],
   "myu5tvr": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 57
+      "line": 55
     }
   ],
   "m4pd7c8": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 58
+      "line": 56
     }
   ],
   "m1qb4as9": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 64
+      "line": 62
     }
   ],
   "m1t4wco": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 72
+      "line": 70
     }
   ],
   "mtwik7": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 73
+      "line": 71
     }
   ],
   "mqqyimy": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 74
+      "line": 72
     },
     {
       "file": "app/service/modules/mural/Mural.tsx",
       "line": 481
     }
   ],
-  "mfw3ajq": [
-    {
-      "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 78
-    },
-    {
-      "file": "app/service/modules/mapa/MapaIgreja.tsx",
-      "line": 602
-    },
-    {
-      "file": "app/service/modules/mural/Mural.tsx",
-      "line": 486
-    },
-    {
-      "file": "app/service/painel/telas/Config.tsx",
-      "line": 446
-    },
-    {
-      "file": "app/service/painel/telas/Config.tsx",
-      "line": 518
-    },
-    {
-      "file": "app/service/painel/telas/Config.tsx",
-      "line": 564
-    },
-    {
-      "file": "app/service/painel/telas/EventoSerie.tsx",
-      "line": 36
-    },
-    {
-      "file": "app/service/painel/telas/EventoSerie.tsx",
-      "line": 108
-    },
-    {
-      "file": "app/service/painel/telas/FichaPessoa.tsx",
-      "line": 457
-    },
-    {
-      "file": "app/service/painel/telas/Identidade.tsx",
-      "line": 105
-    },
-    {
-      "file": "app/service/painel/telas/Identidade.tsx",
-      "line": 105
-    },
-    {
-      "file": "app/service/painel/telas/Identidade.tsx",
-      "line": 158
-    },
-    {
-      "file": "app/service/painel/telas/Identidade.tsx",
-      "line": 253
-    },
-    {
-      "file": "app/service/painel/telas/Identidade.tsx",
-      "line": 253
-    },
-    {
-      "file": "app/service/painel/telas/Kids.tsx",
-      "line": 38
-    },
-    {
-      "file": "app/service/painel/telas/Kids.tsx",
-      "line": 326
-    },
-    {
-      "file": "app/service/painel/telas/Pesquisas.tsx",
-      "line": 289
-    }
-  ],
   "mtkbi5r": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 79
+      "line": 77
     }
   ],
   "m13bt8b1": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 86
+      "line": 84
     }
   ],
   "m1cd27qn": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 87
+      "line": 85
     }
   ],
   "m1s3eqvd": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 88
+      "line": 86
     }
   ],
   "mozwmaa": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 132
+      "line": 130
     }
   ],
   "m13v0bhq": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 134
+      "line": 132
     }
   ],
   "m1o6ufm": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 151
+      "line": 149
     }
   ],
   "mp32kaq": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 154
+      "line": 152
     }
   ],
   "mu5klx0": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 162
+      "line": 160
     }
   ],
   "mixk7zn": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 163
+      "line": 161
     }
   ],
   "m1yzf6kc": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 171
+      "line": 169
     }
   ],
   "m3szbst": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 173
+      "line": 171
     }
   ],
   "m1ok6pj9": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 174
+      "line": 172
     }
   ],
   "m1nvqkf5": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 174
+      "line": 172
     }
   ],
   "mqn322v": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 181
+      "line": 179
     }
   ],
   "m1j3xf8h": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 181
+      "line": 179
     }
   ],
   "mv15omn": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 181
+      "line": 179
     }
   ],
   "mc7zfqn": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 181
+      "line": 179
     }
   ],
   "m1j8wchq": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 182
+      "line": 180
     }
   ],
   "mc6r0t8": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 186
+      "line": 184
     }
   ],
   "m3intey": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 187
+      "line": 185
     }
   ],
   "meg4lgr": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 187
+      "line": 185
     }
   ],
   "mdicpp": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 187
+      "line": 185
     }
   ],
   "m1vb6qdj": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 189
+      "line": 187
     }
   ],
   "m1fcfbod": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 199
+      "line": 197
     }
   ],
   "m187hjz8": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 199
+      "line": 197
     }
   ],
   "m1qvwccd": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 201
+      "line": 199
     }
   ],
   "m13xgv47": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 203
+      "line": 201
     }
   ],
   "m12z168": [
     {
       "file": "app/service/modules/contribuir/ContribuirConfig.tsx",
-      "line": 203
+      "line": 201
     }
   ],
   "m1yys79v": [
@@ -7109,12 +10651,6 @@
       "line": 111
     }
   ],
-  "m10q1bqe": [
-    {
-      "file": "app/service/modules/entrada/EntradaConfig.tsx",
-      "line": 124
-    }
-  ],
   "m1v9aprn": [
     {
       "file": "app/service/modules/entrada/EntradaConfig.tsx",
@@ -7137,20 +10673,6 @@
     {
       "file": "app/service/modules/entrada/EntradaConfig.tsx",
       "line": 141
-    },
-    {
-      "file": "app/service/modules/visitantes/Convidar.tsx",
-      "line": 93
-    }
-  ],
-  "mot0oh5": [
-    {
-      "file": "app/service/modules/entrada/EntradaConfig.tsx",
-      "line": 141
-    },
-    {
-      "file": "app/service/modules/visitantes/AutocadastroPainel.tsx",
-      "line": 93
     },
     {
       "file": "app/service/modules/visitantes/Convidar.tsx",
@@ -7503,16 +11025,6 @@
       "line": 61
     }
   ],
-  "m1ar5yjj": [
-    {
-      "file": "app/service/modules/escalas/EscalaExtra.tsx",
-      "line": 69
-    },
-    {
-      "file": "app/service/modules/escalas/GerarPeriodo.tsx",
-      "line": 249
-    }
-  ],
   "mlsvu80": [
     {
       "file": "app/service/modules/escalas/EscalaExtra.tsx",
@@ -7608,7 +11120,7 @@
     },
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 203
+      "line": 206
     },
     {
       "file": "app/service/modules/secretaria/Secretaria.tsx",
@@ -7815,6 +11327,10 @@
     {
       "file": "app/service/painel/telas/Conversas.tsx",
       "line": 214
+    },
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 631
     }
   ],
   "m1t5g0j8": [
@@ -8749,16 +12265,6 @@
       "line": 85
     }
   ],
-  "m17guhrn": [
-    {
-      "file": "app/service/modules/escalas/PublicarEscala.tsx",
-      "line": 90
-    },
-    {
-      "file": "app/service/modules/mural/Mural.tsx",
-      "line": 195
-    }
-  ],
   "masc18n": [
     {
       "file": "app/service/modules/escalas/PublicarEscala.tsx",
@@ -8789,6 +12295,10 @@
     {
       "file": "app/service/modules/mapa/MapaIgreja.tsx",
       "line": 343
+    },
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 245
     },
     {
       "file": "app/service/modules/visitantes/Convidar.tsx",
@@ -8841,32 +12351,6 @@
     {
       "file": "app/service/modules/grupos/GrupoEditModal.tsx",
       "line": 87
-    }
-  ],
-  "m1avrgid": [
-    {
-      "file": "app/service/modules/grupos/GrupoEditModal.tsx",
-      "line": 90
-    },
-    {
-      "file": "app/service/modules/pessoas/Pessoas.tsx",
-      "line": 169
-    },
-    {
-      "file": "app/service/painel/telas/Config.tsx",
-      "line": 570
-    },
-    {
-      "file": "app/service/painel/telas/FichaPessoa.tsx",
-      "line": 322
-    },
-    {
-      "file": "app/service/painel/telas/FichaPessoa.tsx",
-      "line": 478
-    },
-    {
-      "file": "app/service/painel/telas/FichaPessoa.tsx",
-      "line": 495
     }
   ],
   "m19ytrvo": [
@@ -9017,16 +12501,6 @@
     {
       "file": "app/service/modules/inicio/Saude.tsx",
       "line": 99
-    }
-  ],
-  "mpcf2z6": [
-    {
-      "file": "app/service/modules/inicio/Saude.tsx",
-      "line": 101
-    },
-    {
-      "file": "app/service/painel/telas/Relatorios.tsx",
-      "line": 255
     }
   ],
   "mo3st0l": [
@@ -10791,16 +14265,6 @@
       "line": 282
     }
   ],
-  "mhboncv": [
-    {
-      "file": "app/service/modules/mapa/MapaIgreja.tsx",
-      "line": 603
-    },
-    {
-      "file": "app/service/ui/Menu.tsx",
-      "line": 48
-    }
-  ],
   "mk2fqpr": [
     {
       "file": "app/service/modules/mapa/MapaIgreja.tsx",
@@ -10811,28 +14275,6 @@
     {
       "file": "app/service/modules/mapa/MapaIgreja.tsx",
       "line": 604
-    }
-  ],
-  "m1nlp5t9": [
-    {
-      "file": "app/service/modules/mapa/MapaIgreja.tsx",
-      "line": 605
-    },
-    {
-      "file": "app/service/modules/mapa/Pontos.tsx",
-      "line": 71
-    },
-    {
-      "file": "app/service/modules/mural/Mural.tsx",
-      "line": 482
-    },
-    {
-      "file": "app/service/modules/mural/Mural.tsx",
-      "line": 487
-    },
-    {
-      "file": "app/service/painel/telas/Pesquisas.tsx",
-      "line": 293
     }
   ],
   "mi4zoiz": [
@@ -11413,16 +14855,6 @@
       "line": 154
     }
   ],
-  "m10oi1ss": [
-    {
-      "file": "app/service/modules/mapa/Pontos.tsx",
-      "line": 155
-    },
-    {
-      "file": "app/service/modules/pessoas/ImportarMembros.tsx",
-      "line": 176
-    }
-  ],
   "m1h9379i": [
     {
       "file": "app/service/modules/mapa/Pontos.tsx",
@@ -11466,7 +14898,7 @@
     },
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 236
+      "line": 239
     },
     {
       "file": "app/service/painel/telas/Caminhada.tsx",
@@ -11570,7 +15002,7 @@
     },
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 221
+      "line": 224
     }
   ],
   "m1fnoxii": [
@@ -11895,12 +15327,6 @@
     {
       "file": "app/service/modules/mural/Boletim.tsx",
       "line": 134
-    }
-  ],
-  "m1t4z3fn": [
-    {
-      "file": "app/service/modules/mural/Boletim.tsx",
-      "line": 138
     }
   ],
   "m1gz51be": [
@@ -12235,32 +15661,6 @@
       "line": 224
     }
   ],
-  "m1hwo9ic": [
-    {
-      "file": "app/service/modules/mural/Mural.tsx",
-      "line": 225
-    },
-    {
-      "file": "app/service/painel/telas/Agenda.tsx",
-      "line": 312
-    },
-    {
-      "file": "app/service/painel/telas/Identidade.tsx",
-      "line": 220
-    },
-    {
-      "file": "app/service/painel/telas/Identidade.tsx",
-      "line": 253
-    },
-    {
-      "file": "app/service/painel/telas/Kids.tsx",
-      "line": 182
-    },
-    {
-      "file": "app/service/painel/telas/Reunioes.tsx",
-      "line": 138
-    }
-  ],
   "m1r7i0cx": [
     {
       "file": "app/service/modules/mural/Mural.tsx",
@@ -12481,12 +15881,6 @@
     {
       "file": "app/service/modules/mural/Mural.tsx",
       "line": 318
-    }
-  ],
-  "m8ipwvl": [
-    {
-      "file": "app/service/modules/mural/Mural.tsx",
-      "line": 319
     }
   ],
   "m1eur9y": [
@@ -12711,6 +16105,330 @@
     {
       "file": "app/service/painel/telas/Visitantes.tsx",
       "line": 146
+    }
+  ],
+  "m1ohbquu": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 67
+    }
+  ],
+  "m1gxpfo8": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 70
+    }
+  ],
+  "mgdr82x": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 71
+    }
+  ],
+  "m1xhtn2": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 75
+    }
+  ],
+  "m1iyw847": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 76
+    }
+  ],
+  "m20871m": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 104
+    }
+  ],
+  "m1yaep7v": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 105
+    },
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 166
+    }
+  ],
+  "m1hkqryr": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 107
+    }
+  ],
+  "m4euynn": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 116
+    },
+    {
+      "file": "app/service/painel/telas/Pesquisas.tsx",
+      "line": 366
+    }
+  ],
+  "m1au3wv6": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 119
+    }
+  ],
+  "m4k4ubn": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 119
+    }
+  ],
+  "mxyn6ci": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 120
+    }
+  ],
+  "m16n2tog": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 130
+    }
+  ],
+  "m1d6kc0c": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 131
+    }
+  ],
+  "m1eyq8xg": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 136
+    }
+  ],
+  "m1fu8v4c": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 136
+    }
+  ],
+  "m1tjmzqz": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 145
+    }
+  ],
+  "mhyedxt": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 145
+    }
+  ],
+  "mk6p2qs": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 163
+    }
+  ],
+  "m4385nu": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 163
+    }
+  ],
+  "mftvk2j": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 164
+    }
+  ],
+  "mwjr66j": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 165
+    }
+  ],
+  "msc5d9": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 165
+    }
+  ],
+  "mzal8ul": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 175
+    }
+  ],
+  "m32rxik": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 176
+    }
+  ],
+  "mjnrosf": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 208
+    }
+  ],
+  "ml2az29": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 209
+    }
+  ],
+  "m1y4q3t9": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 215
+    }
+  ],
+  "maaqxxt": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 219
+    }
+  ],
+  "m1ge1lof": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 219
+    }
+  ],
+  "mgbffaa": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 220
+    }
+  ],
+  "m1hagvl0": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 220
+    }
+  ],
+  "m1yurzl9": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 221
+    }
+  ],
+  "m1kr22dv": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 221
+    }
+  ],
+  "mkbz2kq": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 228
+    }
+  ],
+  "m1kjzx22": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 233
+    }
+  ],
+  "m1vdud9b": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 233
+    },
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 478
+    }
+  ],
+  "m1yikbev": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 233
+    }
+  ],
+  "mwezuyx": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 243
+    }
+  ],
+  "m1w8we9z": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 244
+    }
+  ],
+  "m112w88": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 261
+    }
+  ],
+  "m1njmjxk": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 261
+    }
+  ],
+  "mt12jmk": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 265
+    }
+  ],
+  "mzxf0ss": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 272
+    }
+  ],
+  "mdov961": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 273
+    }
+  ],
+  "mkiyjc3": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 274
+    }
+  ],
+  "mcu6xy9": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 275
+    }
+  ],
+  "mpdq3sy": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 279
+    }
+  ],
+  "msr2swh": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 279
+    }
+  ],
+  "m1w0owj1": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 281
+    }
+  ],
+  "mphedsw": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 287
+    }
+  ],
+  "mx3i4zy": [
+    {
+      "file": "app/service/modules/oracao/Oracao.tsx",
+      "line": 287
     }
   ],
   "m14a2878": [
@@ -13595,6 +17313,10 @@
       "line": 326
     },
     {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 636
+    },
+    {
       "file": "app/service/painel/telas/Reunioes.tsx",
       "line": 231
     },
@@ -13761,6 +17483,10 @@
     {
       "file": "app/service/painel/telas/Formacao.tsx",
       "line": 199
+    },
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 478
     }
   ],
   "mjlydbw": [
@@ -13892,19 +17618,19 @@
     },
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 171
+      "line": 174
     },
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 172
+      "line": 175
     },
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 184
+      "line": 187
     },
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 213
+      "line": 216
     },
     {
       "file": "app/service/painel/telas/Kids.tsx",
@@ -14219,16 +17945,6 @@
       "line": 151
     }
   ],
-  "mj61lco": [
-    {
-      "file": "app/service/modules/secretaria/Carteirinha.tsx",
-      "line": 152
-    },
-    {
-      "file": "app/service/modules/secretaria/Secretaria.tsx",
-      "line": 130
-    }
-  ],
   "m1c4q19d": [
     {
       "file": "app/service/modules/secretaria/Carteirinha.tsx",
@@ -14362,85 +18078,85 @@
   "m1vx2nbr": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 83
+      "line": 86
     }
   ],
   "m1o21o6d": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 83
+      "line": 86
     }
   ],
   "m4ul7pk": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 84
+      "line": 87
     }
   ],
   "m14w8u10": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 85
+      "line": 88
     }
   ],
   "m16232d8": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 86
+      "line": 89
     }
   ],
   "mquowq4": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 87
+      "line": 90
     }
   ],
   "m1t7831s": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 88
+      "line": 91
     }
   ],
   "mel8qa": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 124
+      "line": 127
     }
   ],
   "m7qz40s": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 129
+      "line": 132
     }
   ],
   "mw37gwm": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 129
+      "line": 132
     }
   ],
   "mqkv64a": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 129
+      "line": 132
     }
   ],
   "mmlux5y": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 138
+      "line": 141
     }
   ],
   "m1d5tr3q": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 142
+      "line": 145
     }
   ],
   "m1y3u0gl": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 146
+      "line": 149
     },
     {
       "file": "app/service/modules/secretaria/Secretaria.tsx",
@@ -14454,7 +18170,7 @@
   "mq1zhlc": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 146
+      "line": 149
     },
     {
       "file": "app/service/modules/secretaria/Secretaria.tsx",
@@ -14468,25 +18184,25 @@
   "msgq9kw": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 147
+      "line": 150
     }
   ],
   "m91zt8k": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 156
+      "line": 159
     }
   ],
   "m19opvfy": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 156
+      "line": 159
     }
   ],
   "m2ekkcc": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 157
+      "line": 160
     },
     {
       "file": "app/service/painel/telas/Visitantes.tsx",
@@ -14496,75 +18212,61 @@
   "mhjw4sv": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 169
+      "line": 172
     }
   ],
   "m5w0wiu": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 171
+      "line": 174
     }
   ],
   "m8nwxgk": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 172
+      "line": 175
     }
   ],
   "m1cc9ixp": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 174
-    }
-  ],
-  "mxmmza4": [
-    {
-      "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 179
-    },
-    {
-      "file": "app/service/painel/telas/Kids.tsx",
-      "line": 137
-    },
-    {
-      "file": "app/service/painel/telas/Kids.tsx",
-      "line": 336
+      "line": 177
     }
   ],
   "mb1cvoe": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 181
+      "line": 184
     }
   ],
   "m1459u3": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 181
+      "line": 184
     }
   ],
   "mor840q": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 181
+      "line": 184
     }
   ],
   "muyk1pk": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 186
+      "line": 189
     }
   ],
   "m1agbr8d": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 186
+      "line": 189
     }
   ],
   "mki4bic": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 192
+      "line": 195
     },
     {
       "file": "app/service/modules/secretaria/Secretaria.tsx",
@@ -14578,19 +18280,19 @@
   "mvh5f3r": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 194
+      "line": 197
     }
   ],
   "mtvc5h8": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 195
+      "line": 198
     }
   ],
   "m1rw54fu": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 195
+      "line": 198
     },
     {
       "file": "app/service/modules/secretaria/Secretaria.tsx",
@@ -14600,19 +18302,19 @@
   "mg30283": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 199
+      "line": 202
     }
   ],
   "m18q047d": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 199
+      "line": 202
     }
   ],
   "m42q57f": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 202
+      "line": 205
     },
     {
       "file": "app/service/modules/secretaria/Secretaria.tsx",
@@ -14642,19 +18344,19 @@
   "m5lcjrg": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 202
+      "line": 205
     }
   ],
   "mcuce6c": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 203
+      "line": 206
     }
   ],
   "m1ghf3sg": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 209
+      "line": 212
     },
     {
       "file": "app/service/modules/secretaria/Secretaria.tsx",
@@ -14668,55 +18370,55 @@
   "m1lndkv": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 212
+      "line": 215
     }
   ],
   "m6um82t": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 216
+      "line": 219
     }
   ],
   "mg40fz5": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 222
+      "line": 225
     }
   ],
   "mstdx3g": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 225
+      "line": 228
     }
   ],
   "m12as1yd": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 226
+      "line": 229
     }
   ],
   "m1dafx8q": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 226
+      "line": 229
     }
   ],
   "mb3k87e": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 228
+      "line": 231
     }
   ],
   "m1ya9ify": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 232
+      "line": 235
     }
   ],
   "m1reh9yj": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 234
+      "line": 237
     },
     {
       "file": "app/service/modules/secretaria/Secretaria.tsx",
@@ -14726,67 +18428,67 @@
   "m1lfhx4g": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 234
+      "line": 237
     }
   ],
   "mh8c2g5": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 235
+      "line": 238
     }
   ],
   "mca7bxj": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 235
+      "line": 238
     }
   ],
   "m1qdnlkh": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 238
+      "line": 241
     }
   ],
   "m1q9cxax": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 242
+      "line": 245
     }
   ],
   "m3bg4gd": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 243
+      "line": 246
     }
   ],
   "mnnxt8r": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 248
+      "line": 251
     }
   ],
   "mwaaebm": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 251
+      "line": 254
     }
   ],
   "m1g6vzwr": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 253
+      "line": 256
     }
   ],
   "m1qjpwg": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 254
+      "line": 257
     }
   ],
   "mi2a6gr": [
     {
       "file": "app/service/modules/secretaria/RegistroForm.tsx",
-      "line": 257
+      "line": 260
     }
   ],
   "m1pqm2no": [
@@ -15213,12 +18915,6 @@
     {
       "file": "app/service/modules/visitantes/AutocadastroPainel.tsx",
       "line": 105
-    }
-  ],
-  "m12hkz1y": [
-    {
-      "file": "app/service/modules/visitantes/AutocadastroPainel.tsx",
-      "line": 106
     }
   ],
   "mys688b": [
@@ -16465,12 +20161,6 @@
       "line": 229
     }
   ],
-  "md5zaek": [
-    {
-      "file": "app/service/painel/telas/Caminhada.tsx",
-      "line": 233
-    }
-  ],
   "m101g7kg": [
     {
       "file": "app/service/painel/telas/Caminhada.tsx",
@@ -16623,16 +20313,6 @@
       "line": 306
     }
   ],
-  "mojqc5j": [
-    {
-      "file": "app/service/painel/telas/Config.tsx",
-      "line": 320
-    },
-    {
-      "file": "app/service/painel/telas/Config.tsx",
-      "line": 321
-    }
-  ],
   "moqjx9u": [
     {
       "file": "app/service/painel/telas/Config.tsx",
@@ -16643,12 +20323,6 @@
     {
       "file": "app/service/painel/telas/Config.tsx",
       "line": 330
-    }
-  ],
-  "mpvt9sx": [
-    {
-      "file": "app/service/painel/telas/Config.tsx",
-      "line": 355
     }
   ],
   "mfbm9ar": [
@@ -16856,12 +20530,6 @@
     }
   ],
   "m1mvogjz": [
-    {
-      "file": "app/service/painel/telas/Config.tsx",
-      "line": 539
-    }
-  ],
-  "m5d1xjt": [
     {
       "file": "app/service/painel/telas/Config.tsx",
       "line": 539
@@ -17545,12 +21213,6 @@
       "line": 155
     }
   ],
-  "metfwu9": [
-    {
-      "file": "app/service/painel/telas/Conversas.tsx",
-      "line": 118
-    }
-  ],
   "mh2e1we": [
     {
       "file": "app/service/painel/telas/Conversas.tsx",
@@ -17561,22 +21223,16 @@
     {
       "file": "app/service/painel/telas/Conversas.tsx",
       "line": 191
+    },
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 633
     }
   ],
   "mtmh3pe": [
     {
       "file": "app/service/painel/telas/Conversas.tsx",
       "line": 192
-    }
-  ],
-  "m1mjatad": [
-    {
-      "file": "app/service/painel/telas/Conversas.tsx",
-      "line": 214
-    },
-    {
-      "file": "app/service/painel/telas/Relatorios.tsx",
-      "line": 287
     }
   ],
   "me2p915": [
@@ -17625,26 +21281,6 @@
     {
       "file": "app/service/painel/telas/Conversas.tsx",
       "line": 261
-    }
-  ],
-  "m1wjr4sg": [
-    {
-      "file": "app/service/painel/telas/Conversas.tsx",
-      "line": 264
-    }
-  ],
-  "milciao": [
-    {
-      "file": "app/service/painel/telas/Conversas.tsx",
-      "line": 265
-    },
-    {
-      "file": "app/service/painel/telas/Inicio.tsx",
-      "line": 200
-    },
-    {
-      "file": "app/service/painel/telas/Inicio.tsx",
-      "line": 223
     }
   ],
   "m1v41ij0": [
@@ -17711,6 +21347,10 @@
     {
       "file": "app/service/painel/telas/Evento.tsx",
       "line": 124
+    },
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 301
     }
   ],
   "mqha7hr": [
@@ -18445,12 +22085,6 @@
       "line": 444
     }
   ],
-  "mymeeal": [
-    {
-      "file": "app/service/painel/telas/FichaPessoa.tsx",
-      "line": 450
-    }
-  ],
   "m1irsl7z": [
     {
       "file": "app/service/painel/telas/FichaPessoa.tsx",
@@ -18999,12 +22633,6 @@
       "line": 293
     }
   ],
-  "m1ujubgo": [
-    {
-      "file": "app/service/painel/telas/Formacao.tsx",
-      "line": 293
-    }
-  ],
   "mkud6rw": [
     {
       "file": "app/service/painel/telas/Formacao.tsx",
@@ -19251,20 +22879,6 @@
     {
       "file": "app/service/painel/telas/Identidade.tsx",
       "line": 184
-    }
-  ],
-  "m1tuhgl4": [
-    {
-      "file": "app/service/painel/telas/Identidade.tsx",
-      "line": 158
-    },
-    {
-      "file": "app/service/painel/telas/Identidade.tsx",
-      "line": 184
-    },
-    {
-      "file": "app/service/painel/telas/Kids.tsx",
-      "line": 182
     }
   ],
   "m1daz00q": [
@@ -20121,6 +23735,14 @@
     {
       "file": "app/service/painel/telas/Kids.tsx",
       "line": 137
+    },
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 279
+    },
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 391
     }
   ],
   "m13npcsm": [
@@ -20613,12 +24235,6 @@
       "line": 363
     }
   ],
-  "m4euynn": [
-    {
-      "file": "app/service/painel/telas/Pesquisas.tsx",
-      "line": 366
-    }
-  ],
   "mrs0tsi": [
     {
       "file": "app/service/painel/telas/Pesquisas.tsx",
@@ -20799,6 +24415,378 @@
     {
       "file": "app/service/painel/telas/Pesquisas.tsx",
       "line": 496
+    }
+  ],
+  "m13kk6jl": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 72
+    }
+  ],
+  "m1b2maas": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 72
+    }
+  ],
+  "m1nc459u": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 74
+    }
+  ],
+  "me4sgd8": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 76
+    }
+  ],
+  "m1so8die": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 84
+    }
+  ],
+  "m9t0kqp": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 86
+    }
+  ],
+  "m1xmysxu": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 87
+    }
+  ],
+  "mh1w2pi": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 146
+    }
+  ],
+  "m1ky66rd": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 153
+    }
+  ],
+  "mm45yww": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 244
+    }
+  ],
+  "m42d4bg": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 250
+    },
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 499
+    }
+  ],
+  "m1302cz9": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 263
+    },
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 381
+    }
+  ],
+  "mbuh1we": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 264
+    },
+    {
+      "file": "app/service/painel/telas/Visitantes.tsx",
+      "line": 208
+    },
+    {
+      "file": "app/service/painel/telas/ficha/VisitanteDrawer.tsx",
+      "line": 93
+    }
+  ],
+  "m1rvv9ou": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 265
+    },
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 382
+    },
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 483
+    }
+  ],
+  "mxk93xj": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 270
+    },
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 386
+    },
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 483
+    }
+  ],
+  "mij9zb3": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 270
+    },
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 386
+    },
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 483
+    }
+  ],
+  "m1ee0or0": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 270
+    },
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 386
+    },
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 483
+    }
+  ],
+  "m59jy0c": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 294
+    }
+  ],
+  "m1m93h1k": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 308
+    }
+  ],
+  "maeu1hx": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 312
+    }
+  ],
+  "mdwpik1": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 320
+    }
+  ],
+  "mfopid1": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 375
+    }
+  ],
+  "m1x2s8a1": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 377
+    }
+  ],
+  "m1oghkld": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 379
+    }
+  ],
+  "m1bbl2nh": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 380
+    }
+  ],
+  "m1e264by": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 466
+    }
+  ],
+  "m19qhiul": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 467
+    }
+  ],
+  "m168kb0f": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 468
+    }
+  ],
+  "m16kkhph": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 475
+    }
+  ],
+  "m84zbxh": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 478
+    }
+  ],
+  "mauwu89": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 478
+    }
+  ],
+  "mt22s1n": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 478
+    }
+  ],
+  "mffjb27": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 478
+    }
+  ],
+  "m1t78nrg": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 518
+    }
+  ],
+  "mcfnpak": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 600
+    }
+  ],
+  "m1gt3j04": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 632
+    }
+  ],
+  "m1owx9bu": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 632
+    }
+  ],
+  "m12kugn8": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 633
+    }
+  ],
+  "mknhiaf": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 636
+    }
+  ],
+  "mijd7tz": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 636
+    }
+  ],
+  "m15463lw": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 636
+    }
+  ],
+  "mkbptsf": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 636
+    }
+  ],
+  "mth0xda": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 636
+    }
+  ],
+  "m1c20tvu": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 636
+    }
+  ],
+  "muula4j": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 636
+    }
+  ],
+  "m11mwi19": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 636
+    }
+  ],
+  "mpm7h52": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 636
+    }
+  ],
+  "m1iu5eog": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 642
+    }
+  ],
+  "m1566boh": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 643
+    }
+  ],
+  "mp8beg3": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 658
+    }
+  ],
+  "mqbfo8o": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 661
+    }
+  ],
+  "mpr0jxl": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 663
+    }
+  ],
+  "m6s6fhc": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 665
+    }
+  ],
+  "m1idtm5p": [
+    {
+      "file": "app/service/painel/telas/Quadros.tsx",
+      "line": 669
     }
   ],
   "mklr7dz": [
@@ -22133,12 +26121,6 @@
       "line": 200
     }
   ],
-  "mtzlksl": [
-    {
-      "file": "app/service/painel/telas/Times.tsx",
-      "line": 205
-    }
-  ],
   "m1tb3ugl": [
     {
       "file": "app/service/painel/telas/Times.tsx",
@@ -22194,12 +26176,6 @@
     }
   ],
   "m1irc68t": [
-    {
-      "file": "app/service/painel/telas/Visitantes.tsx",
-      "line": 37
-    }
-  ],
-  "m60tux9": [
     {
       "file": "app/service/painel/telas/Visitantes.tsx",
       "line": 37
@@ -22603,16 +26579,6 @@
       "line": 207
     }
   ],
-  "mbuh1we": [
-    {
-      "file": "app/service/painel/telas/Visitantes.tsx",
-      "line": 208
-    },
-    {
-      "file": "app/service/painel/telas/ficha/VisitanteDrawer.tsx",
-      "line": 93
-    }
-  ],
   "mfpq3dd": [
     {
       "file": "app/service/painel/telas/Visitantes.tsx",
@@ -22791,12 +26757,6 @@
       "line": 130
     }
   ],
-  "m19c5vev": [
-    {
-      "file": "app/service/painel/telas/configuracao/CongregacaoEditModal.tsx",
-      "line": 72
-    }
-  ],
   "m1duf9u8": [
     {
       "file": "app/service/painel/telas/configuracao/CongregacaoEditModal.tsx",
@@ -22851,16 +26811,6 @@
       "line": 71
     }
   ],
-  "m1lzoety": [
-    {
-      "file": "app/service/painel/telas/configuracao/TagElencoModal.tsx",
-      "line": 78
-    },
-    {
-      "file": "app/service/painel/telas/ficha/AddToMinistryModal.tsx",
-      "line": 70
-    }
-  ],
   "m1ochr37": [
     {
       "file": "app/service/painel/telas/configuracao/TagElencoModal.tsx",
@@ -22897,12 +26847,6 @@
     {
       "file": "app/service/painel/telas/ficha/AddToMinistryModal.tsx",
       "line": 64
-    }
-  ],
-  "m1hi2i2l": [
-    {
-      "file": "app/service/painel/telas/ficha/AddToMinistryModal.tsx",
-      "line": 79
     }
   ],
   "m2gh92j": [

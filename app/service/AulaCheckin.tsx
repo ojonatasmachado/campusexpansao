@@ -14,6 +14,7 @@ import { Janela } from "./ui/Janela";
 import { Vazio } from "./ui/Estados";
 import { Avatar } from "./ui/Avatar";
 import { confirmar } from "./ui/confirmar";
+import { useTexto } from "./lib/internacional/contexto";
 /* ─── tipos externos (subconjunto dos tipos de ServiceExactApp) ────────── */
 
 type LessonView = {
@@ -89,30 +90,31 @@ export function AulaCheckinLanding({
   result: CheckinResult | null;
   onDone: () => void;
 }) {
+  const traduzirUi = useTexto();
   let cor = "var(--olive)";
-  let titulo = "Verificando...";
+  let titulo = traduzirUi("Verificando...");
   let txt = "";
   let icone = "✓";
 
   if (result) {
     if (result.ok) {
       cor = "var(--olive)";
-      titulo = "Presença confirmada!";
-      txt = `Tudo certo. Bons estudos, ${person?.name.split(" ")[0] ?? ""}!`;
+      titulo = traduzirUi("Presença confirmada!");
+      txt = traduzirUi("Tudo certo. Bons estudos, {nome}!", { nome: person?.name.split(" ")[0] ?? "" });
       icone = "✓";
     } else if (result.dup) {
       cor = "var(--olive-soft)";
-      titulo = "Você já está presente";
-      txt = "Seu check-in nesta aula já foi registrado.";
+      titulo = traduzirUi("Você já está presente");
+      txt = traduzirUi("Seu check-in nesta aula já foi registrado.");
       icone = "✓";
     } else if (result.bloq) {
       cor = "var(--amber)";
-      titulo = "Check-in não liberado";
+      titulo = traduzirUi("Check-in não liberado");
       txt = result.motivo ?? "";
       icone = "!";
     } else {
       cor = "var(--danger)";
-      titulo = "Não foi possível";
+      titulo = traduzirUi("Não foi possível");
       txt = result.motivo ?? "";
       icone = "!";
     }
@@ -126,7 +128,7 @@ export function AulaCheckinLanding({
             <ChurchLockup logoUrl={logoUrl} name={churchName} />
           </div>
           <div className="ck-land-event">
-            <div className="ck-land-ey">Check-in de aula</div>
+            <div className="ck-land-ey">{traduzirUi("Check-in de aula")}</div>
             <div className="ck-land-name">{lessonName}</div>
             <div className="ck-land-when">{courseName}</div>
           </div>
@@ -142,7 +144,7 @@ export function AulaCheckinLanding({
             {txt && <div className="ck-land-txt">{txt}</div>}
           </div>
           <Botao variante="principal" style={{ width: "100%", justifyContent: "center" }} onClick={onDone}>
-            {result?.ok ? "Concluir" : "Voltar"}
+            {result?.ok ? traduzirUi("Concluir") : traduzirUi("Voltar")}
           </Botao>
         </div>
       </div>
@@ -160,6 +162,7 @@ function ManualAulaCheckinModal({
   onAdd: (memberId: string) => void;
   onClose: () => void;
 }) {
+  const traduzirUi = useTexto();
   const [q, setQ] = useState("");
   const presentIds = new Set(present.map((r) => r.member_id));
   const lista = matriculados.filter(
@@ -167,14 +170,14 @@ function ManualAulaCheckinModal({
   );
 
   return (
-    <Janela acima sobretitulo="Registro manual" titulo="Quem está presente" texto="Para quem chegou sem escanear. Só matriculados no curso."
-      aoFechar={onClose} corpoBloco rodape={<Botao onClick={onClose}>Fechar</Botao>}>
+    <Janela acima sobretitulo={traduzirUi("Registro manual")} titulo={traduzirUi("Quem está presente")} texto={traduzirUi("Para quem chegou sem escanear. Só matriculados no curso.")}
+      aoFechar={onClose} corpoBloco rodape={<Botao onClick={onClose}>{traduzirUi("Fechar")}</Botao>}>
           <div className="tb-search" style={{ marginBottom: 12 }}>
             <span className="si" aria-hidden="true"><Icon name="buscar" size={14} /></span>
-            <input placeholder="Buscar matriculado..." value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
+            <input placeholder={traduzirUi("Buscar matriculado...")} value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
           </div>
           {lista.length === 0 && (
-            <Vazio titulo={q ? "Nenhum resultado." : "Todos os matriculados já estão presentes."} />
+            <Vazio titulo={q ? traduzirUi("Nenhum resultado.") : traduzirUi("Todos os matriculados já estão presentes.")} />
           )}
           {lista.map((m) => (
             <div className="flag-row" key={m.id} style={{ cursor: "pointer" }} onClick={() => { onAdd(m.id); onClose(); }}>
@@ -202,6 +205,7 @@ export function AulaCheckinModal({
   attendance: AttendanceRow[];
   onClose: () => void;
 }) {
+  const traduzirUi = useTexto();
   const router = useRouter();
   const [tab, setTab] = useState<"qr" | "presenca">("qr");
   const [qrToken, setQrToken] = useState<string | null>(lesson.checkin_token);
@@ -232,11 +236,11 @@ export function AulaCheckinModal({
 
   const registrar = async (memberId: string, via: "qr" | "manual", token?: string): Promise<CheckinResult> => {
     if (via === "qr") {
-      if (!qrActive) return { ok: false, motivo: "Este QR Code está desativado. Procure a liderança." };
-      if (token && token !== qrToken) return { ok: false, motivo: "QR Code inválido ou expirado. Peça o atual à liderança." };
+      if (!qrActive) return { ok: false, motivo: traduzirUi("Este QR Code está desativado. Procure a liderança.") };
+      if (token && token !== qrToken) return { ok: false, motivo: traduzirUi("QR Code inválido ou expirado. Peça o atual à liderança.") };
     }
-    if (presentIds.has(memberId)) return { ok: false, dup: true, motivo: "Você já fez check-in nesta aula." };
-    if (!matriculadoIds.has(memberId)) return { ok: false, bloq: true, motivo: "Você não está matriculado neste curso. Fale com a liderança." };
+    if (presentIds.has(memberId)) return { ok: false, dup: true, motivo: traduzirUi("Você já fez check-in nesta aula.") };
+    if (!matriculadoIds.has(memberId)) return { ok: false, bloq: true, motivo: traduzirUi("Você não está matriculado neste curso. Fale com a liderança.") };
 
     const supabase = createServiceBrowserClient();
     const { data, error } = await supabase
@@ -246,8 +250,8 @@ export function AulaCheckinModal({
       .select()
       .single();
     if (error) {
-      if (error.code === "23505") return { ok: false, dup: true, motivo: "Você já fez check-in nesta aula." };
-      return { ok: false, motivo: "Não foi possível registrar agora." };
+      if (error.code === "23505") return { ok: false, dup: true, motivo: traduzirUi("Você já fez check-in nesta aula.") };
+      return { ok: false, motivo: traduzirUi("Não foi possível registrar agora.") };
     }
     const newRow = data as AttendanceRow;
     setLessonAttendance((prev) => [...prev, newRow]);
@@ -341,7 +345,7 @@ export function AulaCheckinModal({
       a.download = `checkin-aula-${lesson.id}.png`;
       a.click();
     };
-    img.onerror = () => avisar("Não consegui gerar a imagem agora.", "warn");
+    img.onerror = () => avisar(traduzirUi("Não consegui gerar a imagem agora."), "warn");
     img.src = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(checkinLink)}`;
   };
 
@@ -353,7 +357,7 @@ export function AulaCheckinModal({
   };
 
   const regenerar = async () => {
-    if (!(await confirmar({ titulo: "Gerar um novo QR Code?", texto: "O anterior deixa de funcionar.", acao: "Gerar novo código", perigo: false }))) return;
+    if (!(await confirmar({ titulo: traduzirUi("Gerar um novo QR Code?"), texto: traduzirUi("O anterior deixa de funcionar."), acao: traduzirUi("Gerar novo código"), perigo: false }))) return;
     const token = generateToken();
     setQrToken(token);
     setQrActive(true);
@@ -365,20 +369,20 @@ export function AulaCheckinModal({
     const demo = matriculados.find((m) => !presentIds.has(m.id)) ?? null;
     const result = demo
       ? await registrar(demo.id, "qr", qrToken ?? undefined)
-      : { ok: false, motivo: "Todos os matriculados já fizeram check-in." };
+      : { ok: false, motivo: traduzirUi("Todos os matriculados já fizeram check-in.") };
     setLanding({ person: demo, result });
   };
 
   return (
     <>
-      <Janela larga sobretitulo="Check-in de aula" titulo={lesson.name}
-        texto="QR Code único desta aula. Só quem está matriculado no curso confirma presença."
+      <Janela larga sobretitulo={traduzirUi("Check-in de aula")} titulo={lesson.name}
+        texto={traduzirUi("QR Code único desta aula. Só quem está matriculado no curso confirma presença.")}
         aoFechar={onClose} corpoBloco
         cabecalho={
-          <Abas rotulo="Partes do check-in" ativa={tab} aoMudar={(v) => setTab(v as typeof tab)}
-            abas={[{ id: "qr", rotulo: "QR Code" }, { id: "presenca", rotulo: "Presença ao vivo", contador: presentes }]} />
+          <Abas rotulo={traduzirUi("Partes do check-in")} ativa={tab} aoMudar={(v) => setTab(v as typeof tab)}
+            abas={[{ id: "qr", rotulo: traduzirUi("QR Code") }, { id: "presenca", rotulo: traduzirUi("Presença ao vivo"), contador: presentes }]} />
         }
-        rodape={<Botao variante="principal" onClick={onClose}>Concluído</Botao>}>
+        rodape={<Botao variante="principal" onClick={onClose}>{traduzirUi("Concluído")}</Botao>}>
             {tab === "qr" && (
               <div className="ck-qr-wrap">
                 <div className={`ck-qr ${!qrActive ? "off" : ""}`}>
@@ -387,29 +391,25 @@ export function AulaCheckinModal({
                   ) : (
                     <div className="ck-qr-off">
                       <span style={{ fontSize: "var(--fs-app-28)" }}>✕</span>
-                      <span>QR desativado</span>
+                      <span>{traduzirUi("QR desativado")}</span>
                     </div>
                   )}
                 </div>
                 <div className="ck-qr-side">
                   <div className={`ck-status ${qrActive ? "on" : "off"}`}>
                     <span className="ck-dot" />
-                    {qrActive ? "Ativo, aceitando check-ins" : "Desativado"}
+                    {qrActive ? traduzirUi("Ativo, aceitando check-ins") : traduzirUi("Desativado")}
                   </div>
                   <div className="ck-link"><span className="ck-link-txt">{checkinLink}</span></div>
                   <div className="ck-actions">
-                    <Botao compacto onClick={salvar}>Salvar</Botao>
-                    <Botao compacto onClick={imprimir}>Imprimir</Botao>
-                    <Botao compacto onClick={copiar}>Copiar link</Botao>
-                    <Botao compacto onClick={toggleActive}>{qrActive ? "Desativar" : "Ativar"}</Botao>
-                    <Botao compacto onClick={regenerar}>Regenerar</Botao>
+                    <Botao compacto onClick={salvar}>{traduzirUi("Salvar")}</Botao>
+                    <Botao compacto onClick={imprimir}>{traduzirUi("Imprimir")}</Botao>
+                    <Botao compacto onClick={copiar}>{traduzirUi("Copiar link")}</Botao>
+                    <Botao compacto onClick={toggleActive}>{qrActive ? traduzirUi("Desativar") : traduzirUi("Ativar")}</Botao>
+                    <Botao compacto onClick={regenerar}>{traduzirUi("Regenerar")}</Botao>
                   </div>
-                  <div className="ck-hint">
-                    Imprima e cole na entrada da sala. Quem escanear confirma presença pela conta logada.
-                  </div>
-                  <Botao variante="principal" style={{ marginTop: 4, justifyContent: "center" }} onClick={simularScan}>
-                    Simular leitura (abrir como aluno) →
-                  </Botao>
+                  <div className="ck-hint">{traduzirUi("Imprima e cole na entrada da sala. Quem escanear confirma presença pela conta logada.")}</div>
+                  <Botao variante="principal" style={{ marginTop: 4, justifyContent: "center" }} onClick={simularScan}>{traduzirUi("Simular leitura (abrir como aluno) →")}</Botao>
                 </div>
               </div>
             )}
@@ -417,14 +417,14 @@ export function AulaCheckinModal({
             {tab === "presenca" && (
               <div className="ck-presenca">
                 <div className="ck-counters">
-                  <div className="ck-counter"><b>{presentes}</b><span>presentes</span></div>
-                  <div className="ck-counter"><b style={{ color: "var(--amber)" }}>{faltam}</b><span>não chegaram</span></div>
-                  <div className="ck-counter"><b>{matriculados.length}</b><span>matriculados</span></div>
+                  <div className="ck-counter"><b>{presentes}</b><span>{traduzirUi("presentes")}</span></div>
+                  <div className="ck-counter"><b style={{ color: "var(--amber)" }}>{faltam}</b><span>{traduzirUi("não chegaram")}</span></div>
+                  <div className="ck-counter"><b>{matriculados.length}</b><span>{traduzirUi("matriculados")}</span></div>
                 </div>
 
                 <div className="ck-roster">
                   {lessonAttendance.length === 0 && matriculados.length === 0 && (
-                    <Vazio titulo="Ninguém matriculado neste curso ainda." />
+                    <Vazio titulo={traduzirUi("Ninguém matriculado neste curso ainda.")} />
                   )}
                   {[...lessonAttendance].sort((a, b) => a.checked_in_at.localeCompare(b.checked_in_at)).map((rec) => {
                     const m = members.find((x) => x.id === rec.member_id);
@@ -435,9 +435,9 @@ export function AulaCheckinModal({
                         <Avatar nome={m.name} tamanho="sm" />
                         <div className="ck-row-main">
                           <div className="ck-row-name">{m.name}</div>
-                          <div className="ck-row-meta">{rec.via === "manual" ? "manual" : "QR"} · {timeCurto(rec.checked_in_at)}</div>
+                          <div className="ck-row-meta">{rec.via === "manual" ? traduzirUi("manual") : traduzirUi("QR")} · {timeCurto(rec.checked_in_at)}</div>
                         </div>
-                        <BotaoIcone className="ck-undo" title="Desfazer presença" rotulo="Desfazer presença" onClick={() => remover(rec.member_id)}>✕</BotaoIcone>
+                        <BotaoIcone className="ck-undo" title={traduzirUi("Desfazer presença")} rotulo={traduzirUi("Desfazer presença")} onClick={() => remover(rec.member_id)}>✕</BotaoIcone>
                       </div>
                     );
                   })}
@@ -447,18 +447,14 @@ export function AulaCheckinModal({
                       <Avatar nome={m.name} tamanho="sm" />
                       <div className="ck-row-main">
                         <div className="ck-row-name">{m.name}</div>
-                        <div className="ck-row-meta">não chegou</div>
+                        <div className="ck-row-meta">{traduzirUi("não chegou")}</div>
                       </div>
-                      <Botao variante="discreto" compacto onClick={() => registrar(m.id, "manual").then((r) => { if (!r.ok) avisar(r.motivo ?? "Não foi possível registrar agora.", "warn"); })}>
-                        Marcar presente
-                      </Botao>
+                      <Botao variante="discreto" compacto onClick={() => registrar(m.id, "manual").then((r) => { if (!r.ok) avisar(r.motivo ?? traduzirUi("Não foi possível registrar agora."), "warn"); })}>{traduzirUi("Marcar presente")}</Botao>
                     </div>
                   ))}
                 </div>
 
-                <Botao compacto style={{ marginTop: 6 }} onClick={() => setShowManual(true)}>
-                  + Registrar presença manualmente
-                </Botao>
+                <Botao compacto style={{ marginTop: 6 }} onClick={() => setShowManual(true)}>{traduzirUi("+ Registrar presença manualmente")}</Botao>
               </div>
             )}
       </Janela>
@@ -467,7 +463,7 @@ export function AulaCheckinModal({
         <ManualAulaCheckinModal
           matriculados={matriculados}
           present={lessonAttendance}
-          onAdd={(memberId) => { registrar(memberId, "manual").then((r) => { if (!r.ok) avisar(r.motivo ?? "Não foi possível registrar agora.", "warn"); }); }}
+          onAdd={(memberId) => { registrar(memberId, "manual").then((r) => { if (!r.ok) avisar(r.motivo ?? traduzirUi("Não foi possível registrar agora."), "warn"); }); }}
           onClose={() => setShowManual(false)}
         />
       )}

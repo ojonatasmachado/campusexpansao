@@ -1,6 +1,5 @@
 "use client";
 
-import { plural } from "../../lib/plural";
 import { avisar } from "../../lib/avisar";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -22,6 +21,8 @@ import { Vazio } from "../../ui/Estados";
 import { Progresso } from "../../ui/Graficos";
 import { AvatarGrupo } from "../../ui/Avatar";
 import { Gaveta, Janela } from "../../ui/Janela";
+import { useTexto } from "../../lib/internacional/contexto";
+
 /* permissões do Kanban por papel (equivalente ao kanbanPerm()/S.KANBAN_PERMS do
    protótipo): master/pastor administram o quadro; líder cria, comenta e move os
    próprios cards mas não apaga; voluntário não deveria nem abrir esta tela (usa o
@@ -45,6 +46,8 @@ export function BoardChooser({
   onPick: (boardId: string) => void;
   onClose: () => void;
 }) {
+  const traduzirUi = useTexto();
+
   const [novo, setNovo] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -66,22 +69,22 @@ export function BoardChooser({
   };
 
   return (
-    <Janela sobretitulo="Responsabilidades" titulo={title} texto="Mande para um quadro que já existe ou crie um novo. As responsabilidades viram cards com o responsável marcado." aoFechar={onClose} corpoBloco
-      rodape={<Botao variante="discreto" onClick={onClose}>Cancelar</Botao>}>
-      <div className="dsec-title" style={{ marginBottom: 10 }}>Quadros existentes</div>
+    <Janela sobretitulo={traduzirUi("Responsabilidades")} titulo={title} texto={traduzirUi("Mande para um quadro que já existe ou crie um novo. As responsabilidades viram cards com o responsável marcado.")} aoFechar={onClose} corpoBloco
+      rodape={<Botao variante="discreto" onClick={onClose}>{traduzirUi("Cancelar")}</Botao>}>
+      <div className="dsec-title" style={{ marginBottom: 10 }}>{traduzirUi("Quadros existentes")}</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {boards.length === 0 && <Vazio titulo="Nenhum quadro ainda, crie um abaixo." />}
+        {boards.length === 0 && <Vazio titulo={traduzirUi("Nenhum quadro ainda, crie um abaixo.")} />}
         {boards.map((board) => (
           <Acao className="cand" key={board.id} onClick={() => onPick(board.id)}>
             <span className="esc-col-mark" style={{ width: 30, height: 30 }}><Icon name="quadros" size={15} /></span>
-            <div className="cand-main"><div className="cand-name">{board.name}</div><div className="cand-meta">{board.scope === "geral" ? "Liderança" : "Time"}</div></div>
+            <div className="cand-main"><div className="cand-name">{board.name}</div><div className="cand-meta">{board.scope === "geral" ? traduzirUi("Liderança") : traduzirUi("Time")}</div></div>
           </Acao>
         ))}
       </div>
-      <div className="dsec-title" style={{ margin: "20px 0 10px" }}>Ou crie um novo</div>
+      <div className="dsec-title" style={{ margin: "20px 0 10px" }}>{traduzirUi("Ou crie um novo")}</div>
       <div style={{ display: "flex", gap: 10 }}>
-        <input className="input" style={{ flex: 1 }} placeholder="Nome do novo quadro" value={novo} onChange={(e) => setNovo(e.target.value)} onKeyDown={(e) => e.key === "Enter" && criar()} />
-        <Botao variante="principal" desativado={saving} onClick={criar}>Criar e usar</Botao>
+        <input className="input" style={{ flex: 1 }} placeholder={traduzirUi("Nome do novo quadro")} value={novo} onChange={(e) => setNovo(e.target.value)} onKeyDown={(e) => e.key === "Enter" && criar()} />
+        <Botao variante="principal" desativado={saving} onClick={criar}>{traduzirUi("Criar e usar")}</Botao>
       </div>
     </Janela>
   );
@@ -121,6 +124,8 @@ export function KbCard({
   onDragStart: () => void;
   onDragEnd: () => void;
 }) {
+  const traduzirUi = useTexto();
+
   /* I7: o card é um botão (lei 17). Arrastar continua no mouse; no toque, no teclado e no
      leitor de tela, tocar abre a gaveta, onde "Mover para" troca a coluna. */
   return (
@@ -138,14 +143,14 @@ export function KbCard({
         {card.source_type && card.source_type !== "manual" && (
           <span className="kb-origem"><Icon name="cultos" size={11} /> {card.source_type}</span>
         )}
-        {parado && !atrasado && <span className="kb-parado">parado</span>}
+        {parado && !atrasado && <span className="kb-parado">{traduzirUi("parado")}</span>}
       </span>
       <span className="kb-card-title">{card.title}</span>
       <span className="kb-card-foot">
         {card.due && <span className={`kb-prazo${atrasado ? " late" : ""}`}>{formatDateBR(card.due)}</span>}
         <AvatarGrupo tamanho="xs" max={3} pessoas={card.assignees.flatMap((id) => { const p = peopleById.get(id); return p ? [{ id, nome: p.name, foto: p.photoUrl }] : []; })} />
       </span>
-      <span className="sr-only" id={`kb-dica-${card.id}`}>Abrir para mover ou editar</span>
+      <span className="sr-only" id={`kb-dica-${card.id}`}>{traduzirUi("Abrir para mover ou editar")}</span>
     </Acao>
   );
 }
@@ -175,6 +180,8 @@ export function CardDrawer({
   onMoveParent: (cardId: string, colId: string) => Promise<boolean>;
   onRefresh: () => void;
 }) {
+  const traduzirUi = useTexto();
+
   const boardMinistry = ministries.find((m) => m.id === board.ministry_id);
   const candidatos = board.ministry_id
     ? people.filter((p) => boardMinistry?.people.some((link) => link.personId === p.id))
@@ -200,7 +207,7 @@ export function CardDrawer({
     const antes = Object.fromEntries(Object.keys(updates).map((k) => [k, lc[k as keyof typeof updates]])) as typeof updates;
     setLc((prev) => ({ ...prev, ...updates }));
     const { error } = await createServiceBrowserClient().schema("service").from("cards").update(updates).eq("id", lc.id);
-    if (error) { setLc((prev) => ({ ...prev, ...antes })); avisar("Não foi possível salvar agora. Tente de novo.", "warn"); return; }
+    if (error) { setLc((prev) => ({ ...prev, ...antes })); avisar(traduzirUi("Não foi possível salvar agora. Tente de novo."), "warn"); return; }
     onRefresh();
   };
 
@@ -226,7 +233,7 @@ export function CardDrawer({
   return (
     <Gaveta aoFechar={onClose} larga rotulo={lc.title}>
         <div className="drawer-head">
-          <BotaoIcone className="drawer-close" rotulo="Fechar" onClick={onClose}>✕</BotaoIcone>
+          <BotaoIcone className="drawer-close" rotulo={traduzirUi("Fechar")} onClick={onClose}>✕</BotaoIcone>
           <div className="ph-eyebrow" style={{ marginBottom: 8 }}>{board.name}</div>
           <div className="profile-name" style={{ fontSize: "var(--fs-pn-20)" }}>{lc.title}</div>
         </div>
@@ -234,13 +241,13 @@ export function CardDrawer({
           {lc.description && <p style={{ fontSize: "var(--fs-pn-14)", color: "var(--light)", lineHeight: 1.6, marginBottom: 12 }}>{lc.description}</p>}
 
           <div className="dsec" style={{ marginTop: 8 }}>
-            <div className="dsec-title" id={`kb-mover-${lc.id}`}>Mover para</div>
+            <div className="dsec-title" id={`kb-mover-${lc.id}`}>{traduzirUi("Mover para")}</div>
             <div className="kb-move" role="group" aria-labelledby={`kb-mover-${lc.id}`}>
               {columns.map((col) => (
                 <Opcao key={col.id} marcada={lc.column_id === col.id} estilo="seg-chip" carregando={movendo}
                   onClick={async () => {
                     if (col.id === lc.column_id) return;
-                    if (!canMove) { avisar("Você só move cards onde é responsável.", "warn"); return; }
+                    if (!canMove) { avisar(traduzirUi("Você só move cards onde é responsável."), "warn"); return; }
                     const antes = lc.column_id;
                     setMovendo(true);
                     setLc((prev) => ({ ...prev, column_id: col.id }));
@@ -253,14 +260,14 @@ export function CardDrawer({
               ))}
             </div>
             <dl className="kv" style={{ marginTop: 14 }}>
-              <dt>Prazo</dt>
-              <dd>{lc.due ? formatDateBR(lc.due) : <span style={{ color: "var(--muted)" }}>sem prazo</span>}</dd>
-              <dt>Prioridade</dt>
+              <dt>{traduzirUi("Prazo")}</dt>
+              <dd>{lc.due ? formatDateBR(lc.due) : <span style={{ color: "var(--muted)" }}>{traduzirUi("sem prazo")}</span>}</dd>
+              <dt>{traduzirUi("Prioridade")}</dt>
               <dd>
                 <Segmentado className="seg-sm" style={{ display: "inline-flex" }}>
                   {(["alta", "media", "baixa"] as const).map((p) => (
                     <Opcao key={p} marcada={lc.priority === p} onClick={() => mutate({ priority: p })}>
-                      {p === "alta" ? "Alta" : p === "media" ? "Média" : "Baixa"}
+                      {p === "alta" ? traduzirUi("Alta") : p === "media" ? traduzirUi("Média") : traduzirUi("Baixa")}
                     </Opcao>
                   ))}
                 </Segmentado>
@@ -269,7 +276,7 @@ export function CardDrawer({
           </div>
 
           <div className="dsec">
-            <div className="dsec-title">Responsáveis</div>
+            <div className="dsec-title">{traduzirUi("Responsáveis")}</div>
             <div className="cand-pick">
               {candidatos.slice(0, 12).map((p) => {
                 const on = lc.assignees.includes(p.id);
@@ -284,33 +291,33 @@ export function CardDrawer({
           </div>
 
           <div className="dsec">
-            <div className="dsec-title">Comentários · {comments.length}</div>
+            <div className="dsec-title">{traduzirUi("Comentários · {n}", { n: String(comments.length) })}</div>
             <div className="kb-comments">
               {comments.map((cm) => (
                 <div className="kb-coment" key={cm.id}>
                   <Av name={cm.author || "?"} size="sm" />
                   <div className="kb-coment-body">
                     <div className="kb-coment-top">
-                      <b>{cm.author || "Equipe"}</b>
+                      <b>{cm.author || traduzirUi("Equipe")}</b>
                       <span>{new Date(cm.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
                     </div>
                     <div className="kb-coment-txt">{cm.body}</div>
                   </div>
                 </div>
               ))}
-              {comments.length === 0 && <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum comentário ainda.</div>}
+              {comments.length === 0 && <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>{traduzirUi("Nenhum comentário ainda.")}</div>}
             </div>
             {perm.comentar ? (
               <div className="kb-coment-add">
-                <input className="input" placeholder="Escreva um comentário..." value={commentText}
+                <input className="input" placeholder={traduzirUi("Escreva um comentário...")} value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && addComment()} />
-                <Botao compacto onClick={addComment}>Enviar</Botao>
+                <Botao compacto onClick={addComment}>{traduzirUi("Enviar")}</Botao>
               </div>
             ) : null}
           </div>
 
-          {perm.editarBoard ? <Botao variante="discreto" compacto style={{ marginTop: 8 }} onClick={deleteCard}>Excluir card</Botao> : null}
+          {perm.editarBoard ? <Botao variante="discreto" compacto style={{ marginTop: 8 }} onClick={deleteCard}>{traduzirUi("Excluir card")}</Botao> : null}
         </div>
     </Gaveta>
   );
@@ -333,6 +340,8 @@ export function NovoCard({
   onClose: () => void;
   onRefresh: () => void;
 }) {
+  const traduzirUi = useTexto();
+
   const boardMinistry = ministries.find((m) => m.id === board.ministry_id);
   const candidatos = board.ministry_id
     ? people.filter((p) => boardMinistry?.people.some((link) => link.personId === p.id))
@@ -363,23 +372,23 @@ export function NovoCard({
   };
 
   return (
-    <Janela sobretitulo={board.name} titulo="Novo card" aoFechar={onClose} rodape={<>
-          <Botao onClick={onClose}>Cancelar</Botao>
-          <Botao variante="principal" desativado={saving} onClick={criar}>Adicionar card</Botao>
+    <Janela sobretitulo={board.name} titulo={traduzirUi("Novo card")} aoFechar={onClose} rodape={<>
+          <Botao onClick={onClose}>{traduzirUi("Cancelar")}</Botao>
+          <Botao variante="principal" desativado={saving} onClick={criar}>{traduzirUi("Adicionar card")}</Botao>
       </>}>
-      <Campo rotulo="Título"><Entrada autoFocus value={titulo} placeholder="O que precisa ser feito" onChange={(e) => setTitulo(e.target.value)} /></Campo>
-      <Campo rotulo="Descrição"><TextoLongo value={desc} placeholder="Detalhes (opcional)" onChange={(e) => setDesc(e.target.value)} /></Campo>
-      <Campo rotulo="Prazo" className="field-half"><SeletorData valor={due} aoMudar={setDue} limpavel /></Campo>
-      <Campo rotulo="Prioridade" className="field-half" grupo>
+      <Campo rotulo={traduzirUi("Título")}><Entrada autoFocus value={titulo} placeholder={traduzirUi("O que precisa ser feito")} onChange={(e) => setTitulo(e.target.value)} /></Campo>
+      <Campo rotulo={traduzirUi("Descrição")}><TextoLongo value={desc} placeholder={traduzirUi("Detalhes (opcional)")} onChange={(e) => setDesc(e.target.value)} /></Campo>
+      <Campo rotulo={traduzirUi("Prazo")} className="field-half"><SeletorData valor={due} aoMudar={setDue} limpavel /></Campo>
+      <Campo rotulo={traduzirUi("Prioridade")} className="field-half" grupo>
         <Segmentado className="seg-sm">
           {(["alta", "media", "baixa"] as const).map((p) => (
             <Opcao key={p} marcada={prio === p} onClick={() => setPrio(p)}>
-              {p === "alta" ? "Alta" : p === "media" ? "Média" : "Baixa"}
+              {p === "alta" ? traduzirUi("Alta") : p === "media" ? traduzirUi("Média") : traduzirUi("Baixa")}
             </Opcao>
           ))}
         </Segmentado>
       </Campo>
-      <Campo rotulo="Responsáveis" grupo>
+      <Campo rotulo={traduzirUi("Responsáveis")} grupo>
         <div className="cand-pick">
           {candidatos.slice(0, 12).map((p) => {
             const on = resp.includes(p.id);
@@ -421,6 +430,8 @@ export function QuadroAberto({
   onMoveCard: (cardId: string, colId: string) => Promise<boolean>;
   onRefresh: () => void;
 }) {
+  const traduzirUi = useTexto();
+
   const perm = kanbanPerm(currentRole);
   const [openCard, setOpenCard] = useState<CardView | null>(null);
   const [novoCol, setNovoCol] = useState<string | null>(null);
@@ -452,24 +463,24 @@ export function QuadroAberto({
     <div className="content wide">
       <div className="ph">
         <div>
-          <Botao variante="discreto" compacto onClick={onBack}>← Quadros</Botao>
-          <h1 className="ph-title" style={{ marginTop: 8 }}>{board.name} <HelpDot text="Um quadro de tarefas com colunas (A fazer, Em andamento, Concluído). Arraste o cartão pra mudar o status." /></h1>
-          <p className="ph-sub">{board.description || "Quadro de tarefas da operação."}</p>
+          <Botao variante="discreto" compacto onClick={onBack}>{traduzirUi("← Quadros")}</Botao>
+          <h1 className="ph-title" style={{ marginTop: 8 }}>{board.name} <HelpDot text={traduzirUi("Um quadro de tarefas com colunas (A fazer, Em andamento, Concluído). Arraste o cartão pra mudar o status.")} /></h1>
+          <p className="ph-sub">{board.description || traduzirUi("Quadro de tarefas da operação.")}</p>
         </div>
       </div>
 
       <div className="toolbar">
         <div className="tb-search">
           <span className="si">⌕</span>
-          <input placeholder="Buscar card..." value={q} onChange={(e) => setQ(e.target.value)} />
+          <input placeholder={traduzirUi("Buscar card...")} value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         <Segmentado>
-          {([["todos", "Todos"], ["meus", "Meus"], ["atrasados", `Atrasados${atrasados ? ` ${atrasados}` : ""}`], ["parados", `Parados${parados ? ` ${parados}` : ""}`]] as [string, string][]).map(([k, l]) => (
+          {([["todos", traduzirUi("Todos")], ["meus", traduzirUi("Meus")], ["atrasados", atrasados ? traduzirUi("Atrasados {n}", { n: String(atrasados) }) : traduzirUi("Atrasados")], ["parados", parados ? traduzirUi("Parados {n}", { n: String(parados) }) : traduzirUi("Parados")]] as [string, string][]).map(([k, l]) => (
             <Opcao key={k} marcada={fEstado === k} onClick={() => setFEstado(k)}>{l}</Opcao>
           ))}
         </Segmentado>
         <Segmentado>
-          {([["todas", "Prioridade"], ["alta", "Alta"], ["media", "Média"], ["baixa", "Baixa"]] as [string, string][]).map(([k, l]) => (
+          {([["todas", traduzirUi("Prioridade")], ["alta", traduzirUi("Alta")], ["media", traduzirUi("Média")], ["baixa", traduzirUi("Baixa")]] as [string, string][]).map(([k, l]) => (
             <Opcao key={k} marcada={fPrio === k} onClick={() => setFPrio(k)}>{l}</Opcao>
           ))}
         </Segmentado>
@@ -485,7 +496,7 @@ export function QuadroAberto({
                 if (!drag) return;
                 const dragged = boardCards.find((c) => c.id === drag);
                 if (!perm.moverQualquer && !(dragged && currentPersonId && dragged.assignees.includes(currentPersonId))) {
-                  avisar("Você só move cards onde é responsável.", "warn");
+                  avisar(traduzirUi("Você só move cards onde é responsável."), "warn");
                   setDrag(null);
                   return;
                 }
@@ -504,7 +515,7 @@ export function QuadroAberto({
                     onDragStart={() => setDrag(c.id)}
                     onDragEnd={() => setDrag(null)} />
                 ))}
-                {perm.criarCard ? <Acao className="kb-add" onClick={() => setNovoCol(col.id)}>+ Card</Acao> : null}
+                {perm.criarCard ? <Acao className="kb-add" onClick={() => setNovoCol(col.id)}>{traduzirUi("+ Card")}</Acao> : null}
               </div>
             </div>
           );
@@ -554,6 +565,8 @@ export function Quadros({
   scopeMinistryIds: string[] | null;
   setModal: (modal: ModalState) => void;
 }) {
+  const traduzirUi = useTexto();
+
   const router = useRouter();
   const [boardId, setBoardId] = useState<string | null>(null);
   const [localCards, setLocalCards] = useState<CardView[]>(cards);
@@ -584,7 +597,7 @@ export function Quadros({
       /* só desfaz se ninguém moveu de novo enquanto gravava */
       const voltar = antes;
       if (voltar) setLocalCards((prev) => prev.map((c) => c.id === cardId && c.column_id === colId ? { ...c, column_id: voltar } : c));
-      avisar("Não foi possível mover agora. Tente de novo.", "warn");
+      avisar(traduzirUi("Não foi possível mover agora. Tente de novo."), "warn");
       return false;
     }
     router.refresh();
@@ -615,19 +628,19 @@ export function Quadros({
     <div className="content wide">
       <div className="ph">
         <div>
-          <div className="ph-eyebrow">Operação</div>
-          <h1 className="ph-title">Quadros de <em>tarefas</em> <HelpDot text="Um quadro de tarefas por time: o que fazer, quem é responsável e o prazo. A Direção vê os quadros de todos os times." /></h1>
-          {scopeMinistryIds ? <p className="ph-sub">Os quadros do {ministries.find((m) => m.id === scopeMinistryIds[0])?.name ?? "seu time"}.</p> : null}
+          <div className="ph-eyebrow">{traduzirUi("Operação")}</div>
+          <h1 className="ph-title">{traduzirUi.rich("Quadros de <em>tarefas</em>", { em: (c) => <em>{c}</em> })} <HelpDot text={traduzirUi("Um quadro de tarefas por time: o que fazer, quem é responsável e o prazo. A Direção vê os quadros de todos os times.")} /></h1>
+          {scopeMinistryIds ? <p className="ph-sub">{traduzirUi("Os quadros do {time}.", { time: ministries.find((m) => m.id === scopeMinistryIds[0])?.name ?? traduzirUi("seu time") })}</p> : null}
         </div>
         <div className="ph-actions">
-          <Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: "Novo quadro", subtitle: "Um quadro de tarefas para organizar o trabalho de um time ou da liderança.", saveLabel: "Criar quadro", formFields: [{ k:"nome", label:"Nome do quadro", type:"text", req:true, ph:"ex: Louvor · Julho" }, { k:"time", label:"Time dono", type:"text", half:true, ph:"ex: Louvor (ou deixe em branco para geral)" }, { k:"desc", label:"Descrição", type:"text", half:true, ph:"Para que serve" }], action: { kind: "board" } })}>+ Novo quadro</Botao>
+          <Botao variante="principal" onClick={() => setModal({ eyebrow: traduzirUi("Criar"), title: traduzirUi("Novo quadro"), subtitle: traduzirUi("Um quadro de tarefas para organizar o trabalho de um time ou da liderança."), saveLabel: traduzirUi("Criar quadro"), formFields: [{ k:"nome", label:traduzirUi("Nome do quadro"), type:"text", req:true, ph:traduzirUi("ex: Louvor · Julho") }, { k:"time", label:traduzirUi("Time dono"), type:"text", half:true, ph:traduzirUi("ex: Louvor (ou deixe em branco para geral)") }, { k:"desc", label:traduzirUi("Descrição"), type:"text", half:true, ph:traduzirUi("Para que serve") }], action: { kind: "board" } })}>{traduzirUi("+ Novo quadro")}</Botao>
         </div>
       </div>
       <div className="kb-explain">
         <span className="kb-explain-ic"><Icon name="reunioes" size={18} /></span>
         <div>
-          <div className="kb-explain-t">De onde vêm os cards</div>
-          <div className="kb-explain-s">Toda responsabilidade definida numa reunião pode virar um card aqui, com responsável e prazo já preenchidos.</div>
+          <div className="kb-explain-t">{traduzirUi("De onde vêm os cards")}</div>
+          <div className="kb-explain-s">{traduzirUi("Toda responsabilidade definida numa reunião pode virar um card aqui, com responsável e prazo já preenchidos.")}</div>
         </div>
       </div>
       <div className="bd-grid">
@@ -642,18 +655,18 @@ export function Quadros({
             <Acao className="bd-card" key={board.id} onClick={() => setBoardId(board.id)}>
               <div className="bd-card-top">
                 <div className="bd-mark"><Icon name="times" size={18} /></div>
-                {atrasados > 0 && <Selo tom="cuidado">{plural(atrasados, "atrasado")}</Selo>}
+                {atrasados > 0 && <Selo tom="cuidado">{traduzirUi("{count, plural, =1 {# atrasado} other {# atrasados}}", { count: atrasados })}</Selo>}
               </div>
               <div className="bd-name">{board.name}</div>
-              <div className="bd-desc">{board.description || ministry?.description || "Quadro da operação."}</div>
+              <div className="bd-desc">{board.description || ministry?.description || traduzirUi("Quadro da operação.")}</div>
               <div className="bd-foot">
-                <span className="team-stat"><b>{boardCards.length}</b> cards · <b>{feitos}</b> feitos</span>
+                <span className="team-stat">{traduzirUi.rich("<b>{total}</b> cards · <b>{feitos}</b> feitos", { total: String(boardCards.length), feitos: String(feitos), b: (c) => <b>{c}</b> })}</span>
               </div>
-              <Progresso pct={pct} rotulo={`Cards feitos em ${board.name}`} style={{ marginTop: 10 }} />
+              <Progresso pct={pct} rotulo={traduzirUi("Cards feitos em {quadro}", { quadro: board.name })} style={{ marginTop: 10 }} />
             </Acao>
           );
         })}
-        {visibleBoards.length === 0 && <Vazio titulo="Nenhum quadro criado ainda." />}
+        {visibleBoards.length === 0 && <Vazio titulo={traduzirUi("Nenhum quadro criado ainda.")} />}
       </div>
     </div>
   );

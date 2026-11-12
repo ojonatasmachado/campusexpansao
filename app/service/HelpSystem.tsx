@@ -9,7 +9,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "./lib/icons";
-import { useTermos } from "./lib/vocabulario-context";
+import { useTexto } from "./lib/internacional/contexto";
+import type { Text } from "./lib/internacional/mensagens";
 
 import { Botao, BotaoIcone } from "./ui/Botao";
 import { Acao } from "./ui/Acao";
@@ -27,6 +28,7 @@ const HELP_MARGIN = 12;
 /* Definições ficam no "?" junto do título, sem acrescentar uma ação de texto
    a cada indicador. A explicação continua disponível no teclado e no toque. */
 export function HelpDot({ text }: { text: string }) {
+  const traduzirUi = useTexto();
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
   const ref = useRef<HTMLSpanElement>(null);
@@ -79,7 +81,7 @@ export function HelpDot({ text }: { text: string }) {
     >
       {text}
       {isMobile() && (
-        <Acao className="help-pop-close" onClick={(e) => { e.stopPropagation(); setOpen(false); }}>Entendi</Acao>
+        <Acao className="help-pop-close" onClick={(e) => { e.stopPropagation(); setOpen(false); }}>{traduzirUi("Entendi")}</Acao>
       )}
     </div>
   ) : null;
@@ -89,7 +91,7 @@ export function HelpDot({ text }: { text: string }) {
       <Acao
        
         className="help-dot"
-        aria-label="Ajuda"
+        aria-label={traduzirUi("Ajuda")}
         aria-expanded={open}
         onClick={(e) => { e.stopPropagation(); e.preventDefault(); setPos(null); setOpen((o) => !o); }}
       >
@@ -102,23 +104,23 @@ export function HelpDot({ text }: { text: string }) {
 
 /* ── COACHMARK · tour guiado, aponta pros botões reais da sidebar ─── */
 
-export type CoachStep = { route?: string; sel: string; t: string; s: string };
+export type CoachStep = { route?: string; sel: string; texto: (traduzirUi: Text) => { t: string; s: string } };
 
 /* Tour curto: só o caminho do domingo (pessoas, escala, agenda, aviso) e onde
    pedir ajuda. Eram 20 passos, um por item do menu; o resto do menu se explica
    pelo "?" de cada tela. O painel tira do tour o que o papel não vê. */
 export const TOUR_DESKTOP: CoachStep[] = [
-  { route: "painel", sel: '[data-tour="painel"]', t: "Seu painel", s: "O que precisa de você agora, em ordem. Cada linha leva à tela que resolve." },
-  { route: "membros", sel: '[data-tour="membros"]', t: "Pessoas", s: "Membros, visitantes, crianças e {grupos}. Cada pessoa tem a sua {caminhada} e o seu histórico." },
-  { route: "escalas", sel: '[data-tour="escalas"]', t: "Escalas", s: "Monte quem serve em cada {culto}. As pessoas confirmam ou recusam direto no celular." },
-  { route: "cultos", sel: '[data-tour="cultos"]', t: "{Cultos} e eventos", s: "A agenda da igreja. Cada {culto} pode virar uma escala." },
-  { route: "comunicacao", sel: '[data-tour="comunicacao"]', t: "Mural", s: "Avisos para a igreja toda ou só para um time, com lembrete para quem não viu." },
-  { route: "config", sel: '[data-tour="config"]', t: "Configurações", s: "Dados da igreja, cores do app, permissões e convites para outros líderes." },
-  { sel: '[data-tour="ajuda-fab"]', t: "Sempre por perto", s: 'Rever este tour fica aqui. Em qualquer tela, o "?" ao lado de títulos, números e botões explica o que aquilo faz.' },
+  { route: "painel", sel: '[data-tour="painel"]', texto: (traduzirUi) => ({ t: traduzirUi("Seu painel"), s: traduzirUi("O que precisa de você agora, em ordem. Cada linha leva à tela que resolve.") }) },
+  { route: "membros", sel: '[data-tour="membros"]', texto: (traduzirUi) => ({ t: traduzirUi("Pessoas"), s: traduzirUi("Membros, visitantes, crianças e {grupos}. Cada pessoa tem a sua {caminhada} e o seu histórico.") }) },
+  { route: "escalas", sel: '[data-tour="escalas"]', texto: (traduzirUi) => ({ t: traduzirUi("Escalas"), s: traduzirUi("Monte quem serve em cada {culto}. As pessoas confirmam ou recusam direto no celular.") }) },
+  { route: "cultos", sel: '[data-tour="cultos"]', texto: (traduzirUi) => ({ t: traduzirUi("{Cultos} e eventos"), s: traduzirUi("A agenda da igreja. Cada {culto} pode virar uma escala.") }) },
+  { route: "comunicacao", sel: '[data-tour="comunicacao"]', texto: (traduzirUi) => ({ t: traduzirUi("Mural"), s: traduzirUi("Avisos para a igreja toda ou só para um time, com lembrete para quem não viu.") }) },
+  { route: "config", sel: '[data-tour="config"]', texto: (traduzirUi) => ({ t: traduzirUi("Configurações"), s: traduzirUi("Dados da igreja, cores do app, permissões e convites para outros líderes.") }) },
+  { sel: '[data-tour="ajuda-fab"]', texto: (traduzirUi) => ({ t: traduzirUi("Sempre por perto"), s: traduzirUi('Rever este tour fica aqui. Em qualquer tela, o "?" ao lado de títulos, números e botões explica o que aquilo faz.') }) },
 ];
 
 export function Coachmark({ steps, go, onDone, startAt = 0, onStepChange }: { steps: CoachStep[]; go?: (route: string) => void; onDone: () => void; startAt?: number; onStepChange?: (i: number) => void }) {
-  const { comTermos: ct } = useTermos();
+  const traduzirUi = useTexto();
   const [i, setI] = useState(startAt);
   const [rect, setRect] = useState<DOMRect | null>(null);
   const step = steps[i];
@@ -160,6 +162,7 @@ export function Coachmark({ steps, go, onDone, startAt = 0, onStepChange }: { st
   }, []);
 
   if (!step) return null;
+  const textoPasso = step.texto(traduzirUi);
   const next = () => (i < steps.length - 1 ? setI(i + 1) : onDone());
   const prev = () => i > 0 && setI(i - 1);
   const pad = 8;
@@ -175,14 +178,14 @@ export function Coachmark({ steps, go, onDone, startAt = 0, onStepChange }: { st
     <div className="coach-layer">
       <div className="coach-spot" style={spotStyle} />
       <div className="coach-pop" style={{ top: popTop, left: popLeft }}>
-        <div className="coach-pop-eyebrow">Passo {i + 1} de {steps.length}</div>
-        <div className="coach-pop-t">{ct(step.t)}</div>
-        <div className="coach-pop-s">{ct(step.s)}</div>
+        <div className="coach-pop-eyebrow">{traduzirUi("Passo {atual} de {total}", { atual: String(i + 1), total: String(steps.length) })}</div>
+        <div className="coach-pop-t">{textoPasso.t}</div>
+        <div className="coach-pop-s">{textoPasso.s}</div>
         <div className="coach-pop-actions">
-          <Botao variante="discreto" compacto onClick={onDone}>Pular tour</Botao>
+          <Botao variante="discreto" compacto onClick={onDone}>{traduzirUi("Pular tour")}</Botao>
           <div style={{ flex: 1 }} />
-          {i > 0 ? <Botao compacto onClick={prev}>Voltar</Botao> : null}
-          <Botao variante="principal" compacto onClick={next}>{i < steps.length - 1 ? "Próximo →" : "Concluir"}</Botao>
+          {i > 0 ? <Botao compacto onClick={prev}>{traduzirUi("Voltar")}</Botao> : null}
+          <Botao variante="principal" compacto onClick={next}>{i < steps.length - 1 ? traduzirUi("Próximo →") : traduzirUi("Concluir")}</Botao>
         </div>
       </div>
     </div>
@@ -194,6 +197,7 @@ export function Coachmark({ steps, go, onDone, startAt = 0, onStepChange }: { st
 /* lugar: "flutuante" (computador, canto de baixo) ou "barra" (celular, na barra
    do topo, para não cobrir o conteúdo; v7 2.11). O CSS mostra um ou outro. */
 export function HelpFab({ onTour, onSetup, lugar = "flutuante" }: { onTour: () => void; onSetup?: () => void; lugar?: "flutuante" | "barra" }) {
+  const traduzirUi = useTexto();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -207,11 +211,11 @@ export function HelpFab({ onTour, onSetup, lugar = "flutuante" }: { onTour: () =
     <div className={`help-fab-wrap ${lugar === "barra" ? "na-barra" : "flutuante"}`} ref={ref}>
       {open ? (
         <div className="help-fab-menu">
-          <Acao onClick={() => { setOpen(false); onTour(); }}><Icon name="pendente" size={14} className="ic" /> Rever o tour guiado</Acao>
-          {onSetup && <Acao onClick={() => { setOpen(false); onSetup(); }}><Icon name="identidade" size={14} className="ic" /> Ver o que falta configurar</Acao>}
+          <Acao onClick={() => { setOpen(false); onTour(); }}><Icon name="pendente" size={14} className="ic" /> {traduzirUi("Rever o tour guiado")}</Acao>
+          {onSetup && <Acao onClick={() => { setOpen(false); onSetup(); }}><Icon name="identidade" size={14} className="ic" /> {traduzirUi("Ver o que falta configurar")}</Acao>}
         </div>
       ) : null}
-      <Acao className="help-fab" data-tour={lugar === "barra" ? undefined : "ajuda-fab"} title="Ajuda" aria-label="Ajuda" aria-expanded={open} onClick={() => setOpen((o) => !o)}>?</Acao>
+      <Acao className="help-fab" data-tour={lugar === "barra" ? undefined : "ajuda-fab"} title={traduzirUi("Ajuda")} aria-label={traduzirUi("Ajuda")} aria-expanded={open} onClick={() => setOpen((o) => !o)}>?</Acao>
     </div>
   );
 }
@@ -220,22 +224,22 @@ export function HelpFab({ onTour, onSetup, lugar = "flutuante" }: { onTour: () =
 
 export type SetupCounts = { igreja: string; times: number; cultos: number; membros: number; escalados: number };
 
-type SetupItem = { id: string; ic: string; t: string; s: string; done: (base: SetupCounts, atual: SetupCounts) => boolean; route: string };
+type SetupItem = { id: string; ic: string; texto: (traduzirUi: Text) => { t: string; s: string }; done: (base: SetupCounts, atual: SetupCounts) => boolean; route: string };
 
 const SETUP_ITENS: SetupItem[] = [
   /* lê os dados de verdade: o item fica feito quando a igreja já tem aquilo */
-  { id: "igreja", ic: "identidade", t: "Dados da igreja", s: "Nome, cidade e endereço aparecem no login e nas publicações.", done: (_b, a) => a.igreja.split("|").every(Boolean), route: "config" },
-  { id: "time", ic: "times", t: "Primeiro time", s: "Louvor, Recepção, Kids... cada time tem líder e funções.", done: (_b, a) => a.times > 0, route: "times" },
-  { id: "culto", ic: "cultos", t: "Primeiro {culto}", s: "O {culto} vira uma linha na agenda e depois uma escala.", done: (_b, a) => a.cultos > 0, route: "cultos" },
-  { id: "membro", ic: "membros", t: "Primeiro membro", s: "A congregação inteira entra aqui, sirva ou não em um time.", done: (_b, a) => a.membros > 1, route: "membros" },
-  { id: "escala", ic: "escalas", t: "Primeira escala", s: "Coloque alguém pra servir num {culto} e veja a confirmação chegar.", done: (_b, a) => a.escalados > 0, route: "escalas" },
+  { id: "igreja", ic: "identidade", texto: (traduzirUi) => ({ t: traduzirUi("Dados da igreja"), s: traduzirUi("Nome, cidade e endereço aparecem no login e nas publicações.") }), done: (_b, a) => a.igreja.split("|").every(Boolean), route: "config" },
+  { id: "time", ic: "times", texto: (traduzirUi) => ({ t: traduzirUi("Primeiro time"), s: traduzirUi("Louvor, Recepção, Kids... cada time tem líder e funções.") }), done: (_b, a) => a.times > 0, route: "times" },
+  { id: "culto", ic: "cultos", texto: (traduzirUi) => ({ t: traduzirUi("Primeiro {culto}"), s: traduzirUi("O {culto} vira uma linha na agenda e depois uma escala.") }), done: (_b, a) => a.cultos > 0, route: "cultos" },
+  { id: "membro", ic: "membros", texto: (traduzirUi) => ({ t: traduzirUi("Primeiro membro"), s: traduzirUi("A congregação inteira entra aqui, sirva ou não em um time.") }), done: (_b, a) => a.membros > 1, route: "membros" },
+  { id: "escala", ic: "escalas", texto: (traduzirUi) => ({ t: traduzirUi("Primeira escala"), s: traduzirUi("Coloque alguém pra servir num {culto} e veja a confirmação chegar.") }), done: (_b, a) => a.escalados > 0, route: "escalas" },
 ];
 
 const BASELINE_KEY = "cex_setup_baseline";
 const HIDE_KEY = "cex_setup_hide";
 
 export function SetupChecklist({ counts, setRoute }: { counts: SetupCounts; setRoute: (route: string) => void }) {
-  const { comTermos: ct } = useTermos();
+  const traduzirUi = useTexto();
   /* hidden/baseline nascem com valor neutro (igual no servidor e no cliente,
      antes da hidratação) e só recebem o que está salvo no localStorage
      depois, num useEffect — ler localStorage direto no useState causava
@@ -276,29 +280,30 @@ export function SetupChecklist({ counts, setRoute }: { counts: SetupCounts; setR
   return (
     <>
     <Acao className="setup-line" onClick={() => proximo && setRoute(proximo.route)}>
-      <span>Configuração <b>{done.length} de {SETUP_ITENS.length}</b></span>
-      <span className="setup-line-go">Continuar →</span>
+      <span>{traduzirUi.rich("Configuração <b>{feitos} de {total}</b>", { b: (chunks) => <b>{chunks}</b>, feitos: String(done.length), total: String(SETUP_ITENS.length) })}</span>
+      <span className="setup-line-go">{traduzirUi("Continuar →")}</span>
     </Acao>
     <div className="setup-card">
       <div className="setup-head">
         <div>
           <div className="setup-eyebrow">
-            Configuração inicial
-            <HelpDot text="Um checklist básico pra deixar sua igreja rodando. Cada item leva pra tela de verdade, pode fazer na ordem que quiser." />
+            {traduzirUi("Configuração inicial")}
+            <HelpDot text={traduzirUi("Um checklist básico pra deixar sua igreja rodando. Cada item leva pra tela de verdade, pode fazer na ordem que quiser.")} />
           </div>
-          <div className="setup-title">Falta pouco pra sua igreja estar pronta</div>
+          <div className="setup-title">{traduzirUi("Falta pouco pra sua igreja estar pronta")}</div>
         </div>
-        <BotaoIcone className="setup-close" onClick={hide} title="Esconder por agora" rotulo="Esconder por agora">✕</BotaoIcone>
+        <BotaoIcone className="setup-close" onClick={hide} title={traduzirUi("Esconder por agora")} rotulo={traduzirUi("Esconder por agora")}>✕</BotaoIcone>
       </div>
       <div className="setup-bar"><div className="setup-bar-fill" style={{ transform: `translateX(${pct - 100}%)` }} /></div>
       <div className="setup-list">
         {SETUP_ITENS.map((it) => {
           const ok = it.done(baseline, counts);
+          const textoItem = it.texto(traduzirUi);
           return (
             <Acao key={it.id} className={`setup-item${ok ? " ok" : ""}`} onClick={() => !ok && setRoute(it.route)}>
               <span className="setup-item-check">{ok ? <Icon name="ok" size={14} /> : <Icon name={it.ic} size={14} />}</span>
-              <span className="setup-item-main"><b>{ct(it.t)}</b><small>{ct(it.s)}</small></span>
-              {!ok ? <span className="setup-item-go">Fazer →</span> : null}
+              <span className="setup-item-main"><b>{textoItem.t}</b><small>{textoItem.s}</small></span>
+              {!ok ? <span className="setup-item-go">{traduzirUi("Fazer →")}</span> : null}
             </Acao>
           );
         })}

@@ -5,6 +5,8 @@ import { useTermos } from "./lib/vocabulario-context";
 
 import { Opcao } from "./ui/Opcao";
 import { Selecao } from "./ui/Selecao";
+import { useTexto } from "./lib/internacional/contexto";
+
 /* subtítulo em cinza médio (texto secundário do Brand Book 3.2): o título da
    seção fica com quem usa o editor, estes só agrupam as opções */
 const SUBLABEL = { color: "var(--muted)", fontWeight: 500 } as const;
@@ -25,6 +27,8 @@ export default function RequisitosEditor({
   events: { id: string; name: string; eventDate?: string }[];
   groupsLabel?: string;
 }) {
+  const traduzirUi = useTexto();
+
   const { comTermos: ct } = useTermos();
   const has = (kind: Requirement["kind"], ref: string) => value.some((r) => r.kind === kind && r.ref === ref);
   const toggle = (kind: Requirement["kind"], ref: string) =>
@@ -35,7 +39,7 @@ export default function RequisitosEditor({
   return (
     <div style={{ display: "grid", gap: 14 }}>
       <div>
-        <div className="field-label" style={SUBLABEL}>{ct("Etapas da {caminhada}")}</div>
+        <div className="field-label" style={SUBLABEL}>{traduzirUi("Etapas da {caminhada}")}</div>
         <div className="seg-check">
           {JOURNEY_REQ_STEPS.map((s) => (
             <Opcao key={s.ref} marcada={has("journey", s.ref)} estilo="seg-chip" onClick={() => toggle("journey", s.ref)}>
@@ -47,7 +51,7 @@ export default function RequisitosEditor({
 
       {courses.length > 0 && (
         <div>
-          <div className="field-label" style={SUBLABEL}>Cursos concluídos</div>
+          <div className="field-label" style={SUBLABEL}>{traduzirUi("Cursos concluídos")}</div>
           <div className="seg-check">
             {courses.map((c) => (
               <Opcao key={c.id} marcada={has("course", c.id)} estilo="seg-chip" onClick={() => toggle("course", c.id)}>
@@ -60,11 +64,11 @@ export default function RequisitosEditor({
 
       {events.length > 0 && (
         <div>
-          <div className="field-label" style={SUBLABEL}>Participou do evento (pelo check-in)</div>
+          <div className="field-label" style={SUBLABEL}>{traduzirUi("Participou do evento (pelo check-in)")}</div>
           {chosenEvents.length > 0 && (
             <div className="seg-check" style={{ marginBottom: 8 }}>
               {chosenEvents.map((r) => (
-                <Opcao key={r.ref} marcada estilo="seg-chip" onClick={() => toggle("event", r.ref)} title="Remover">
+                <Opcao key={r.ref} marcada estilo="seg-chip" onClick={() => toggle("event", r.ref)} title={traduzirUi("Remover")}>
                   {ct(requirementLabel(r, { courses, events }).replace(/^Participou: /, ""))} ×
                 </Opcao>
               ))}
@@ -72,17 +76,17 @@ export default function RequisitosEditor({
           )}
           {openEvents.length > 0 && (
             <Selecao
-              rotulo="Adicionar evento"
+              rotulo={traduzirUi("Adicionar evento")}
               valor=""
               aoMudar={(v) => v && toggle("event", v)}
-              vazio="Adicionar evento..."
+              vazio={traduzirUi("Adicionar evento...")}
               opcoes={openEvents.map((e) => ({ v: e.id, l: e.eventDate ? `${e.name} · ${e.eventDate}` : e.name }))}
             />
           )}
         </div>
       )}
 
-      {value.length === 0 && <div style={{ fontSize: "var(--fs-ui-sm)", color: "var(--muted)" }}>Sem pré-requisito: qualquer membro pode.</div>}
+      {value.length === 0 && <div style={{ fontSize: "var(--fs-ui-sm)", color: "var(--muted)" }}>{traduzirUi("Sem pré-requisito: qualquer membro pode.")}</div>}
     </div>
   );
 }

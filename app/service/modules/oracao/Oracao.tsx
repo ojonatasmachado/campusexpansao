@@ -9,7 +9,6 @@
 
 import { useId, useState } from "react";
 import { Icon } from "../../lib/icons";
-import { plural } from "../../lib/plural";
 import { useRelogioDaIgreja } from "../../lib/relogio-context";
 import { useRascunho } from "../../lib/retorno";
 
@@ -26,6 +25,8 @@ import { Linha, Lista } from "../../ui/Linha";
 import { Cartao } from "../../ui/Cartao";
 import { Selo } from "../../ui/Selo";
 import { Carregando } from "../../ui/Estados";
+import { useTexto } from "../../lib/internacional/contexto";
+
 type Toast = (msg: string, action?: { label: string; fn: () => void }) => void;
 
 // ── o pedido ─────────────────────────────────────────────────────────────────
@@ -40,6 +41,8 @@ export function SheetPedidoOracao({ organizationId, memberId, dest, muralOn, onS
   onVerMural: () => void;
   inicial?: Publico;
 }) {
+  const traduzirUi = useTexto();
+
   const fid = useId();
   const podeIntercessao = !!dest && !!onStartChat;
   /* M3: o pedido em escrita volta na recarga (sessionStorage, some na saída da conta) */
@@ -61,16 +64,16 @@ export function SheetPedidoOracao({ organizationId, memberId, dest, muralOn, onS
     return (
       <div className="m6-donesh">
         <span className="m6-dot feito big"><Icon name="ok" size={28} /></span>
-        <h2 className="m6-sh">{feito.publico === "mural" ? "Seu pedido está no mural" : "Pedido enviado"}</h2>
+        <h2 className="m6-sh">{feito.publico === "mural" ? traduzirUi("Seu pedido está no mural") : traduzirUi("Pedido enviado")}</h2>
         <p className="m6-txt">
           {feito.publico === "mural"
-            ? "A igreja já pode orar com você. Quando Deus responder, conte no mural."
-            : `${nome} recebeu e vai orar por você. A conversa fica em Mensagens.`}
+            ? traduzirUi("A igreja já pode orar com você. Quando Deus responder, conte no mural.")
+            : traduzirUi("{nome} recebeu e vai orar por você. A conversa fica em Mensagens.", { nome })}
         </p>
         <div className="m6-btns">
           {feito.publico === "mural"
-            ? <Botao tamanho="toque" variante="principal" onClick={onVerMural}>Ver o mural</Botao>
-            : feito.chatId && <Botao tamanho="toque" variante="principal" onClick={() => onVerConversa(feito.chatId as string)}>Ver em Mensagens</Botao>}
+            ? <Botao tamanho="toque" variante="principal" onClick={onVerMural}>{traduzirUi("Ver o mural")}</Botao>
+            : feito.chatId && <Botao tamanho="toque" variante="principal" onClick={() => onVerConversa(feito.chatId as string)}>{traduzirUi("Ver em Mensagens")}</Botao>}
         </div>
       </div>
     );
@@ -87,21 +90,21 @@ export function SheetPedidoOracao({ organizationId, memberId, dest, muralOn, onS
       void pedirOracao(organizationId, { body, audience: "intercessao", anonymous: false, category: categoria ?? "outro" });
       const id = await onStartChat(memberId, dest.member_id, `Pedido de oração: ${body}`);
       setEnviando(false);
-      if (id) { limparRascunho(); setFeito({ publico, chatId: id }); } else setErro("Não foi possível enviar agora. Tente de novo.");
+      if (id) { limparRascunho(); setFeito({ publico, chatId: id }); } else setErro(traduzirUi("Não foi possível enviar agora. Tente de novo."));
       return;
     }
     const r = await pedirOracao(organizationId, { body, audience: "mural", anonymous: anonimo, category: categoria ?? "outro" });
     setEnviando(false);
-    if (r.id) { limparRascunho(); setFeito({ publico, chatId: null }); } else setErro(r.erro ?? "Não foi possível enviar agora. Tente de novo.");
+    if (r.id) { limparRascunho(); setFeito({ publico, chatId: null }); } else setErro(r.erro ?? traduzirUi("Não foi possível enviar agora. Tente de novo."));
   };
 
   return (
     <div className="or-sheet">
-      <h2 className="m6-sh">Pedido de oração</h2>
-      <textarea className="m6-ta" value={txt} maxLength={LIMITE_PEDIDO} onChange={(e) => setTxt(e.target.value)} placeholder="Pelo que podemos orar?" aria-label="Pedido de oração" />
-      {txt.length > LIMITE_PEDIDO - 100 && <div className="m6-meta or-conta">{`${LIMITE_PEDIDO - txt.length} caracteres restantes`}</div>}
+      <h2 className="m6-sh">{traduzirUi("Pedido de oração")}</h2>
+      <textarea className="m6-ta" value={txt} maxLength={LIMITE_PEDIDO} onChange={(e) => setTxt(e.target.value)} placeholder={traduzirUi("Pelo que podemos orar?")} aria-label={traduzirUi("Pedido de oração")} />
+      {txt.length > LIMITE_PEDIDO - 100 && <div className="m6-meta or-conta">{traduzirUi("{n} caracteres restantes", { n: String(LIMITE_PEDIDO - txt.length) })}</div>}
 
-      <div className="or-campo" id={`${fid}-cat`}>Sobre o quê</div>
+      <div className="or-campo" id={`${fid}-cat`}>{traduzirUi("Sobre o quê")}</div>
       <div className="or-chips" role="group" aria-labelledby={`${fid}-cat`}>
         {CATEGORIAS.map((c) => (
           <Opcao key={c.id} marcada={categoria === c.id} estilo="or-chip" aria-pressed={categoria === c.id} onClick={() => setCategoria(categoria === c.id ? null : c.id)}>{c.rotulo}</Opcao>
@@ -110,11 +113,11 @@ export function SheetPedidoOracao({ organizationId, memberId, dest, muralOn, onS
 
       {podeIntercessao && muralOn && (
         <>
-          <div className="or-campo" id={`${fid}-pub`}>Quem vê</div>
+          <div className="or-campo" id={`${fid}-pub`}>{traduzirUi("Quem vê")}</div>
           <Lista plano role="radiogroup" aria-labelledby={`${fid}-pub`}>
             {([
-              ["intercessao", "Só a intercessão", `Vai para ${papelDoDestinatario(dest as Destinatario)}, numa conversa.`],
-              ["mural", "Mural de oração", "A igreja vê e pode orar com você."],
+              ["intercessao", traduzirUi("Só a intercessão"), traduzirUi("Vai para {destino}, numa conversa.", { destino: papelDoDestinatario(dest as Destinatario) })],
+              ["mural", traduzirUi("Mural de oração"), traduzirUi("A igreja vê e pode orar com você.")],
             ] as const).map(([v, t, s]) => (
               <Opcao key={v} role="radio" aria-checked={publico === v} marcada={publico === v} estilo="m6-row" className="or-opt" onClick={() => setPublico(v)}>
                 <span className="or-radio" aria-hidden="true" />
@@ -124,13 +127,13 @@ export function SheetPedidoOracao({ organizationId, memberId, dest, muralOn, onS
           </Lista>
         </>
       )}
-      {!podeIntercessao && <div className="m6-meta or-nota">Seu pedido vai para o mural de oração da igreja.</div>}
-      {podeIntercessao && !muralOn && <div className="m6-meta or-nota">{`Vai para ${papelDoDestinatario(dest as Destinatario)}. Só essa pessoa lê.`}</div>}
+      {!podeIntercessao && <div className="m6-meta or-nota">{traduzirUi("Seu pedido vai para o mural de oração da igreja.")}</div>}
+      {podeIntercessao && !muralOn && <div className="m6-meta or-nota">{traduzirUi("Vai para {destino}. Só essa pessoa lê.", { destino: papelDoDestinatario(dest as Destinatario) })}</div>}
 
       {publico === "mural" && (
         <Lista plano>
           <Linha estilo="app" className="or-sw">
-            <span className="m6-rb"><span className="m6-rt" id={`${fid}-anon`}>Pedir sem meu nome</span><span className="m6-rs">Só quem cuida da intercessão sabe que foi você.</span></span>
+            <span className="m6-rb"><span className="m6-rt" id={`${fid}-anon`}>{traduzirUi("Pedir sem meu nome")}</span><span className="m6-rs">{traduzirUi("Só quem cuida da intercessão sabe que foi você.")}</span></span>
             <Interruptor ligado={anonimo} tamanho="toque" rotuloId={`${fid}-anon`} onClick={() => setAnonimo(!anonimo)} />
           </Linha>
         </Lista>
@@ -139,7 +142,7 @@ export function SheetPedidoOracao({ organizationId, memberId, dest, muralOn, onS
       {erro && <div className="m6-err" role="alert">{erro}</div>}
       <div className="m6-btns">
         <Botao tamanho="toque" variante="principal" desativado={!txt.trim() || enviando} onClick={enviar}>
-          {enviando ? "Enviando..." : publico === "mural" ? "Publicar no mural" : "Enviar pedido"}
+          {enviando ? traduzirUi("Enviando...") : publico === "mural" ? traduzirUi("Publicar no mural") : traduzirUi("Enviar pedido")}
         </Botao>
       </div>
     </div>
@@ -150,25 +153,27 @@ export function SheetPedidoOracao({ organizationId, memberId, dest, muralOn, onS
 export function SheetRespondido({ organizationId, pedido, onFechar, toast, onMudou }: {
   organizationId?: string; pedido: PedidoMural; onFechar: () => void; toast: Toast; onMudou: () => void;
 }) {
+  const traduzirUi = useTexto();
+
   const [txt, setTxt] = useState(pedido.testimony ?? "");
   const [salvando, setSalvando] = useState(false);
   const jaRespondido = !!pedido.answered_at;
   return (
     <div className="or-sheet">
-      <h2 className="m6-sh">{jaRespondido ? "Seu testemunho" : "Deus respondeu?"}</h2>
-      <p className="m6-meta">Se quiser, conte em poucas palavras o que aconteceu. Quem orou com você vai se alegrar junto.</p>
-      <textarea className="m6-ta" value={txt} maxLength={LIMITE_TESTEMUNHO} onChange={(e) => setTxt(e.target.value)} placeholder="O que Deus fez (opcional)" aria-label="Testemunho" />
-      {txt.length > LIMITE_TESTEMUNHO - 80 && <div className="m6-meta or-conta">{`${LIMITE_TESTEMUNHO - txt.length} caracteres restantes`}</div>}
+      <h2 className="m6-sh">{jaRespondido ? traduzirUi("Seu testemunho") : traduzirUi("Deus respondeu?")}</h2>
+      <p className="m6-meta">{traduzirUi("Se quiser, conte em poucas palavras o que aconteceu. Quem orou com você vai se alegrar junto.")}</p>
+      <textarea className="m6-ta" value={txt} maxLength={LIMITE_TESTEMUNHO} onChange={(e) => setTxt(e.target.value)} placeholder={traduzirUi("O que Deus fez (opcional)")} aria-label={traduzirUi("Testemunho")} />
+      {txt.length > LIMITE_TESTEMUNHO - 80 && <div className="m6-meta or-conta">{traduzirUi("{n} caracteres restantes", { n: String(LIMITE_TESTEMUNHO - txt.length) })}</div>}
       <div className="m6-btns col">
         <Botao tamanho="toque" variante="principal" desativado={salvando} onClick={async () => {
           setSalvando(true);
           const ok = await marcarRespondido(organizationId, pedido.id, true, txt);
           setSalvando(false);
-          if (!ok) { toast("Não foi possível salvar agora. Tente de novo."); return; }
+          if (!ok) { toast(traduzirUi("Não foi possível salvar agora. Tente de novo.")); return; }
           onFechar();
           onMudou();
-          if (!jaRespondido) toast("Marcado como respondido.", { label: "Desfazer", fn: async () => { await marcarRespondido(organizationId, pedido.id, false); onMudou(); } });
-        }}>{salvando ? "Salvando..." : jaRespondido ? "Salvar" : "Marcar como respondido"}</Botao>
+          if (!jaRespondido) toast(traduzirUi("Marcado como respondido."), { label: traduzirUi("Desfazer"), fn: async () => { await marcarRespondido(organizationId, pedido.id, false); onMudou(); } });
+        }}>{salvando ? traduzirUi("Salvando...") : jaRespondido ? traduzirUi("Salvar") : traduzirUi("Marcar como respondido")}</Botao>
       </div>
     </div>
   );
@@ -184,6 +189,8 @@ export function MuralOracao({ organizationId, onPedir, sheet, toast }: {
   sheet: (el: React.ReactNode | null) => void;
   toast: Toast;
 }) {
+  const traduzirUi = useTexto();
+
   const { quandoPublicado } = useRelogioDaIgreja();
   const { dados, erro, recarregar } = useMuralOracao(organizationId);
   const [aba, setAba] = useState<Aba>("igreja");
@@ -198,32 +205,32 @@ export function MuralOracao({ organizationId, onPedir, sheet, toast }: {
   const marcarOrei = async (p: PedidoMural, on: boolean) => {
     setOreiAgora((o) => ({ ...o, [p.id]: on }));
     const ok = await orar(organizationId, p.id, on);
-    if (!ok) { setOreiAgora((o) => { const n = { ...o }; delete n[p.id]; return n; }); toast("Não foi possível marcar agora. Tente de novo."); return; }
-    if (on) toast("Obrigado por orar.", { label: "Desfazer", fn: () => void marcarOrei(p, false) });
+    if (!ok) { setOreiAgora((o) => { const n = { ...o }; delete n[p.id]; return n; }); toast(traduzirUi("Não foi possível marcar agora. Tente de novo.")); return; }
+    if (on) toast(traduzirUi("Obrigado por orar."), { label: traduzirUi("Desfazer"), fn: () => void marcarOrei(p, false) });
   };
   const tirar = async (p: PedidoMural) => {
     const ok = await tirarDoMural(organizationId, p.id, true);
-    if (!ok) { toast("Não foi possível tirar agora. Tente de novo."); return; }
+    if (!ok) { toast(traduzirUi("Não foi possível tirar agora. Tente de novo.")); return; }
     void recarregar();
-    toast("Pedido tirado do mural.", { label: "Desfazer", fn: async () => { await tirarDoMural(organizationId, p.id, false); void recarregar(); } });
+    toast(traduzirUi("Pedido tirado do mural."), { label: traduzirUi("Desfazer"), fn: async () => { await tirarDoMural(organizationId, p.id, false); void recarregar(); } });
   };
 
   const vazio = {
-    igreja: ["Nenhum pedido no mural agora", "Quando alguém da igreja pedir oração, o pedido aparece aqui para você orar junto."],
-    meus: ["Você ainda não fez um pedido", "Seus pedidos ficam aqui, com quantas pessoas oraram por você."],
-    respondidos: ["Nenhuma resposta contada ainda", "Quando alguém contar o que Deus fez, o testemunho aparece aqui."],
+    igreja: [traduzirUi("Nenhum pedido no mural agora"), traduzirUi("Quando alguém da igreja pedir oração, o pedido aparece aqui para você orar junto.")],
+    meus: [traduzirUi("Você ainda não fez um pedido"), traduzirUi("Seus pedidos ficam aqui, com quantas pessoas oraram por você.")],
+    respondidos: [traduzirUi("Nenhuma resposta contada ainda"), traduzirUi("Quando alguém contar o que Deus fez, o testemunho aparece aqui.")],
   }[aba];
 
   return (
     <div className="or-tela">
       {onPedir && (
         <div className="m6-pad or-pedir">
-          <Botao tamanho="toque" variante="principal" largo onClick={onPedir}><Icon name="add" size={20} />Fazer um pedido</Botao>
+          <Botao tamanho="toque" variante="principal" largo onClick={onPedir}><Icon name="add" size={20} />{traduzirUi("Fazer um pedido")}</Botao>
         </div>
       )}
       <div className="m6-segwrap">
-        <div className="ts-seg m6-seg" role="radiogroup" aria-label="O que ver">
-          {([["igreja", "Da igreja"], ["meus", "Meus"], ["respondidos", "Respostas"]] as const).map(([v, l]) => (
+        <div className="ts-seg m6-seg" role="radiogroup" aria-label={traduzirUi("O que ver")}>
+          {([["igreja", traduzirUi("Da igreja")], ["meus", traduzirUi("Meus")], ["respondidos", traduzirUi("Respostas")]] as const).map(([v, l]) => (
             <Opcao key={v} role="radio" aria-checked={aba === v} marcada={aba === v} onClick={() => setAba(v)}>{l}</Opcao>
           ))}
         </div>
@@ -233,9 +240,9 @@ export function MuralOracao({ organizationId, onPedir, sheet, toast }: {
         {dados === null && !erro && <Carregando forma="lista" />}
         {erro && (
           <Cartao estilo="app">
-            <div className="m6-ct">Não deu para abrir o mural</div>
-            <div className="m6-meta">Confira a internet e tente de novo.</div>
-            <div className="m6-btns"><Botao tamanho="toque" onClick={() => void recarregar()}>Tentar de novo</Botao></div>
+            <div className="m6-ct">{traduzirUi("Não deu para abrir o mural")}</div>
+            <div className="m6-meta">{traduzirUi("Confira a internet e tente de novo.")}</div>
+            <div className="m6-btns"><Botao tamanho="toque" onClick={() => void recarregar()}>{traduzirUi("Tentar de novo")}</Botao></div>
           </Cartao>
         )}
         {dados !== null && visiveis.length === 0 && (
@@ -251,33 +258,33 @@ export function MuralOracao({ organizationId, onPedir, sheet, toast }: {
                 <span className="or-cat">{rotuloCategoria(p.category)}</span>
                 <span className="or-quando">{quandoPublicado(p.created_at)}</span>
               </div>
-              <div className="or-quem">{p.is_mine ? (p.anonymous ? "Você, sem seu nome no mural" : "Você") : p.author ?? "Pedido sem nome"}</div>
+              <div className="or-quem">{p.is_mine ? (p.anonymous ? traduzirUi("Você, sem seu nome no mural") : traduzirUi("Você")) : p.author ?? traduzirUi("Pedido sem nome")}</div>
               <p className="m6-txt or-txt">{p.body}</p>
               {p.answered_at && (
                 <div className="or-resp">
-                  <Selo tamanho="toque" tom="ok"><Icon name="ok" size={16} />Respondido</Selo>
+                  <Selo tamanho="toque" tom="ok"><Icon name="ok" size={16} />{traduzirUi("Respondido")}</Selo>
                   {p.testimony && <p className="or-test">{p.testimony}</p>}
                 </div>
               )}
               {p.is_mine ? (
                 <>
                   <div className="m6-meta or-info">
-                    {p.audience === "intercessao" ? "Só a intercessão vê este pedido."
-                      : p.hidden ? "A intercessão tirou este pedido do mural e continua orando por você."
-                      : n > 0 ? `${plural(n, "pessoa orou", "pessoas oraram")} por você.`
-                      : "Assim que alguém orar, aparece aqui."}
+                    {p.audience === "intercessao" ? traduzirUi("Só a intercessão vê este pedido.")
+                      : p.hidden ? traduzirUi("A intercessão tirou este pedido do mural e continua orando por você.")
+                      : n > 0 ? traduzirUi("{count, plural, =1 {# pessoa orou} other {# pessoas oraram}} por você.", { count: n })
+                      : traduzirUi("Assim que alguém orar, aparece aqui.")}
                   </div>
                   <div className="m6-btns">
                     <Botao tamanho="toque" compacto onClick={() => sheet(<SheetRespondido organizationId={organizationId} pedido={p} onFechar={() => sheet(null)} toast={toast} onMudou={() => void recarregar()} />)}>
-                      {p.answered_at ? "Editar testemunho" : "Deus respondeu"}
+                      {p.answered_at ? traduzirUi("Editar testemunho") : traduzirUi("Deus respondeu")}
                     </Botao>
-                    {p.audience === "mural" && !p.hidden && <Botao tamanho="toque" compacto onClick={() => void tirar(p)}>Tirar do mural</Botao>}
+                    {p.audience === "mural" && !p.hidden && <Botao tamanho="toque" compacto onClick={() => void tirar(p)}>{traduzirUi("Tirar do mural")}</Botao>}
                   </div>
                 </>
               ) : !p.answered_at && (
                 <div className="m6-btns">
                   <Botao tamanho="toque" variante="discreto" compacto className={`or-orei${orei ? " on" : ""}`} aria-pressed={orei} onClick={() => void marcarOrei(p, !orei)}>
-                    <Icon name={orei ? "ok" : "oracao"} size={18} />{orei ? "Você orou" : "Orei"}
+                    <Icon name={orei ? "ok" : "oracao"} size={18} />{orei ? traduzirUi("Você orou") : traduzirUi("Orei")}
                   </Botao>
                 </div>
               )}

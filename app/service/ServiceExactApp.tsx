@@ -71,6 +71,7 @@ import { Botao, BotaoIcone } from "./ui/Botao";
 import { Acao } from "./ui/Acao";
 import { Cartao } from "./ui/Cartao";
 import { entrarComDirecao } from "./ui/movimento";
+import type { Text } from "./lib/internacional/mensagens";
 export type * from "./painel/tipos";
 
 /* papel e permissão de cada tela : regra no registro de módulos (modules/registry.ts) */
@@ -78,7 +79,7 @@ const podeVerNav = podeVerRota;
 /* telas fora do menu (atalhos internos) herdam o grupo declarado no manifesto */
 const ROUTE_GROUP: Record<string, string> = ROTA_GRUPO;
 
-const ROLE_LABEL: Record<string, string> = { master: "Pastor master", pastor: "Pastor", lider: "Líder", membro: "Membro" };
+const rotulosDoPapel = (traduzirUi: Text): Record<string, string> => ({ master: traduzirUi("Pastor master"), pastor: traduzirUi("Pastor"), lider: traduzirUi("Líder"), membro: traduzirUi("Membro") });
 
 /* Marca do app: sempre ChurchLockup (logo da igreja | Service). */
 function IgrejaLogo({ logoUrl, nome }: { logoUrl?: string | null; nome?: string }) {
@@ -86,6 +87,7 @@ function IgrejaLogo({ logoUrl, nome }: { logoUrl?: string | null; nome?: string 
 }
 
 function CongSwitcher({ churches, activeId, setActiveId }: { churches: ChurchView[]; activeId: string; setActiveId: (id: string) => void }) {
+  const traduzirUi = useTexto();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const active = churches.find((c) => c.id === activeId) ?? churches[0];
@@ -104,8 +106,8 @@ function CongSwitcher({ churches, activeId, setActiveId }: { churches: ChurchVie
   const marca = <span className="cong-mark"><Icon name={active?.matriz ? "identidade" : "globo"} size={16} /></span>;
   const info = (
     <span className="cong-info">
-      <span className="cong-name">{active?.nome ?? "Sua igreja"}</span>
-      <span className="cong-role">{active?.matriz ? (unica ? "Matriz" : "Matriz · rede") : "Congregação"}</span>
+      <span className="cong-name">{active?.nome ?? traduzirUi("Sua igreja")}</span>
+      <span className="cong-role">{active?.matriz ? (unica ? traduzirUi("Matriz") : traduzirUi("Matriz · rede")) : traduzirUi("Congregação")}</span>
     </span>
   );
   if (unica) return <div className="cong"><div className="cong-btn static">{marca}{info}</div></div>;
@@ -118,7 +120,7 @@ function CongSwitcher({ churches, activeId, setActiveId }: { churches: ChurchVie
       </Acao>
       {open && churches.length > 1 && (
         <div className="cong-menu">
-          <div className="cong-group">Matriz</div>
+          <div className="cong-group">{traduzirUi("Matriz")}</div>
           {churches.filter((c) => c.matriz).map((c) => (
             <Acao key={c.id} className={`cong-opt ${c.id === activeId ? "on" : ""}`}
               onClick={() => { setActiveId(c.id); setOpen(false); }}>
@@ -133,7 +135,7 @@ function CongSwitcher({ churches, activeId, setActiveId }: { churches: ChurchVie
           ))}
           {churches.some((c) => !c.matriz) && (
             <>
-              <div className="cong-group">Congregações</div>
+              <div className="cong-group">{traduzirUi("Congregações")}</div>
               {churches.filter((c) => !c.matriz).map((c) => (
                 <Acao key={c.id} className={`cong-opt ${c.id === activeId ? "on" : ""}`}
                   onClick={() => { setActiveId(c.id); setOpen(false); }}>
@@ -926,7 +928,7 @@ export default function ServiceExactApp({
       <aside className={`sb${navOpen ? " open" : ""}`}>
         <div className="sb-top">
           <IgrejaLogo logoUrl={(churches.find((c) => c.matriz) ?? firstChurch)?.logoUrl} nome={(churches.find((c) => c.matriz) ?? firstChurch)?.nome} />
-          <BotaoIcone className="sb-close" onClick={() => setNavOpen(false)} rotulo="Fechar menu">✕</BotaoIcone>
+          <BotaoIcone className="sb-close" onClick={() => setNavOpen(false)} rotulo={textoDeErro("Fechar menu")}>✕</BotaoIcone>
         </div>
         {churches.length > 1 && <CongSwitcher churches={churches} activeId={activeChurchId} setActiveId={setActiveChurchId} />}
         <nav className="sb-nav">
@@ -954,11 +956,11 @@ export default function ServiceExactApp({
             return (
               <div className={`sb-sec sb-mais${aberto ? "" : " closed"}`}>
                 <Acao className="sb-group sb-group-btn" aria-expanded={aberto} onClick={() => setMaisAberto((v) => !v)}>
-                  Mais<Caret open={aberto} size={13} />
+                  {textoDeErro("Mais")}<Caret open={aberto} size={13} />
                 </Acao>
                 {aberto && grupos.map((g) => (
                   <details className="sb-mais-grupo" name="service-mais-grupo" key={g.group} open={g.items.some((i) => i.id === route)}>
-                    <summary className="sb-link" aria-label={`Mais em ${g.group}`}>
+                    <summary className="sb-link" aria-label={textoDeErro("Mais em {area}", { area: g.group })}>
                       {g.group}<Caret open={false} size={13} />
                     </summary>
                     <div className="sb-mais-itens">{g.items.map(linkDoMenu)}</div>
@@ -971,7 +973,7 @@ export default function ServiceExactApp({
         <div className="sb-bottom">
           {podeVerNav("config", currentRole, matrizEfetiva, currentExtraAccess, souVoluntario) && (
             <Acao className={`sb-link ${route === "config" ? "on" : ""}`} data-tour="config" onClick={() => { setRoute("config"); if (!showTour) setNavOpen(false); }}>
-              <span className="sb-ic"><Icon name="config" size={17} /></span> Configurações
+              <span className="sb-ic"><Icon name="config" size={17} /></span> {textoDeErro("Configurações")}
             </Acao>
           )}
         </div>
@@ -979,11 +981,11 @@ export default function ServiceExactApp({
 
       <div className="main help-fab-reserve">
         <header className={`top${buscaAberta ? " search-open" : ""}`}>
-          <BotaoIcone className="top-menu" onClick={() => setNavOpen(true)} rotulo="Abrir menu">
+          <BotaoIcone className="top-menu" onClick={() => setNavOpen(true)} rotulo={textoDeErro("Abrir menu")}>
             <Icon name="menu" size={18} />
           </BotaoIcone>
           <div className="top-crumb">{ROUTE_GROUP[route] ?? ""}</div>
-          <BotaoIcone className="top-search-btn" rotulo={buscaAberta ? "Fechar a busca" : "Buscar"} onClick={() => setBuscaAberta((b) => !b)}>
+          <BotaoIcone className="top-search-btn" rotulo={buscaAberta ? textoDeErro("Fechar a busca") : textoDeErro("Buscar")} onClick={() => setBuscaAberta((b) => !b)}>
             <Icon name={buscaAberta ? "recusou" : "buscar"} size={18} />
           </BotaoIcone>
           <div className="top-search">
@@ -999,7 +1001,7 @@ export default function ServiceExactApp({
           </div>
           <HelpFab lugar="barra" onTour={abrirTourAjuda} onSetup={podeVerItem("configurar") ? abrirSetupAjuda : undefined} />
           <div className="top-actions">
-<TopUserMenu name={eu?.name ?? "Você"} roleLabel={ROLE_LABEL[currentRole] ?? "Liderança"} photoUrl={eu?.photoUrl} churchPageUrl={paginaUrl} onLogout={sair} onOpenApp={() => setView("app")} theme={theme} onToggleTheme={() => setTheme((t) => t === "dark" ? "light" : "dark")} />
+<TopUserMenu name={eu?.name ?? textoDeErro("Você")} roleLabel={rotulosDoPapel(textoDeErro)[currentRole] ?? textoDeErro("Liderança")} photoUrl={eu?.photoUrl} churchPageUrl={paginaUrl} onLogout={sair} onOpenApp={() => setView("app")} theme={theme} onToggleTheme={() => setTheme((t) => t === "dark" ? "light" : "dark")} />
           </div>
         </header>
 
@@ -1008,7 +1010,7 @@ export default function ServiceExactApp({
         <RouteGroupContext.Provider value={ROUTE_GROUP[route] ?? null}>
         {error ? <ErrorPanel message={error} /> : null}
         {!podeVerItem(route) ? (
-          <EmptyState title="Esta área não está disponível" text="Seu acesso ou os módulos da igreja não permitem abrir esta tela." action={{ label: "Abrir uma área disponível", onClick: () => setRoute(rotasPermitidas[0]) }} />
+          <EmptyState title={textoDeErro("Esta área não está disponível")} text={textoDeErro("Seu acesso ou os módulos da igreja não permitem abrir esta tela.")} action={{ label: textoDeErro("Abrir uma área disponível"), onClick: () => setRoute(rotasPermitidas[0]) }} />
         ) : <>
         {route === "painel" ? (
           <Painel
@@ -1061,7 +1063,7 @@ export default function ServiceExactApp({
         {route === "aniversariantes" ? <Aniversariantes base={aniversariantesBase} escopo={aniversariosEscopo} comIdade={podePrevisualizar} times={ministries} grupos={fellowshipGroups} onAbrir={abrirAniversariante} podeAbrirPessoa={(p) => podeVerItem(p.tipo === "member" ? "membros" : "pessoas")} /> : null}
         {route === "pessoas" ? <Pessoas key={filtroDiretorio?.route === "pessoas" ? filtroDiretorio.filtro : "todos"} people={people} ministries={ministries} filtroInicial={filtroDiretorio?.route === "pessoas" && filtroDiretorio.filtro === "servindo" ? "servindo" : undefined} onLimparFiltro={() => setFiltroDiretorio(null)} currentPersonId={currentPersonId} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "times" ? <Times ministries={ministries} people={people} members={members} serveRequests={serveRequests} setDrawer={setDrawer} setModal={setModal} /> : null}
-        {route === "times" ? <details className="teams-config"><summary>Configurações de times e requisitos</summary><Config key={firstChurch?.id} church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} kidsClasses={kidsClasses} currentRole={currentRole} currentExtraAccess={currentExtraAccess} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} only="min" embedded /></details> : null}
+        {route === "times" ? <details className="teams-config"><summary>{textoDeErro("Configurações de times e requisitos")}</summary><Config key={firstChurch?.id} church={firstChurch} churches={churches} ministries={ministries} people={people} rooms={rooms} reservations={reservations} kidsClasses={kidsClasses} currentRole={currentRole} currentExtraAccess={currentExtraAccess} ministerialTitles={ministerialTitles} fellowshipGroups={fellowshipGroups} tags={tags} courses={courses} setModal={setModal} permissionsMatrix={permissionsMatrix} only="min" embedded /></details> : null}
         {route === "visitantes" ? <Visitantes key={filtroDiretorio?.route === "visitantes" ? filtroDiretorio.filtro : "todos"} visitors={visitors} visitorNotes={visitorNotes} filtroInicial={filtroDiretorio?.route === "visitantes" ? filtroDiretorio.filtro === "sem-contato" || filtroDiretorio.filtro === "pelo-link" ? filtroDiretorio.filtro : null : null} onLimparFiltro={() => setFiltroDiretorio(null)} people={people} church={firstChurch} setDrawer={setDrawer} setModal={setModal} /> : null}
         {route === "criancas" ? <Criancas kidsChildren={kidsChildren} kidsClasses={kidsClasses} childGuardians={childGuardians} people={people} kidsEvents={kidsEvents} rooms={rooms} church={firstChurch} /> : null}
         {route === "decisoes" ? <Decisoes decisions={decisions} members={members} people={people} setDrawer={setDrawer} setModal={setModal} /> : null}
@@ -1234,13 +1236,13 @@ export default function ServiceExactApp({
       {tourResumeStep !== null ? (
         <div className="coach-layer">
           <div className="coach-pop" style={{ top: "40%", left: "50%", transform: "translate(-50%, -50%)" }}>
-            <div className="coach-pop-eyebrow">Tour guiado</div>
-            <div className="coach-pop-t">Retomar de onde parou?</div>
-            <div className="coach-pop-s">Você não terminou o tour da última vez. Parou no passo {Math.min(tourResumeStep + 1, tourSteps.length)} de {tourSteps.length}.</div>
+            <div className="coach-pop-eyebrow">{textoDeErro("Tour guiado")}</div>
+            <div className="coach-pop-t">{textoDeErro("Retomar de onde parou?")}</div>
+            <div className="coach-pop-s">{textoDeErro("Você não terminou o tour da última vez. Parou no passo {passo} de {total}.", { passo: String(Math.min(tourResumeStep + 1, tourSteps.length)), total: String(tourSteps.length) })}</div>
             <div className="coach-pop-actions">
-              <Botao variante="discreto" compacto onClick={closeTour}>Não, obrigado</Botao>
+              <Botao variante="discreto" compacto onClick={closeTour}>{textoDeErro("Não, obrigado")}</Botao>
               <div style={{ flex: 1 }} />
-              <Botao variante="principal" compacto onClick={() => startTourFrom(tourResumeStep)}>Continuar</Botao>
+              <Botao variante="principal" compacto onClick={() => startTourFrom(tourResumeStep)}>{textoDeErro("Continuar")}</Botao>
             </div>
           </div>
         </div>

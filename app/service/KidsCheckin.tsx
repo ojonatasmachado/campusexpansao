@@ -1,6 +1,5 @@
 "use client";
 
-import { plural } from "./lib/plural";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
@@ -15,6 +14,7 @@ import { Cartao } from "./ui/Cartao";
 import { Vazio } from "./ui/Estados";
 import { Avatar } from "./ui/Avatar";
 import { confirmar } from "./ui/confirmar";
+import { useTexto } from "./lib/internacional/contexto";
 // ── tipos externos (subconjunto dos tipos de ServiceExactApp) ─────────────────
 
 type EventLite = {
@@ -60,6 +60,7 @@ export function KidsQRModal({
   kidsChildren: ChildLite[];
   onClose: () => void;
 }) {
+  const traduzirUi = useTexto();
   const router = useRouter();
   const [sessionId, setSessionId] = useState<string | null>(session?.id ?? null);
   const [qrToken, setQrToken] = useState<string | null>(session?.checkin_token ?? null);
@@ -112,7 +113,7 @@ export function KidsQRModal({
   };
 
   const regenerar = async () => {
-    if (!sessionId || !(await confirmar({ titulo: "Gerar um novo QR Code?", texto: "O anterior deixa de funcionar.", acao: "Gerar novo código", perigo: false }))) return;
+    if (!sessionId || !(await confirmar({ titulo: traduzirUi("Gerar um novo QR Code?"), texto: traduzirUi("O anterior deixa de funcionar."), acao: traduzirUi("Gerar novo código"), perigo: false }))) return;
     const token = generateToken();
     setQrToken(token);
     setQrActive(true);
@@ -151,32 +152,32 @@ export function KidsQRModal({
 
   return (
     <Janela larga
-      sobretitulo={joinDot("Kids", `${event.weekday} ${formatDateBR(event.eventDate)}`.trim(), event.time)}
+      sobretitulo={joinDot(traduzirUi("Kids"), `${event.weekday} ${formatDateBR(event.eventDate)}`.trim(), event.time)}
       titulo={kidsClass.name}
-      texto="QR Code próprio desta turma neste culto. O responsável escaneia, escolhe o filho e confirma o check-in ou pede a retirada."
+      texto={traduzirUi("QR Code próprio desta turma neste culto. O responsável escaneia, escolhe o filho e confirma o check-in ou pede a retirada.")}
       aoFechar={onClose} corpoBloco
       cabecalho={
-        <Abas rotulo="Partes do check-in" ativa={tab} aoMudar={(v) => setTab(v as typeof tab)}
-          abas={[{ id: "qr", rotulo: "QR Code" }, { id: "sala", rotulo: `Quem está na sala${pending.length > 0 ? ` · ${plural(pending.length, "retirada")}` : ""}`, contador: present.length }]} />
+        <Abas rotulo={traduzirUi("Partes do check-in")} ativa={tab} aoMudar={(v) => setTab(v as typeof tab)}
+          abas={[{ id: "qr", rotulo: traduzirUi("QR Code") }, { id: "sala", rotulo: pending.length > 0 ? traduzirUi("Quem está na sala · {count, plural, =1 {# retirada} other {# retiradas}}", { count: pending.length }) : traduzirUi("Quem está na sala"), contador: present.length }]} />
       }
-      rodape={<Botao variante="principal" onClick={onClose}>Concluído</Botao>}>
+      rodape={<Botao variante="principal" onClick={onClose}>{traduzirUi("Concluído")}</Botao>}>
           {tab === "qr" && (
             <div className="ck-qr-wrap">
               <div className={`ck-qr ${!qrActive ? "off" : ""}`}>
                 {qrActive && qrToken && checkinLink ? (
                   <QRCode value={checkinLink} size={200} style={{ height: "auto", maxWidth: "100%", width: "100%" }} viewBox="0 0 200 200" />
                 ) : (
-                  <div className="ck-qr-off"><span style={{ fontSize: "var(--fs-app-28)" }}>✕</span><span>QR desativado</span></div>
+                  <div className="ck-qr-off"><span style={{ fontSize: "var(--fs-app-28)" }}>✕</span><span>{traduzirUi("QR desativado")}</span></div>
                 )}
               </div>
               <div className="ck-qr-side">
-                <div className={`ck-status ${qrActive ? "on" : "off"}`}><span className="ck-dot" />{qrActive ? "Ativo, aceitando check-ins" : "Desativado"}</div>
+                <div className={`ck-status ${qrActive ? "on" : "off"}`}><span className="ck-dot" />{qrActive ? traduzirUi("Ativo, aceitando check-ins") : traduzirUi("Desativado")}</div>
                 <div className="ck-link"><span className="ck-link-txt">{checkinLink}</span></div>
                 <div className="ck-actions">
-                  <Botao compacto onClick={toggleActive}>{qrActive ? "Desativar" : "Ativar"}</Botao>
-                  <Botao compacto onClick={regenerar}>Regenerar</Botao>
+                  <Botao compacto onClick={toggleActive}>{qrActive ? traduzirUi("Desativar") : traduzirUi("Ativar")}</Botao>
+                  <Botao compacto onClick={regenerar}>{traduzirUi("Regenerar")}</Botao>
                 </div>
-                <div className="ck-hint">Imprima e cole na porta da sala. Cada responsável escaneia com o celular pra deixar ou retirar o filho.</div>
+                <div className="ck-hint">{traduzirUi("Imprima e cole na porta da sala. Cada responsável escaneia com o celular pra deixar ou retirar o filho.")}</div>
               </div>
             </div>
           )}
@@ -185,7 +186,7 @@ export function KidsQRModal({
             <div className="ck-presenca">
               {pending.length > 0 && (
                 <Cartao style={{ marginBottom: 16 }}>
-                  <div className="panel-head"><span className="panel-title"><Icon name="alerta" size={14} /> Retiradas pendentes</span></div>
+                  <div className="panel-head"><span className="panel-title"><Icon name="alerta" size={14} /> {traduzirUi("Retiradas pendentes")}</span></div>
                   <div className="panel-body flush">
                     {pending.map((att) => {
                       const child = childById.get(att.child_id);
@@ -193,10 +194,10 @@ export function KidsQRModal({
                         <div className="ck-row" key={att.id}>
                           <span className="ck-check pend">!</span>
                           <div className="ck-row-main">
-                            <div className="ck-row-name">{child?.name ?? "Criança"}</div>
-                            <div className="ck-row-meta">Aguardando confirmação visual do responsável</div>
+                            <div className="ck-row-name">{child?.name ?? traduzirUi("Criança")}</div>
+                            <div className="ck-row-meta">{traduzirUi("Aguardando confirmação visual do responsável")}</div>
                           </div>
-                          <Botao variante="principal" compacto onClick={() => confirmarRetirada(att)}>Confirmar retirada</Botao>
+                          <Botao variante="principal" compacto onClick={() => confirmarRetirada(att)}>{traduzirUi("Confirmar retirada")}</Botao>
                         </div>
                       );
                     })}
@@ -204,7 +205,7 @@ export function KidsQRModal({
                 </Cartao>
               )}
               <div className="ck-roster">
-                {present.filter((a) => a.status === "presente").length === 0 && <Vazio titulo="Nenhuma criança na sala ainda." />}
+                {present.filter((a) => a.status === "presente").length === 0 && <Vazio titulo={traduzirUi("Nenhuma criança na sala ainda.")} />}
                 {present.filter((a) => a.status === "presente").map((att) => {
                   const child = childById.get(att.child_id);
                   return (
@@ -212,8 +213,8 @@ export function KidsQRModal({
                       <span className="ck-check"><Icon name="ok" size={14} /></span>
                       <Avatar nome={child?.name ?? ""} tamanho="sm" />
                       <div className="ck-row-main">
-                        <div className="ck-row-name">{child?.name ?? "Criança"}{child?.allergies ? <span className="ck-extra"><Icon name="alerta" size={13} /> alergia</span> : null}</div>
-                        <div className="ck-row-meta">{att.dropped_off_via === "manual" ? "manual" : "QR"}</div>
+                        <div className="ck-row-name">{child?.name ?? traduzirUi("Criança")}{child?.allergies ? <span className="ck-extra"><Icon name="alerta" size={13} /> {traduzirUi("alergia")}</span> : null}</div>
+                        <div className="ck-row-meta">{att.dropped_off_via === "manual" ? traduzirUi("manual") : traduzirUi("QR")}</div>
                       </div>
                     </div>
                   );
@@ -221,13 +222,13 @@ export function KidsQRModal({
               </div>
               <div className="tb-search" style={{ marginTop: 16, marginBottom: 8 }}>
                 <span className="si"><Icon name="buscar" size={13} /></span>
-                <input placeholder="Buscar criança pra check-in manual..." value={q} onChange={(e) => setQ(e.target.value)} />
+                <input placeholder={traduzirUi("Buscar criança pra check-in manual...")} value={q} onChange={(e) => setQ(e.target.value)} />
               </div>
               {q && notYetIn.slice(0, 6).map((child) => (
                 <div className="flag-row" key={child.id} style={{ cursor: "pointer" }} onClick={() => { checkinManual(child.id); setQ(""); }}>
                   <Avatar nome={child.name} tamanho="sm" />
                   <div className="flag-main"><div className="flag-nome">{child.name}</div></div>
-                  <span style={{ marginLeft: "auto", color: "var(--muted)" }}>+ check-in</span>
+                  <span style={{ marginLeft: "auto", color: "var(--muted)" }}>{traduzirUi("+ check-in")}</span>
                 </div>
               ))}
             </div>

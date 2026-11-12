@@ -26,6 +26,8 @@ import { Selo } from "./ui/Selo";
 import { Campo, Entrada, TextoLongo } from "./ui/Campo";
 import { Vazio, Carregando } from "./ui/Estados";
 import { confirmar } from "./ui/confirmar";
+import { useServiceLocale, useTexto } from "./lib/internacional/contexto";
+import type { Text } from "./lib/internacional/mensagens";
 /* Editor da Página da igreja (link-in-bio) da igreja, aba "Página da igreja" em
    Configurações. Arquivo próprio (não dentro de ServiceExactApp.tsx, que já
    tem 10k+ linhas) : essa funcionalidade tem peso real (CRUD de links com
@@ -88,20 +90,20 @@ type PostItem = {
   publishedAt: string;
 };
 
-const TEMPLATES: { id: PaginaTemplate; label: string; desc: string }[] = [
-  { id: "simples", label: "Simples", desc: "Lista de botões, direto ao ponto." },
-  { id: "vitrine", label: "Vitrine", desc: "Capa no topo, links em cards." },
-  { id: "editorial", label: "Editorial", desc: "Última notícia em destaque." },
+const modelos = (traduzirUi: Text): { id: PaginaTemplate; label: string; desc: string }[] => [
+  { id: "simples", label: traduzirUi("Simples"), desc: traduzirUi("Lista de botões, direto ao ponto.") },
+  { id: "vitrine", label: traduzirUi("Vitrine"), desc: traduzirUi("Capa no topo, links em cards.") },
+  { id: "editorial", label: traduzirUi("Editorial"), desc: traduzirUi("Última notícia em destaque.") },
 ];
 
 type PageEditorTab = "publicar" | "modelo" | "aparencia" | "links" | "redes" | "noticias";
-const PAGE_EDITOR_TABS: { id: PageEditorTab; label: string }[] = [
-  { id: "publicar", label: "Publicar" },
-  { id: "modelo", label: "Modelo" },
-  { id: "aparencia", label: "Aparência" },
-  { id: "links", label: "Links" },
-  { id: "redes", label: "Redes sociais" },
-  { id: "noticias", label: "Notícias" },
+const abasDoEditor = (traduzirUi: Text): { id: PageEditorTab; label: string }[] => [
+  { id: "publicar", label: traduzirUi("Publicar") },
+  { id: "modelo", label: traduzirUi("Modelo") },
+  { id: "aparencia", label: traduzirUi("Aparência") },
+  { id: "links", label: traduzirUi("Links") },
+  { id: "redes", label: traduzirUi("Redes sociais") },
+  { id: "noticias", label: traduzirUi("Notícias") },
 ];
 
 function toDatetimeLocal(iso: string | null): string {
@@ -112,6 +114,8 @@ function toDatetimeLocal(iso: string | null): string {
 }
 
 export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; currentRole?: string }) {
+  const traduzirUi = useTexto();
+  const locale = useServiceLocale();
   const router = useRouter();
   const canEdit = currentRole === "master" || currentRole === "pastor" || currentRole === "owner";
 
@@ -215,7 +219,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
   };
 
   const deleteLink = async (id: string) => {
-    if (!(await confirmar({ titulo: "Remover este link da página?", acao: "Remover" }))) return;
+    if (!(await confirmar({ titulo: traduzirUi("Remover este link da página?"), acao: traduzirUi("Remover") }))) return;
     await client().from("church_links").delete().eq("id", id);
     setLinkModal(null);
     loadLinks();
@@ -248,7 +252,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
   };
 
   const deletePost = async (id: string) => {
-    if (!(await confirmar({ titulo: "Remover esta notícia da página?", acao: "Remover" }))) return;
+    if (!(await confirmar({ titulo: traduzirUi("Remover esta notícia da página?"), acao: traduzirUi("Remover") }))) return;
     await client().from("church_page_posts").delete().eq("id", id);
     setPostModal(null);
     loadPosts();
@@ -284,7 +288,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
       a.download = `qr-${church.slug || "pagina"}.png`;
       a.click();
     } catch {
-      avisar("Não consegui gerar o QR agora. Tente de novo.", "warn");
+      avisar(traduzirUi("Não consegui gerar o QR agora. Tente de novo."), "warn");
     }
   };
 
@@ -306,7 +310,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
   };
 
   if (!canEdit) {
-    return <Vazio titulo="Só master ou pastor pode configurar a página da igreja." />;
+    return <Vazio titulo={traduzirUi("Só master ou pastor pode configurar a página da igreja.")} />;
   }
 
   return (
@@ -315,7 +319,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
 
       <div className="pge-main">
         <div className="cfg-tabs">
-          {PAGE_EDITOR_TABS.map((t) => (
+          {abasDoEditor(traduzirUi).map((t) => (
             <Opcao key={t.id} marcada={activeTab === t.id} estilo="cfg-tab" onClick={() => setActiveTab(t.id)}>{t.label}</Opcao>
           ))}
         </div>
@@ -323,17 +327,17 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
         {/* ─── Publicar + endereço ─── */}
         {activeTab === "publicar" && (
           <div className="cfg-card">
-            <div className="cfg-card-t">Publicar página</div>
-            <div className="cfg-card-s">Enquanto estiver desligada, a página existe mas mostra “ainda não publicada” pra quem acessar.</div>
+            <div className="cfg-card-t">{traduzirUi("Publicar página")}</div>
+            <div className="cfg-card-s">{traduzirUi("Enquanto estiver desligada, a página existe mas mostra “ainda não publicada” pra quem acessar.")}</div>
             <Linha estilo="config" style={{ padding: "10px 0" }}>
               <div className="cfg-row-main">
-                <div className="cfg-row-t">{pagina.enabled ? "Publicada" : "Despublicada"}</div>
-                <div className="cfg-row-s">{viewCount !== null ? `${viewCount} visualizações até agora` : "Carregando estatísticas..."}</div>
+                <div className="cfg-row-t">{pagina.enabled ? traduzirUi("Publicada") : traduzirUi("Despublicada")}</div>
+                <div className="cfg-row-s">{viewCount !== null ? traduzirUi("{count, plural, =1 {{n} visualizações até agora} other {{n} visualizações até agora}}", { count: viewCount, n: String(viewCount) }) : traduzirUi("Carregando estatísticas...")}</div>
               </div>
-              <Interruptor ligado={!!pagina.enabled} rotulo="Publicar página da igreja" onClick={() => savePagina({ enabled: !pagina.enabled })} />
+              <Interruptor ligado={!!pagina.enabled} rotulo={traduzirUi("Publicar página da igreja")} onClick={() => savePagina({ enabled: !pagina.enabled })} />
             </Linha>
 
-            <div className="field-label" style={{ marginTop: 14 }}>Endereço da página</div>
+            <div className="field-label" style={{ marginTop: 14 }}>{traduzirUi("Endereço da página")}</div>
             <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
               <span style={{ fontSize: "var(--fs-ui-13)", color: "var(--muted)" }}>{origin.replace(/^https?:\/\//, "")}/</span>
               <input
@@ -344,26 +348,26 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
                 onChange={(e) => { setSlugDraft(e.target.value.toLowerCase()); setSlugStatus("idle"); }}
                 onBlur={checkSlug}
               />
-              <Botao compacto desativado={slugStatus !== "ok"} onClick={saveSlug}>Salvar endereço</Botao>
+              <Botao compacto desativado={slugStatus !== "ok"} onClick={saveSlug}>{traduzirUi("Salvar endereço")}</Botao>
               {pageUrl && (
                 <Botao variante="discreto" compacto onClick={() => navigator.clipboard.writeText(pageUrl)}>
-                  <Icon name="copiar" size={13} /> Copiar link
+                  <Icon name="copiar" size={13} /> {traduzirUi("Copiar link")}
                 </Botao>
               )}
             </div>
-            {slugStatus === "invalid" && <div className="brand-accent-warn">Use só letras minúsculas, números e hífen, de 3 a 40 caracteres.</div>}
-            {slugStatus === "reserved" && <div className="brand-accent-warn">Este endereço é reservado, escolha outro.</div>}
-            {slugStatus === "taken" && <div className="brand-accent-warn">Já tem outra igreja com este endereço.</div>}
-            {slugStatus === "ok" && <div className="brand-accent-contrast">Disponível.</div>}
+            {slugStatus === "invalid" && <div className="brand-accent-warn">{traduzirUi("Use só letras minúsculas, números e hífen, de 3 a 40 caracteres.")}</div>}
+            {slugStatus === "reserved" && <div className="brand-accent-warn">{traduzirUi("Este endereço é reservado, escolha outro.")}</div>}
+            {slugStatus === "taken" && <div className="brand-accent-warn">{traduzirUi("Já tem outra igreja com este endereço.")}</div>}
+            {slugStatus === "ok" && <div className="brand-accent-contrast">{traduzirUi("Disponível.")}</div>}
 
             {loginUrl && (
               <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 14 }}>
                 <div className="cfg-row-main" style={{ flex: "0 1 auto" }}>
-                  <div className="field-label" style={{ marginTop: 0 }}>Acesso da equipe (login com a cara da igreja)</div>
+                  <div className="field-label" style={{ marginTop: 0 }}>{traduzirUi("Acesso da equipe (login com a cara da igreja)")}</div>
                   <span style={{ fontSize: "var(--fs-ui-13)", color: "var(--muted)" }}>{loginUrl.replace(/^https?:\/\//, "")}</span>
                 </div>
                 <Botao variante="discreto" compacto onClick={() => navigator.clipboard.writeText(loginUrl)}>
-                  <Icon name="copiar" size={13} /> Copiar link
+                  <Icon name="copiar" size={13} /> {traduzirUi("Copiar link")}
                 </Botao>
               </div>
             )}
@@ -374,8 +378,8 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
                   <QRCode value={pageUrl || `${origin}/${church.slug}`} size={104} style={{ height: "auto", maxWidth: "100%", width: 104 }} viewBox="0 0 104 104" />
                 </div>
                 <div>
-                  <div className="cfg-row-s">QR code pronto pra colocar em boletim, cartaz ou tela de projeção.</div>
-                  <Botao compacto style={{ marginTop: 8 }} onClick={baixarQr}>Baixar QR code</Botao>
+                  <div className="cfg-row-s">{traduzirUi("QR code pronto pra colocar em boletim, cartaz ou tela de projeção.")}</div>
+                  <Botao compacto style={{ marginTop: 8 }} onClick={baixarQr}>{traduzirUi("Baixar QR code")}</Botao>
                 </div>
               </div>
             )}
@@ -385,10 +389,10 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
         {/* ─── Modelo ─── */}
         {activeTab === "modelo" && (
           <div className="cfg-card">
-            <div className="cfg-card-t">Modelo</div>
-            <div className="cfg-card-s">Muda o layout da página. As cores e os links continuam os mesmos.</div>
+            <div className="cfg-card-t">{traduzirUi("Modelo")}</div>
+            <div className="cfg-card-s">{traduzirUi("Muda o layout da página. As cores e os links continuam os mesmos.")}</div>
             <div className="opt-row">
-              {TEMPLATES.map((tpl) => (
+              {modelos(traduzirUi).map((tpl) => (
                 <Opcao key={tpl.id} marcada={pagina.template === tpl.id} estilo="opt" onClick={() => savePagina({ template: tpl.id })}>
                   <div className="opt-t">{tpl.label}</div>
                   <div className="opt-s">{tpl.desc}</div>
@@ -401,29 +405,26 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
         {/* ─── Aparência ─── */}
         {activeTab === "aparencia" && (
           <div className="cfg-card">
-            <div className="cfg-card-t">Aparência</div>
-            <div className="cfg-card-s">
-              Bio, capa e cor de destaque só desta página. Logo, fundo e as demais cores são a
-              identidade da igreja, editada em Configurações → Personalização.
-            </div>
+            <div className="cfg-card-t">{traduzirUi("Aparência")}</div>
+            <div className="cfg-card-s">{traduzirUi("Bio, capa e cor de destaque só desta página. Logo, fundo e as demais cores são a identidade da igreja, editada em Configurações → Personalização.")}</div>
 
             <div style={{ marginTop: 10 }}>
-              <Campo rotulo="Bio (aparece embaixo do nome da igreja)">
+              <Campo rotulo={traduzirUi("Bio (aparece embaixo do nome da igreja)")}>
                 <TextoLongo
                   className="input"
                   rows={2}
                   value={pagina.bio ?? ""}
                   onChange={(e) => setPagina((p) => ({ ...p, bio: e.target.value }))}
                   onBlur={(e) => savePagina({ bio: e.target.value })}
-                  placeholder="Uma frase curta sobre a igreja"
+                  placeholder={traduzirUi("Uma frase curta sobre a igreja")}
                 />
               </Campo>
             </div>
 
             <div style={{ marginTop: 14 }}>
               <ImageUpload
-                label="Capa (banner do topo, modelo Vitrine)"
-                hint="Tamanho ideal: 1200×500px."
+                label={traduzirUi("Capa (banner do topo, modelo Vitrine)")}
+                hint={traduzirUi("Tamanho ideal: 1200×500px.")}
                 url={pagina.coverUrl}
                 aspectRatio={2.4}
                 onUpload={async (file) => {
@@ -435,9 +436,7 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
               />
             </div>
 
-            <div className="cfg-card-s" style={{ marginTop: 14 }}>
-              Ícones e selos usam a cor da igreja, escolhida em Personalização.
-            </div>
+            <div className="cfg-card-s" style={{ marginTop: 14 }}>{traduzirUi("Ícones e selos usam a cor da igreja, escolhida em Personalização.")}</div>
           </div>
         )}
 
@@ -445,16 +444,16 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
         {activeTab === "links" && (
           <div className="cfg-card">
             <div className="panel-head" style={{ padding: 0, marginBottom: 10 }}>
-              <span className="panel-title">Links</span>
+              <span className="panel-title">{traduzirUi("Links")}</span>
               <Botao
                 variante="principal" compacto
                 onClick={() => setLinkModal({ isNew: true, draft: { id: crypto.randomUUID(), label: "", url: "", icon: DEFAULT_LINK_ICON, imageUrl: null, groupLabel: "", startsAt: "", endsAt: "", active: true, position: links.length, clickCount: 0 } })}
               >
-                + Link
+                {traduzirUi("+ Link")}
               </Botao>
             </div>
             {loading && <Carregando forma="lista" />}
-            {!loading && links.length === 0 && <Vazio titulo="Nenhum link ainda. Adicione o primeiro." />}
+            {!loading && links.length === 0 && <Vazio titulo={traduzirUi("Nenhum link ainda. Adicione o primeiro.")} />}
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {links.map((link, idx) => (
                 <Linha estilo="config" key={link.id}>
@@ -464,13 +463,13 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
                     <span className="cx-link-icon" style={{ background: "var(--accent-fill)", color: "var(--accent-ink)" }}><LinkIconView name={link.icon} size={16} /></span>
                   )}
                   <div className="cfg-row-main">
-                    <div className="cfg-row-t">{link.label || "(sem título)"} {!link.active && <Selo>oculto</Selo>}</div>
-                    <div className="cfg-row-s">{link.groupLabel ? `${link.groupLabel} · ` : ""}{link.url} · {link.clickCount} cliques</div>
+                    <div className="cfg-row-t">{link.label || traduzirUi("(sem título)")} {!link.active && <Selo>{traduzirUi("oculto")}</Selo>}</div>
+                    <div className="cfg-row-s">{link.groupLabel ? `${link.groupLabel} · ` : ""}{traduzirUi("{url} · {count, plural, =1 {{n} cliques} other {{n} cliques}}", { url: link.url, count: link.clickCount, n: String(link.clickCount) })}</div>
                   </div>
                   <div style={{ display: "flex", gap: 4 }}>
                     <Botao variante="discreto" compacto desativado={idx === 0} onClick={() => moveLink(link.id, -1)}>↑</Botao>
                     <Botao variante="discreto" compacto desativado={idx === links.length - 1} onClick={() => moveLink(link.id, 1)}>↓</Botao>
-                    <Botao compacto onClick={() => setLinkModal({ isNew: false, draft: link })}>Editar</Botao>
+                    <Botao compacto onClick={() => setLinkModal({ isNew: false, draft: link })}>{traduzirUi("Editar")}</Botao>
                   </div>
                 </Linha>
               ))}
@@ -481,25 +480,25 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
         {/* ─── Redes sociais ─── */}
         {activeTab === "redes" && (
           <div className="cfg-card">
-            <div className="cfg-card-t">Redes sociais</div>
-            <div className="cfg-card-s">Aparecem como ícones no rodapé da página. Deixe em branco o que não usar.</div>
+            <div className="cfg-card-t">{traduzirUi("Redes sociais")}</div>
+            <div className="cfg-card-s">{traduzirUi("Aparecem como ícones no rodapé da página. Deixe em branco o que não usar.")}</div>
             <div className="cfg-grid2" style={{ marginTop: 10 }}>
-              <Campo rotulo="WhatsApp (só números, com DDD)">
+              <Campo rotulo={traduzirUi("WhatsApp (só números, com DDD)")}>
                 <Entrada defaultValue={pagina.social?.whatsapp ?? ""} placeholder="5511999999999" onBlur={(e) => saveSocial("whatsapp", e.target.value)} />
               </Campo>
-              <Campo rotulo="Instagram (link completo)">
+              <Campo rotulo={traduzirUi("Instagram (link completo)")}>
                 <Entrada defaultValue={pagina.social?.instagram ?? ""} placeholder="https://instagram.com/suaigreja" onBlur={(e) => saveSocial("instagram", e.target.value)} />
               </Campo>
-              <Campo rotulo="YouTube (link completo)">
+              <Campo rotulo={traduzirUi("YouTube (link completo)")}>
                 <Entrada defaultValue={pagina.social?.youtube ?? ""} placeholder="https://youtube.com/@suaigreja" onBlur={(e) => saveSocial("youtube", e.target.value)} />
               </Campo>
-              <Campo rotulo="Facebook (link completo)">
+              <Campo rotulo={traduzirUi("Facebook (link completo)")}>
                 <Entrada defaultValue={pagina.social?.facebook ?? ""} placeholder="https://facebook.com/suaigreja" onBlur={(e) => saveSocial("facebook", e.target.value)} />
               </Campo>
-              <Campo rotulo="TikTok (link completo)">
+              <Campo rotulo={traduzirUi("TikTok (link completo)")}>
                 <Entrada defaultValue={pagina.social?.tiktok ?? ""} placeholder="https://tiktok.com/@suaigreja" onBlur={(e) => saveSocial("tiktok", e.target.value)} />
               </Campo>
-              <Campo rotulo="Site (link completo)">
+              <Campo rotulo={traduzirUi("Site (link completo)")}>
                 <Entrada defaultValue={pagina.social?.site ?? ""} placeholder="https://suaigreja.com" onBlur={(e) => saveSocial("site", e.target.value)} />
               </Campo>
             </div>
@@ -510,23 +509,23 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
         {activeTab === "noticias" && (
           <div className="cfg-card">
             <div className="panel-head" style={{ padding: 0, marginBottom: 10 }}>
-              <span className="panel-title">Publicações</span>
+              <span className="panel-title">{traduzirUi("Publicações")}</span>
               <Botao
                 variante="principal" compacto
                 onClick={() => setPostModal({ isNew: true, draft: { id: crypto.randomUUID(), title: "", body: "", coverUrl: null, pinned: false, publishedAt: new Date().toISOString() } })}
               >
-                + Notícia
+                {traduzirUi("+ Notícia")}
               </Botao>
             </div>
-            {!loading && posts.length === 0 && <Vazio titulo="Nenhuma notícia publicada ainda." />}
+            {!loading && posts.length === 0 && <Vazio titulo={traduzirUi("Nenhuma notícia publicada ainda.")} />}
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {posts.map((post) => (
                 <Linha estilo="config" key={post.id}>
                   <div className="cfg-row-main">
-                    <div className="cfg-row-t">{post.title} {post.pinned && <Selo tom="ok">fixado</Selo>}</div>
-                    <div className="cfg-row-s">{new Date(post.publishedAt).toLocaleDateString("pt-BR")}</div>
+                    <div className="cfg-row-t">{post.title} {post.pinned && <Selo tom="ok">{traduzirUi("fixado")}</Selo>}</div>
+                    <div className="cfg-row-s">{new Date(post.publishedAt).toLocaleDateString(locale)}</div>
                   </div>
-                  <Botao compacto onClick={() => setPostModal({ isNew: false, draft: post })}>Editar</Botao>
+                  <Botao compacto onClick={() => setPostModal({ isNew: false, draft: post })}>{traduzirUi("Editar")}</Botao>
                 </Linha>
               ))}
             </div>
@@ -536,8 +535,8 @@ export function PublicPageEditor({ church, currentRole }: { church: ChurchProp; 
 
       {/* ─── Preview ao vivo : fica fixo à direita durante o scroll ─── */}
       <div className="pge-preview">
-        <div className="cfg-card-t">Preview</div>
-        <div className="cfg-card-s">Exatamente como a página fica pro visitante (os links não abrem aqui).</div>
+        <div className="cfg-card-t">{traduzirUi("Preview")}</div>
+        <div className="cfg-card-s">{traduzirUi("Exatamente como a página fica pro visitante (os links não abrem aqui).")}</div>
         <div style={{ width: 300, maxWidth: "100%", height: 560, overflowY: "auto", borderRadius: 28, border: "8px solid #14170F", margin: "14px auto 0" }}>
           <ChurchPageView data={previewData} preview />
         </div>
@@ -578,6 +577,7 @@ function LinkModal({
   onSave: (draft: LinkItem) => void;
   onDelete?: () => void;
 }) {
+  const traduzirUi = useTexto();
   const [form, setForm] = useState(draft);
   const [saving, setSaving] = useState(false);
 
@@ -589,27 +589,27 @@ function LinkModal({
   };
 
   return (
-    <Janela sobretitulo={isNew ? "Novo link" : "Editar link"} titulo={form.label || "Link da página"} aoFechar={onCancel} ocupada={saving} corpoBloco
+    <Janela sobretitulo={isNew ? traduzirUi("Novo link") : traduzirUi("Editar link")} titulo={form.label || traduzirUi("Link da página")} aoFechar={onCancel} ocupada={saving} corpoBloco
       rodape={
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-          {onDelete ? <Botao variante="discreto" onClick={onDelete}>Excluir</Botao> : <span />}
+          {onDelete ? <Botao variante="discreto" onClick={onDelete}>{traduzirUi("Excluir")}</Botao> : <span />}
           <div style={{ display: "flex", gap: 8 }}>
-            <Botao onClick={onCancel}>Cancelar</Botao>
-            <Botao variante="principal" desativado={saving || !form.label.trim() || !form.url.trim()} onClick={salvar}>Salvar</Botao>
+            <Botao onClick={onCancel}>{traduzirUi("Cancelar")}</Botao>
+            <Botao variante="principal" desativado={saving || !form.label.trim() || !form.url.trim()} onClick={salvar}>{traduzirUi("Salvar")}</Botao>
           </div>
         </div>
       }>
-          <Campo rotulo="Título">
-            <Entrada value={form.label} onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))} placeholder="Ex.: Culto ao vivo" />
+          <Campo rotulo={traduzirUi("Título")}>
+            <Entrada value={form.label} onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))} placeholder={traduzirUi("Ex.: Culto ao vivo")} />
           </Campo>
 
           <div style={{ marginTop: 12 }}>
-            <Campo rotulo="Link">
+            <Campo rotulo={traduzirUi("Link")}>
               <Entrada value={form.url} onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))} placeholder="https://..." />
             </Campo>
           </div>
 
-          <div className="field-label" style={{ marginTop: 12 }}>Ícone</div>
+          <div className="field-label" style={{ marginTop: 12 }}>{traduzirUi("Ícone")}</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {LINK_ICON_NAMES.map((name) => (
               <Opcao
@@ -624,10 +624,10 @@ function LinkModal({
             ))}
           </div>
 
-          <div className="field-label" style={{ marginTop: 12 }}>Foto do link (opcional)</div>
-          <div className="cfg-card-s" style={{ marginTop: 0, marginBottom: 8 }}>Se enviar uma foto, ela aparece no lugar do ícone.</div>
+          <div className="field-label" style={{ marginTop: 12 }}>{traduzirUi("Foto do link (opcional)")}</div>
+          <div className="cfg-card-s" style={{ marginTop: 0, marginBottom: 8 }}>{traduzirUi("Se enviar uma foto, ela aparece no lugar do ícone.")}</div>
           <ImageUpload
-            label="Foto"
+            label={traduzirUi("Foto")}
             round
             aspectRatio={1}
             url={form.imageUrl}
@@ -640,27 +640,27 @@ function LinkModal({
           />
 
           <div style={{ marginTop: 12 }}>
-            <Campo rotulo="Grupo (opcional, ex.: Jovens, Eventos)">
-              <Entrada value={form.groupLabel} onChange={(e) => setForm((f) => ({ ...f, groupLabel: e.target.value }))} placeholder="Deixe em branco pra não agrupar" />
+            <Campo rotulo={traduzirUi("Grupo (opcional, ex.: Jovens, Eventos)")}>
+              <Entrada value={form.groupLabel} onChange={(e) => setForm((f) => ({ ...f, groupLabel: e.target.value }))} placeholder={traduzirUi("Deixe em branco pra não agrupar")} />
             </Campo>
           </div>
 
           <div className="cfg-grid2" style={{ marginTop: 12 }}>
             <div>
-              <div className="field-label">Aparece a partir de (opcional)</div>
+              <div className="field-label">{traduzirUi("Aparece a partir de (opcional)")}</div>
               <input className="input" type="datetime-local" value={form.startsAt} onChange={(e) => setForm((f) => ({ ...f, startsAt: e.target.value }))} />
             </div>
             <div>
-              <div className="field-label">Some depois de (opcional)</div>
+              <div className="field-label">{traduzirUi("Some depois de (opcional)")}</div>
               <input className="input" type="datetime-local" value={form.endsAt} onChange={(e) => setForm((f) => ({ ...f, endsAt: e.target.value }))} />
             </div>
           </div>
 
           <Linha estilo="config" style={{ padding: "10px 0 0" }}>
             <div className="cfg-row-main">
-              <div className="cfg-row-t">Visível na página</div>
+              <div className="cfg-row-t">{traduzirUi("Visível na página")}</div>
             </div>
-            <Interruptor ligado={form.active} rotulo="Link ativo" onClick={() => setForm((f) => ({ ...f, active: !f.active }))} />
+            <Interruptor ligado={form.active} rotulo={traduzirUi("Link ativo")} onClick={() => setForm((f) => ({ ...f, active: !f.active }))} />
           </Linha>
     </Janela>
   );
@@ -676,6 +676,7 @@ function PostModal({
   onSave: (draft: PostItem) => void;
   onDelete?: () => void;
 }) {
+  const traduzirUi = useTexto();
   const [form, setForm] = useState(draft);
   const [saving, setSaving] = useState(false);
 
@@ -687,29 +688,29 @@ function PostModal({
   };
 
   return (
-    <Janela sobretitulo={isNew ? "Nova notícia" : "Editar notícia"} titulo={form.title || "Notícia da página"} aoFechar={onCancel} ocupada={saving} corpoBloco
+    <Janela sobretitulo={isNew ? traduzirUi("Nova notícia") : traduzirUi("Editar notícia")} titulo={form.title || traduzirUi("Notícia da página")} aoFechar={onCancel} ocupada={saving} corpoBloco
       rodape={
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-          {onDelete ? <Botao variante="discreto" onClick={onDelete}>Excluir</Botao> : <span />}
+          {onDelete ? <Botao variante="discreto" onClick={onDelete}>{traduzirUi("Excluir")}</Botao> : <span />}
           <div style={{ display: "flex", gap: 8 }}>
-            <Botao onClick={onCancel}>Cancelar</Botao>
-            <Botao variante="principal" desativado={saving || !form.title.trim()} onClick={salvar}>Salvar</Botao>
+            <Botao onClick={onCancel}>{traduzirUi("Cancelar")}</Botao>
+            <Botao variante="principal" desativado={saving || !form.title.trim()} onClick={salvar}>{traduzirUi("Salvar")}</Botao>
           </div>
         </div>
       }>
-          <Campo rotulo="Título">
-            <Entrada value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} placeholder="Ex.: Retiro de Jovens abre inscrições" />
+          <Campo rotulo={traduzirUi("Título")}>
+            <Entrada value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} placeholder={traduzirUi("Ex.: Retiro de Jovens abre inscrições")} />
           </Campo>
 
           <div style={{ marginTop: 12 }}>
-            <Campo rotulo="Texto">
-              <TextoLongo className="input" rows={4} value={form.body} onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))} placeholder="Detalhes da notícia ou aviso" />
+            <Campo rotulo={traduzirUi("Texto")}>
+              <TextoLongo className="input" rows={4} value={form.body} onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))} placeholder={traduzirUi("Detalhes da notícia ou aviso")} />
             </Campo>
           </div>
 
           <div style={{ marginTop: 12 }}>
             <ImageUpload
-              label="Imagem (opcional)"
+              label={traduzirUi("Imagem (opcional)")}
               url={form.coverUrl}
               aspectRatio={16 / 9}
               onUpload={async (file) => {
@@ -723,9 +724,9 @@ function PostModal({
 
           <Linha estilo="config" style={{ padding: "10px 0 0" }}>
             <div className="cfg-row-main">
-              <div className="cfg-row-t">Fixar no topo</div>
+              <div className="cfg-row-t">{traduzirUi("Fixar no topo")}</div>
             </div>
-            <Interruptor ligado={form.pinned} rotulo="Fixar notícia" onClick={() => setForm((f) => ({ ...f, pinned: !f.pinned }))} />
+            <Interruptor ligado={form.pinned} rotulo={traduzirUi("Fixar notícia")} onClick={() => setForm((f) => ({ ...f, pinned: !f.pinned }))} />
           </Linha>
     </Janela>
   );

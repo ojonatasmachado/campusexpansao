@@ -6,6 +6,7 @@ import { Icon } from "./lib/icons";
 
 import { Botao } from "./ui/Botao";
 import { Acao } from "./ui/Acao";
+import { useTexto } from "./lib/internacional/contexto";
 /* Seletor de cor livre (hex), com roda de cores + leitura de contraste ao
    vivo. Extraído de ServiceExactApp.tsx (era local, usado só pela cor de
    destaque da marca) pra ser reaproveitado também pelo editor da Página
@@ -61,6 +62,7 @@ function ColorWheelPicker({ onPick }: { onPick: (hex: string) => void }) {
    compact, o campo já nasce aberto (comportamento de sempre, usado em
    Personalização). */
 export function AccentField({ label, bgHex, value, defaultHex, onChange, compact }: { label: string; bgHex: string; value: string; defaultHex: string; onChange: (hex: string) => void; compact?: boolean }) {
+  const traduzirUi = useTexto();
   const [draft, setDraft] = useState(value);
   const [savedMsg, setSavedMsg] = useState(false);
   const [expanded, setExpanded] = useState(!compact);
@@ -73,6 +75,8 @@ export function AccentField({ label, bgHex, value, defaultHex, onChange, compact
   const vars = deriveAccentVars(hex, bgHex === "#0E110D" ? "dark" : "light");
   const bgContrast = contrastRatio(hex, bgHex);
   const bgLabel = contrastLabel(bgContrast);
+  /* o rótulo vem em pt-BR de lib/color.ts; aqui só a apresentação */
+  const nivelContraste: Record<string, string> = { "Ótimo contraste": traduzirUi("Ótimo contraste"), "Contraste razoável": traduzirUi("Contraste razoável"), "Contraste baixo : difícil de ler": traduzirUi("Contraste baixo : difícil de ler") };
   const dirty = valid && hex.toLowerCase() !== value.toLowerCase();
 
   const aplicar = () => {
@@ -107,12 +111,12 @@ export function AccentField({ label, bgHex, value, defaultHex, onChange, compact
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           {draft.toLowerCase() !== defaultHex.toLowerCase() && (
             <Acao className="brand-accent-reset" onClick={() => setDraft(defaultHex)}>
-              Restaurar padrão
+              {traduzirUi("Restaurar padrão")}
             </Acao>
           )}
           {compact && (
             <Acao className="brand-accent-reset" onClick={() => setExpanded(false)}>
-              Fechar
+              {traduzirUi("Fechar")}
             </Acao>
           )}
         </div>
@@ -126,7 +130,7 @@ export function AccentField({ label, bgHex, value, defaultHex, onChange, compact
           className="brand-accent-swatch"
           value={valid ? hex : defaultHex}
           onChange={(e) => setDraft(e.target.value)}
-          aria-label={`Cor de destaque : ${label}`}
+          aria-label={traduzirUi("Cor de destaque : {rotulo}", { rotulo: label })}
         />
         <input
           className="input brand-accent-hex"
@@ -139,15 +143,15 @@ export function AccentField({ label, bgHex, value, defaultHex, onChange, compact
         </Acao>
       </div>
 
-      {!valid && <div className="brand-accent-warn">Use um hex válido, tipo #7A9E3F.</div>}
+      {!valid && <div className="brand-accent-warn">{traduzirUi("Use um hex válido, tipo #7A9E3F.")}</div>}
       {valid && (
         <div className={`brand-accent-contrast${bgLabel.ok ? "" : " low"}`}>
-          {bgLabel.label} · {bgContrast.toFixed(2)}:1 contra o fundo. Texto dos botões ajustado sozinho pra continuar legível.
+          {traduzirUi("{nivel} · {razao}:1 contra o fundo. Texto dos botões ajustado sozinho pra continuar legível.", { nivel: nivelContraste[bgLabel.label] ?? bgLabel.label, razao: bgContrast.toFixed(2) })}
         </div>
       )}
 
       <Botao variante="principal" compacto className="brand-accent-apply" desativado={!valid || !dirty} onClick={aplicar}>
-        {savedMsg ? <><Icon name="ok" size={14} /> Aplicado</> : "Aplicar"}
+        {savedMsg ? <><Icon name="ok" size={14} /> {traduzirUi("Aplicado")}</> : traduzirUi("Aplicar")}
       </Botao>
     </div>
   );

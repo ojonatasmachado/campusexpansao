@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 
 import { Botao } from "./ui/Botao";
 import { Janela } from "./ui/Janela";
+import { useTexto } from "./lib/internacional/contexto";
+
 /* Corte + zoom antes de enviar qualquer imagem do Service (logo, capa da
    Página da igreja, imagem de notícia...). Arrasta pra reposicionar, controla
    o zoom no slider, e só sai daqui uma imagem já no enquadramento certo —
@@ -31,6 +33,8 @@ export function ImageCropper({
   onConfirm: (file: File) => void;
   onCancel: () => void;
 }) {
+  const traduzirUi = useTexto();
+
   const [imgUrl, setImgUrl] = useState<string | null>(null);
   const [imgSize, setImgSize] = useState({ w: 0, h: 0 });
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
@@ -165,13 +169,13 @@ export function ImageCropper({
   };
 
   return (
-    <Janela sobretitulo="Ajustar imagem" titulo="Corte e zoom" texto="Arraste pra reposicionar e use o zoom pra enquadrar melhor."
+    <Janela sobretitulo={traduzirUi("Ajustar imagem")} titulo={traduzirUi("Corte e zoom")} texto={traduzirUi("Arraste pra reposicionar e use o zoom pra enquadrar melhor.")}
       aoFechar={onCancel} corpoStyle={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}
       rodape={
         <>
-          <Botao onClick={onCancel}>Cancelar</Botao>
+          <Botao onClick={onCancel}>{traduzirUi("Cancelar")}</Botao>
           <Botao variante="principal" desativado={busy || status !== "ready"} onClick={confirmar}>
-            {busy ? "Aplicando..." : "Aplicar"}
+            {busy ? traduzirUi("Aplicando...") : traduzirUi("Aplicar")}
           </Botao>
         </>
       }>
@@ -193,14 +197,10 @@ export function ImageCropper({
             onPointerLeave={onPointerUp}
           >
             {status === "loading" && (
-              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--fs-ui-13)", color: "var(--muted)" }}>
-                Carregando imagem...
-              </div>
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--fs-ui-13)", color: "var(--muted)" }}>{traduzirUi("Carregando imagem...")}</div>
             )}
             {status === "error" && (
-              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center", padding: 16, fontSize: "var(--fs-ui-13)", color: "var(--danger)" }}>
-                Não consegui abrir essa imagem. Tente outro arquivo (JPG, PNG ou WEBP).
-              </div>
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center", padding: 16, fontSize: "var(--fs-ui-13)", color: "var(--danger)" }}>{traduzirUi("Não consegui abrir essa imagem. Tente outro arquivo (JPG, PNG ou WEBP).")}</div>
             )}
             {imgUrl && status !== "error" && (
               <img
@@ -222,7 +222,7 @@ export function ImageCropper({
             )}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, width: FRAME_W }}>
-            <span style={{ fontSize: "var(--fs-ui-sm)", color: "var(--muted)" }}>Zoom</span>
+            <span style={{ fontSize: "var(--fs-ui-sm)", color: "var(--muted)" }}>{traduzirUi("Zoom")}</span>
             <input
               type="range"
               min={1}

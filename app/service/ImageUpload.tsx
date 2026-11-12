@@ -5,6 +5,8 @@ import { ImageCropper } from "./ImageCropper";
 
 import { Botao } from "./ui/Botao";
 import { Acao } from "./ui/Acao";
+import { useTexto } from "./lib/internacional/contexto";
+
 /* Upload de imagem retangular (logo, capa/banner...), com preview de fundo e
    botão trocar/remover. Extraído de ServiceExactApp.tsx (era local/não
    exportado, usado só pro logo da igreja) pra poder ser reaproveitado também
@@ -25,6 +27,8 @@ export function ImageUpload({
   onUpload: (file: File) => Promise<void>;
   onRemove: () => void | Promise<void>;
 }) {
+  const traduzirUi = useTexto();
+
   const ref = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -37,7 +41,7 @@ export function ImageUpload({
     try {
       await onUpload(file);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Não foi possível enviar a imagem.");
+      setError(err instanceof Error ? err.message : traduzirUi("Não foi possível enviar a imagem."));
     } finally {
       setBusy(false);
       if (ref.current) ref.current.value = "";
@@ -59,12 +63,10 @@ export function ImageUpload({
         {error && <div style={{ fontSize: "var(--fs-ui-sm)", color: "var(--danger)", marginTop: 6 }}>{error}</div>}
         <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
           <Botao compacto desativado={busy} onClick={() => ref.current?.click()}>
-            {busy ? "Enviando..." : url ? "Trocar" : "Enviar imagem"}
+            {busy ? traduzirUi("Enviando...") : url ? traduzirUi("Trocar") : traduzirUi("Enviar imagem")}
           </Botao>
           {url && (
-            <Botao variante="discreto" compacto desativado={busy} onClick={() => onRemove()}>
-              Remover
-            </Botao>
+            <Botao variante="discreto" compacto desativado={busy} onClick={() => onRemove()}>{traduzirUi("Remover")}</Botao>
           )}
         </div>
       </div>
