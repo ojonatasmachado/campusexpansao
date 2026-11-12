@@ -15,6 +15,8 @@ import { Botao, BotaoIcone } from "../../../ui/Botao";
 import { Acao } from "../../../ui/Acao";
 import { Selo } from "../../../ui/Selo";
 import { Etapas, type Etapa } from "../../../ui/Etapas";
+import { useTexto } from "../../../lib/internacional/contexto";
+
 
 export function VisitanteDrawer({
   visitor: initVisitor, notes, church, people, onClose, onOpenMember, setModal,
@@ -23,6 +25,8 @@ export function VisitanteDrawer({
   people: PersonView[]; onClose: () => void; onOpenMember: (id: string) => void;
   setModal: (modal: ModalState) => void;
 }) {
+  const traduzirUi = useTexto();
+
   const { comTermos: ct } = useTermos();
   const router = useRouter();
   const [nota, setNota] = useState("");
@@ -67,12 +71,12 @@ export function VisitanteDrawer({
   return (
     <DrawerShell onClose={onClose}>
       <div className="drawer-head">
-        <BotaoIcone className="drawer-close" rotulo="Fechar" onClick={onClose}>✕</BotaoIcone>
+        <BotaoIcone className="drawer-close" rotulo={traduzirUi("Fechar")} onClick={onClose}>✕</BotaoIcone>
         <div className="profile-top">
           <Av name={initVisitor.name} size="lg" />
           <div>
             <div className="profile-name">{initVisitor.name}</div>
-            <div className="profile-role">{initVisitor.origin || "Visitante"} · primeira visita {formatDateBR(initVisitor.visited_on) || "sem data"}</div>
+            <div className="profile-role">{traduzirUi("{origem} · primeira visita {data}", { origem: initVisitor.origin || traduzirUi("Visitante"), data: formatDateBR(initVisitor.visited_on) || traduzirUi("sem data") })}</div>
             <div style={{ marginTop: 10 }}>
               <Selo style={{ color: VISITOR_STAGES[stageIdx]?.color }}>{VISITOR_STAGES[stageIdx]?.name ?? currentStage}</Selo>
             </div>
@@ -80,16 +84,16 @@ export function VisitanteDrawer({
         </div>
       </div>
       <div className="drawer-body">
-        <DrawerSection title="Contato">
+        <DrawerSection title={traduzirUi("Contato")}>
           <dl className="kv">
-            <dt>Telefone</dt><dd>{initVisitor.phone || "-"}</dd>
+            <dt>{traduzirUi("Telefone")}</dt><dd>{initVisitor.phone || "-"}</dd>
             <AutocadastroDados visitor={initVisitor} />
-            <dt>Como chegou</dt><dd>{initVisitor.origin || "Visitante"}</dd>
-            <dt>Responsável</dt><dd>{owner?.name || "sem dono fixo"}</dd>
-            <dt>Próximo passo</dt><dd><span className={`vcard-due ${initVisitor.due_status || "ok"}`}>{initVisitor.due || "sem prazo"}</span></dd>
+            <dt>{traduzirUi("Como chegou")}</dt><dd>{initVisitor.origin || traduzirUi("Visitante")}</dd>
+            <dt>{traduzirUi("Responsável")}</dt><dd>{owner?.name || traduzirUi("sem dono fixo")}</dd>
+            <dt>{traduzirUi("Próximo passo")}</dt><dd><span className={`vcard-due ${initVisitor.due_status || "ok"}`}>{initVisitor.due || traduzirUi("sem prazo")}</span></dd>
           </dl>
         </DrawerSection>
-        <DrawerSection title={ct("{Caminhada} de integração")}>
+        <DrawerSection title={ct(traduzirUi("{Caminhada} de integração"))}>
           <div style={{ display: "flex", gap: 6 }}>
             {VISITOR_STAGES.map((s, i) => (
               <div key={s.id} style={{ flex: 1, textAlign: "center" }}>
@@ -99,53 +103,53 @@ export function VisitanteDrawer({
             ))}
           </div>
           {stageIdx < VISITOR_STAGES.length - 1
-            ? <Botao variante="principal" compacto style={{ marginTop: 16, width: "100%", justifyContent: "center" }} onClick={avancar} desativado={saving}>Mover para {VISITOR_STAGES[stageIdx + 1]?.name}</Botao>
+            ? <Botao variante="principal" compacto style={{ marginTop: 16, width: "100%", justifyContent: "center" }} onClick={avancar} desativado={saving}>{traduzirUi("Mover para {etapa}", { etapa: VISITOR_STAGES[stageIdx + 1]?.name ?? "" })}</Botao>
             : (
               <div className="vmember-cta">
-                <div className="vmember-t"><Icon name="ok" size={13} /> Chegou a membro</div>
-                <div className="vmember-s">Complete os dados cadastrais para liberar o acesso ao app.</div>
+                <div className="vmember-t"><Icon name="ok" size={13} /> {traduzirUi("Chegou a membro")}</div>
+                <div className="vmember-s">{traduzirUi("Complete os dados cadastrais para liberar o acesso ao app.")}</div>
                 {initVisitor.member_id
-                  ? <Botao variante="principal" compacto style={{ width: "100%", justifyContent: "center", marginTop: 12 }} onClick={() => { onClose(); onOpenMember(initVisitor.member_id!); }}>Ver ficha</Botao>
+                  ? <Botao variante="principal" compacto style={{ width: "100%", justifyContent: "center", marginTop: 12 }} onClick={() => { onClose(); onOpenMember(initVisitor.member_id!); }}>{traduzirUi("Ver ficha")}</Botao>
                   : (
                     <Botao variante="principal" compacto style={{ width: "100%", justifyContent: "center", marginTop: 12 }} onClick={() => setModal({
-                      eyebrow: "Criar",
-                      title: "Completar dados de membro",
-                      subtitle: "Finalize o cadastro para liberar o acesso ao app.",
-                      saveLabel: "Adicionar membro",
+                      eyebrow: traduzirUi("Criar"),
+                      title: traduzirUi("Completar dados de membro"),
+                      subtitle: traduzirUi("Finalize o cadastro para liberar o acesso ao app."),
+                      saveLabel: traduzirUi("Adicionar membro"),
                       formFields: [
-                        { k: "nome", label: "Nome completo", type: "text", req: true, ph: "Como a pessoa se chama", value: initVisitor.name },
-                        { k: "tel", label: "Telefone (WhatsApp)", type: "text", half: true, ph: "(11) 9...", value: initVisitor.phone ?? "" },
-                        { k: "email", label: "E-mail", type: "text", half: true, req: true, ph: "usado para entrar no app" },
-                        { k: "nasc", label: "Aniversário", type: "date", half: true },
-                        { k: "bairro", label: "Bairro", type: "text", half: true, ph: "Onde mora" },
+                        { k: "nome", label: traduzirUi("Nome completo"), type: "text", req: true, ph: traduzirUi("Como a pessoa se chama"), value: initVisitor.name },
+                        { k: "tel", label: traduzirUi("Telefone (WhatsApp)"), type: "text", half: true, ph: "(11) 9...", value: initVisitor.phone ?? "" },
+                        { k: "email", label: traduzirUi("E-mail"), type: "text", half: true, req: true, ph: traduzirUi("usado para entrar no app") },
+                        { k: "nasc", label: traduzirUi("Aniversário"), type: "date", half: true },
+                        { k: "bairro", label: traduzirUi("Bairro"), type: "text", half: true, ph: traduzirUi("Onde mora") },
                       ],
                       action: { kind: "member", visitorId: initVisitor.id },
-                    })}>Completar dados de membro →</Botao>
+                    })}>{traduzirUi("Completar dados de membro →")}</Botao>
                   )}
               </div>
             )
           }
         </DrawerSection>
-        <DrawerSection title="Registrar contato">
-          {currentReply && <div className={`vresp-now ${currentReply}`}>{currentReply === "respondeu" ? "Último contato: respondeu" : "Último contato: sem resposta, refazer"}</div>}
-          <textarea className="textarea" placeholder="O que rolou nesse contato? (ligação, WhatsApp, visita...)" value={nota} onChange={(e) => setNota(e.target.value)} />
+        <DrawerSection title={traduzirUi("Registrar contato")}>
+          {currentReply && <div className={`vresp-now ${currentReply}`}>{currentReply === "respondeu" ? traduzirUi("Último contato: respondeu") : traduzirUi("Último contato: sem resposta, refazer")}</div>}
+          <textarea className="textarea" placeholder={traduzirUi("O que rolou nesse contato? (ligação, WhatsApp, visita...)")} value={nota} onChange={(e) => setNota(e.target.value)} />
           <div className="vresp-pick">
-            <span className="vresp-lbl">A pessoa respondeu?</span>
+            <span className="vresp-lbl">{traduzirUi("A pessoa respondeu?")}</span>
             <div className="seg-check">
-              <Acao className={`seg-chip ${resp === "respondeu" ? "on" : ""}`} onClick={() => setResp(resp === "respondeu" ? "" : "respondeu")}>Respondeu</Acao>
-              <Acao className={`seg-chip ${resp === "sem_resposta" ? "on" : ""}`} onClick={() => setResp(resp === "sem_resposta" ? "" : "sem_resposta")}>Não respondeu</Acao>
+              <Acao className={`seg-chip ${resp === "respondeu" ? "on" : ""}`} onClick={() => setResp(resp === "respondeu" ? "" : "respondeu")}>{traduzirUi("Respondeu")}</Acao>
+              <Acao className={`seg-chip ${resp === "sem_resposta" ? "on" : ""}`} onClick={() => setResp(resp === "sem_resposta" ? "" : "sem_resposta")}>{traduzirUi("Não respondeu")}</Acao>
             </div>
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-            <Botao variante="principal" compacto onClick={addNota} desativado={saving}>{saving ? "Salvando…" : "Salvar no histórico"}</Botao>
+            <Botao variante="principal" compacto onClick={addNota} desativado={saving}>{saving ? traduzirUi("Salvando…") : traduzirUi("Salvar no histórico")}</Botao>
           </div>
         </DrawerSection>
-        <DrawerSection title="Histórico de contato">
+        <DrawerSection title={traduzirUi("Histórico de contato")}>
           {visitorNotes.length > 0
             ? (
-              <Etapas rotulo="Histórico de contato" itens={visitorNotes.map((n): Etapa => ({ id: n.id, estado: "feito", tom: n.is_milestone ? undefined : "neutro", detalhe: n.body, quando: formatDateBR(n.happened_on || n.created_at) || undefined, por: n.author || undefined }))} />
+              <Etapas rotulo={traduzirUi("Histórico de contato")} itens={visitorNotes.map((n): Etapa => ({ id: n.id, estado: "feito", tom: n.is_milestone ? undefined : "neutro", detalhe: n.body, quando: formatDateBR(n.happened_on || n.created_at) || undefined, por: n.author || undefined }))} />
             )
-            : <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum contato registrado ainda.</div>}
+            : <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>{traduzirUi("Nenhum contato registrado ainda.")}</div>}
         </DrawerSection>
       </div>
     </DrawerShell>

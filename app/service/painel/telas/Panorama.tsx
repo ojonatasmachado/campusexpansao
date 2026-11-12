@@ -14,6 +14,7 @@ import { Linha } from "../../ui/Linha";
 import { Selo } from "../../ui/Selo";
 import { DrawerSection } from "../campos";
 import { useTermos } from "../../lib/vocabulario-context";
+import { useTexto } from "../../lib/internacional/contexto";
 
 export function Panorama({
   cobertura,
@@ -26,17 +27,19 @@ export function Panorama({
   schedule: CronoStep[];
   onAbrirTime: (timeId: string) => void;
 }) {
+  const traduzirUi = useTexto();
+
   const { comTermos: ct } = useTermos();
   const incompletos = cobertura.filter((t) => t.preenchidas < t.total);
   const completosCount = cobertura.length - incompletos.length;
 
   return (
     <>
-      <DrawerSection title={ct("Cobertura")}>
+      <DrawerSection title={ct(traduzirUi("Cobertura"))}>
         {incompletos.length === 0 && completosCount === 0 ? (
-          <p className="mini-sub">Sem times neste {ct("culto")}.</p>
+          <p className="mini-sub">{traduzirUi("Sem times neste culto.")}</p>
         ) : (
-          <ul className="panorama-cob" aria-label={ct("Cobertura")}>
+          <ul className="panorama-cob" aria-label={ct(traduzirUi("Cobertura"))}>
             {incompletos.map((t) => (
               <li key={t.timeId}>
                 <Acao
@@ -56,7 +59,7 @@ export function Panorama({
             {completosCount > 0 && (
               <li className="panorama-cob-ok-li">
                 <div className="mini-sub panorama-cob-ok">
-                  +{completosCount} {completosCount === 1 ? "ok" : "ok"}
+                  +{completosCount} {completosCount === 1 ? traduzirUi("ok") : traduzirUi("ok")}
                 </div>
               </li>
             )}
@@ -64,17 +67,17 @@ export function Panorama({
         )}
       </DrawerSection>
 
-      <DrawerSection title={ct("Roteiro")}>
+      <DrawerSection title={ct(traduzirUi("Roteiro"))}>
         {schedule.length === 0 ? (
-          <p className="mini-sub">Sem etapas.</p>
+          <p className="mini-sub">{traduzirUi("Sem etapas.")}</p>
         ) : (
-          <ul className="panorama-crono" aria-label={ct("Roteiro")}>
+          <ul className="panorama-crono" aria-label={ct(traduzirUi("Roteiro"))}>
             {schedule.map((step) => (
               <li key={step.id}>
                 <Linha>
                   <span className="panorama-crono-hora">{step.time ?? "--:--"}</span>
                   <div className="mini-main">
-                    <div className="panorama-crono-item">{step.item || "Sem nome"}</div>
+                    <div className="panorama-crono-item">{step.item || traduzirUi("Sem nome")}</div>
                   </div>
                 </Linha>
               </li>

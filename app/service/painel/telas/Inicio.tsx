@@ -1,7 +1,6 @@
 "use client";
 
 import { pendenciasDeCobertura } from "../../modules/escalas/pendencias";
-import { plural } from "../../lib/plural";
 import { nomeComparavel } from "../../lib/pessoas";
 import { useState } from "react";
 import { Icon } from "../../lib/icons";
@@ -30,6 +29,8 @@ import { Cartao } from "../../ui/Cartao";
 import { Linha, linhaClasse } from "../../ui/Linha";
 import { Gaveta } from "../../ui/Janela";
 import { ListaDeCuidado } from "../../modules/cuidado/Cuidado";
+import { useTexto } from "../../lib/internacional/contexto";
+import { sourceText, type Text } from "../../lib/internacional/mensagens";
 export function GlobalSearch({
   people,
   members,
@@ -47,6 +48,8 @@ export function GlobalSearch({
      (nome interno e nome que a igreja deu, lei 7) */
   telas?: { id: string; label: string; icon: string; grupo: string }[];
 }) {
+  const traduzirUi = useTexto();
+
   const { vocab, comTermos: ct } = useTermos();
   const [query, setQuery] = useState("");
   const term = query.trim().toLowerCase();
@@ -61,7 +64,7 @@ export function GlobalSearch({
           .slice(0, 4)
           .map((tela) => ({
             key: `tela-${tela.id}`,
-            type: "Tela",
+            type: traduzirUi("Tela"),
             icon: tela.icon,
             name: ct(tela.label),
             sub: tela.grupo,
@@ -72,7 +75,7 @@ export function GlobalSearch({
           .slice(0, 4)
           .map((member) => ({
             key: `member-${member.id}`,
-            type: "Membro",
+            type: traduzirUi("Membro"),
             icon: "membros",
             name: member.name,
             sub: member.situation,
@@ -100,10 +103,10 @@ export function GlobalSearch({
           .slice(0, 4)
           .map((ministry) => ({
             key: `ministry-${ministry.id}`,
-            type: "Time",
+            type: traduzirUi("Time"),
             icon: "times",
             name: ministry.name,
-            sub: plural(ministry.people.length, ct("{voluntario}")),
+            sub: ct(traduzirUi("{count, plural, =1 {# {voluntario}} other {# {voluntarios}}}", { count: ministry.people.length })),
             action: () => {
               setRoute("times");
               setDrawer({ kind: "ministry", id: ministry.id });
@@ -121,7 +124,7 @@ export function GlobalSearch({
           });
           return Array.from(funcoes.entries()).slice(0, 6).map(([name, times]) => ({
             key: `func-${name}`,
-            type: "Função",
+            type: traduzirUi("Função"),
             icon: "escalas",
             name,
             sub: times.map((m) => m.name.split(" ")[0]).join(", "),
@@ -137,7 +140,7 @@ export function GlobalSearch({
   return (
     <>
       <input
-        placeholder={ct("Buscar tela, membro, {voluntario}, time ou função...")}
+        placeholder={ct(traduzirUi("Buscar tela, membro, {voluntario}, time ou função..."))}
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         onKeyDown={(event) => {
@@ -150,7 +153,7 @@ export function GlobalSearch({
       />
       {term ? (
         <div className="gsearch-pop">
-          {results.length === 0 ? <div className="gsearch-empty">Nada encontrado para &quot;{query}&quot;.</div> : null}
+          {results.length === 0 ? <div className="gsearch-empty">{traduzirUi("Nada encontrado para \"{query}\".", { query })}</div> : null}
           {results.map((result) => (
             <Acao
               className="gsearch-row"
@@ -175,46 +178,49 @@ export function GlobalSearch({
 
 export const REACOES_ENQUETE = ["Ótimo", "Bom", "Neutro", "Ruim", "Péssimo"];
 
-export function buildAvaliacaoModal(enquete: EnqueteElegivelView): NonNullable<ModalState> {
+/* reações gravadas na resposta: o valor fica em pt-BR, só o rótulo muda */
+const rotuloReacao = (t: Text, r: string) => ({ "Ótimo": t("Ótimo"), Bom: t("Bom"), Neutro: t("Neutro"), Regular: t("Regular"), Ruim: t("Ruim"), "Péssimo": t("Péssimo") } as Record<string, string>)[r] ?? r;
+
+export function buildAvaliacaoModal(enquete: EnqueteElegivelView, traduzirUi: Text = sourceText): NonNullable<ModalState> {
   const formFields: FieldDef[] = enquete.perguntas.map((p) => {
-    if (p.tipo === "texto") return { k: p.id, label: p.texto, type: "area", req: true, ph: "Escreva aqui..." };
+    if (p.tipo === "texto") return { k: p.id, label: p.texto, type: "area", req: true, ph: traduzirUi("Escreva aqui...") };
     if (p.tipo === "nota") {
       const max = p.escala ?? 10;
       const options = Array.from({ length: max + 1 }, (_, i) => ({ v: String(i), l: String(i) }));
-      return { k: p.id, label: p.texto, type: "select", req: true, ph: "Escolha uma nota", options };
+      return { k: p.id, label: p.texto, type: "select", req: true, ph: traduzirUi("Escolha uma nota"), options };
     }
-    if (p.tipo === "emoji") return { k: p.id, label: p.texto, type: "select", req: true, ph: "Escolha uma reação", options: REACOES_ENQUETE.map((r) => ({ v: r, l: r })) };
-    if (p.tipo === "simnao") return { k: p.id, label: p.texto, type: "select", req: true, ph: "Escolha uma opção", options: [{ v: "Sim", l: "Sim" }, { v: "Não", l: "Não" }] };
-    return { k: p.id, label: p.texto, type: "select", req: true, ph: "Escolha uma opção", options: (p.opcoes ?? []).map((o) => ({ v: o, l: o })) };
+    if (p.tipo === "emoji") return { k: p.id, label: p.texto, type: "select", req: true, ph: traduzirUi("Escolha uma reação"), options: REACOES_ENQUETE.map((r) => ({ v: r, l: rotuloReacao(traduzirUi, r) })) };
+    if (p.tipo === "simnao") return { k: p.id, label: p.texto, type: "select", req: true, ph: traduzirUi("Escolha uma opção"), options: [{ v: "Sim", l: traduzirUi("Sim") }, { v: "Não", l: traduzirUi("Não") }] };
+    return { k: p.id, label: p.texto, type: "select", req: true, ph: traduzirUi("Escolha uma opção"), options: (p.opcoes ?? []).map((o) => ({ v: o, l: o })) };
   });
   return {
-    eyebrow: "Avaliação de experiência",
+    eyebrow: traduzirUi("Avaliação de experiência"),
     title: enquete.nome,
-    subtitle: "Leva menos de um minuto. Ajuda sua liderança a cuidar melhor do time.",
-    saveLabel: "Enviar",
+    subtitle: traduzirUi("Leva menos de um minuto. Ajuda sua liderança a cuidar melhor do time."),
+    saveLabel: traduzirUi("Enviar"),
     formFields,
     action: { kind: "avaliacaoResposta", enquete },
   };
 }
 
-export function buildPesquisaModal(pesquisa: PesquisaElegivelView): NonNullable<ModalState> {
+export function buildPesquisaModal(pesquisa: PesquisaElegivelView, traduzirUi: Text = sourceText): NonNullable<ModalState> {
   const formFields: FieldDef[] = pesquisa.perguntas.map((p) => {
     const valorAnterior = pesquisa.respostasAnteriores[p.id];
-    if (p.tipo === "texto") return { k: p.id, label: p.texto, type: "area", req: p.obrigatoria, ph: "Escreva aqui...", value: valorAnterior };
+    if (p.tipo === "texto") return { k: p.id, label: p.texto, type: "area", req: p.obrigatoria, ph: traduzirUi("Escreva aqui..."), value: valorAnterior };
     if (p.tipo === "nota") {
       const max = p.escala ?? 5;
       const options = Array.from({ length: max + 1 }, (_, i) => ({ v: String(i), l: String(i) }));
-      return { k: p.id, label: p.texto, type: "select", req: p.obrigatoria, ph: "Escolha uma nota", options, value: valorAnterior };
+      return { k: p.id, label: p.texto, type: "select", req: p.obrigatoria, ph: traduzirUi("Escolha uma nota"), options, value: valorAnterior };
     }
-    if (p.tipo === "emoji") return { k: p.id, label: p.texto, type: "select", req: p.obrigatoria, ph: "Escolha uma reação", options: REACOES_PESQUISA.map((r) => ({ v: r, l: r })), value: valorAnterior };
-    if (p.tipo === "simnao") return { k: p.id, label: p.texto, type: "select", req: p.obrigatoria, ph: "Escolha uma opção", options: [{ v: "Sim", l: "Sim" }, { v: "Não", l: "Não" }], value: valorAnterior };
-    return { k: p.id, label: p.texto, type: "select", req: p.obrigatoria, ph: "Escolha uma opção", options: (p.opcoes ?? []).map((o) => ({ v: o, l: o })), value: valorAnterior };
+    if (p.tipo === "emoji") return { k: p.id, label: p.texto, type: "select", req: p.obrigatoria, ph: traduzirUi("Escolha uma reação"), options: REACOES_PESQUISA.map((r) => ({ v: r, l: rotuloReacao(traduzirUi, r) })), value: valorAnterior };
+    if (p.tipo === "simnao") return { k: p.id, label: p.texto, type: "select", req: p.obrigatoria, ph: traduzirUi("Escolha uma opção"), options: [{ v: "Sim", l: traduzirUi("Sim") }, { v: "Não", l: traduzirUi("Não") }], value: valorAnterior };
+    return { k: p.id, label: p.texto, type: "select", req: p.obrigatoria, ph: traduzirUi("Escolha uma opção"), options: (p.opcoes ?? []).map((o) => ({ v: o, l: o })), value: valorAnterior };
   });
   return {
-    eyebrow: pesquisa.pendente ? "Pesquisa da igreja" : "Sua resposta",
+    eyebrow: pesquisa.pendente ? traduzirUi("Pesquisa da igreja") : traduzirUi("Sua resposta"),
     title: pesquisa.nome,
-    subtitle: pesquisa.pendente ? "Leva menos de um minuto. Ajuda sua liderança a cuidar melhor do time." : "Você já respondeu. Pode rever ou atualizar quando quiser, principalmente se algo mudou.",
-    saveLabel: pesquisa.pendente ? "Enviar" : "Atualizar resposta",
+    subtitle: pesquisa.pendente ? traduzirUi("Leva menos de um minuto. Ajuda sua liderança a cuidar melhor do time.") : traduzirUi("Você já respondeu. Pode rever ou atualizar quando quiser, principalmente se algo mudou."),
+    saveLabel: pesquisa.pendente ? traduzirUi("Enviar") : traduzirUi("Atualizar resposta"),
     formFields,
     action: { kind: "pesquisaResposta", pesquisa },
   };
@@ -297,6 +303,8 @@ export function Painel({
   /* sem times ou sem cultos: a configuração guiada aparece no Início */
   igrejaNova?: boolean;
 }) {
+  const traduzirUi = useTexto();
+
   const { aindaVaiAcontecer, saudacao, todayISO, fuso } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
   const gestao = currentRole === "master" || currentRole === "pastor";
@@ -329,21 +337,21 @@ export function Painel({
     <div className="content wide painel-inicio">
       <div className="ph">
         <div>
-          <h1 className="ph-title">{saudacao()}, {userName?.split(" ")[0] ?? "liderança"} <HelpDot text={ct("Seu resumo da semana: próximos {cultos}, vagas em aberto na escala e o que precisa da sua atenção agora.")} /></h1>
+          <h1 className="ph-title">{traduzirUi("{saudacao}, {nome}", { saudacao: saudacao(), nome: userName?.split(" ")[0] ?? traduzirUi("liderança") })} <HelpDot text={ct(traduzirUi("Seu resumo da semana: próximos {cultos}, vagas em aberto na escala e o que precisa da sua atenção agora."))} /></h1>
           <p className="ph-sub">{semanaDe(todayISO())}.</p>
         </div>
         {/* v7 I1: ações do topo removidas (Lei 15). A fila já contém a ação principal. */}
       </div>
       {ativando && (
         <section className="service-start-guide" aria-labelledby="service-start-title">
-          <div className="ph-eyebrow">{primeiraProgramacao ? "Primeiros passos" : "Fila de ações"}</div>
-          <h2 id="service-start-title">{primeiraProgramacao ? "Comece por aqui" : "Precisa de você"}</h2>
-          <p>{primeiraProgramacao ? "Sua igreja ainda não tem programação. Siga os passos abaixo para começar." : "Tudo o que pede atenção agora aparece nesta fila. Resolva na ordem; cada linha leva direto à tela que resolve."}</p>
+          <div className="ph-eyebrow">{primeiraProgramacao ? traduzirUi("Primeiros passos") : traduzirUi("Fila de ações")}</div>
+          <h2 id="service-start-title">{primeiraProgramacao ? traduzirUi("Comece por aqui") : traduzirUi("Precisa de você")}</h2>
+          <p>{primeiraProgramacao ? traduzirUi("Sua igreja ainda não tem programação. Siga os passos abaixo para começar.") : traduzirUi("Tudo o que pede atenção agora aparece nesta fila. Resolva na ordem; cada linha leva direto à tela que resolve.")}</p>
           {primeiraProgramacao && (
             <ol>
-              <li><b>Identifique sua igreja</b><span>Nome, endereço e a identidade que as pessoas vão reconhecer.</span></li>
-              <li><b>Prepare o encontro</b><span>Uma data e um lugar antes de organizar toda a equipe.</span></li>
-              <li><b>Convide quem vai ajudar</b><span>Depois, acompanhe os acessos e as respostas.</span></li>
+              <li><b>{traduzirUi("Identifique sua igreja")}</b><span>{traduzirUi("Nome, endereço e a identidade que as pessoas vão reconhecer.")}</span></li>
+              <li><b>{traduzirUi("Prepare o encontro")}</b><span>{traduzirUi("Uma data e um lugar antes de organizar toda a equipe.")}</span></li>
+              <li><b>{traduzirUi("Convide quem vai ajudar")}</b><span>{traduzirUi("Depois, acompanhe os acessos e as respostas.")}</span></li>
             </ol>
           )}
         </section>
@@ -357,36 +365,36 @@ export function Painel({
             key: `cobertura-${evento.id}`,
             t: `${evento.name} · ${formatDateBR(evento.eventDate)}`,
             s: ` · ${resumo}`,
-            go: "Ver panorama →",
+            go: traduzirUi("Ver panorama →"),
             action: () => setDrawer({ kind: "event", id: evento.id, tab: "panorama" }),
           });
         }
         if (!liderDeTime && podeAbrir("visitantes") && visitantesSemContato > 0) {
-          filas.push({ key: "visitantes-contato", t: visitantesSemContato === 1 ? "1 visitante sem contato" : `${visitantesSemContato} visitantes sem contato`, s: " · há mais de 48h", go: "Ver →", action: () => { const alvos = (visitors ?? []).filter((v) => semContato48h(v, visitorNotes)); if (alvos.length === 1) { setRoute("visitantes"); setDrawer({ kind: "visitor", id: alvos[0].id }); } else abrirDiretorio("visitantes", "sem-contato"); } });
+          filas.push({ key: "visitantes-contato", t: traduzirUi("{count, plural, =1 {1 visitante sem contato} other {{n} visitantes sem contato}}", { count: visitantesSemContato, n: String(visitantesSemContato) }), s: ` · ${traduzirUi("há mais de 48h")}`, go: traduzirUi("Ver →"), action: () => { const alvos = (visitors ?? []).filter((v) => semContato48h(v, visitorNotes)); if (alvos.length === 1) { setRoute("visitantes"); setDrawer({ kind: "visitor", id: alvos[0].id }); } else abrirDiretorio("visitantes", "sem-contato"); } });
         }
         if (!liderDeTime && podeAbrir("visitantes") && visitantesPeloLink > 0) {
-          filas.push({ key: "visitantes-link", t: `${plural(visitantesPeloLink, "visitante")} ${visitantesPeloLink === 1 ? "se cadastrou" : "se cadastraram"} pelo link`, s: " · esperando o 1º contato", go: "Ver →", action: () => { const alvos = (visitors ?? []).filter((v) => visitantePeloLink(v, visitorNotes)); if (alvos.length === 1) { setRoute("visitantes"); setDrawer({ kind: "visitor", id: alvos[0].id }); } else abrirDiretorio("visitantes", "pelo-link"); } });
+          filas.push({ key: "visitantes-link", t: traduzirUi("{count, plural, =1 {# visitante se cadastrou pelo link} other {# visitantes se cadastraram pelo link}}", { count: visitantesPeloLink }), s: ` · ${traduzirUi("esperando o 1º contato")}`, go: traduzirUi("Ver →"), action: () => { const alvos = (visitors ?? []).filter((v) => visitantePeloLink(v, visitorNotes)); if (alvos.length === 1) { setRoute("visitantes"); setDrawer({ kind: "visitor", id: alvos[0].id }); } else abrirDiretorio("visitantes", "pelo-link"); } });
         }
         if (pedidosJornada.length > 0) {
-          filas.push({ key: "jornada", t: ct(`${plural(pedidosJornada.length, "pedido", "pedidos")} na {caminhada}`), s: " · esperando aprovação", go: "Revisar →", action: () => setJornadaAberta(true) });
+          filas.push({ key: "jornada", t: ct(traduzirUi("{count, plural, =1 {# pedido na {caminhada}} other {# pedidos na {caminhada}}}", { count: pedidosJornada.length })), s: ` · ${traduzirUi("esperando aprovação")}`, go: traduzirUi("Revisar →"), action: () => setJornadaAberta(true) });
         }
         if (gestao && (pedidosConta.estado !== "pronto" || pedidosConta.pedidos.length > 0)) {
           const total = pedidosConta.pedidos.length;
-          const titulo = pedidosConta.estado === "carregando" ? "Carregando pedidos de conta"
-            : pedidosConta.estado === "erro" ? "Não conseguimos carregar os pedidos de conta"
-            : `${plural(total, "pedido", "pedidos")} de conta ${total === 1 ? "pendente" : "pendentes"}`;
-          filas.push({ key: "novos-cadastros", t: titulo, s: pedidosConta.estado === "pronto" ? " · aguardando aprovação" : "", go: "Revisar →", action: () => setPedidosAbertos(true) });
+          const titulo = pedidosConta.estado === "carregando" ? traduzirUi("Carregando pedidos de conta")
+            : pedidosConta.estado === "erro" ? traduzirUi("Não conseguimos carregar os pedidos de conta")
+            : traduzirUi("{count, plural, =1 {# pedido de conta pendente} other {# pedidos de conta pendentes}}", { count: total });
+          filas.push({ key: "novos-cadastros", t: titulo, s: pedidosConta.estado === "pronto" ? ` · ${traduzirUi("aguardando aprovação")}` : "", go: traduzirUi("Revisar →"), action: () => setPedidosAbertos(true) });
         }
         if (!liderDeTime && cuidado && cuidado.lista.length > 0) {
-          filas.push({ key: "cuidado", t: `${plural(cuidado.lista.length, "pessoa")} sem registro`, s: ` · há ${plural(cuidado.semanas, "semana")} ou mais`, go: "Ver →", action: () => setCuidadoAberto("adultos") });
+          filas.push({ key: "cuidado", t: traduzirUi("{count, plural, =1 {# pessoa sem registro} other {# pessoas sem registro}}", { count: cuidado.lista.length }), s: ` · ${traduzirUi("há {count, plural, =1 {# semana} other {# semanas}} ou mais", { count: cuidado.semanas })}`, go: traduzirUi("Ver →"), action: () => setCuidadoAberto("adultos") });
         }
         if (!liderDeTime && cuidado && (cuidado.criancas?.length ?? 0) > 0) {
-          filas.push({ key: "kids-sumindo", t: `${plural(cuidado.criancas!.length, "criança")} sem check-in`, s: " · vale um contato", go: "Ver →", action: () => setCuidadoAberto("criancas") });
+          filas.push({ key: "kids-sumindo", t: traduzirUi("{count, plural, =1 {# criança sem check-in} other {# crianças sem check-in}}", { count: cuidado.criancas!.length }), s: ` · ${traduzirUi("vale um contato")}`, go: traduzirUi("Ver →"), action: () => setCuidadoAberto("criancas") });
         }
         if (faltas.length > 3) {
           filas.push({
             key: "cobertura-todos",
-            t: `${ct("Ver todos os {cultos} com falta")} (${plural(faltas.length, ct("{culto}"))})`,
+            t: ct(traduzirUi("Ver todos os {cultos} com falta ({count, plural, =1 {# {culto}} other {# {cultos}}})", { count: faltas.length })),
             s: "",
             go: "→",
             action: () => setCoberturaAberta(true),
@@ -395,7 +403,7 @@ export function Painel({
         if (filas.length > 0) {
           return (
             <>
-              <h2 className="painel-sec-t">{liderDeTime ? "Para resolver no seu time" : "Para resolver"}</h2>
+              <h2 className="painel-sec-t">{liderDeTime ? traduzirUi("Para resolver no seu time") : traduzirUi("Para resolver")}</h2>
               <div className="agora-list">
                 {filas.map((f) => (
                   <Acao className={linhaClasse({})} key={f.key} onClick={f.action}>
@@ -413,8 +421,8 @@ export function Painel({
         if (ativando) return null;
         return (
           <>
-            <h2 className="painel-sec-t">Para resolver</h2>
-            <div className="agora-list"><Linha><div className="mini-main"><div className="mini-title">Tudo em dia</div><div className="mini-sub">Nenhuma pendência agora.</div></div></Linha></div>
+            <h2 className="painel-sec-t">{traduzirUi("Para resolver")}</h2>
+            <div className="agora-list"><Linha><div className="mini-main"><div className="mini-title">{traduzirUi("Tudo em dia")}</div><div className="mini-sub">{traduzirUi("Nenhuma pendência agora.")}</div></div></Linha></div>
           </>
         );
       })()}
@@ -426,7 +434,7 @@ export function Painel({
         return (
           <div className="kpi-row">
             {base.map((n) => (
-              <Indicador key={n.id} estilo="cartao" icone={n.id === "membros" ? "membros" : n.id === "servindo" ? "escalas" : "grupos"} valor={n.valor} rotulo={ct(n.rotulo)} aoAbrir={() => abrirDiretorio(n.id === "servindo" ? "pessoas" : "membros", n.id === "servindo" ? "servindo" : n.id === "grupos" ? "em-grupos" : "membros")} rotuloAcao={`${ct(n.rotulo)}: ${n.valor}. Ver a lista`} />
+              <Indicador key={n.id} estilo="cartao" icone={n.id === "membros" ? "membros" : n.id === "servindo" ? "escalas" : "grupos"} valor={n.valor} rotulo={ct(n.rotulo)} aoAbrir={() => abrirDiretorio(n.id === "servindo" ? "pessoas" : "membros", n.id === "servindo" ? "servindo" : n.id === "grupos" ? "em-grupos" : "membros")} rotuloAcao={traduzirUi("{rotulo}: {valor}. Ver a lista", { rotulo: ct(n.rotulo), valor: String(n.valor) })} />
             ))}
           </div>
         );
@@ -434,10 +442,10 @@ export function Painel({
       {podeAbrir("configurar") && (emPreparacao ? (
         <Acao className="setup-banner" onClick={() => setRoute("configurar")}>
           <span className="setup-banner-t">{linhaDoSetup(setup)}</span>
-          <span className="agora-go">{setup.feitas.length || setup.pulou ? "Continuar →" : "Começar →"}</span>
+          <span className="agora-go">{setup.feitas.length || setup.pulou ? traduzirUi("Continuar →") : traduzirUi("Começar →")}</span>
         </Acao>
       ) : (
-        gestao && ["configurar", "times", "cultos", "membros"].every((r) => podeAbrir(r as keyof typeof ROUTES)) ? <details className="service-preparacao"><summary>Revisar preparação da igreja</summary><SetupChecklist counts={setupCounts} setRoute={(r) => setRoute(r as keyof typeof ROUTES)} /></details> : null
+        gestao && ["configurar", "times", "cultos", "membros"].every((r) => podeAbrir(r as keyof typeof ROUTES)) ? <details className="service-preparacao"><summary>{traduzirUi("Revisar preparação da igreja")}</summary><SetupChecklist counts={setupCounts} setRoute={(r) => setRoute(r as keyof typeof ROUTES)} /></details> : null
       ))}
       {/* v7 I1: KPI row removido (lei 14). Voluntários/confirmação/visitantes repetiam a fila e o saúde-resumo; agora vivem só em Relatórios. */}
       {/* v7 I1: blocos "Pendências da escala" e "Próximos cultos" removidos.
@@ -445,20 +453,20 @@ export function Painel({
           Próximos cultos sem pendência não aparecem no Início; a tela dona é Cultos. */}
       <div className="flex-col gap-md">
           {enqueteElegivel && (
-            <Cartao className="cursor-pointer" onClick={() => setModal(buildAvaliacaoModal(enqueteElegivel))}>
-              <div className="panel-head"><span className="panel-title"><Icon name="estrela" size={14} /> Avaliação de experiência</span></div>
+            <Cartao className="cursor-pointer" onClick={() => setModal(buildAvaliacaoModal(enqueteElegivel, traduzirUi))}>
+              <div className="panel-head"><span className="panel-title"><Icon name="estrela" size={14} /> {traduzirUi("Avaliação de experiência")}</span></div>
               <div className="panel-body">
                 <div className="text-pn-14 text-semibold text-white mb-xs">{enqueteElegivel.nome}</div>
-                <div className="text-pn-13 text-muted">Leva menos de um minuto. Ajuda sua liderança a cuidar melhor do time.</div>
+                <div className="text-pn-13 text-muted">{traduzirUi("Leva menos de um minuto. Ajuda sua liderança a cuidar melhor do time.")}</div>
               </div>
             </Cartao>
           )}
           {pesquisaElegivel && (
-            <Cartao className="cursor-pointer" onClick={() => setModal(buildPesquisaModal(pesquisaElegivel))}>
-              <div className="panel-head"><span className="panel-title"><Icon name="reacao" size={14} /> {pesquisaElegivel.pendente ? "Pulso da escala" : "Sua última resposta"}</span></div>
+            <Cartao className="cursor-pointer" onClick={() => setModal(buildPesquisaModal(pesquisaElegivel, traduzirUi))}>
+              <div className="panel-head"><span className="panel-title"><Icon name="reacao" size={14} /> {pesquisaElegivel.pendente ? traduzirUi("Pulso da escala") : traduzirUi("Sua última resposta")}</span></div>
               <div className="panel-body">
                 <div className="text-pn-14 text-semibold text-white mb-xs">{pesquisaElegivel.nome}</div>
-                <div className="text-pn-13 text-muted">{pesquisaElegivel.pendente ? "Leva menos de um minuto. Conta como foi pra você." : "Já respondida. Toque pra rever ou atualizar quando quiser."}</div>
+                <div className="text-pn-13 text-muted">{pesquisaElegivel.pendente ? traduzirUi("Leva menos de um minuto. Conta como foi pra você.") : traduzirUi("Já respondida. Toque pra rever ou atualizar quando quiser.")}</div>
               </div>
             </Cartao>
           )}
@@ -472,12 +480,12 @@ export function Painel({
           aoFechar={() => setJornadaAberta(false)}
         />
       )}
-      {cuidadoAberto && cuidado && <Gaveta larga rotulo={cuidadoAberto === "adultos" ? "Pessoas sem registro" : "Crianças sem check-in"} aoFechar={() => setCuidadoAberto(null)}>
+      {cuidadoAberto && cuidado && <Gaveta larga rotulo={cuidadoAberto === "adultos" ? traduzirUi("Pessoas sem registro") : traduzirUi("Crianças sem check-in")} aoFechar={() => setCuidadoAberto(null)}>
         <ListaDeCuidado lista={cuidado.lista} criancas={cuidado.criancas} semanas={cuidado.semanas} visaoInicial={cuidadoAberto} onAbrir={(ausente) => { setCuidadoAberto(null); setRoute(ausente.memberId ? "membros" : "pessoas"); setDrawer(ausente.memberId ? { kind: "member", id: ausente.memberId } : { kind: "person", id: ausente.personId }); }} />
       </Gaveta>}
-      {coberturaAberta && <Gaveta larga rotulo={ct("{Cultos} com vaga aberta")} aoFechar={() => setCoberturaAberta(false)}>
-        <div className="panel-head"><span className="panel-title">{ct("{Cultos} com vaga aberta")}</span></div>
-        <div className="panel-body flush">{faltas.map(({ conteudo: { evento, resumo } }) => <Acao className={linhaClasse({})} key={evento.id} onClick={() => { setCoberturaAberta(false); setDrawer({ kind: "event", id: evento.id, tab: "panorama" }); }}><div className="mini-main"><div className="mini-title">{evento.name} · {formatDateBR(evento.eventDate)}</div><div className="mini-sub">{resumo}</div></div><span className="text-pn-14">Ver panorama →</span></Acao>)}</div>
+      {coberturaAberta && <Gaveta larga rotulo={ct(traduzirUi("{Cultos} com vaga aberta"))} aoFechar={() => setCoberturaAberta(false)}>
+        <div className="panel-head"><span className="panel-title">{ct(traduzirUi("{Cultos} com vaga aberta"))}</span></div>
+        <div className="panel-body flush">{faltas.map(({ conteudo: { evento, resumo } }) => <Acao className={linhaClasse({})} key={evento.id} onClick={() => { setCoberturaAberta(false); setDrawer({ kind: "event", id: evento.id, tab: "panorama" }); }}><div className="mini-main"><div className="mini-title">{evento.name} · {formatDateBR(evento.eventDate)}</div><div className="mini-sub">{resumo}</div></div><span className="text-pn-14">{traduzirUi("Ver panorama →")}</span></Acao>)}</div>
       </Gaveta>}
       {/* v7 I1: blocos "Comunicação recente" e "Crianças por turma" removidos.
           Telas donas existem (Mural e Crianças). Pendências reais já estão na fila. */}

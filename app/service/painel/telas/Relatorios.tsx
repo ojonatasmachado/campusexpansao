@@ -4,7 +4,6 @@ import { partesNoFuso } from "../../lib/fuso";
 import { formatDateBR, parseISODate, toISODate } from "../../lib/date";
 import { useRelogioDaIgreja } from "../../lib/relogio-context";
 
-import { plural } from "../../lib/plural";
 import { useState } from "react";
 import { Icon } from "../../lib/icons";
 
@@ -26,6 +25,8 @@ import { Cartao } from "../../ui/Cartao";
 import { Segmentado } from "../../ui/Segmentado";
 import { Vazio } from "../../ui/Estados";
 import { Barras, Distribuicao } from "../../ui/Graficos";
+import { useTexto } from "../../lib/internacional/contexto";
+
 export function Relatorios({
   people,
   members,
@@ -61,6 +62,8 @@ export function Relatorios({
   timelineEvents?: TimelineEventView[];
   enrollments?: EnrollmentView[];
 }) {
+  const traduzirUi = useTexto();
+
   const { aindaVaiAcontecer, todayISO, fuso } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
   const gruposAtivo = church?.settings?.gruposCfg?.ativo ?? true;
@@ -107,7 +110,7 @@ export function Relatorios({
   const freqAnterior = frequenciaPeriodo(P, 2 * P);
   const freqDelta = freqRecente !== null && freqAnterior !== null ? freqRecente - freqAnterior : null;
 
-  const foot = (delta: number | null, unidade: string, fallback: string) => delta === null ? fallback : `${delta >= 0 ? "+" : "−"}${Math.abs(delta)}${unidade} em relação ${P === 90 ? "ao trimestre anterior" : "aos 30 dias anteriores"}`;
+  const foot = (delta: number | null, unidade: string, fallback: string) => delta === null ? fallback : P === 90 ? traduzirUi("{delta}{unidade} em relação ao trimestre anterior", { delta: `${delta >= 0 ? "+" : "−"}${Math.abs(delta)}`, unidade }) : traduzirUi("{delta}{unidade} em relação aos 30 dias anteriores", { delta: `${delta >= 0 ? "+" : "−"}${Math.abs(delta)}`, unidade });
 
   /* termômetro de bem-estar sem sobreposição: carga real da semana via roster, não engajamento alto ‒
      equivalente a bemEstar() em evolucoes/service_app/relatorios.jsx:19-27, sem o override de sinais (mock-only) */
@@ -147,10 +150,10 @@ export function Relatorios({
     matriculas: enrollments ?? [],
   };
   const SAUDE_PRESETS: { v: Preset; l: string }[] = [
-    { v: "30", l: "30 dias" },
-    { v: "90", l: "90 dias" },
-    { v: "365", l: "12 meses" },
-    { v: "datas", l: "Datas" },
+    { v: "30", l: traduzirUi("30 dias") },
+    { v: "90", l: traduzirUi("90 dias") },
+    { v: "365", l: traduzirUi("12 meses") },
+    { v: "datas", l: traduzirUi("Datas") },
   ];
   const [saudePreset, setSaudePreset] = useState<Preset>("30");
   const [saudeDatas, setSaudeDatas] = useState<Periodo>(() => periodoDe("30", undefined, todayISO()));
@@ -173,9 +176,12 @@ export function Relatorios({
     { id: "integrando", label: "Integrando" },
     { id: "membro", label: "Virou membro" },
   ];
+  /* rótulo só na tela; o CSV segue com o rótulo gravado em pt-BR */
+  const ROTULO_FUNIL: Record<string, string> = { novo: traduzirUi("Novo"), contato: traduzirUi("Em contato"), integrando: traduzirUi("Integrando"), membro: traduzirUi("Virou membro") };
   const funnelCounts = FUNNEL_STAGES.map((s) => visitors.filter((v) => v.stage === s.id).length);
   const funnelMax = Math.max(...funnelCounts, 1);
   const caminhadaEtapas = ["Decisão", "Batismo", "Fundamentos", gruposSigla, "Servindo"];
+  const caminhadaRotulos = [traduzirUi("Decisão"), traduzirUi("Batismo"), traduzirUi("Fundamentos"), gruposSigla, traduzirUi("Servindo")];
   /* o relatório baixado traz os mesmos números da tela, no recorte escolhido; sem nomes de pessoas */
   const baixarRelatorio = () => {
     const recorte = P === 90 ? "Trimestre" : "Últimos 30 dias";
@@ -202,38 +208,38 @@ export function Relatorios({
   };
   return (
     <div className="content wide">
-      <PageHead title="Relatórios e indicadores" eyebrow="Gestão" help="A saúde da igreja num lugar. Use 30 dias ou trimestre para comparar. Check-in zero não quer dizer que ninguém veio." action={<><Segmentado role="group" aria-label="Recorte das comparações">{([[30, "30 dias"], [90, "Trimestre"]] as const).map(([v, l]) => <Opcao key={v} marcada={v === periodo} aria-pressed={v === periodo} onClick={() => setPeriodo(v)}>{l}</Opcao>)}</Segmentado><Botao variante="principal" onClick={baixarRelatorio}>Baixar relatório →</Botao></>} />
-      <div className="kpi-row"><Indicador icone="visitante" rotulo="Visitantes que viraram membros" valor={retencaoAtual === null ? "Sem dados" : `${retencaoAtual}%`} rodape={foot(retencaoDelta, " pp", retencaoAtual === null ? "nenhum visitante no recorte" : "dos cadastrados no recorte")} /><Indicador icone="escalas" rotulo="Confirmações de escala" valor={coberturaRecente === null ? "Sem dados" : `${coberturaRecente}%`} rodape={foot(coberturaDelta, " pp", coberturaRecente === null ? "nenhuma escala no recorte" : "das vagas escaladas no recorte")} /><Indicador icone="cultos" rotulo="Média de check-ins" valor={freqRecente ?? "Sem dados"} rodape={foot(freqDelta, "", freqRecente === null ? ct("nenhum {culto} no recorte") : ct("por {culto} no recorte"))} /></div>
+      <PageHead title={traduzirUi("Relatórios e indicadores")} eyebrow={traduzirUi("Gestão")} help={traduzirUi("A saúde da igreja num lugar. Use 30 dias ou trimestre para comparar. Check-in zero não quer dizer que ninguém veio.")} action={<><Segmentado role="group" aria-label={traduzirUi("Recorte das comparações")}>{([[30, traduzirUi("30 dias")], [90, traduzirUi("Trimestre")]] as const).map(([v, l]) => <Opcao key={v} marcada={v === periodo} aria-pressed={v === periodo} onClick={() => setPeriodo(v)}>{l}</Opcao>)}</Segmentado><Botao variante="principal" onClick={baixarRelatorio}>{traduzirUi("Baixar relatório →")}</Botao></>} />
+      <div className="kpi-row"><Indicador icone="visitante" rotulo={traduzirUi("Visitantes que viraram membros")} valor={retencaoAtual === null ? traduzirUi("Sem dados") : `${retencaoAtual}%`} rodape={foot(retencaoDelta, " pp", retencaoAtual === null ? traduzirUi("nenhum visitante no recorte") : traduzirUi("dos cadastrados no recorte"))} /><Indicador icone="escalas" rotulo={traduzirUi("Confirmações de escala")} valor={coberturaRecente === null ? traduzirUi("Sem dados") : `${coberturaRecente}%`} rodape={foot(coberturaDelta, " pp", coberturaRecente === null ? traduzirUi("nenhuma escala no recorte") : traduzirUi("das vagas escaladas no recorte"))} /><Indicador icone="cultos" rotulo={traduzirUi("Média de check-ins")} valor={freqRecente ?? traduzirUi("Sem dados")} rodape={foot(freqDelta, "", freqRecente === null ? ct(traduzirUi("nenhum {culto} no recorte")) : ct(traduzirUi("por {culto} no recorte")))} /></div>
       {/* v7 I1: Números de base migrados do Início (lei 14). Indicador cartao, cada número abre a lista. Sem duplicar "Membros na rede". */}
-      <div className="section-divide"><span className="num">01</span><span className="label">Números de base</span><HelpDot text={ct("Quantas pessoas estão registradas, servindo em times e em {grupos} hoje. Cada número abre a lista.")} /><span className="line" /></div>
+      <div className="section-divide"><span className="num">01</span><span className="label">{traduzirUi("Números de base")}</span><HelpDot text={ct(traduzirUi("Quantas pessoas estão registradas, servindo em times e em {grupos} hoje. Cada número abre a lista."))} /><span className="line" /></div>
       <div className="kpi-row">
         {baseNums.map((n) => (
           <Indicador key={n.id} estilo="cartao" icone={n.id === "membros" ? "membros" : n.id === "servindo" ? "escalas" : "grupos"} valor={n.valor} rotulo={ct(n.rotulo)}
             aoAbrir={n.itens.length ? () => abrirListaBase(n.itens[0]) : undefined}
-            rotuloAcao={`${ct(n.rotulo)}: ${n.valor}. Ver a lista`} />
+            rotuloAcao={traduzirUi("{rotulo}: {valor}. Ver a lista", { rotulo: ct(n.rotulo), valor: String(n.valor) })} />
         ))}
       </div>
       <div className="saude-head">
         <Botao variante="texto" onClick={() => setSaudePanorama((v) => !v)}>
-          {saudePanorama ? "Recolher panorama" : "Ver panorama completo"}
+          {saudePanorama ? traduzirUi("Recolher panorama") : traduzirUi("Ver panorama completo")}
         </Botao>
       </div>
       {saudePanorama && (
         <>
           <div className="saude-datas">
-            <Segmentado className="seg-sm" role="radiogroup" aria-label="Período">
+            <Segmentado className="seg-sm" role="radiogroup" aria-label={traduzirUi("Período")}>
               {SAUDE_PRESETS.map((p) => (
                 <Opcao key={p.v} role="radio" aria-checked={saudePreset === p.v} marcada={saudePreset === p.v} onClick={() => setSaudePreset(p.v)}>{p.l}</Opcao>
               ))}
             </Segmentado>
             {saudePreset === "datas" && (
               <div className="saude-datas-range">
-                <div>De <SeletorData rotulo="De" valor={saudeDatas.ini} aoMudar={(v) => setSaudeDatas((d) => ({ ...d, ini: v }))} /></div>
-                <div>até <SeletorData rotulo="Até" valor={saudeDatas.fim} aoMudar={(v) => setSaudeDatas((d) => ({ ...d, fim: v }))} /></div>
+                <div>{traduzirUi("De")} <SeletorData rotulo={traduzirUi("De")} valor={saudeDatas.ini} aoMudar={(v) => setSaudeDatas((d) => ({ ...d, ini: v }))} /></div>
+                <div>{traduzirUi("até")} <SeletorData rotulo={traduzirUi("Até")} valor={saudeDatas.fim} aoMudar={(v) => setSaudeDatas((d) => ({ ...d, fim: v }))} /></div>
               </div>
             )}
           </div>
-          <div className="saude-grp">{`De ${formatDateBR(saudePeriodo.ini)} a ${formatDateBR(saudePeriodo.fim)}`}<span className="saude-grp-s">{` · comparado a ${formatDateBR(saudeAnt.ini)} a ${formatDateBR(saudeAnt.fim)}`}</span></div>
+          <div className="saude-grp">{traduzirUi("De {ini} a {fim}", { ini: formatDateBR(saudePeriodo.ini), fim: formatDateBR(saudePeriodo.fim) })}<span className="saude-grp-s">{traduzirUi(" · comparado a {ini} a {fim}", { ini: formatDateBR(saudeAnt.ini), fim: formatDateBR(saudeAnt.fim) })}</span></div>
           <div className="kpi-row">
             {numerosDoPeriodo(dadosSaude, saudePeriodo).map((n) => {
               const cmp = comparacao(n.valor, n.anterior, saudeDias);
@@ -242,43 +248,43 @@ export function Relatorios({
                 <Indicador key={n.id} estilo="numero" valor={n.valor} rotulo={ct(n.rotulo)}
                   rodape={cmp && mudou ? cmp : undefined}
                   aoAbrir={n.itens.length ? () => abrirListaBase(n.itens[0]) : undefined}
-                  rotuloAcao={`${ct(n.rotulo)}: ${n.valor}${cmp ? `, ${cmp}` : ""}. Ver a lista`} />
+                  rotuloAcao={cmp ? traduzirUi("{rotulo}: {valor}, {comparacao}. Ver a lista", { rotulo: ct(n.rotulo), valor: String(n.valor), comparacao: cmp }) : traduzirUi("{rotulo}: {valor}. Ver a lista", { rotulo: ct(n.rotulo), valor: String(n.valor) })} />
               );
             })}
           </div>
-          <div className="saude-grp">{ct("Etapas da {caminhada}")}<span className="saude-grp-s"> · membros que já fizeram cada uma</span></div>
+          <div className="saude-grp">{ct(traduzirUi("Etapas da {caminhada}"))}<span className="saude-grp-s">{traduzirUi(" · membros que já fizeram cada uma")}</span></div>
           <div className="kpi-row">
             {etapasDaCaminhada(members, JRN_STEPS.map((s) => ({ label: ct(s.label) }))).map((n) => (
               <Indicador key={n.id} estilo="numero" valor={n.valor} rotulo={n.rotulo}
                 aoAbrir={n.itens.length ? () => abrirListaBase(n.itens[0]) : undefined}
-                rotuloAcao={`${n.rotulo}: ${n.valor}. Ver a lista`} />
+                rotuloAcao={traduzirUi("{rotulo}: {valor}. Ver a lista", { rotulo: n.rotulo, valor: String(n.valor) })} />
             ))}
           </div>
         </>
       )}
       <div className="dash-3col">
-        <Cartao><div className="panel-head"><span className="panel-title"><Icon name="relatorios" size={13} /> Crescimento de membros</span><span className="panel-meta">últimos meses</span></div><div className="panel-body"><div style={{ fontSize: "var(--fs-pn-32)", fontWeight: 700 }}>{members.length}<span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", fontWeight: 500, marginLeft: 8 }}>membros no total</span></div><div style={{ marginTop: 14 }}><Barras rotulo="Membros novos por mês" serie={series} rotulos={serieLabels} /></div></div></Cartao>
-        <Cartao><div className="panel-head"><span className="panel-title"><Icon name="visitante" size={13} /> Funil de visitantes</span><Botao variante="texto" onClick={() => setRoute("visitantes")}>Abrir</Botao></div><div className="panel-body flush"><Distribuicao funil max={funnelMax} itens={FUNNEL_STAGES.map((s, i) => ({ id: s.id, rotulo: s.label, valor: funnelCounts[i] }))} /></div></Cartao>
+        <Cartao><div className="panel-head"><span className="panel-title"><Icon name="relatorios" size={13} /> {traduzirUi("Crescimento de membros")}</span><span className="panel-meta">{traduzirUi("últimos meses")}</span></div><div className="panel-body"><div style={{ fontSize: "var(--fs-pn-32)", fontWeight: 700 }}>{members.length}<span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", fontWeight: 500, marginLeft: 8 }}>{traduzirUi("membros no total")}</span></div><div style={{ marginTop: 14 }}><Barras rotulo={traduzirUi("Membros novos por mês")} serie={series} rotulos={serieLabels} /></div></div></Cartao>
+        <Cartao><div className="panel-head"><span className="panel-title"><Icon name="visitante" size={13} /> {traduzirUi("Funil de visitantes")}</span><Botao variante="texto" onClick={() => setRoute("visitantes")}>{traduzirUi("Abrir")}</Botao></div><div className="panel-body flush"><Distribuicao funil max={funnelMax} itens={FUNNEL_STAGES.map((s, i) => ({ id: s.id, rotulo: ROTULO_FUNIL[s.id] ?? s.label, valor: funnelCounts[i] }))} /></div></Cartao>
       </div>
-      <div className="section-divide" style={{ marginTop: 28 }}><span className="num">02</span><span className="label">Situação da escala na semana</span><HelpDot text="Pausas, recusas e quantidade de escalas registradas na semana. Esses registros não medem bem-estar nem dedicação da pessoa." /><span className="line" /></div>
-      <div className="well-sum">{[["saudavel", contar("saudavel"), "Sem pendência registrada"], ["atencao", contar("atencao"), "Uma recusa"], ["sobrecarga", contar("sobrecarga"), "Três ou mais escalas"], ["afastando", contar("afastando"), "Pausa ou duas recusas"]].map(([level, count, label]) => <div className="well-pill" key={level}><div className="n">{count}</div><div className="l"><span className={`well-dot ${level}`} />{label}</div></div>)}</div>
+      <div className="section-divide" style={{ marginTop: 28 }}><span className="num">02</span><span className="label">{traduzirUi("Situação da escala na semana")}</span><HelpDot text={traduzirUi("Pausas, recusas e quantidade de escalas registradas na semana. Esses registros não medem bem-estar nem dedicação da pessoa.")} /><span className="line" /></div>
+      <div className="well-sum">{[["saudavel", contar("saudavel"), traduzirUi("Sem pendência registrada")], ["atencao", contar("atencao"), traduzirUi("Uma recusa")], ["sobrecarga", contar("sobrecarga"), traduzirUi("Três ou mais escalas")], ["afastando", contar("afastando"), traduzirUi("Pausa ou duas recusas")]].map(([level, count, label]) => <div className="well-pill" key={level}><div className="n">{count}</div><div className="l"><span className={`well-dot ${level}`} />{label}</div></div>)}</div>
       <Cartao>
-        <div className="panel-head"><span className="panel-title"><Icon name="pessoa" size={13} /> Registros para conferir</span><Botao variante="texto" onClick={() => setRoute("pessoas")}>{ct("{Voluntarios}")}</Botao></div>
+        <div className="panel-head"><span className="panel-title"><Icon name="pessoa" size={13} /> {traduzirUi("Registros para conferir")}</span><Botao variante="texto" onClick={() => setRoute("pessoas")}>{ct(traduzirUi("{Voluntarios}"))}</Botao></div>
         <div className="panel-body flush">
-          {wellRows.length === 0 && <Vazio titulo="Nenhuma pendência identificada nos registros da semana." />}
+          {wellRows.length === 0 && <Vazio titulo={traduzirUi("Nenhuma pendência identificada nos registros da semana.")} />}
           {wellRows.slice(0, 8).map(({ person, cls }) => {
             const dado = carga[person.id] ?? { escalas: 0, recusas: 0 };
-            return <div className="well-row" key={person.id}><Av name={person.name} size="md" photoUrl={person.photoUrl} /><div className="mini-main"><div className="mini-title">{person.name}</div><div className="mini-sub">{person.status === "pausa" ? "Pausa informada no cadastro." : `${plural(dado.escalas, "escala")} e ${plural(dado.recusas, "recusa")} nesta semana.`}</div></div><span className={`well-tag ${cls}`}>Conferir</span></div>;
+            return <div className="well-row" key={person.id}><Av name={person.name} size="md" photoUrl={person.photoUrl} /><div className="mini-main"><div className="mini-title">{person.name}</div><div className="mini-sub">{person.status === "pausa" ? traduzirUi("Pausa informada no cadastro.") : traduzirUi("{escalas, plural, =1 {# escala} other {# escalas}} e {recusas, plural, =1 {# recusa} other {# recusas}} nesta semana.", { escalas: dado.escalas, recusas: dado.recusas })}</div></div><span className={`well-tag ${cls}`}>{traduzirUi("Conferir")}</span></div>;
           })}
         </div>
       </Cartao>
       <div className="dash-2col" style={{ marginTop: 28 }}>
-        <Cartao><div className="panel-head"><span className="panel-title"><Icon name="times" size={13} /> {ct("{Voluntarios} por time")}</span><Botao variante="texto" onClick={() => setRoute("times")}>Times</Botao></div><div className="panel-body flush"><Distribuicao max={maxMinistry} itens={ministries.map((ministry) => ({ id: ministry.id, rotulo: ministry.name, valor: ministry.people.length }))} /></div></Cartao>
-        <Cartao><div className="panel-head"><span className="panel-title"><Icon name="membros" size={13} /> {ct("Membros por {caminhada}")}</span><span className="panel-meta">{members.length} pessoas</span></div><div className="panel-body flush"><Distribuicao max={members.length} itens={caminhadaEtapas.map((step, index) => ({ id: step, rotulo: step, valor: members.filter((member) => member.journey[index]).length }))} /></div></Cartao>
+        <Cartao><div className="panel-head"><span className="panel-title"><Icon name="times" size={13} /> {ct(traduzirUi("{Voluntarios} por time"))}</span><Botao variante="texto" onClick={() => setRoute("times")}>{traduzirUi("Times")}</Botao></div><div className="panel-body flush"><Distribuicao max={maxMinistry} itens={ministries.map((ministry) => ({ id: ministry.id, rotulo: ministry.name, valor: ministry.people.length }))} /></div></Cartao>
+        <Cartao><div className="panel-head"><span className="panel-title"><Icon name="membros" size={13} /> {ct(traduzirUi("Membros por {caminhada}"))}</span><span className="panel-meta">{traduzirUi("{n} pessoas", { n: String(members.length) })}</span></div><div className="panel-body flush"><Distribuicao max={members.length} itens={caminhadaEtapas.map((step, index) => ({ id: step, rotulo: caminhadaRotulos[index], valor: members.filter((member) => member.journey[index]).length }))} /></div></Cartao>
       </div>
       <div className="dash-2col" style={{ marginTop: 28 }}>
-        {gruposAtivo && <Cartao><div className="panel-head"><span className="panel-title"><Icon name="membros" size={13} /> Membros por {gruposSigla}</span><span className="panel-meta">{fellowshipGroups.length} grupos</span></div><div className="panel-body flush"><Distribuicao max={maxGc} itens={gcCounts.map(({ group, n }) => ({ id: group.id, rotulo: group.name, valor: n }))} />{fellowshipGroups.length === 0 && <Vazio titulo="Nenhum grupo cadastrado ainda." />}</div></Cartao>}
-        <Cartao><div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={13} /> Operação conectada</span><span className="panel-meta">Kanban & chat</span></div><div className="panel-body flush"><Distribuicao max={maxOps} itens={([["Quadros", boards.length], ["Conversas", chats.length], ["Eventos", events.length]] as const).map(([label, count]) => ({ id: label, rotulo: label, valor: count }))} /></div></Cartao>
+        {gruposAtivo && <Cartao><div className="panel-head"><span className="panel-title"><Icon name="membros" size={13} /> {traduzirUi("Membros por {sigla}", { sigla: gruposSigla })}</span><span className="panel-meta">{traduzirUi("{n} grupos", { n: String(fellowshipGroups.length) })}</span></div><div className="panel-body flush"><Distribuicao max={maxGc} itens={gcCounts.map(({ group, n }) => ({ id: group.id, rotulo: group.name, valor: n }))} />{fellowshipGroups.length === 0 && <Vazio titulo={traduzirUi("Nenhum grupo cadastrado ainda.")} />}</div></Cartao>}
+        <Cartao><div className="panel-head"><span className="panel-title"><Icon name="comunicacao" size={13} /> {traduzirUi("Operação conectada")}</span><span className="panel-meta">{traduzirUi("Kanban & chat")}</span></div><div className="panel-body flush"><Distribuicao max={maxOps} itens={([["Quadros", boards.length, traduzirUi("Quadros")], ["Conversas", chats.length, traduzirUi("Conversas")], ["Eventos", events.length, traduzirUi("Eventos")]] as const).map(([label, count, rotulo]) => ({ id: label, rotulo, valor: count }))} /></div></Cartao>
       </div>
     </div>
   );

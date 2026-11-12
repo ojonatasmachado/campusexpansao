@@ -23,6 +23,8 @@ import type { ChurchView, MemberView, MinistryView, ModalState, PersonView, Room
 import { Botao } from "../../ui/Botao";
 import { Opcao } from "../../ui/Opcao";
 import { Janela } from "../../ui/Janela";
+import { useTexto } from "../../lib/internacional/contexto";
+
 export function findMinistryByName(ministries: MinistryView[], value: string) {
   const term = normalize(value);
   if (!term) return null;
@@ -68,6 +70,8 @@ export function ServiceModal({
   currentRole?: "master" | "pastor" | "lider" | "membro";
   onClose: () => void;
 }) {
+  const traduzirUi = useTexto();
+
   const { todayISO } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
   const router = useRouter();
@@ -99,7 +103,7 @@ export function ServiceModal({
     }
     const action = modal.action;
     if (!church?.organizationId || !church.id) {
-      setError("Nenhuma igreja foi encontrada para vincular este registro.");
+      setError(traduzirUi("Nenhuma igreja foi encontrada para vincular este registro."));
       return;
     }
 
@@ -112,14 +116,14 @@ export function ServiceModal({
 
     setSaving(true);
     if (action.kind === "member") {
-      if (value("nome").split(/\s+/).length < 2) { setSaving(false); setError("Coloque nome e sobrenome."); return; }
-      if (!telefoneValido(value("tel"))) { setSaving(false); setError("Coloque o telefone com DDD: o convite do app vai por WhatsApp."); return; }
+      if (value("nome").split(/\s+/).length < 2) { setSaving(false); setError(traduzirUi("Coloque nome e sobrenome.")); return; }
+      if (!telefoneValido(value("tel"))) { setSaving(false); setError(traduzirUi("Coloque o telefone com DDD: o convite do app vai por WhatsApp.")); return; }
       const dup = possivelDuplicado([...members, ...people], value("nome"), value("tel"));
       const chaveDup = `${nomeComparavel(value("nome"))}|${value("tel").replace(/\D/g, "")}`;
       if (dup && dupVisto !== chaveDup) {
         setSaving(false);
         setDupVisto(chaveDup);
-        setError(`Pode ser alguém já cadastrado: ${dup.pessoa.name}${dup.pessoa.phone ? `, ${formatarTelefone(dup.pessoa.phone)}` : ""} tem ${dup.motivo === "telefone" ? "o mesmo telefone" : "o mesmo nome"}. Confira em Pessoas. Se for outra pessoa, toque em "${modal.saveLabel || "Salvar"}" de novo.`);
+        setError(traduzirUi("Pode ser alguém já cadastrado: {nome}{telefone} tem {motivo, select, telefone {o mesmo telefone} other {o mesmo nome}}. Confira em Pessoas. Se for outra pessoa, toque em \"{acao}\" de novo.", { nome: dup.pessoa.name, telefone: dup.pessoa.phone ? `, ${formatarTelefone(dup.pessoa.phone)}` : "", motivo: dup.motivo === "telefone" ? "telefone" : "nome", acao: modal.saveLabel || traduzirUi("Salvar") }));
         return;
       }
       /* aba do WhatsApp aberta ainda no clique (antes do primeiro await),
@@ -156,23 +160,23 @@ export function ServiceModal({
           template: church.settings?.acessoMsgCfg?.mensagem,
           tab: conviteTab,
         });
-        if (conviteError) avisar(`Membro cadastrado, mas o convite não saiu: ${conviteError} Use "Enviar acesso pelo WhatsApp" na ficha dele.`, "warn");
+        if (conviteError) avisar(traduzirUi("Membro cadastrado, mas o convite não saiu: {erro} Use \"Enviar acesso pelo WhatsApp\" na ficha dele.", { erro: conviteError }), "warn");
       } else {
         conviteTab?.close();
       }
     } else if (action.kind === "event") {
-      if (!value("nome")) { setSaving(false); setError(ct("Digite o nome do {culto}.")); return; }
+      if (!value("nome")) { setSaving(false); setError(ct(traduzirUi("Digite o nome do {culto}."))); return; }
       const eventLocal = resolveLocalField(value("local"), value("endereco"), rooms);
-      if (!eventLocal) { setSaving(false); setError(value("local") === OUTRO_LOCAL ? "Digite o endereço do espaço." : "Selecione um espaço já cadastrado em Configurações → Espaços e Salas."); return; }
+      if (!eventLocal) { setSaving(false); setError(value("local") === OUTRO_LOCAL ? traduzirUi("Digite o endereço do espaço.") : traduzirUi("Selecione um espaço já cadastrado em Configurações → Espaços e Salas.")); return; }
       const eventDate = value("data");
       const eventTime = value("hora").replace("h", ":");
-      if (!isCivilDate(eventDate)) { setSaving(false); setError("Informe uma data válida com dia, mês e ano."); return; }
-      if (!/^([01]\d|2[0-3])[h:]([0-5]\d)$/.test(eventTime)) { setSaving(false); setError("Informe o horário de início."); return; }
+      if (!isCivilDate(eventDate)) { setSaving(false); setError(traduzirUi("Informe uma data válida com dia, mês e ano.")); return; }
+      if (!/^([01]\d|2[0-3])[h:]([0-5]\d)$/.test(eventTime)) { setSaving(false); setError(traduzirUi("Informe o horário de início.")); return; }
       /* O10: repete gera a série inteira de uma vez, cada encontro com sua escala e presença */
       const regra = ehRepeticao(value("repete")) ? value("repete") as Repeticao : null;
-      if (regra && (!isCivilDate(value("ate")) || value("ate") <= eventDate)) { setSaving(false); setError("Escolha até quando repete: uma data depois do primeiro encontro."); return; }
+      if (regra && (!isCivilDate(value("ate")) || value("ate") <= eventDate)) { setSaving(false); setError(traduzirUi("Escolha até quando repete: uma data depois do primeiro encontro.")); return; }
       const datas = regra ? datasDaSerie(eventDate, regra, value("ate")) : [eventDate];
-      if (regra && datas.length < 2) { setSaving(false); setError(regra === "mensal" ? "Todo mês precisa de pelo menos um mês até o fim. Escolha uma data mais adiante." : "Escolha uma data de fim que inclua pelo menos mais um encontro."); return; }
+      if (regra && datas.length < 2) { setSaving(false); setError(regra === "mensal" ? traduzirUi("Todo mês precisa de pelo menos um mês até o fim. Escolha uma data mais adiante.") : traduzirUi("Escolha uma data de fim que inclua pelo menos mais um encontro.")); return; }
       const seriesId = regra ? crypto.randomUUID() : null;
       const { data: eventRows, error: eventError } = await supabase.schema("service").from("events").insert(datas.map((data) => ({
         organization_id: church.organizationId,
@@ -201,13 +205,13 @@ export function ServiceModal({
             source_type: "evento",
             source_id: row.id,
           })));
-          if (erroReserva) avisar("Já está na agenda, mas o espaço não ficou reservado. Reserve em Configurações → Espaços e Salas.", "warn");
+          if (erroReserva) avisar(traduzirUi("Já está na agenda, mas o espaço não ficou reservado. Reserve em Configurações → Espaços e Salas."), "warn");
         }
         if (regra) avisar(feitoDaSerie(datas, regra, ct("{cultos}").toLowerCase()));
         result = { error: null };
       }
     } else if (action.kind === "ministry") {
-      if (!value("nome")) { setSaving(false); setError("Digite o nome do time."); return; }
+      if (!value("nome")) { setSaving(false); setError(traduzirUi("Digite o nome do time.")); return; }
       result = await supabase.schema("service").from("ministries").insert({
         organization_id: church.organizationId,
         church_id: church.id,
@@ -219,7 +223,7 @@ export function ServiceModal({
     } else if (action.kind === "decision") {
       if (!value("nome")) {
         setSaving(false);
-        setError("Digite o nome da pessoa.");
+        setError(traduzirUi("Digite o nome da pessoa."));
         return;
       }
       result = await supabase.schema("service").from("decisions").insert({
@@ -236,11 +240,11 @@ export function ServiceModal({
     } else if (action.kind === "baptismClass") {
       if (!value("label")) {
         setSaving(false);
-        setError("Digite o nome da turma.");
+        setError(traduzirUi("Digite o nome da turma."));
         return;
       }
       const baptismLocal = resolveLocalField(value("local"), value("endereco"), rooms);
-      if (!baptismLocal) { setSaving(false); setError(value("local") === OUTRO_LOCAL ? "Digite o endereço do espaço." : "Selecione um espaço já cadastrado em Configurações → Espaços e Salas."); return; }
+      if (!baptismLocal) { setSaving(false); setError(value("local") === OUTRO_LOCAL ? traduzirUi("Digite o endereço do espaço.") : traduzirUi("Selecione um espaço já cadastrado em Configurações → Espaços e Salas.")); return; }
       result = await supabase.schema("service").from("baptism_classes").insert({
         organization_id: church.organizationId,
         church_id: church.id,
@@ -255,7 +259,7 @@ export function ServiceModal({
     } else if (action.kind === "course") {
       if (!value("nome")) {
         setSaving(false);
-        setError("Digite o nome do curso.");
+        setError(traduzirUi("Digite o nome do curso."));
         return;
       }
       result = await supabase.schema("service").from("courses").insert({
@@ -271,7 +275,7 @@ export function ServiceModal({
     } else if (action.kind === "board") {
       if (!value("nome")) {
         setSaving(false);
-        setError("Digite o nome do quadro.");
+        setError(traduzirUi("Digite o nome do quadro."));
         return;
       }
       result = await supabase.schema("service").from("boards").insert({
@@ -290,7 +294,7 @@ export function ServiceModal({
     } else if (action.kind === "card") {
       if (!value("titulo")) {
         setSaving(false);
-        setError("Digite o título do card.");
+        setError(traduzirUi("Digite o título do card."));
         return;
       }
       const assignee = namedPerson("responsavel");
@@ -307,7 +311,7 @@ export function ServiceModal({
     } else if (action.kind === "visitor") {
       if (!value("nome")) {
         setSaving(false);
-        setError("Digite o nome do visitante.");
+        setError(traduzirUi("Digite o nome do visitante."));
         return;
       }
       result = await supabase.schema("service").from("visitors").insert({
@@ -324,12 +328,12 @@ export function ServiceModal({
     } else if (action.kind === "rehearsal") {
       if (!value("titulo")) {
         setSaving(false);
-        setError("Digite o título do ensaio.");
+        setError(traduzirUi("Digite o título do ensaio."));
         return;
       }
       const ministry = namedMinistry("time");
       const rehearsalLocal = resolveLocalField(value("local"), value("endereco"), rooms);
-      if (!rehearsalLocal) { setSaving(false); setError(value("local") === OUTRO_LOCAL ? "Digite o endereço do espaço." : "Selecione um espaço já cadastrado em Configurações → Espaços e Salas."); return; }
+      if (!rehearsalLocal) { setSaving(false); setError(value("local") === OUTRO_LOCAL ? traduzirUi("Digite o endereço do espaço.") : traduzirUi("Selecione um espaço já cadastrado em Configurações → Espaços e Salas.")); return; }
       result = await supabase.schema("service").from("rehearsals").insert({
         organization_id: church.organizationId,
         church_id: church.id,
@@ -348,7 +352,7 @@ export function ServiceModal({
     } else if (action.kind === "announcement") {
       if (!value("titulo")) {
         setSaving(false);
-        setError("Digite o título do aviso.");
+        setError(traduzirUi("Digite o título do aviso."));
         return;
       }
       result = await supabase.schema("service").from("announcements").insert({
@@ -363,7 +367,7 @@ export function ServiceModal({
     } else if (action.kind === "wallPost") {
       if (!value("msg")) {
         setSaving(false);
-        setError("Digite a mensagem do mural.");
+        setError(traduzirUi("Digite a mensagem do mural."));
         return;
       }
       result = await supabase.schema("service").from("wall_posts").insert({
@@ -377,7 +381,7 @@ export function ServiceModal({
     } else if (action.kind === "room") {
       if (!value("nome")) {
         setSaving(false);
-        setError("Digite o nome da sala.");
+        setError(traduzirUi("Digite o nome da sala."));
         return;
       }
       result = await supabase.schema("service").from("rooms").insert({
@@ -390,7 +394,7 @@ export function ServiceModal({
         allows_meetings: value("permiteReuniao") !== "false",
       });
     } else if (action.kind === "kidsClass") {
-      if (!value("nome")) { setSaving(false); setError("Digite o nome da turma."); return; }
+      if (!value("nome")) { setSaving(false); setError(traduzirUi("Digite o nome da turma.")); return; }
       const payload = {
         organization_id: church.organizationId,
         church_id: church.id,
@@ -405,9 +409,9 @@ export function ServiceModal({
         ? await supabase.schema("service").from("kids_classes").update(payload).eq("id", action.id)
         : await supabase.schema("service").from("kids_classes").insert(payload);
     } else if (action.kind === "kidsEvent") {
-      if (!value("titulo")) { setSaving(false); setError("Digite o título do evento."); return; }
+      if (!value("titulo")) { setSaving(false); setError(traduzirUi("Digite o título do evento.")); return; }
       const kidsEventLocal = resolveLocalField(value("local"), value("endereco"), rooms);
-      if (!kidsEventLocal) { setSaving(false); setError(value("local") === OUTRO_LOCAL ? "Digite o endereço do espaço." : "Selecione um espaço já cadastrado em Configurações → Espaços e Salas."); return; }
+      if (!kidsEventLocal) { setSaving(false); setError(value("local") === OUTRO_LOCAL ? traduzirUi("Digite o endereço do espaço.") : traduzirUi("Selecione um espaço já cadastrado em Configurações → Espaços e Salas.")); return; }
       result = await supabase.schema("service").from("kids_events").insert({
         organization_id: church.organizationId,
         church_id: church.id,
@@ -421,7 +425,7 @@ export function ServiceModal({
         open_enrollment: true,
       });
     } else if (action.kind === "avaliacaoResposta") {
-      if (!currentPersonId) { setSaving(false); setError(ct("Não foi possível identificar seu cadastro de {voluntario}.")); return; }
+      if (!currentPersonId) { setSaving(false); setError(ct(traduzirUi("Não foi possível identificar seu cadastro de {voluntario}."))); return; }
       const minhasEquipes = ministries.filter((m) => m.people.some((p) => p.personId === currentPersonId)).map((m) => m.name);
       const { data: novaResposta, error: respostaError } = await supabase.schema("service").from("respostas").insert({
         enquete_id: action.enquete.id,
@@ -449,7 +453,7 @@ export function ServiceModal({
         }
       }
     } else if (action.kind === "pesquisaResposta") {
-      if (!currentPersonId) { setSaving(false); setError(ct("Não foi possível identificar seu cadastro de {voluntario}.")); return; }
+      if (!currentPersonId) { setSaving(false); setError(ct(traduzirUi("Não foi possível identificar seu cadastro de {voluntario}."))); return; }
       const pesquisa = action.pesquisa;
       let respostaId = pesquisa.respostaId;
       if (!respostaId) {
@@ -484,7 +488,7 @@ export function ServiceModal({
         updated_at: new Date().toISOString(),
       });
     } else if (action.kind === "historyEntry") {
-      if (!value("titulo")) { setSaving(false); setError("Digite o título do capítulo."); return; }
+      if (!value("titulo")) { setSaving(false); setError(traduzirUi("Digite o título do capítulo.")); return; }
       const payload = {
         organization_id: church.organizationId,
         church_id: church.id,
@@ -498,7 +502,7 @@ export function ServiceModal({
         ? await supabase.schema("service").from("history_entries").update(payload).eq("id", action.id)
         : await supabase.schema("service").from("history_entries").insert(payload);
     } else if (action.kind === "cycle") {
-      if (!value("ano") || !value("tema")) { setSaving(false); setError("Digite o ano e o tema do ciclo."); return; }
+      if (!value("ano") || !value("tema")) { setSaving(false); setError(traduzirUi("Digite o ano e o tema do ciclo.")); return; }
       const payload = {
         year: value("ano"),
         theme: value("tema"),
@@ -515,14 +519,14 @@ export function ServiceModal({
             is_active: true,
           });
     } else if (action.kind === "title") {
-      if (!value("nome")) { setSaving(false); setError("Digite o nome do papel ministerial."); return; }
+      if (!value("nome")) { setSaving(false); setError(traduzirUi("Digite o nome do papel ministerial.")); return; }
       result = await supabase.schema("service").from("ministerial_titles").insert({
         organization_id: church.organizationId,
         church_id: church.id,
         name: value("nome"),
       });
     } else if (action.kind === "tag") {
-      if (!value("nome")) { setSaving(false); setError("Digite o nome da etiqueta."); return; }
+      if (!value("nome")) { setSaving(false); setError(traduzirUi("Digite o nome da etiqueta.")); return; }
       result = await supabase.schema("service").from("tags").insert({
         organization_id: church.organizationId,
         church_id: church.id,
@@ -530,7 +534,7 @@ export function ServiceModal({
         color: value("cor") || "wheat",
       });
     } else if (action.kind === "group") {
-      if (!value("nome")) { setSaving(false); setError("Digite o nome do grupo."); return; }
+      if (!value("nome")) { setSaving(false); setError(traduzirUi("Digite o nome do grupo.")); return; }
       result = await supabase.schema("service").from("fellowship_groups").insert({
         organization_id: church.organizationId,
         church_id: church.id,
@@ -541,7 +545,7 @@ export function ServiceModal({
         neighborhood: value("bairro") || null,
       });
     } else if (action.kind === "congregacao") {
-      if (!value("nome")) { setSaving(false); setError("Digite o nome da congregação."); return; }
+      if (!value("nome")) { setSaving(false); setError(traduzirUi("Digite o nome da congregação.")); return; }
       result = await supabase.schema("service").from("churches").insert({
         organization_id: church.organizationId,
         name: value("nome"),
@@ -558,7 +562,7 @@ export function ServiceModal({
 
     setSaving(false);
     if (result.error) {
-      setError(friendlyWriteError(result.error.message));
+      setError(friendlyWriteError(result.error.message, traduzirUi));
       return;
     }
     /* fecha primeiro: o voltar do histórico restaura a árvore da entrada anterior,
@@ -580,7 +584,7 @@ export function ServiceModal({
         eyebrow={modal.eyebrow}
         title={modal.title}
         subtitle={modal.subtitle}
-        saveLabel={modal.saveLabel || "Salvar"}
+        saveLabel={modal.saveLabel || traduzirUi("Salvar")}
         saving={saving}
         missing={falta}
         dirty={mudou}
@@ -630,8 +634,8 @@ export function ServiceModal({
   return (
     <Janela larga={hasHalf} sobretitulo={modal.eyebrow} titulo={modal.title} texto={modal.subtitle || undefined} aoFechar={onClose} ocupada={saving} corpoBloco
       rodape={<>
-        <Botao onClick={onClose} desativado={saving}>Cancelar</Botao>
-        <Botao variante="principal" onClick={save} desativado={saving}>{saving ? "Salvando..." : (modal.saveLabel || "Salvar")}</Botao>
+        <Botao onClick={onClose} desativado={saving}>{traduzirUi("Cancelar")}</Botao>
+        <Botao variante="principal" onClick={save} desativado={saving}>{saving ? traduzirUi("Salvando...") : (modal.saveLabel || traduzirUi("Salvar"))}</Botao>
       </>}>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "0 16px" }}>
         {modal.formFields.filter((field) => mostraCampo(field.showIf, values)).map((field) => (

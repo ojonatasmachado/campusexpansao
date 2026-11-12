@@ -4,6 +4,9 @@ import { forwardRef, useCallback, useEffect, useId, useImperativeHandle, useRef,
 import { Icon } from "../../lib/icons";
 
 import { Botao, BotaoIcone } from "../../ui/Botao";
+import { useTexto } from "../../lib/internacional/contexto";
+import type { Text } from "../../lib/internacional/mensagens";
+
 /* Tela de formulário do painel (onda 1 do plano docs/service-v7/PLANO_TELA_FORMULARIO.md).
    Criar ou editar algo com mais de 4 campos abre aqui, não numa janela:
    topo fixo (voltar, título, até duas ações), coluna de 720px, e no celular o
@@ -37,9 +40,9 @@ export type FormScreenHandle = { fechar: () => Promise<void> };
 type EstadoHistorico = { svcForm?: string } | null;
 
 /** "nome", "nome e telefone", "nome, telefone e culto" */
-function juntar(itens: string[]) {
+function juntar(itens: string[], traduzirUi: Text) {
   if (itens.length <= 1) return itens.join("");
-  return `${itens.slice(0, -1).join(", ")} e ${itens[itens.length - 1]}`;
+  return traduzirUi("{inicio} e {fim}", { inicio: itens.slice(0, -1).join(", "), fim: itens[itens.length - 1] });
 }
 
 /** volta uma entrada e espera o popstate (ou desiste em 400 ms) */
@@ -54,6 +57,8 @@ function voltarEEsperar(): Promise<void> {
 }
 
 export const FormScreen = forwardRef<FormScreenHandle, Props>(function FormScreen({ eyebrow, title, subtitle, saveLabel, saving = false, missing = [], dirty = false, error, onSave, onClose, secondary, children }, ref) {
+  const traduzirUi = useTexto();
+
   const id = useId();
   const titleId = `${id}-t`;
   const rootRef = useRef<HTMLDivElement>(null);
@@ -151,10 +156,10 @@ export const FormScreen = forwardRef<FormScreenHandle, Props>(function FormScree
   useEffect(() => { if (error) erroRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [error]);
 
   const bloqueado = saving || missing.length > 0;
-  const falta = missing.length ? `Falta: ${juntar(missing)}` : "";
+  const falta = missing.length ? traduzirUi("Falta: {campos}", { campos: juntar(missing, traduzirUi) }) : "";
   const principal = (
     <Botao variante="principal" onClick={onSave} desativado={bloqueado} aria-describedby={falta ? `${id}-falta` : undefined}>
-      {saving ? "Salvando…" : saveLabel}
+      {saving ? traduzirUi("Salvando…") : saveLabel}
     </Botao>
   );
 
@@ -165,7 +170,7 @@ export const FormScreen = forwardRef<FormScreenHandle, Props>(function FormScree
   return (
     <div className="fs" role="dialog" aria-modal="true" aria-labelledby={titleId} ref={rootRef} tabIndex={-1} onKeyDown={onKeyDown}>
       <header className="fs-top">
-        <BotaoIcone className="fs-back" onClick={pedirFechar} desativado={saving} rotulo="Voltar sem salvar">
+        <BotaoIcone className="fs-back" onClick={pedirFechar} desativado={saving} rotulo={traduzirUi("Voltar sem salvar")}>
           <Icon name="voltar" size={18} />
         </BotaoIcone>
         <div className="fs-head">
@@ -173,7 +178,7 @@ export const FormScreen = forwardRef<FormScreenHandle, Props>(function FormScree
           <h2 className="fs-title" id={titleId}>{title}</h2>
         </div>
         <div className="fs-actions">
-          {segunda ?? <Botao onClick={pedirFechar} desativado={saving}>Cancelar</Botao>}
+          {segunda ?? <Botao onClick={pedirFechar} desativado={saving}>{traduzirUi("Cancelar")}</Botao>}
           {principal}
         </div>
       </header>
@@ -195,10 +200,10 @@ export const FormScreen = forwardRef<FormScreenHandle, Props>(function FormScree
       {confirmar ? (
         <div className="fs-confirm" role="alertdialog" aria-modal="true" aria-labelledby={`${id}-c`}>
           <div className="fs-confirm-card">
-            <p className="fs-confirm-t" id={`${id}-c`}>Descartar o que você preencheu?</p>
+            <p className="fs-confirm-t" id={`${id}-c`}>{traduzirUi("Descartar o que você preencheu?")}</p>
             <div className="fs-confirm-acts">
-              <Botao onClick={() => setConfirmar(false)} autoFocus>Continuar editando</Botao>
-              <Botao variante="perigo" onClick={() => { setConfirmar(false); void fechar(); }}>Descartar</Botao>
+              <Botao onClick={() => setConfirmar(false)} autoFocus>{traduzirUi("Continuar editando")}</Botao>
+              <Botao variante="perigo" onClick={() => { setConfirmar(false); void fechar(); }}>{traduzirUi("Descartar")}</Botao>
             </div>
           </div>
         </div>

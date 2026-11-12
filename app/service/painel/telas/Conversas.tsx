@@ -4,7 +4,6 @@ import { useRelogioDaIgreja } from "../../lib/relogio-context";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
-import { plural } from "../../lib/plural";
 import { notifyPush } from "../../lib/notify-push";
 import "../../modules/conversas/conversas.css";
 import { identidadeConversa } from "../../modules/conversas/identidade";
@@ -19,6 +18,8 @@ import { Segmentado } from "../../ui/Segmentado";
 import { Campo, Entrada, TextoLongo } from "../../ui/Campo";
 import { Vazio } from "../../ui/Estados";
 import { Janela } from "../../ui/Janela";
+import { useTexto } from "../../lib/internacional/contexto";
+
 export function NovaConversaModal({
   members,
   church,
@@ -34,6 +35,8 @@ export function NovaConversaModal({
   onClose: () => void;
   onCreated: (chatId: string) => void;
 }) {
+  const traduzirUi = useTexto();
+
   const router = useRouter();
   const [tipo, setTipo] = useState<"dm" | "grupo">("dm");
   const [nome, setNome] = useState("");
@@ -48,8 +51,8 @@ export function NovaConversaModal({
   const tog = (id: string) => setSel((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
 
   const criar = async () => {
-    if (sel.length === 0) { setError("Escolha pelo menos uma pessoa."); return; }
-    if (!church?.organizationId || !church.id) { setError("Nenhuma igreja encontrada para vincular esta conversa."); return; }
+    if (sel.length === 0) { setError(traduzirUi("Escolha pelo menos uma pessoa.")); return; }
+    if (!church?.organizationId || !church.id) { setError(traduzirUi("Nenhuma igreja encontrada para vincular esta conversa.")); return; }
     setSaving(true);
     setError("");
     const supabase = createServiceBrowserClient();
@@ -61,7 +64,7 @@ export function NovaConversaModal({
     }).select("id").single();
     if (chatError || !chatRow) {
       setSaving(false);
-      setError(chatError?.message ?? "Não foi possível criar a conversa.");
+      setError(chatError?.message ?? traduzirUi("Não foi possível criar a conversa."));
       return;
     }
     const participantIds = [...new Set([...(eu ? [eu] : []), ...sel])];
@@ -84,22 +87,22 @@ export function NovaConversaModal({
   };
 
   return (
-    <Janela larga sobretitulo="Nova conversa" titulo="Chamar para conversar" texto="Fale com alguém em particular ou crie um grupo com parte da equipe." aoFechar={onClose} corpoBloco rodape={<>
-          <Botao onClick={onClose}>Cancelar</Botao>
-          <Botao variante="principal" desativado={saving} onClick={criar}>{saving ? "Criando…" : "Iniciar conversa"}</Botao>
+    <Janela larga sobretitulo={traduzirUi("Nova conversa")} titulo={traduzirUi("Chamar para conversar")} texto={traduzirUi("Fale com alguém em particular ou crie um grupo com parte da equipe.")} aoFechar={onClose} corpoBloco rodape={<>
+          <Botao onClick={onClose}>{traduzirUi("Cancelar")}</Botao>
+          <Botao variante="principal" desativado={saving} onClick={criar}>{saving ? traduzirUi("Criando…") : traduzirUi("Iniciar conversa")}</Botao>
       </>}>
-      <Campo rotulo="Tipo" grupo>
+      <Campo rotulo={traduzirUi("Tipo")} grupo>
         <Segmentado>
-          <Opcao marcada={tipo === "dm"} onClick={() => setTipo("dm")}>Individual</Opcao>
-          <Opcao marcada={tipo === "grupo"} onClick={() => setTipo("grupo")}>Em grupo</Opcao>
+          <Opcao marcada={tipo === "dm"} onClick={() => setTipo("dm")}>{traduzirUi("Individual")}</Opcao>
+          <Opcao marcada={tipo === "grupo"} onClick={() => setTipo("grupo")}>{traduzirUi("Em grupo")}</Opcao>
         </Segmentado>
       </Campo>
       {isGrupo && (
-        <Campo rotulo="Nome do grupo">
-          <Entrada value={nome} placeholder="ex: Apoio do domingo" onChange={(e) => setNome(e.target.value)} />
+        <Campo rotulo={traduzirUi("Nome do grupo")}>
+          <Entrada value={nome} placeholder={traduzirUi("ex: Apoio do domingo")} onChange={(e) => setNome(e.target.value)} />
         </Campo>
       )}
-      <Campo rotulo="Quem participa" grupo>
+      <Campo rotulo={traduzirUi("Quem participa")} grupo>
         <div className="cand-pick">
           {candidatos.map((m) => {
             const on = sel.includes(m.id);
@@ -109,10 +112,10 @@ export function NovaConversaModal({
               </Acao>
             );
           })}
-          {candidatos.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum membro disponível.</span>}
+          {candidatos.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>{traduzirUi("Nenhum membro disponível.")}</span>}
         </div>
       </Campo>
-      <Campo rotulo="Primeira mensagem (opcional)" style={{ marginBottom: 0 }}>
+      <Campo rotulo={traduzirUi("Primeira mensagem (opcional)")} style={{ marginBottom: 0 }}>
         <TextoLongo value={primeiraMsg} placeholder="..." onChange={(e) => setPrimeiraMsg(e.target.value)} />
       </Campo>
       {error && <div style={{ marginTop: 10, fontSize: "var(--fs-pn-13)", color: "var(--danger)" }}>{error}</div>}
@@ -143,6 +146,8 @@ export function Conversas({
   pendingChatMemberId?: string | null;
   onConsumePendingChatMember?: () => void;
 }) {
+  const traduzirUi = useTexto();
+
   const router = useRouter();
   const { fuso } = useRelogioDaIgreja();
   const [selected, setSelected] = useState<string | null>(null);
@@ -183,8 +188,8 @@ export function Conversas({
   const identidade = (item: ChatView) => identidadeConversa(item, chatMembers, currentMember?.id, ministries);
   const chatName = (item: ChatView) => identidade(item).nome;
   const perspectiveText = scopeMinistryIds
-    ? `Canal do ${ministries.find((m) => m.id === scopeMinistryIds[0])?.name ?? "seu time"}, grupos e mensagens diretas da sua equipe. Conversas são privadas: só os envolvidos veem.`
-    : "Só as conversas das quais você participa aparecem aqui. Conversas são privadas: só os envolvidos veem.";
+    ? traduzirUi("Canal do {time}, grupos e mensagens diretas da sua equipe. Conversas são privadas: só os envolvidos veem.", { time: ministries.find((m) => m.id === scopeMinistryIds[0])?.name ?? traduzirUi("seu time") })
+    : traduzirUi("Só as conversas das quais você participa aparecem aqui. Conversas são privadas: só os envolvidos veem.");
 
   const enviar = async () => {
     if (!texto.trim() || !chat || sending || !currentMember) return;
@@ -206,7 +211,7 @@ export function Conversas({
 
   return (
     <div className="content wide conversas-painel">
-      <PageHead title="Conversas" eyebrow="Operação" help={`Um chat simples com seu time e sua liderança, dentro do mesmo app. ${perspectiveText}`} action={<Botao variante="principal" onClick={() => setNova(true)}>+ Nova conversa</Botao>} />
+      <PageHead title={traduzirUi("Conversas")} eyebrow={traduzirUi("Operação")} help={traduzirUi("Um chat simples com seu time e sua liderança, dentro do mesmo app. {perspectiva}", { perspectiva: perspectiveText })} action={<Botao variante="principal" onClick={() => setNova(true)}>{traduzirUi("+ Nova conversa")}</Botao>} />
       <div className="chat-layout">
         <div className="chat-list">
           {visibleChats.map((item) => (
@@ -217,13 +222,13 @@ export function Conversas({
                   : <Icon name={item.kind === "time" ? "times" : "membros"} size={16} />}
               </span>
               <span className="chat-row-main">
-                <span className="chat-row-top"><b>{chatName(item)}</b><small>agora</small></span>
-                <span className="chat-row-prev">{messages.find((message) => message.chat_id === item.id)?.body || "Canal de alinhamento"}</span>
+                <span className="chat-row-top"><b>{chatName(item)}</b><small>{traduzirUi("agora")}</small></span>
+                <span className="chat-row-prev">{messages.find((message) => message.chat_id === item.id)?.body || traduzirUi("Canal de alinhamento")}</span>
               </span>
               <span className="chat-row-count">{chatCount(item.id)}</span>
             </Acao>
           ))}
-          {visibleChats.length === 0 && <Vazio titulo="Nenhuma conversa ainda." />}
+          {visibleChats.length === 0 && <Vazio titulo={traduzirUi("Nenhuma conversa ainda.")} />}
         </div>
         {chat ? (
           <div className="chat-main">
@@ -235,7 +240,7 @@ export function Conversas({
               </span>
               <div>
                 <div className="chat-head-name">{chatName(chat)}</div>
-                <div className="chat-head-sub">{chat.kind === "time" ? "Canal do time" : chat.kind === "dm" ? "Mensagem direta" : "Grupo"} · {plural(chatCount(chat.id), "pessoa")}</div>
+                <div className="chat-head-sub">{chat.kind === "time" ? traduzirUi("Canal do time") : chat.kind === "dm" ? traduzirUi("Mensagem direta") : traduzirUi("Grupo")} · {traduzirUi("{count, plural, =1 {# pessoa} other {# pessoas}}", { count: chatCount(chat.id) })}</div>
               </div>
             </div>
             <div className="chat-thread">
@@ -253,15 +258,15 @@ export function Conversas({
                     </div>
                   );
                 })}
-                {selectedMessages.length === 0 ? <Vazio titulo="Nenhuma mensagem nesta conversa." /> : null}
+                {selectedMessages.length === 0 ? <Vazio titulo={traduzirUi("Nenhuma mensagem nesta conversa.")} /> : null}
               </div>
               <div className="chat-compose">
-                <Entrada placeholder="Escreva uma mensagem..." value={texto} onChange={(e) => setTexto(e.target.value)} onKeyDown={(e) => e.key === "Enter" && enviar()} disabled={sending} />
-                <Botao variante="principal" compacto desativado={sending || !texto.trim()} onClick={enviar}>Enviar</Botao>
+                <Entrada placeholder={traduzirUi("Escreva uma mensagem...")} value={texto} onChange={(e) => setTexto(e.target.value)} onKeyDown={(e) => e.key === "Enter" && enviar()} disabled={sending} />
+                <Botao variante="principal" compacto desativado={sending || !texto.trim()} onClick={enviar}>{traduzirUi("Enviar")}</Botao>
               </div>
             </div>
           </div>
-        ) : <div className="chat-main chat-empty"><EmptyState title="Escolha uma conversa" text="Toque numa conversa da lista para ler e responder, ou comece uma nova." /></div>}
+        ) : <div className="chat-main chat-empty"><EmptyState title={traduzirUi("Escolha uma conversa")} text={traduzirUi("Toque numa conversa da lista para ler e responder, ou comece uma nova.")} /></div>}
       </div>
       {nova && (
         <NovaConversaModal

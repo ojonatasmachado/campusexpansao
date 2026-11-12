@@ -13,6 +13,8 @@ import { Campo } from "../../../ui/Campo";
 import { Selecao } from "../../../ui/Selecao";
 import { Vazio } from "../../../ui/Estados";
 import { Janela } from "../../../ui/Janela";
+import { useTexto } from "../../../lib/internacional/contexto";
+
 
 export function AddToMinistryModal({
   ministry, people, members, church, onClose,
@@ -23,6 +25,8 @@ export function AddToMinistryModal({
   church: { id: string; organizationId: string };
   onClose: () => void;
 }) {
+  const traduzirUi = useTexto();
+
   const { comTermos: ct } = useTermos();
   const router = useRouter();
   const [q, setQ] = useState("");
@@ -54,25 +58,25 @@ export function AddToMinistryModal({
   };
 
   return (
-    <Janela acima sobretitulo="Adicionar ao time" titulo={ministry.name} texto={ct("Escolha o {voluntario} e, se souber, a função dele neste time.")}
-      aoFechar={onClose} corpoBloco rodape={<Botao onClick={onClose}>Fechar</Botao>}>
+    <Janela acima sobretitulo={traduzirUi("Adicionar ao time")} titulo={ministry.name} texto={ct(traduzirUi("Escolha o {voluntario} e, se souber, a função dele neste time."))}
+      aoFechar={onClose} corpoBloco rodape={<Botao onClick={onClose}>{traduzirUi("Fechar")}</Botao>}>
           {ministry.positions.length > 0 && (
-            <Campo rotulo="Função (opcional)" style={{ marginBottom: 14 }}>
-              <Selecao valor={positionId} aoMudar={setPositionId} vazio="Sem função definida" opcoes={ministry.positions.map((p) => ({ v: p.id, l: p.name }))} />
+            <Campo rotulo={traduzirUi("Função (opcional)")} style={{ marginBottom: 14 }}>
+              <Selecao valor={positionId} aoMudar={setPositionId} vazio={traduzirUi("Sem função definida")} opcoes={ministry.positions.map((p) => ({ v: p.id, l: p.name }))} />
             </Campo>
           )}
           <div className="tb-search" style={{ marginBottom: 12 }}>
             <span className="si"><Icon name="buscar" size={13} /></span>
-            <input placeholder={ct("Buscar {voluntario}...")} value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
+            <input placeholder={ct(traduzirUi("Buscar {voluntario}..."))} value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
           </div>
           {fora.map((p) => (
             <div className="flag-row" key={p.id} style={{ cursor: "pointer" }} onClick={() => add(p.id)}>
               <Av name={p.name} size="sm" photoUrl={p.photoUrl} />
               <div className="flag-main"><div className="flag-nome">{p.name}</div></div>
-              <span className={botaoClasse({ variante: "discreto", compacto: true })} style={{ marginLeft: "auto" }}>Adicionar</span>
+              <span className={botaoClasse({ variante: "discreto", compacto: true })} style={{ marginLeft: "auto" }}>{traduzirUi("Adicionar")}</span>
             </div>
           ))}
-          {fora.length === 0 && <Vazio titulo={q ? "Nenhum resultado." : ct("Todos os {voluntarios} já estão no time.")} />}
+          {fora.length === 0 && <Vazio titulo={q ? traduzirUi("Nenhum resultado.") : ct(traduzirUi("Todos os {voluntarios} já estão no time."))} />}
     </Janela>
   );
 }

@@ -12,17 +12,23 @@ import { Opcao } from "../../ui/Opcao";
 import { usePopover } from "../../ui/popover";
 import { Selecao } from "../../ui/Selecao";
 import { SeletorData } from "../../ui/Data";
+import { useTexto } from "../../lib/internacional/contexto";
+
 
 export const DP_MESES_FULL = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 export const DP_DIAS_MES = [31,29,31,30,31,30,31,31,30,31,30,31];
 
 export function DatePicker({ value, onChange, id, fullDate = false, label }: { value: string; onChange: (v: string) => void; id?: string; fullDate?: boolean; label?: string }) {
+  const traduzirUi = useTexto();
+
   return fullDate
-    ? <SeletorData id={id} rotulo={label ?? "Data completa"} valor={value} aoMudar={onChange} limpavel />
+    ? <SeletorData id={id} rotulo={label ?? traduzirUi("Data completa")} valor={value} aoMudar={onChange} limpavel />
     : <BirthdayPicker id={id} value={value} onChange={onChange} />;
 }
 
 function BirthdayPicker({ value, onChange, id }: { value: string; onChange: (v: string) => void; id?: string }) {
+  const traduzirUi = useTexto();
+
   const parse = () => {
     if (!value) return { d: null as number | null, m: 0 };
     const p = value.split(" ");
@@ -39,15 +45,15 @@ function BirthdayPicker({ value, onChange, id }: { value: string; onChange: (v: 
   return (
     <div className="dp" ref={caixa}>
       <Acao ref={gatilho} id={id} className="dp-trigger" aria-expanded={open} aria-controls={open ? popId : undefined} aria-haspopup="dialog" onClick={() => setOpen((o) => !o)}>
-        <span className={value ? "" : "dp-ph"}>{value ? `${dia} de ${DP_MESES_FULL[mes]}` : "Escolher dia e mês"}</span>
+        <span className={value ? "" : "dp-ph"}>{value ? `${dia} de ${DP_MESES_FULL[mes]}` : traduzirUi("Escolher dia e mês")}</span>
         <span className="dp-ic"><Caret /></span>
       </Acao>
       {open && (
-        <div className="dp-pop" id={popId} role="dialog" aria-label="Escolher dia e mês">
+        <div className="dp-pop" id={popId} role="dialog" aria-label={traduzirUi("Escolher dia e mês")}>
           <div className="dp-head">
-            <BotaoIcone rotulo="Mês anterior" onClick={() => setMes((m) => (m + 11) % 12)}>‹</BotaoIcone>
+            <BotaoIcone rotulo={traduzirUi("Mês anterior")} onClick={() => setMes((m) => (m + 11) % 12)}>‹</BotaoIcone>
             <span aria-live="polite">{DP_MESES_FULL[mes]}</span>
-            <BotaoIcone rotulo="Próximo mês" onClick={() => setMes((m) => (m + 1) % 12)}>›</BotaoIcone>
+            <BotaoIcone rotulo={traduzirUi("Próximo mês")} onClick={() => setMes((m) => (m + 1) % 12)}>›</BotaoIcone>
           </div>
           <div className="dp-grid">
             {Array.from({ length: DP_DIAS_MES[mes] }, (_, i) => i + 1).map((d) => (
@@ -61,6 +67,8 @@ function BirthdayPicker({ value, onChange, id }: { value: string; onChange: (v: 
 }
 
 export function TimePicker({ value, onChange, id }: { value: string; onChange: (v: string) => void; id?: string }) {
+  const traduzirUi = useTexto();
+
   const [open, setOpen] = useState(false);
   const { caixa, gatilho } = usePopover(open, setOpen);
   const popId = useId();
@@ -71,24 +79,24 @@ export function TimePicker({ value, onChange, id }: { value: string; onChange: (
   return (
     <div className="dp" ref={caixa}>
       <Acao ref={gatilho} id={id} className="dp-trigger" aria-expanded={open} aria-controls={open ? popId : undefined} aria-haspopup="dialog" onClick={() => setOpen((o) => !o)}>
-        <span className={value ? "" : "dp-ph"}>{value || "Escolher horário"}</span>
+        <span className={value ? "" : "dp-ph"}>{value || traduzirUi("Escolher horário")}</span>
         <span className="dp-ic"><Caret /></span>
       </Acao>
       {open && (
-        <div className="dp-pop tp-pop" id={popId} role="dialog" aria-label="Escolher horário">
+        <div className="dp-pop tp-pop" id={popId} role="dialog" aria-label={traduzirUi("Escolher horário")}>
           <div className="tp-col">
-            <div className="tp-col-h">Hora</div>
+            <div className="tp-col-h">{traduzirUi("Hora")}</div>
             <div className="tp-scroll">
               {Array.from({ length: 24 }, (_, h) => h).map((h) => (
-                <Opcao key={h} marcada={hh === h} estilo="tp-opt" aria-pressed={hh === h} aria-label={`${h} horas`} onClick={() => set(h, mm)}>{String(h).padStart(2, "0")}</Opcao>
+                <Opcao key={h} marcada={hh === h} estilo="tp-opt" aria-pressed={hh === h} aria-label={traduzirUi("{h} horas", { h })} onClick={() => set(h, mm)}>{String(h).padStart(2, "0")}</Opcao>
               ))}
             </div>
           </div>
           <div className="tp-col">
-            <div className="tp-col-h">Min</div>
+            <div className="tp-col-h">{traduzirUi("Min")}</div>
             <div className="tp-scroll">
               {[0, 15, 30, 45].map((m) => (
-                <Opcao key={m} marcada={mm === m} estilo="tp-opt" aria-pressed={mm === m} aria-label={`${m} minutos`} onClick={() => { set(hh, m); setOpen(false); gatilho.current?.focus(); }}>{String(m).padStart(2, "0")}</Opcao>
+                <Opcao key={m} marcada={mm === m} estilo="tp-opt" aria-pressed={mm === m} aria-label={traduzirUi("{m} minutos", { m })} onClick={() => { set(hh, m); setOpen(false); gatilho.current?.focus(); }}>{String(m).padStart(2, "0")}</Opcao>
               ))}
             </div>
           </div>
@@ -133,6 +141,8 @@ function semanticaDoCampo(k: string): { type: string; inputMode?: "tel" | "email
 }
 
 export function FField({ field, value, onChange, onPatch, id }: { field: FieldDef; value: string; onChange: (v: string) => void; onPatch?: (patch: Record<string, string>) => void; id?: string }) {
+  const traduzirUi = useTexto();
+
   if (field.type === "cep") return <CepField field={field} value={value} onChange={onChange} onPatch={onPatch} />;
   if (field.type === "area")
     return <textarea id={id} name={field.k} className="textarea" aria-label={id ? undefined : field.label} value={value} placeholder={field.ph} style={field.big ? { minHeight: 110 } : undefined} onChange={(e) => onChange(e.target.value)} />;
@@ -142,7 +152,7 @@ export function FField({ field, value, onChange, onPatch, id }: { field: FieldDe
     return (
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <Interruptor ligado={value === "true"} id={id} rotulo={field.label} onClick={() => onChange(value === "true" ? "false" : "true")} />
-        <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>{value === "true" ? (field.onLabel || "Sim") : (field.offLabel || "Não")}</span>
+        <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>{value === "true" ? (field.onLabel || traduzirUi("Sim")) : (field.offLabel || traduzirUi("Não"))}</span>
       </div>
     );
   if (field.type === "checks") {
