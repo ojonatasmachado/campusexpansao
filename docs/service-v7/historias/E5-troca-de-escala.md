@@ -2,10 +2,10 @@
 id: E5
 titulo: Percorrer cadeia completa de troca de escala
 tipo: verificacao
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-11-12
+branch: historia/E5-troca-de-escala
 depende: []
 tamanho: M
 ---
