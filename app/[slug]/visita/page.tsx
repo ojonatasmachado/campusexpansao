@@ -7,7 +7,7 @@ import { getAuthChurchBySlug } from "../../service/lib/auth-church";
 import { resolveMode, THEME_COOKIE } from "../../service/lib/theme";
 import { supabaseAdmin } from "../../lib/supabase";
 import { normalizarVocabulario } from "../../service/lib/vocabulario";
-import { interessesDe, lerAutocadastro } from "../../service/modules/visitantes/autocadastro";
+import { interessesDe, lerAutocadastro, lerCodigoConvite } from "../../service/modules/visitantes/autocadastro";
 import AutocadastroForm from "../../service/modules/visitantes/AutocadastroForm";
 
 export const dynamic = "force-dynamic";
@@ -20,9 +20,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 /* Visitante se cadastra sozinho (QR ou link que a gestão divulga em
    Visitantes › QR e link). Sem login. O servidor lê só se o autocadastro
    está ligado e os nomes da igreja; o envio vai pela RPC pública
-   service.visitante_autocadastro (0070), que valida de novo. */
-export default async function VisitaPage({ params }: { params: Promise<{ slug: string }> }) {
+   service.visitante_autocadastro (0070), que valida de novo. Com ?convite=
+   (O9), "Quem te convidou?" já chega preenchido. */
+export default async function VisitaPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ convite?: string | string[] }> }) {
   const { slug } = await params;
+  const codigo = lerCodigoConvite((await searchParams).convite);
   const church = await getAuthChurchBySlug(slug);
   if (!church) redirect("/service/login");
 
@@ -33,6 +35,11 @@ export default async function VisitaPage({ params }: { params: Promise<{ slug: s
     : { data: null };
   const vocab = normalizarVocabulario(sede?.vocabulario, (sede?.settings as { gruposCfg?: { termoP?: string } } | null)?.gruposCfg?.termoP);
   const aberto = lerAutocadastro(row?.settings).ativo;
+  /* O9: link "Convidar um amigo". Só o nome de quem convidou, e só desta organização */
+  const { data: quem } = aberto && codigo && row
+    ? await db.from("people").select("name").eq("invite_code", codigo).eq("organization_id", row.organization_id).maybeSingle()
+    : { data: null };
+  const convite = quem?.name ? { codigo: codigo!, nome: quem.name as string } : null;
 
   const mode = resolveMode((await cookies()).get(THEME_COOKIE)?.value, church.brand);
 
@@ -40,7 +47,7 @@ export default async function VisitaPage({ params }: { params: Promise<{ slug: s
     <>
       <ServiceTheme brand={church.brand} mode={mode} />
       {aberto ? (
-        <AutocadastroForm slug={church.slug} churchName={church.name} logoUrl={church.logoUrl} interesses={interessesDe(vocab)} />
+        <AutocadastroForm slug={church.slug} churchName={church.name} logoUrl={church.logoUrl} interesses={interessesDe(vocab)} convite={convite} />
       ) : (
         <AuthShell
           logoUrl={church.logoUrl}

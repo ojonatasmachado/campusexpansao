@@ -1,5 +1,6 @@
 "use client";
 
+import { lerAutocadastro } from "./modules/visitantes/autocadastro";
 import { partesNoFuso } from "./lib/fuso";
 import { RelogioProvider } from "./lib/relogio-context";
 import { limparRetorno } from "./lib/retorno";
@@ -811,6 +812,11 @@ export default function ServiceExactApp({
         textSizePerfil={textSizePerfil}
         readAnnouncementIds={announcementReads.filter((r) => r.person_id === currentPersonId).map((r) => r.announcement_id)}
         contribuir={(churches.find((c) => c.matriz) ?? firstChurch)?.settings?.contribuirCfg as MobileOverlayProps["contribuir"]}
+        convite={(() => {
+          /* O9: a igreja ativa (a mesma dos módulos do app) precisa ter o autocadastro ligado e um endereço */
+          const igreja = firstChurch;
+          return igreja?.slug && lerAutocadastro(igreja.settings).ativo ? { slug: igreja.slug, organizationId: igreja.organizationId, igreja: igreja.nome } : null;
+        })()}
         churchPurpose={(() => {
           const ciclo = cycles.find((c) => c.is_active);
           const titulo = churchIdentity?.purpose || churchIdentity?.mission || ciclo?.theme;

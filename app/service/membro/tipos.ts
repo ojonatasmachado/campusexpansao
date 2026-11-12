@@ -6,6 +6,7 @@ import type { CategoriaAviso, ContextoMembro } from "../modules/define";
 import { type AniversarioNoTime } from "../modules/aniversarios/CartaoDoTime";
 import { type FatoView } from "../lib/historico";
 import { type ContribuirCfg } from "../modules/contribuir/pix";
+import type { ConviteCfg } from "../modules/visitantes/Convidar";
 
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
 
@@ -246,6 +247,8 @@ export type MobileOverlayProps = {
   readAnnouncementIds?: string[];
   /* chave Pix da igreja (settings.contribuirCfg da matriz); sem chave, Contribuir não aparece */
   contribuir?: Partial<ContribuirCfg> | null;
+  /* O9: igreja da pessoa com o autocadastro ligado; sem isso, "Convidar um amigo" não aparece */
+  convite?: ConviteCfg | null;
   /* cartão "Nossa igreja" na Caminhada (Identidade e propósito) */
   churchPurpose?: { kick?: string | null; title?: string | null; text?: string | null } | null;
   /* "Quando posso servir" (0049) */

@@ -3513,8 +3513,13 @@ body{transition:background-color .2s ease,color .2s ease}
 .contrib-chev.on{transform:rotate(90deg)}
 /* o QR fica sempre preto no branco, nos dois modos, para a câmera do banco ler
    (hex fixo de propósito: não é cor da igreja nem do tema, é exigência do leitor) */
-.contrib-qr{display:grid;place-items:center;margin-top:16px;padding:16px;border-radius:16px;background:#FFFFFF}
+.contrib-qr,.convite-qr{display:grid;place-items:center;margin-top:16px;padding:16px;border-radius:16px;background:#FFFFFF}
 .contrib-qr svg{width:100%;max-width:208px;height:auto}
+/* O9: o QR do convite usa o mesmo fundo branco do QR do Pix (leitura da câmera) */
+.convite-qr{margin-top:0;padding:20px}
+.convite-qr svg{width:min(72vw,320px);height:auto}
+.convite-acoes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}
+.convite-link{margin-top:12px;overflow-wrap:anywhere}
 .contrib-nota{margin:4px 20px 24px}
 @media (prefers-reduced-motion:reduce){.contrib-chev{transition:none}}
 .contrib-cfg-v{overflow-wrap:anywhere}
@@ -3529,6 +3534,7 @@ body{transition:background-color .2s ease,color .2s ease}
 .vis-form{gap:18px}
 .vis-opt{font-weight:400;color:var(--muted)}
 .vis-err{font-size:var(--fs-pn-13);line-height:1.45;color:var(--danger)}
+.vis-dica{font-size:var(--fs-pn-13);line-height:1.45;color:var(--muted)}
 .login-input[aria-invalid="true"]{border-color:var(--danger-line)}
 .vis-sel{position:relative;display:block}
 .vis-sel select{appearance:none;-webkit-appearance:none;padding-right:42px;cursor:pointer}

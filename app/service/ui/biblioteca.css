@@ -373,6 +373,9 @@
   .janela-alca span { width: 40px; height: 5px; border-radius: 3px; background: var(--border-3); }
   .modal-head:has(.janela-x) { padding-top: 6px; }
   .janela-x { top: 4px; }
+  /* telaCheia: a folha vai até o topo e o corpo fica no meio (QR do convite) */
+  .modal.janela-cheia:has(> .janela-alca) { height: 100dvh; max-height: none; border-radius: 0; padding-top: var(--safe-top); }
+  .modal.janela-cheia .modal-body { flex: 1; display: grid; grid-template-columns: 1fr; place-items: center; align-content: center; }
 }
 
 /* ── Gaveta: 440 px (larga 560), entra em 0,45 s com o véu; tela cheia no celular ── */

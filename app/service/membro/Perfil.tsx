@@ -112,12 +112,14 @@ export function usePush(organizationId?: string) {
 }
 
 export function TabPerfil({
-  person, member, organizationId, theme, setTheme, onChangePassword, onUpdateProfile, onLogout, onSwitchToPanel, view = "home", openSub, contribuir, onContribuir,
+  person, member, organizationId, theme, setTheme, onChangePassword, onUpdateProfile, onLogout, onSwitchToPanel, view = "home", openSub, contribuir, onContribuir, onConvidar,
 }: {
   view?: "home" | "dados" | "senha";
   /* Pix da igreja: atalho no Perfil, além da Caminhada (crítica de design 2026-10-20) */
   contribuir?: ContribuirCfg | null;
   onContribuir?: () => void;
+  /* O9: só quando a igreja recebe o autocadastro (MobileApp) */
+  onConvidar?: () => void;
   openSub?: (sub: string) => void;
   onLogout?: () => void;
   onSwitchToPanel?: () => void;
@@ -335,6 +337,7 @@ export function TabPerfil({
           <M6Row ic="pessoa" t={traduzirUi("Meus dados")} s={traduzirUi("Telefone, e-mail, endereço e aniversário")} onClick={() => openSub?.("dados")} />
           <M6Row ic="kids" t={traduzirUi("Minha família")} s={traduzirUi("Filhos no Kids, check-in e eventos")} onClick={() => openSub?.("familia")} />
           {contribuir && <M6Row ic="semente" t={traduzirUi("Contribuir")} s={traduzirUi("Pix para {value0}", { value0: String(listaFinalidades(contribuir.finalidades)) })} onClick={onContribuir} />}
+          {onConvidar && <M6Row ic="visitante" t={traduzirUi("Convidar um amigo")} s={traduzirUi("WhatsApp, link ou QR para a primeira visita")} onClick={onConvidar} />}
           <M6Row ic="historia" t={traduzirUi("Minha história")} s={traduzirUi("O que você já viveu na igreja")} onClick={() => openSub?.("minha-historia")} />
         </Lista>
       </div>

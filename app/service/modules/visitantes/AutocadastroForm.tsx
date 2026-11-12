@@ -21,17 +21,20 @@ export default function AutocadastroForm({
   churchName,
   logoUrl,
   interesses,
+  convite = null,
 }: {
   slug: string;
   churchName: string;
   logoUrl: string | null;
   interesses: { v: string; l: string }[];
+  /** O9: veio pelo link "Convidar um amigo"; o nome já entra no campo e pode ser apagado */
+  convite?: { codigo: string; nome: string } | null;
 }) {
   const [nome, setNome] = useState("");
   const [tel, setTel] = useState("");
   const [email, setEmail] = useState("");
-  const [como, setComo] = useState("");
-  const [convidou, setConvidou] = useState("");
+  const [como, setComo] = useState(convite ? "amigo" : "");
+  const [convidou, setConvidou] = useState(convite?.nome ?? "");
   const [marcados, setMarcados] = useState<string[]>([]);
   const [consent, setConsent] = useState(false);
   const [erros, setErros] = useState<Erros>({});
@@ -78,6 +81,8 @@ export default function AutocadastroForm({
         p_invited_by: convidou.trim() || null,
         p_interests: marcados,
         p_consent: consent,
+        /* só com convite: sem ele, a assinatura antiga segue valendo */
+        ...(convite ? { p_convite: convite.codigo } : {}),
       });
     setEnviando(false);
     const r = error ? "erro" : String(data);
@@ -214,7 +219,13 @@ export default function AutocadastroForm({
             placeholder="Nome de quem te chamou"
             value={convidou}
             onChange={(e) => setConvidou(e.target.value)}
+            {...(convite ? { "aria-describedby": "vis-convidou-dica" } : {})}
           />
+          {convite ? (
+            <span className="vis-dica" id="vis-convidou-dica">
+              Veio do convite. Se não foi essa pessoa, é só apagar ou trocar.
+            </span>
+          ) : null}
         </label>
 
         <fieldset className="login-field vis-fs">

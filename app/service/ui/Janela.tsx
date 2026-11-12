@@ -39,16 +39,18 @@ export type JanelaProps = {
   acima?: boolean;
   /* salvando: nada fecha (véu, Esc e ✕) até terminar */
   ocupada?: boolean;
+  /* celular: ocupa a tela toda, com o corpo centrado (QR para mostrar a outra pessoa) */
+  telaCheia?: boolean;
   className?: string;
   children?: ReactNode;
 };
 
-export function Janela({ titulo, sobretitulo, texto, cabecalho, aoFechar, larga, rodape, fecharNoFundo = true, corpoBloco, corpoStyle, acima, ocupada, className, children }: JanelaProps) {
+export function Janela({ titulo, sobretitulo, texto, cabecalho, aoFechar, larga, rodape, fecharNoFundo = true, corpoBloco, corpoStyle, acima, ocupada, telaCheia, className, children }: JanelaProps) {
   const tituloId = useId();
   const { alvo, zona } = useArrastarParaFechar("baixo", aoFechar);
   return (
     <div className={`modal-bg${acima ? " janela-acima" : ""}`} onClick={fecharNoFundo && !ocupada ? aoFechar : undefined}>
-      <div ref={alvo} className={`modal${larga ? " wide" : ""}${className ? ` ${className}` : ""}`}
+      <div ref={alvo} className={`modal${larga ? " wide" : ""}${telaCheia ? " janela-cheia" : ""}${className ? ` ${className}` : ""}`}
         role="dialog" aria-modal="true" aria-labelledby={tituloId} aria-busy={ocupada || undefined} onClick={parar}>
         <div className="janela-alca" aria-hidden="true" {...(ocupada ? {} : zona)}><span /></div>
         <div className="modal-head">

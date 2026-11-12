@@ -17,6 +17,15 @@ export const ORIGEM_AUTOCADASTRO = "QR/link";
 
 export const caminhoAutocadastro = (slug: string) => `/${slug}/visita`;
 
+/** O9: link "Convidar um amigo", com o código de quem convida. */
+export const caminhoConvite = (slug: string, codigo: string) => `${caminhoAutocadastro(slug)}?convite=${encodeURIComponent(codigo)}`;
+
+/** Código do ?convite=: só letras e números, até 32 (o banco gera 10). */
+export function lerCodigoConvite(v: string | string[] | undefined): string | null {
+  const c = (Array.isArray(v) ? v[0] : v)?.trim() ?? "";
+  return /^[a-z0-9]{4,32}$/i.test(c) ? c : null;
+}
+
 export const COMO_CONHECEU = [
   { v: "instagram", l: "Instagram ou internet" },
   { v: "amigo", l: "Um amigo ou parente" },
