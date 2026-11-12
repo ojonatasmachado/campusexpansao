@@ -211,7 +211,8 @@ export type MobileOverlayProps = {
   onAddCardComment?: (cardId: string, author: string, body: string) => void;
   onAdvanceVisitorStage?: (visitorId: string, nextStageId: string) => void;
   onRegisterVisitor?: (data: { name: string; phone: string; origin: string }) => void;
-  onSendMessage?: (chatId: string, senderId: string, body: string) => void;
+  /* M3: devolve false quando não gravou, para o rascunho não se perder */
+  onSendMessage?: (chatId: string, senderId: string, body: string) => void | Promise<boolean | void>;
   onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
   organizationId?: string;
   churchName?: string;
@@ -221,7 +222,7 @@ export type MobileOverlayProps = {
   onChangePassword?: (senha: string) => Promise<{ error?: string }>;
   onUpdateProfile?: (personId: string, memberId: string | null, data: MemberContactInput) => Promise<{ error?: string }>;
   journeyRequests?: JourneyRequest[];
-  onRequestJourneyStep?: (memberId: string, step: JourneyStep, eventDate: string, note: string) => void;
+  onRequestJourneyStep?: (memberId: string, step: JourneyStep, eventDate: string, note: string) => void | Promise<boolean | void>;
   missingRequirements?: MissingRequirement[];
   serveRequests?: ServeRequest[];
   baptismCandidates?: BaptismCandidateRef[];

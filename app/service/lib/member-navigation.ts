@@ -1,9 +1,10 @@
 import type { MemberTab } from "../membro/tipos";
 
 export type AgendaSeg = "minha" | "igreja" | "onde";
-export type MemberLocation = { tab: MemberTab; sub: string | null; segment: AgendaSeg; announcement: string | null; card: string | null };
+/* M3: `chat` (conversa aberta, só em Mensagens) e `event` (folha do evento) voltam na recarga. */
+export type MemberLocation = { tab: MemberTab; sub: string | null; segment: AgendaSeg; announcement: string | null; card: string | null; chat?: string | null; event?: string | null };
 const TABS: MemberTab[] = ["inicio", "agenda", "mensagens", "caminhada", "perfil"];
-const KEYS = ["maba", "mtela", "msegmento", "maviso", "mtarefa"];
+const KEYS = ["maba", "mtela", "msegmento", "maviso", "mtarefa", "mconversa", "mevento"];
 const id = (value: string | null) => value && /^[a-zA-Z0-9_-]{1,100}$/.test(value) ? value : null;
 
 export function clearMemberLocation(url: URL): URL {
@@ -24,7 +25,8 @@ export function readMemberLocation(url: URL, allowed: (tab: MemberTab, sub: stri
   /* Tarefas ficam dentro de Minha agenda, sem uma subtela independente. */
   const sub = tab === "agenda" && accepted === "tarefas" ? null : accepted;
   const card = tab === "agenda" && !sub && allowed("agenda", "tarefas") ? id(url.searchParams.get("mtarefa")) : null;
-  return { tab, sub, segment: card || accepted === "tarefas" ? "minha" : (["igreja", "onde"] as const).find((v) => v === url.searchParams.get("msegmento")) ?? "minha", announcement: sub === "mural" ? id(url.searchParams.get("maviso")) : null, card };
+  const chat = tab === "mensagens" && !sub ? id(url.searchParams.get("mconversa")) : null;
+  return { tab, sub, segment: card || accepted === "tarefas" ? "minha" : (["igreja", "onde"] as const).find((v) => v === url.searchParams.get("msegmento")) ?? "minha", announcement: sub === "mural" ? id(url.searchParams.get("maviso")) : null, card, chat, event: id(url.searchParams.get("mevento")) };
 }
 
 export function memberNotificationUrl(category: string, announcementId?: string): string {
@@ -51,5 +53,7 @@ export function writeMemberLocation(url: URL, location: MemberLocation): URL {
     next.searchParams.set("msegmento", "minha");
     next.searchParams.set("mtarefa", location.card!);
   }
+  if (location.tab === "mensagens" && !location.sub && id(location.chat ?? null)) next.searchParams.set("mconversa", location.chat!);
+  if (id(location.event ?? null)) next.searchParams.set("mevento", location.event!);
   return next;
 }

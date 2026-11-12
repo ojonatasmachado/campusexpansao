@@ -2,6 +2,7 @@
 
 import { partesNoFuso } from "./lib/fuso";
 import { RelogioProvider } from "./lib/relogio-context";
+import { limparRetorno } from "./lib/retorno";
 import { relogioDoFuso } from "./lib/relogio";
 import { clearMemberLocation } from "./lib/member-navigation";
 import { clearPanelLocation } from "./lib/panel-navigation";
@@ -503,13 +504,14 @@ export default function ServiceExactApp({
     router.refresh();
   };
   const sendMessageMobile = async (chatId: string, senderId: string, body: string) => {
-    if (!firstChurch?.organizationId || !body.trim()) return;
-    await createServiceBrowserClient().schema("service").from("messages").insert({
+    if (!firstChurch?.organizationId || !body.trim()) return false;
+    const { error } = await createServiceBrowserClient().schema("service").from("messages").insert({
       organization_id: firstChurch.organizationId,
       chat_id: chatId,
       sender_id: senderId,
       body: body.trim(),
     });
+    if (error) return false;
     const recipients = chatMembers.filter((cm) => cm.chat_id === chatId && cm.member_id !== senderId).map((cm) => cm.member_id);
     const senderName = members.find((m) => m.id === senderId)?.name ?? "Alguém";
     notifyPush(firstChurch.organizationId, recipients, senderName, body.trim(), "mensagens");
@@ -574,8 +576,8 @@ export default function ServiceExactApp({
     await startChatMobile(volunteerMember.id, leaderMember.id, texto);
   };
   const submitJourneyRequest = async (memberId: string, step: JourneyStepKind, eventDate: string, note: string) => {
-    if (!firstChurch?.organizationId || !currentPersonId) return;
-    await createServiceBrowserClient().schema("service").from("journey_change_requests").insert({
+    if (!firstChurch?.organizationId || !currentPersonId) return false;
+    const { error: erroPedido } = await createServiceBrowserClient().schema("service").from("journey_change_requests").insert({
       organization_id: firstChurch.organizationId,
       member_id: memberId,
       step,
@@ -583,6 +585,7 @@ export default function ServiceExactApp({
       note: note.trim() || null,
       requested_by: currentPersonId,
     });
+    if (erroPedido) return false;
     const member = members.find((m) => m.id === memberId);
     const stepLabel = ct(JRN_STEPS.find((s) => s.kind === step)?.label ?? step);
     if (member) {
@@ -662,6 +665,7 @@ export default function ServiceExactApp({
   const matrizChurch = churches.find((c) => c.matriz) ?? firstChurch;
   const paginaUrl = matrizChurch?.slug && matrizChurch.settings?.paginaCfg?.enabled ? `/${matrizChurch.slug}` : null;
   const sair = async () => {
+    limparRetorno();
     await createServiceBrowserClient().auth.signOut();
     router.push("/service/login");
     router.refresh();
@@ -795,6 +799,7 @@ export default function ServiceExactApp({
   }, [route]);
   if (!podeGerenciar || view === "app") {
     const handleLogoutSelf = async () => {
+      limparRetorno();
       await createServiceBrowserClient().auth.signOut();
       router.push("/service/login");
       router.refresh();

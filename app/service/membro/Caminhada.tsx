@@ -9,6 +9,7 @@ import { useTermos } from "../lib/vocabulario-context";
 import { useRelogioDaIgreja } from "../lib/relogio-context";
 import { porData, quandoFoi, tipoDoFato, type FatoView } from "../lib/historico";
 import { tituloDoFato } from "../lib/titulo-historico";
+import { useRascunho } from "../lib/retorno";
 import { listaFinalidades, type ContribuirCfg } from "../modules/contribuir/pix";
 import { JourneyContext, M6Row, MemberUiContext, mensagemAcao, useFaltas } from "./comum";
 import type { JourneyStep, M, Ministry, P, StepView } from "./tipos";
@@ -127,11 +128,14 @@ export function MinhaHistoria({ fatos }: { fatos: FatoView[] }) {
 export const STW = { feito: "Concluída", andamento: "Em andamento", afazer: "A fazer" } as const;
 const ESTADO_ETAPA = { feito: "feito", andamento: "atual", afazer: "futuro" } as const;
 
-export function SheetPedidoEtapa({ step, nome, member, onRequestJourneyStep }: { step: JourneyStep; nome: string; member: M | null; onRequestJourneyStep?: (memberId: string, step: JourneyStep, eventDate: string, note: string) => void }) {
+export function SheetPedidoEtapa({ step, nome, member, onRequestJourneyStep }: { step: JourneyStep; nome: string; member: M | null; onRequestJourneyStep?: (memberId: string, step: JourneyStep, eventDate: string, note: string) => void | Promise<boolean | void> }) {
   const { comTermos: ct } = useTermos();
   const ui = useContext(MemberUiContext);
-  const [data, setData] = useState("");
-  const [nota, setNota] = useState("");
+  /* M3: o pedido em escrita volta na recarga */
+  const [rascunho, setRascunho, limparRascunho] = useRascunho(member ? `etapa:${member.id}:${step}` : null, { data: "", nota: "" });
+  const { data, nota } = rascunho;
+  const setData = (v: string) => setRascunho((r) => ({ ...r, data: v }));
+  const setNota = (v: string) => setRascunho((r) => ({ ...r, nota: v }));
   return (
     <div>
       <h2 className="m6-sh">{nome}</h2>
@@ -139,9 +143,14 @@ export function SheetPedidoEtapa({ step, nome, member, onRequestJourneyStep }: {
       <div style={{ marginTop: 14 }}><Campo rotulo="Quando foi?"><SeletorData valor={data} aoMudar={setData} /></Campo></div>
       <Campo rotulo="Quer contar mais? (opcional)"><Entrada value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Ex.: aconteceu em outra igreja" /></Campo>
       <div className="m6-btns">
-        <Botao tamanho="toque" variante="principal" desativado={!data || !member || !onRequestJourneyStep} onClick={() => {
+        <Botao tamanho="toque" variante="principal" desativado={!data || !member || !onRequestJourneyStep} onClick={async () => {
           if (!member || !onRequestJourneyStep) return;
-          onRequestJourneyStep(member.id, step, data, nota);
+          /* M3: sem gravar, a folha fica aberta com o que a pessoa escreveu */
+          if ((await onRequestJourneyStep(member.id, step, data, nota)) === false) {
+            ui.toast("Não foi possível enviar agora. Tente de novo.");
+            return;
+          }
+          limparRascunho();
           ui.sheet(null);
           ui.toast("Pedido enviado · a liderança vai confirmar");
         }}>Enviar</Botao>
