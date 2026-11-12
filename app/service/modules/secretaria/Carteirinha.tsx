@@ -25,6 +25,7 @@ import { Opcao } from "../../ui/Opcao";
 import { linhaClasse } from "../../ui/Linha";
 import { Segmentado } from "../../ui/Segmentado";
 import { Campo, Entrada } from "../../ui/Campo";
+import { useTexto } from "../../lib/internacional/contexto";
 export type Marca = { nome: string; logoUrl?: string | null; cor: string; cidade?: string | null };
 
 type Emitida = { id: string; codigo: string; validade: string; emitida_em: string };
@@ -47,6 +48,7 @@ export function Carteirinha({ memberId, church, marca, demo, members, people, ro
   currentPersonId?: string | null;
   onClose: () => void;
 }) {
+  const traduzirUi = useTexto();
   const { todayISO } = useRelogioDaIgreja();
   const fid = useId();
   const [id, setId] = useState<string | null>(memberId);
@@ -94,11 +96,11 @@ export function Carteirinha({ memberId, church, marca, demo, members, people, ro
       const sb = createServiceBrowserClient().schema("service");
       if (atual) await sb.from("carteirinhas").update({ revogada_em: new Date().toISOString() }).eq("id", atual.id);
       const { data, error: e } = await sb.from("carteirinhas").insert(nova).select("id,codigo,validade,emitida_em").single();
-      if (e || !data) { setSaving(false); setError("Não deu para emitir a carteirinha. Confira a conexão e tente de novo."); return; }
+      if (e || !data) { setSaving(false); setError(traduzirUi("Não deu para emitir a carteirinha. Confira a conexão e tente de novo.")); return; }
       setAtual(data as Emitida);
     }
     setSaving(false);
-    avisar(atual ? "Nova carteirinha emitida. A anterior deixou de valer." : "Carteirinha emitida");
+    avisar(atual ? traduzirUi("Nova carteirinha emitida. A anterior deixou de valer.") : traduzirUi("Carteirinha emitida"));
   };
 
   const imagens = async () => {
@@ -115,7 +117,7 @@ export function Carteirinha({ memberId, church, marca, demo, members, people, ro
       const [f, v] = await imagens();
       baixar(f, `${nomeArquivo}-frente.png`);
       baixar(v, `${nomeArquivo}-verso.png`);
-    } catch { avisar("Não deu para gerar a imagem. Tente de novo.", "warn"); }
+    } catch { avisar(traduzirUi("Não deu para gerar a imagem. Tente de novo."), "warn"); }
     setBaixando("");
   };
   const baixarPdf = async () => {
@@ -128,7 +130,7 @@ export function Carteirinha({ memberId, church, marca, demo, members, people, ro
       pdf.addImage(f, "PNG", 15, 20, 85.6, 54);
       pdf.addImage(v, "PNG", 15 + 85.6 + 6, 20, 85.6, 54);
       pdf.save(`${nomeArquivo}.pdf`);
-    } catch { avisar("Não deu para gerar o PDF. Tente de novo.", "warn"); }
+    } catch { avisar(traduzirUi("Não deu para gerar o PDF. Tente de novo."), "warn"); }
     setBaixando("");
   };
 
@@ -144,33 +146,33 @@ export function Carteirinha({ memberId, church, marca, demo, members, people, ro
 
   return (
     <FormScreen
-      eyebrow="Carteirinha de membro"
-      title={m?.name ?? "Emitir carteirinha"}
-      subtitle={m ? undefined : "Procure a pessoa pelo nome."}
-      saveLabel={vigente ? "Imprimir" : atual ? "Emitir nova" : "Emitir carteirinha"}
+      eyebrow={traduzirUi("Carteirinha de membro")}
+      title={m?.name ?? traduzirUi("Emitir carteirinha")}
+      subtitle={m ? undefined : traduzirUi("Procure a pessoa pelo nome.")}
+      saveLabel={vigente ? traduzirUi("Imprimir") : atual ? traduzirUi("Emitir nova") : traduzirUi("Emitir carteirinha")}
       saving={saving}
-      missing={[!m && "escolher a pessoa", saiu && "estar no rol (a pessoa saiu)"].filter(Boolean) as string[]}
+      missing={[!m && traduzirUi("escolher a pessoa"), saiu && traduzirUi("estar no rol (a pessoa saiu)")].filter(Boolean) as string[]}
       dirty={false}
       error={error}
       onSave={vigente ? () => imprimir("cartao", "portrait") : emitir}
       onClose={onClose}
     >
       {!m ? (
-        <FormSection title="Pessoa">
-          <Campo rotulo="Nome"><Entrada id={`${fid}-busca`} autoFocus value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Digite pelo menos 2 letras" /></Campo>
+        <FormSection title={traduzirUi("Pessoa")}>
+          <Campo rotulo={traduzirUi("Nome")}><Entrada id={`${fid}-busca`} autoFocus value={busca} onChange={(e) => setBusca(e.target.value)} placeholder={traduzirUi("Digite pelo menos 2 letras")} /></Campo>
           {candidatos.length ? (
             <div className="sec-busca">
               {candidatos.map((x) => (
                 <Acao key={x.id} className={`${linhaClasse({})} sec-busca-it`} onClick={() => setId(x.id)}>
-                  <div className="mini-main"><div className="mini-title">{x.name}</div><div className="mini-sub">{x.situation === "novo" ? "Novo membro" : "Membro"}</div></div>
+                  <div className="mini-main"><div className="mini-title">{x.name}</div><div className="mini-sub">{x.situation === "novo" ? traduzirUi("Novo membro") : traduzirUi("Membro")}</div></div>
                 </Acao>
               ))}
             </div>
-          ) : busca.trim().length >= 2 ? <p className="field-hint">Ninguém com esse nome. Confira a grafia.</p> : null}
+          ) : busca.trim().length >= 2 ? <p className="field-hint">{traduzirUi("Ninguém com esse nome. Confira a grafia.")}</p> : null}
         </FormSection>
       ) : (
         <>
-          <FormSection title="Como fica">
+          <FormSection title={traduzirUi("Como fica")}>
             <Encaixe>
               <div className="cart-par">
                 <Frente ref={frenteRef} d={dados} />
@@ -178,33 +180,33 @@ export function Carteirinha({ memberId, church, marca, demo, members, people, ro
               </div>
             </Encaixe>
             <p className="field-hint">
-              {carregando ? "Procurando carteirinha já emitida..." : atual
-                ? `Emitida em ${formatDateBR(atual.emitida_em.slice(0, 10))}${vencida ? `, venceu em ${formatDateBR(atual.validade)}` : `, válida até ${formatDateBR(atual.validade)}`}. O QR confere se ela ainda vale.`
-                : "Ainda não emitida. O QR aparece depois de emitir."}
+              {carregando ? traduzirUi("Procurando carteirinha já emitida...") : atual
+                ? traduzirUi("Emitida em {emitida}{vencida, select, sim {, venceu em {validade}} other {, válida até {validade}}}. O QR confere se ela ainda vale.", { emitida: formatDateBR(atual.emitida_em.slice(0, 10)), vencida: vencida ? "sim" : "nao", validade: formatDateBR(atual.validade) })
+                : traduzirUi("Ainda não emitida. O QR aparece depois de emitir.")}
             </p>
           </FormSection>
 
           {atual ? (
-            <FormSection title="Baixar">
+            <FormSection title={traduzirUi("Baixar")}>
               <div className="sec-saidas">
-                <Botao desativado={!!baixando} onClick={baixarPng}>{baixando === "png" ? "Gerando..." : "Baixar PNG"}</Botao>
-                <Botao desativado={!!baixando} onClick={baixarPdf}>{baixando === "pdf" ? "Gerando..." : "Baixar PDF"}</Botao>
+                <Botao desativado={!!baixando} onClick={baixarPng}>{baixando === "png" ? traduzirUi("Gerando...") : traduzirUi("Baixar PNG")}</Botao>
+                <Botao desativado={!!baixando} onClick={baixarPdf}>{baixando === "pdf" ? traduzirUi("Gerando...") : traduzirUi("Baixar PDF")}</Botao>
               </div>
-              <p className="field-hint">Tamanho de cartão de crédito (85,6 × 54 mm). Ao imprimir, use 100% de escala, sem ajustar à página.</p>
+              <p className="field-hint">{traduzirUi("Tamanho de cartão de crédito (85,6 × 54 mm). Ao imprimir, use 100% de escala, sem ajustar à página.")}</p>
             </FormSection>
           ) : null}
 
-          <FormSection title={atual ? "Emitir de novo" : "Validade"}>
-            <Segmentado role="radiogroup" aria-label="Validade">
+          <FormSection title={atual ? traduzirUi("Emitir de novo") : traduzirUi("Validade")}>
+            <Segmentado role="radiogroup" aria-label={traduzirUi("Validade")}>
               {[1, 2, 3].map((n) => (
-                <Opcao key={n} role="radio" aria-checked={anos === n} marcada={anos === n} onClick={() => setAnos(n)}>{n === 1 ? "1 ano" : `${n} anos`}</Opcao>
+                <Opcao key={n} role="radio" aria-checked={anos === n} marcada={anos === n} onClick={() => setAnos(n)}>{traduzirUi("{count, plural, =1 {1 ano} other {{n} anos}}", { count: n, n: String(n) })}</Opcao>
               ))}
             </Segmentado>
-            {vigente ? <Botao className="sec-reemitir" desativado={saving} onClick={emitir}>{saving ? "Emitindo..." : "Emitir nova carteirinha"}</Botao> : null}
-            <p className="field-hint">{atual ? `Emitir uma nova cancela a atual e vale até ${formatDateBR(somaAnos(todayISO(), anos))}. Use se ela foi perdida ou os dados mudaram.` : `Válida até ${formatDateBR(somaAnos(todayISO(), anos))}.`}</p>
+            {vigente ? <Botao className="sec-reemitir" desativado={saving} onClick={emitir}>{saving ? traduzirUi("Emitindo...") : traduzirUi("Emitir nova carteirinha")}</Botao> : null}
+            <p className="field-hint">{atual ? traduzirUi("Emitir uma nova cancela a atual e vale até {data}. Use se ela foi perdida ou os dados mudaram.", { data: formatDateBR(somaAnos(todayISO(), anos)) }) : traduzirUi("Válida até {data}.", { data: formatDateBR(somaAnos(todayISO(), anos)) })}</p>
           </FormSection>
 
-          {!memberId ? <Botao compacto onClick={() => { setId(null); setBusca(""); }}>Escolher outra pessoa</Botao> : null}
+          {!memberId ? <Botao compacto onClick={() => { setId(null); setBusca(""); }}>{traduzirUi("Escolher outra pessoa")}</Botao> : null}
 
           {atual ? (
             <FolhaDeImpressao folha="cartao">

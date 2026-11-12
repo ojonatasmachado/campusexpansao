@@ -15,6 +15,8 @@ import { MENSAGEM_PADRAO, comData, daSemana, linkWhatsapp, mensagemPara, primeir
 
 import { Botao } from "../../ui/Botao";
 import { Cartao } from "../../ui/Cartao";
+import { useTexto } from "../../lib/internacional/contexto";
+import type { Text } from "../../lib/internacional/mensagens";
 type Membro = { id: string; name: string; phone: string; birth: string | null; groupId?: string | null; volunteerId: string | null };
 type Pessoa = { id: string; name: string; phone?: string; meta?: { birthday?: string } };
 type Time = { id: string; name: string; people: Array<{ personId: string; isLeader: boolean }> };
@@ -41,22 +43,23 @@ export function aniversariosHojeNoMeuTime({ personId, membros, pessoas, times, h
 /* botão (não link): a casca mede card_acted pelo clique em botão do cartão (lei 11) */
 const abrir = (url: string) => window.open(url, "_blank", "noopener");
 
-const nomes = (l: AniversarioNoTime[]) => {
+const nomes = (l: AniversarioNoTime[], traduzirUi: Text) => {
   const n = l.map((p) => primeiroNome(p.nome));
-  return n.length <= 2 ? n.join(" e ") : `${n.slice(0, 2).join(", ")} e mais ${n.length - 2}`;
+  return n.length <= 2 ? (n.length === 2 ? traduzirUi("{a} e {b}", { a: n[0], b: n[1] }) : n.join("")) : traduzirUi("{nomes} e mais {n}", { nomes: n.slice(0, 2).join(", "), n: String(n.length - 2) });
 };
 
 export function CartaoAniversario({ pessoas, destaque, onAgoraNao }: { pessoas: AniversarioNoTime[]; destaque: boolean; onAgoraNao: () => void }) {
+  const traduzirUi = useTexto();
   const variante = destaque ? "principal" : "secundario";
   const um = pessoas.length === 1 ? pessoas[0] : null;
   const link = um ? linkWhatsapp(um.telefone, mensagemPara(MENSAGEM_PADRAO, um.nome)) : null;
   const times = [...new Set(pessoas.map((p) => p.time).filter(Boolean))];
   return (
     <Cartao estilo="app">
-      <div className="m6-kick">{times.length === 1 ? `Aniversário · ${times[0]}` : "Aniversário nos seus times"}</div>
-      <div className="m6-ct">{um ? `Hoje é aniversário de ${primeiroNome(um.nome)}` : `Hoje fazem aniversário: ${nomes(pessoas)}`}</div>
+      <div className="m6-kick">{times.length === 1 ? traduzirUi("Aniversário · {time}", { time: times[0] }) : traduzirUi("Aniversário nos seus times")}</div>
+      <div className="m6-ct">{um ? traduzirUi("Hoje é aniversário de {nome}", { nome: primeiroNome(um.nome) }) : traduzirUi("Hoje fazem aniversário: {nomes}", { nomes: nomes(pessoas, traduzirUi) })}</div>
       {um ? (
-        <div className="m6-meta">{link ? "Uma mensagem sua faz diferença no dia." : `Sem celular no cadastro de ${primeiroNome(um.nome)}.`}</div>
+        <div className="m6-meta">{link ? traduzirUi("Uma mensagem sua faz diferença no dia.") : traduzirUi("Sem celular no cadastro de {nome}.", { nome: primeiroNome(um.nome) })}</div>
       ) : (
         <ul className="m6-aniv">
           {pessoas.slice(0, 6).map((p) => {
@@ -64,15 +67,15 @@ export function CartaoAniversario({ pessoas, destaque, onAgoraNao }: { pessoas: 
             return (
               <li key={p.id}>
                 <span className="m6-aniv-n">{p.nome}</span>
-                {l ? <Botao tamanho="toque" variante="texto" onClick={() => abrir(l)} aria-label={`Mandar parabéns para ${p.nome}, ${formatarTelefone(p.telefone)}`}>Parabéns</Botao> : <span className="m6-meta">sem celular</span>}
+                {l ? <Botao tamanho="toque" variante="texto" onClick={() => abrir(l)} aria-label={traduzirUi("Mandar parabéns para {nome}, {telefone}", { nome: p.nome, telefone: formatarTelefone(p.telefone) })}>{traduzirUi("Parabéns")}</Botao> : <span className="m6-meta">{traduzirUi("sem celular")}</span>}
               </li>
             );
           })}
         </ul>
       )}
       <div className="m6-btns">
-        {link && <Botao tamanho="toque" variante={variante} onClick={() => abrir(link)}>Mandar parabéns</Botao>}
-        <Botao tamanho="toque" variante="texto" data-dispensa="1" onClick={onAgoraNao}>Agora não</Botao>
+        {link && <Botao tamanho="toque" variante={variante} onClick={() => abrir(link)}>{traduzirUi("Mandar parabéns")}</Botao>}
+        <Botao tamanho="toque" variante="texto" data-dispensa="1" onClick={onAgoraNao}>{traduzirUi("Agora não")}</Botao>
       </div>
     </Cartao>
   );

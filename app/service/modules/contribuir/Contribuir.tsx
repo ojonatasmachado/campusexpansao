@@ -16,8 +16,10 @@ import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
 import { Cartao } from "../../ui/Cartao";
+import { useTexto } from "../../lib/internacional/contexto";
 
 export function Contribuir({ cfg }: { cfg: ContribuirCfg }) {
+  const traduzirUi = useTexto();
   const finalidades = cfg.finalidades.filter((f) => f.trim());
   const [escolhida, setFinalidade] = useState<string | null>(null);
   /* se a lista mudar com a tela aberta, volta para a primeira */
@@ -32,8 +34,8 @@ export function Contribuir({ cfg }: { cfg: ContribuirCfg }) {
 
   const copiarEAvisar = async (qual: "codigo" | "chave") => {
     const ok = await copiarTexto(qual === "codigo" ? codigo : normalizarChave(cfg.tipo, cfg.chave));
-    if (!ok) { avisar("Não consegui copiar. Toque e segure a chave para copiar.", "warn"); return; }
-    avisar(qual === "codigo" ? "Código Pix copiado. Cole no app do seu banco." : "Chave Pix copiada.");
+    if (!ok) { avisar(traduzirUi("Não consegui copiar. Toque e segure a chave para copiar."), "warn"); return; }
+    avisar(qual === "codigo" ? traduzirUi("Código Pix copiado. Cole no app do seu banco.") : traduzirUi("Chave Pix copiada."));
     setCopiado(qual);
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => setCopiado(null), 2000);
@@ -43,7 +45,7 @@ export function Contribuir({ cfg }: { cfg: ContribuirCfg }) {
     <>
       <div className="m6-sec0">
         <Cartao estilo="app">
-          <div className="m6-kick">Pix para</div>
+          <div className="m6-kick">{traduzirUi("Pix para")}</div>
           <div className="m6-ct contrib-fav">{cfg.favorecido}</div>
           {cfg.texto.trim() && <p className="m6-txt">{cfg.texto}</p>}
         </Cartao>
@@ -51,7 +53,7 @@ export function Contribuir({ cfg }: { cfg: ContribuirCfg }) {
 
       {finalidades.length > 1 && (
         <div className="m6-sec">
-          <div className="m6-lbl" id="contrib-fin">Para</div>
+          <div className="m6-lbl" id="contrib-fin">{traduzirUi("Para")}</div>
           <div className="m6-seg">
             <div className="ts-seg contrib-seg" role="radiogroup" aria-labelledby="contrib-fin" style={{ gridTemplateColumns: `repeat(${finalidades.length === 4 ? 2 : finalidades.length}, minmax(0, 1fr))` }}>
               {finalidades.map((f) => (
@@ -66,17 +68,17 @@ export function Contribuir({ cfg }: { cfg: ContribuirCfg }) {
         <Cartao estilo="app">
           <Botao tamanho="toque" variante="principal" largo onClick={() => copiarEAvisar("codigo")}>
             <Icon name={copiado === "codigo" ? "ok" : "copiar"} size={20} />
-            {copiado === "codigo" ? "Código copiado" : "Copiar código Pix"}
+            {copiado === "codigo" ? traduzirUi("Código copiado") : traduzirUi("Copiar código Pix")}
           </Botao>
-          <p className="m6-meta m6-mt">No app do seu banco, escolha Pix copia e cola, cole o código e digite o valor.</p>
+          <p className="m6-meta m6-mt">{traduzirUi("No app do seu banco, escolha Pix copia e cola, cole o código e digite o valor.")}</p>
 
           <div className="contrib-chave">
             <div className="m6-rb">
               <div className="m6-meta">{rotuloDoTipo(cfg.tipo)}</div>
               <div className="contrib-chave-v">{legivel}</div>
             </div>
-            <Botao tamanho="toque" compacto onClick={() => copiarEAvisar("chave")} aria-label={`Copiar chave Pix ${legivel}`}>
-              {copiado === "chave" ? "Copiada" : "Copiar"}
+            <Botao tamanho="toque" compacto onClick={() => copiarEAvisar("chave")} aria-label={traduzirUi("Copiar chave Pix {chave}", { chave: legivel })}>
+              {copiado === "chave" ? traduzirUi("Copiada") : traduzirUi("Copiar")}
             </Botao>
           </div>
         </Cartao>
@@ -86,20 +88,20 @@ export function Contribuir({ cfg }: { cfg: ContribuirCfg }) {
         <Cartao estilo="app">
           <Acao className="contrib-qr-t" aria-expanded={qr} onClick={() => setQr((v) => !v)}>
             <span className="m6-rb">
-              <span className="m6-rt">QR code</span>
-              <span className="m6-rs">Para pagar com o celular de outra pessoa</span>
+              <span className="m6-rt">{traduzirUi("QR code")}</span>
+              <span className="m6-rs">{traduzirUi("Para pagar com o celular de outra pessoa")}</span>
             </span>
             <span className={`m6-chev contrib-chev${qr ? " on" : ""}`} aria-hidden="true"><Icon name="avancar" size={18} /></span>
           </Acao>
           {qr && (
             <div className="contrib-qr">
-              <QRCode value={codigo} size={208} viewBox="0 0 208 208" level="M" title={`QR code do Pix para ${cfg.favorecido}`} />
+              <QRCode value={codigo} size={208} viewBox="0 0 208 208" level="M" title={traduzirUi("QR code do Pix para {favorecido}", { favorecido: cfg.favorecido })} />
             </div>
           )}
         </Cartao>
       </div>
 
-      <p className="m6-meta contrib-nota">O valor você decide no seu banco. O app não guarda quanto nem quem contribuiu.</p>
+      <p className="m6-meta contrib-nota">{traduzirUi("O valor você decide no seu banco. O app não guarda quanto nem quem contribuiu.")}</p>
     </>
   );
 }

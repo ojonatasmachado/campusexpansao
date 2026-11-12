@@ -16,10 +16,12 @@ import { caminhoConvite } from "./autocadastro";
 import { Botao } from "../../ui/Botao";
 import { Cartao } from "../../ui/Cartao";
 import { Janela } from "../../ui/Janela";
+import { useTexto } from "../../lib/internacional/contexto";
 
 export type ConviteCfg = { slug: string; organizationId: string; igreja: string };
 
 export function Convidar({ cfg }: { cfg: ConviteCfg }) {
+  const traduzirUi = useTexto();
   const [link, setLink] = useState<string | null>(null);
   const [falhou, setFalhou] = useState(false);
   const [qr, setQr] = useState(false);
@@ -56,8 +58,8 @@ export function Convidar({ cfg }: { cfg: ConviteCfg }) {
 
   const copiar = async () => {
     if (!link) return;
-    if (!(await copiarTexto(link))) { avisar("Não consegui copiar. Toque e segure o link para copiar.", "warn"); return; }
-    avisar("Link copiado. Cole na conversa com seu amigo.");
+    if (!(await copiarTexto(link))) { avisar(traduzirUi("Não consegui copiar. Toque e segure o link para copiar."), "warn"); return; }
+    avisar(traduzirUi("Link copiado. Cole na conversa com seu amigo."));
     setCopiado(true);
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => setCopiado(false), 2000);
@@ -67,8 +69,8 @@ export function Convidar({ cfg }: { cfg: ConviteCfg }) {
     <>
       <div className="m6-sec0">
         <Cartao estilo="app">
-          <div className="m6-ct">{`Chame alguém para a ${cfg.igreja}`}</div>
-          <p className="m6-txt">Quem abrir o seu link deixa o contato para a primeira visita, e o seu nome já aparece em &quot;Quem te convidou?&quot;. A pessoa pode apagar.</p>
+          <div className="m6-ct">{traduzirUi("Chame alguém para a {igreja}", { igreja: cfg.igreja })}</div>
+          <p className="m6-txt">{traduzirUi("Quem abrir o seu link deixa o contato para a primeira visita, e o seu nome já aparece em \"Quem te convidou?\". A pessoa pode apagar.")}</p>
         </Cartao>
       </div>
 
@@ -76,23 +78,23 @@ export function Convidar({ cfg }: { cfg: ConviteCfg }) {
         <Cartao estilo="app">
           {falhou ? (
             <>
-              <p className="m6-meta" role="alert">Não deu para criar o seu link agora. Confira a internet e tente de novo.</p>
-              <div className="m6-btns"><Botao tamanho="toque" onClick={() => void tentarDeNovo()}>Tentar de novo</Botao></div>
+              <p className="m6-meta" role="alert">{traduzirUi("Não deu para criar o seu link agora. Confira a internet e tente de novo.")}</p>
+              <div className="m6-btns"><Botao tamanho="toque" onClick={() => void tentarDeNovo()}>{traduzirUi("Tentar de novo")}</Botao></div>
             </>
           ) : (
             <>
               <Botao tamanho="toque" variante="principal" largo carregando={!link} onClick={whatsapp}>
                 <Icon name="whatsapp" size={20} />
-                Enviar no WhatsApp
+                {traduzirUi("Enviar no WhatsApp")}
               </Botao>
               <div className="convite-acoes">
                 <Botao tamanho="toque" desativado={!link} onClick={copiar}>
                   <Icon name={copiado ? "ok" : "copiar"} size={20} />
-                  {copiado ? "Link copiado" : "Copiar link"}
+                  {copiado ? traduzirUi("Link copiado") : traduzirUi("Copiar link")}
                 </Botao>
                 <Botao tamanho="toque" desativado={!link} onClick={() => setQr(true)}>
                   <Icon name="codigo" size={20} />
-                  Mostrar QR
+                  {traduzirUi("Mostrar QR")}
                 </Botao>
               </div>
               {link ? <p className="m6-meta convite-link">{link}</p> : null}
@@ -102,9 +104,9 @@ export function Convidar({ cfg }: { cfg: ConviteCfg }) {
       </div>
 
       {qr && link ? (
-        <Janela telaCheia sobretitulo="Convidar um amigo" titulo="Aponte a câmera do celular" texto={`Abre o cadastro de primeira visita da ${cfg.igreja}, com o seu nome.`} aoFechar={() => setQr(false)}>
+        <Janela telaCheia sobretitulo={traduzirUi("Convidar um amigo")} titulo={traduzirUi("Aponte a câmera do celular")} texto={traduzirUi("Abre o cadastro de primeira visita da {igreja}, com o seu nome.", { igreja: cfg.igreja })} aoFechar={() => setQr(false)}>
           <div className="convite-qr">
-            <QRCode value={link} size={280} viewBox="0 0 280 280" level="M" title={`QR code do convite para a ${cfg.igreja}`} />
+            <QRCode value={link} size={280} viewBox="0 0 280 280" level="M" title={traduzirUi("QR code do convite para a {igreja}", { igreja: cfg.igreja })} />
           </div>
         </Janela>
       ) : null}

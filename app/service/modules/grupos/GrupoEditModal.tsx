@@ -3,19 +3,20 @@
 import { useId, useRef, useState } from "react";
 import CepInput, { type CepResult } from "../../CepInput";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
-import { useTermos } from "../../lib/vocabulario-context";
 import { FormScreen, FormSection, type FormScreenHandle } from "../../painel/form/FormScreen";
 import { friendlyWriteError } from "../../painel/erros";
 import type { FellowshipGroupView, PersonView } from "../../painel/tipos";
 import { Campo, Entrada } from "../../ui/Campo";
 import { Selecao } from "../../ui/Selecao";
+import { useTexto } from "../../lib/internacional/contexto";
+
 
 /* Editar um grupo (célula, GC, PG): dia, horário, líder, local e lotação.
    O local é público para os membros da igreja ("Onde", mapa da igreja,
    etapa 2): endereço completo da casa que recebe. O ponto no mapa vem do CEP
    pelo trigger de endereço (0088); a consulta do CEP aqui enche o cache. */
 export function GrupoEditModal({ grupo, people, onClose, onRefresh }: { grupo: FellowshipGroupView; people: PersonView[]; onClose: () => void; onRefresh: () => void }) {
-  const { comTermos: ct } = useTermos();
+  const traduzirUi = useTexto();
   const fid = useId();
   const telaRef = useRef<FormScreenHandle>(null);
   const [form, setForm] = useState({
@@ -57,7 +58,7 @@ export function GrupoEditModal({ grupo, people, onClose, onRefresh }: { grupo: F
       complement: form.complemento.trim() || null,
       capacity: form.lotacao.trim() ? Number(form.lotacao) : null,
     }).eq("id", grupo.id);
-    if (erro) { setSaving(false); setError(friendlyWriteError(erro.message)); return; }
+    if (erro) { setSaving(false); setError(friendlyWriteError(erro.message, traduzirUi)); return; }
     if (telaRef.current) await telaRef.current.fechar(); else onClose();
     onRefresh();
   };
@@ -65,17 +66,17 @@ export function GrupoEditModal({ grupo, people, onClose, onRefresh }: { grupo: F
   const retrato = JSON.stringify(form);
   const [retratoInicial] = useState(retrato);
   const faltando = [
-    ...(form.nome.trim() ? [] : ["nome"]),
-    ...(cepInvalido ? ["CEP com 8 números"] : []),
-    ...(lotacaoInvalida ? ["lotação entre 1 e 500"] : []),
+    ...(form.nome.trim() ? [] : [traduzirUi("nome")]),
+    ...(cepInvalido ? [traduzirUi("CEP com 8 números")] : []),
+    ...(lotacaoInvalida ? [traduzirUi("lotação entre 1 e 500")] : []),
   ];
 
   return (
     <FormScreen
       ref={telaRef}
-      eyebrow={ct("{Grupo}")}
+      eyebrow={traduzirUi("{Grupo}")}
       title={form.nome.trim() || grupo.name}
-      saveLabel="Salvar"
+      saveLabel={traduzirUi("Salvar")}
       saving={saving || consultando}
       missing={faltando}
       dirty={retrato !== retratoInicial}
@@ -83,29 +84,29 @@ export function GrupoEditModal({ grupo, people, onClose, onRefresh }: { grupo: F
       onSave={salvar}
       onClose={onClose}
     >
-      <FormSection title="Encontro">
+      <FormSection title={traduzirUi("Encontro")}>
         <div className="fs-grid">
-          <Campo rotulo="Nome" obrigatorio id={`${fid}-nome`}><Entrada aria-required="true" value={form.nome} onChange={set("nome")} /></Campo>
-          <Campo rotulo="Líder" id={`${fid}-lider`}>
-            <Selecao valor={form.lider} aoMudar={(v) => setForm((p) => ({ ...p, lider: v }))} vazio="A definir"
+          <Campo rotulo={traduzirUi("Nome")} obrigatorio id={`${fid}-nome`}><Entrada aria-required="true" value={form.nome} onChange={set("nome")} /></Campo>
+          <Campo rotulo={traduzirUi("Líder")} id={`${fid}-lider`}>
+            <Selecao valor={form.lider} aoMudar={(v) => setForm((p) => ({ ...p, lider: v }))} vazio={traduzirUi("A definir")}
               opcoes={people.map((p) => ({ v: p.id, l: p.name }))} />
           </Campo>
-          <Campo rotulo="Dia" id={`${fid}-dia`} className="half"><Entrada placeholder="ex: Quinta-feira" value={form.dia} onChange={set("dia")} /></Campo>
-          <Campo rotulo="Horário" id={`${fid}-hora`} className="half"><Entrada placeholder="ex: 20h" value={form.hora} onChange={set("hora")} /></Campo>
-          <Campo rotulo="Lugares" id={`${fid}-lot`} className="half">
-            <Entrada inputMode="numeric" placeholder="sem limite" value={form.lotacao} aria-invalid={lotacaoInvalida} onChange={set("lotacao")} />
+          <Campo rotulo={traduzirUi("Dia")} id={`${fid}-dia`} className="half"><Entrada placeholder={traduzirUi("ex: Quinta-feira")} value={form.dia} onChange={set("dia")} /></Campo>
+          <Campo rotulo={traduzirUi("Horário")} id={`${fid}-hora`} className="half"><Entrada placeholder={traduzirUi("ex: 20h")} value={form.hora} onChange={set("hora")} /></Campo>
+          <Campo rotulo={traduzirUi("Lugares")} id={`${fid}-lot`} className="half">
+            <Entrada inputMode="numeric" placeholder={traduzirUi("sem limite")} value={form.lotacao} aria-invalid={lotacaoInvalida} onChange={set("lotacao")} />
           </Campo>
         </div>
       </FormSection>
 
-      <FormSection title="Onde acontece">
-        <p className="fs-note">O endereço aparece para os membros da igreja, para quem quiser participar encontrar a casa.</p>
+      <FormSection title={traduzirUi("Onde acontece")}>
+        <p className="fs-note">{traduzirUi("O endereço aparece para os membros da igreja, para quem quiser participar encontrar a casa.")}</p>
         <div className="fs-grid">
-          <Campo rotulo="CEP" id={`${fid}-cep`} className="half">
+          <Campo rotulo={traduzirUi("CEP")} id={`${fid}-cep`} className="half">
             <CepInput id={`${fid}-cep`} value={form.cep} onBusyChange={setConsultando} onChange={(v) => { setForm((p) => ({ ...p, cep: v })); setEndereco({}); }} onResult={(r) => { if (r) setEndereco(r); }} />
           </Campo>
-          <Campo rotulo="Número" id={`${fid}-num`} className="half"><Entrada value={form.numero} onChange={set("numero")} /></Campo>
-          <Campo rotulo="Complemento" id={`${fid}-comp`}><Entrada placeholder="ex: casa 2, apto 31" value={form.complemento} onChange={set("complemento")} /></Campo>
+          <Campo rotulo={traduzirUi("Número")} id={`${fid}-num`} className="half"><Entrada value={form.numero} onChange={set("numero")} /></Campo>
+          <Campo rotulo={traduzirUi("Complemento")} id={`${fid}-comp`}><Entrada placeholder={traduzirUi("ex: casa 2, apto 31")} value={form.complemento} onChange={set("complemento")} /></Campo>
         </div>
         {(endereco.street || endereco.neighborhood) && <p className="fs-note">{[endereco.street, endereco.neighborhood, endereco.city].filter(Boolean).join(" · ")}</p>}
       </FormSection>

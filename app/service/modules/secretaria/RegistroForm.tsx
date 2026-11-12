@@ -16,6 +16,10 @@ import { Botao } from "../../ui/Botao";
 import { Campo, Entrada, TextoLongo, Marcar } from "../../ui/Campo";
 import { Selecao } from "../../ui/Selecao";
 import { SeletorData } from "../../ui/Data";
+import { useTexto } from "../../lib/internacional/contexto";
+
+/* id do registro criado no modo demonstração (fora do componente: roda só no clique) */
+const idDemo = () => `demo-novo-${Date.now()}`;
 /** o que o livro usa da criança do Kids */
 export type CriancaKids = { id: string; name: string; birth: string | null };
 
@@ -33,6 +37,7 @@ export function RegistroForm({ livro, registro, church, demo, members, people, k
   onCarteirinha: (memberId: string) => void;
   onClose: () => void;
 }) {
+  const traduzirUi = useTexto();
   const { todayISO } = useRelogioDaIgreja();
   const fid = useId();
   const telaRef = useRef<FormScreenHandle>(null);
@@ -78,12 +83,12 @@ export function RegistroForm({ livro, registro, church, demo, members, people, k
   const nomeDoRegistro = livro === "casamento" ? [noivo.trim(), noiva.trim()].filter(Boolean).join(" e ") : livro === "apresentacao" ? crianca.trim() : r?.nome ?? "";
 
   const falta = [
-    !data && (livro === "rol" ? "data de entrada" : "data"),
-    livro === "casamento" && !noivo.trim() && "nome do noivo",
-    livro === "casamento" && !noiva.trim() && "nome da noiva",
-    livro === "apresentacao" && !crianca.trim() && "nome da criança",
-    livro === "rol" && saiu && !saida && "data de saída",
-    livro === "rol" && saiu && !motivo && "motivo da saída",
+    !data && (livro === "rol" ? traduzirUi("data de entrada") : traduzirUi("data")),
+    livro === "casamento" && !noivo.trim() && traduzirUi("nome do noivo"),
+    livro === "casamento" && !noiva.trim() && traduzirUi("nome da noiva"),
+    livro === "apresentacao" && !crianca.trim() && traduzirUi("nome da criança"),
+    livro === "rol" && saiu && !saida && traduzirUi("data de saída"),
+    livro === "rol" && saiu && !motivo && traduzirUi("motivo da saída"),
   ].filter(Boolean) as string[];
 
   const salvar = async () => {
@@ -112,19 +117,19 @@ export function RegistroForm({ livro, registro, church, demo, members, people, k
     };
     let salvoReg: Registro;
     if (demo) {
-      salvoReg = { ...(r ?? { id: `demo-novo-${Date.now()}`, organization_id: church.organizationId, church_id: church.id, livro, numero: 0, member_id: null, fato_id: null }), ...campos } as Registro;
+      salvoReg = { ...(r ?? { id: idDemo(), organization_id: church.organizationId, church_id: church.id, livro, numero: 0, member_id: null, fato_id: null }), ...campos } as Registro;
     } else {
       const sb = createServiceBrowserClient().schema("service");
       const q = r
         ? sb.from("registros").update(campos).eq("id", r.id).select(REGISTRO_COLS).single()
         : sb.from("registros").insert({ ...campos, organization_id: church.organizationId, church_id: church.id, livro, created_by: currentPersonId ?? null }).select(REGISTRO_COLS).single();
       const { data: linha, error: e } = await q;
-      if (e || !linha) { setSaving(false); setError("Não deu para salvar o registro. Confira a conexão e tente de novo."); return; }
+      if (e || !linha) { setSaving(false); setError(traduzirUi("Não deu para salvar o registro. Confira a conexão e tente de novo.")); return; }
       salvoReg = linha as Registro;
     }
     onSalvo(salvoReg);
     setSaving(false);
-    avisar(!novo ? "Registro atualizado" : salvoReg.numero ? `Registro nº ${numeroFmt(salvoReg.numero)} criado em ${def.rotulo}` : `Registro criado em ${def.rotulo}`);
+    avisar(!novo ? traduzirUi("Registro atualizado") : salvoReg.numero ? traduzirUi("Registro nº {numero} criado em {livro}", { numero: numeroFmt(salvoReg.numero), livro: def.rotulo }) : traduzirUi("Registro criado em {livro}", { livro: def.rotulo }));
     if (telaRef.current) await telaRef.current.fechar(); else onClose();
   };
 
@@ -133,16 +138,16 @@ export function RegistroForm({ livro, registro, church, demo, members, people, k
     setSaving(true);
     if (!demo) {
       const { error: e } = await createServiceBrowserClient().schema("service").from("registros").delete().eq("id", r.id);
-      if (e) { setSaving(false); setApagar(false); setError("Não deu para apagar o registro. Tente de novo."); return; }
+      if (e) { setSaving(false); setApagar(false); setError(traduzirUi("Não deu para apagar o registro. Tente de novo.")); return; }
     }
     onSalvo(r, true);
     setSaving(false);
-    avisar("Registro apagado do livro", "info");
+    avisar(traduzirUi("Registro apagado do livro"), "info");
     if (telaRef.current) await telaRef.current.fechar(); else onClose();
   };
 
-  const titulo = novo ? (livro === "casamento" ? "Registrar casamento" : "Registrar apresentação") : nomeDoRegistro || r.nome;
-  const eyebrow = novo ? def.rotulo : `${def.rotulo} · nº ${numeroFmt(r.numero)}`;
+  const titulo = novo ? (livro === "casamento" ? traduzirUi("Registrar casamento") : traduzirUi("Registrar apresentação")) : nomeDoRegistro || r.nome;
+  const eyebrow = novo ? def.rotulo : traduzirUi("{livro} · nº {numero}", { livro: def.rotulo, numero: numeroFmt(r.numero) });
   const listaPessoas = `${fid}-pessoas`;
   const listaMembros = `${fid}-membros`;
 
@@ -151,8 +156,8 @@ export function RegistroForm({ livro, registro, church, demo, members, people, k
       ref={telaRef}
       eyebrow={eyebrow}
       title={titulo}
-      subtitle={!novo && r.fato_id ? `Veio da etapa Batismo de ${r.nome}. A data do batismo pode ser corrigida aqui.` : !novo && livro === "rol" ? `No rol desde ${formatDateBR(r.data)}.` : undefined}
-      saveLabel={novo ? "Registrar" : "Salvar"}
+      subtitle={!novo && r.fato_id ? traduzirUi("Veio da etapa Batismo de {nome}. A data do batismo pode ser corrigida aqui.", { nome: r.nome }) : !novo && livro === "rol" ? traduzirUi("No rol desde {data}.", { data: formatDateBR(r.data) }) : undefined}
+      saveLabel={novo ? traduzirUi("Registrar") : traduzirUi("Salvar")}
       saving={saving}
       missing={falta}
       dirty={retrato !== retratoInicial}
@@ -164,95 +169,95 @@ export function RegistroForm({ livro, registro, church, demo, members, people, k
       <datalist id={listaMembros}>{members.map((m) => <option key={m.id} value={m.name} />)}</datalist>
 
       {livro === "casamento" ? (
-        <FormSection title="Noivos">
+        <FormSection title={traduzirUi("Noivos")}>
           <div className="fs-grid">
-            <Campo rotulo="Noivo" obrigatorio className="half"><Entrada id={`${fid}-noivo`} list={listaMembros} value={noivo} onChange={(e) => setNoivo(e.target.value)} placeholder="Nome completo" /></Campo>
-            <Campo rotulo="Noiva" obrigatorio className="half"><Entrada id={`${fid}-noiva`} list={listaMembros} value={noiva} onChange={(e) => setNoiva(e.target.value)} placeholder="Nome completo" /></Campo>
+            <Campo rotulo={traduzirUi("Noivo")} obrigatorio className="half"><Entrada id={`${fid}-noivo`} list={listaMembros} value={noivo} onChange={(e) => setNoivo(e.target.value)} placeholder={traduzirUi("Nome completo")} /></Campo>
+            <Campo rotulo={traduzirUi("Noiva")} obrigatorio className="half"><Entrada id={`${fid}-noiva`} list={listaMembros} value={noiva} onChange={(e) => setNoiva(e.target.value)} placeholder={traduzirUi("Nome completo")} /></Campo>
           </div>
-          <div className="field-hint">Ao digitar, aparecem as pessoas da igreja. Quem não é membro pode ser escrito à mão.</div>
+          <div className="field-hint">{traduzirUi("Ao digitar, aparecem as pessoas da igreja. Quem não é membro pode ser escrito à mão.")}</div>
         </FormSection>
       ) : null}
 
       {livro === "apresentacao" ? (
-        <FormSection title="Criança">
+        <FormSection title={traduzirUi("Criança")}>
           {kidsChildren.length ? (
-            <Campo rotulo="Criança do Kids" ajuda="Escolhendo a criança, nome, nascimento e responsáveis vêm do cadastro do Kids."><Selecao id={`${fid}-kids`} valor={childId} aoMudar={(v) => (v ? escolherCrianca(v) : setChildId(""))} vazio="Não está no Kids" opcoes={[...kidsChildren].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")).map((c) => ({ v: c.id, l: c.name }))} /></Campo>
+            <Campo rotulo={traduzirUi("Criança do Kids")} ajuda={traduzirUi("Escolhendo a criança, nome, nascimento e responsáveis vêm do cadastro do Kids.")}><Selecao id={`${fid}-kids`} valor={childId} aoMudar={(v) => (v ? escolherCrianca(v) : setChildId(""))} vazio={traduzirUi("Não está no Kids")} opcoes={[...kidsChildren].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")).map((c) => ({ v: c.id, l: c.name }))} /></Campo>
           ) : null}
           <div className="fs-grid">
-            <Campo rotulo="Nome da criança" obrigatorio><Entrada id={`${fid}-cri`} value={crianca} onChange={(e) => setCrianca(e.target.value)} placeholder="Nome completo" /></Campo>
-            <Campo rotulo="Nascimento" className="half"><SeletorData id={`${fid}-nasc`} valor={nascimento ?? ""} aoMudar={setNascimento} /></Campo>
-            <Campo rotulo="Pais ou responsáveis"><Entrada id={`${fid}-pais`} list={listaMembros} value={pais} onChange={(e) => setPais(e.target.value)} placeholder="ex: Ana Souza e Pedro Souza" /></Campo>
+            <Campo rotulo={traduzirUi("Nome da criança")} obrigatorio><Entrada id={`${fid}-cri`} value={crianca} onChange={(e) => setCrianca(e.target.value)} placeholder={traduzirUi("Nome completo")} /></Campo>
+            <Campo rotulo={traduzirUi("Nascimento")} className="half"><SeletorData id={`${fid}-nasc`} valor={nascimento ?? ""} aoMudar={setNascimento} /></Campo>
+            <Campo rotulo={traduzirUi("Pais ou responsáveis")}><Entrada id={`${fid}-pais`} list={listaMembros} value={pais} onChange={(e) => setPais(e.target.value)} placeholder={traduzirUi("ex: Ana Souza e Pedro Souza")} /></Campo>
           </div>
         </FormSection>
       ) : null}
 
       {livro === "rol" ? (
-        <FormSection title="Entrada">
+        <FormSection title={traduzirUi("Entrada")}>
           <div className="fs-grid">
-            <Campo rotulo="Data de entrada" obrigatorio className="half"><SeletorData id={`${fid}-data`} valor={data} aoMudar={setData} /></Campo>
-            <Campo rotulo="Como entrou" className="half"><Selecao id={`${fid}-forma`} valor={forma} aoMudar={setForma} vazio="Não informado" opcoes={FORMAS_ENTRADA.map((f) => ({ v: f, l: f }))} /></Campo>
+            <Campo rotulo={traduzirUi("Data de entrada")} obrigatorio className="half"><SeletorData id={`${fid}-data`} valor={data} aoMudar={setData} /></Campo>
+            <Campo rotulo={traduzirUi("Como entrou")} className="half"><Selecao id={`${fid}-forma`} valor={forma} aoMudar={setForma} vazio={traduzirUi("Não informado")} opcoes={FORMAS_ENTRADA.map((f) => ({ v: f, l: f }))} /></Campo>
           </div>
         </FormSection>
       ) : (
-        <FormSection title={livro === "batismo" ? "Batismo" : livro === "casamento" ? "Cerimônia" : "Apresentação"}>
+        <FormSection title={livro === "batismo" ? traduzirUi("Batismo") : livro === "casamento" ? traduzirUi("Cerimônia") : traduzirUi("Apresentação")}>
           <div className="fs-grid">
-            <Campo rotulo="Data" obrigatorio className="half"><SeletorData id={`${fid}-data`} valor={data} aoMudar={setData} /></Campo>
-            <Campo rotulo="Oficiante" className="half"><Entrada id={`${fid}-ofi`} list={listaPessoas} value={oficiante} onChange={(e) => setOficiante(e.target.value)} placeholder="Quem celebrou" /></Campo>
-            <Campo rotulo="Local"><Entrada id={`${fid}-local`} value={local} onChange={(e) => setLocal(e.target.value)} placeholder="ex: Templo sede" /></Campo>
+            <Campo rotulo={traduzirUi("Data")} obrigatorio className="half"><SeletorData id={`${fid}-data`} valor={data} aoMudar={setData} /></Campo>
+            <Campo rotulo={traduzirUi("Oficiante")} className="half"><Entrada id={`${fid}-ofi`} list={listaPessoas} value={oficiante} onChange={(e) => setOficiante(e.target.value)} placeholder={traduzirUi("Quem celebrou")} /></Campo>
+            <Campo rotulo={traduzirUi("Local")}><Entrada id={`${fid}-local`} value={local} onChange={(e) => setLocal(e.target.value)} placeholder={traduzirUi("ex: Templo sede")} /></Campo>
           </div>
         </FormSection>
       )}
 
       {livro === "casamento" ? (
-        <FormSection title="Testemunhas">
+        <FormSection title={traduzirUi("Testemunhas")}>
           {testemunhas.map((t, i) => (
             <div className="field" key={i}>
-              <label className="field-label" htmlFor={`${fid}-tes-${i}`}>Testemunha {i + 1}</label>
-              <input id={`${fid}-tes-${i}`} className="input" list={listaMembros} value={t} onChange={(e) => setTestemunhas((l) => l.map((x, j) => (j === i ? e.target.value : x)))} placeholder="Nome completo" />
+              <label className="field-label" htmlFor={`${fid}-tes-${i}`}>{traduzirUi("Testemunha {n}", { n: String(i + 1) })}</label>
+              <input id={`${fid}-tes-${i}`} className="input" list={listaMembros} value={t} onChange={(e) => setTestemunhas((l) => l.map((x, j) => (j === i ? e.target.value : x)))} placeholder={traduzirUi("Nome completo")} />
             </div>
           ))}
-          {testemunhas.length < 6 ? <Botao compacto onClick={() => setTestemunhas((l) => [...l, ""])}>Adicionar testemunha</Botao> : null}
+          {testemunhas.length < 6 ? <Botao compacto onClick={() => setTestemunhas((l) => [...l, ""])}>{traduzirUi("Adicionar testemunha")}</Botao> : null}
         </FormSection>
       ) : null}
 
       {livro === "rol" ? (
-        <FormSection title="Saída">
-          <Marcar className="fs-check" checked={saiu} onChange={(e) => setSaiu(e.target.checked)}>Saiu do rol</Marcar>
+        <FormSection title={traduzirUi("Saída")}>
+          <Marcar className="fs-check" checked={saiu} onChange={(e) => setSaiu(e.target.checked)}>{traduzirUi("Saiu do rol")}</Marcar>
           {saiu ? (
             <div className="fs-grid">
-              <Campo rotulo="Data de saída" obrigatorio className="half"><SeletorData id={`${fid}-saida`} valor={saida} aoMudar={setSaida} /></Campo>
-              <Campo rotulo="Motivo" obrigatorio className="half"><Selecao id={`${fid}-motivo`} valor={motivo} aoMudar={setMotivo} vazio="Escolha" opcoes={[...new Set([...MOTIVOS_SAIDA, ...(motivo ? [motivo] : [])])].map((m) => ({ v: m, l: m }))} /></Campo>
+              <Campo rotulo={traduzirUi("Data de saída")} obrigatorio className="half"><SeletorData id={`${fid}-saida`} valor={saida} aoMudar={setSaida} /></Campo>
+              <Campo rotulo={traduzirUi("Motivo")} obrigatorio className="half"><Selecao id={`${fid}-motivo`} valor={motivo} aoMudar={setMotivo} vazio={traduzirUi("Escolha")} opcoes={[...new Set([...MOTIVOS_SAIDA, ...(motivo ? [motivo] : [])])].map((m) => ({ v: m, l: m }))} /></Campo>
             </div>
-          ) : <div className="field-hint">A ficha continua no app. Marcar a saída só muda o rol e a carteirinha deixa de valer.</div>}
+          ) : <div className="field-hint">{traduzirUi("A ficha continua no app. Marcar a saída só muda o rol e a carteirinha deixa de valer.")}</div>}
         </FormSection>
       ) : null}
 
-      <FormSection title="Livro de papel">
+      <FormSection title={traduzirUi("Livro de papel")}>
         <div className="fs-grid">
-          <Campo rotulo="Livro" className="half"><Entrada id={`${fid}-liv`} inputMode="numeric" value={livroFisico} onChange={(e) => setLivroFisico(e.target.value)} placeholder="ex: 2" /></Campo>
-          <Campo rotulo="Folha" className="half"><Entrada id={`${fid}-fl`} inputMode="numeric" value={folha} onChange={(e) => setFolha(e.target.value)} placeholder="ex: 14" /></Campo>
-          <Campo rotulo="Observação"><TextoLongo id={`${fid}-obs`} rows={3} value={obs} onChange={(e) => setObs(e.target.value)} /></Campo>
+          <Campo rotulo={traduzirUi("Livro")} className="half"><Entrada id={`${fid}-liv`} inputMode="numeric" value={livroFisico} onChange={(e) => setLivroFisico(e.target.value)} placeholder={traduzirUi("ex: 2")} /></Campo>
+          <Campo rotulo={traduzirUi("Folha")} className="half"><Entrada id={`${fid}-fl`} inputMode="numeric" value={folha} onChange={(e) => setFolha(e.target.value)} placeholder={traduzirUi("ex: 14")} /></Campo>
+          <Campo rotulo={traduzirUi("Observação")}><TextoLongo id={`${fid}-obs`} rows={3} value={obs} onChange={(e) => setObs(e.target.value)} /></Campo>
         </div>
-        <div className="field-hint">Opcional. Use se a igreja também registra no livro físico.</div>
+        <div className="field-hint">{traduzirUi("Opcional. Use se a igreja também registra no livro físico.")}</div>
       </FormSection>
 
       {livro === "rol" && r?.member_id && !r.saida ? (
-        <FormSection title="Carteirinha">
-          <Botao onClick={() => onCarteirinha(r.member_id!)}>Abrir carteirinha</Botao>
+        <FormSection title={traduzirUi("Carteirinha")}>
+          <Botao onClick={() => onCarteirinha(r.member_id!)}>{traduzirUi("Abrir carteirinha")}</Botao>
         </FormSection>
       ) : null}
 
       {!novo && (livro === "casamento" || livro === "apresentacao") ? (
-        <FormSection title="Apagar">
+        <FormSection title={traduzirUi("Apagar")}>
           {apagar ? (
             <div className="sec-apagar">
-              <p className="field-hint">Apagar o registro nº {numeroFmt(r.numero)}? O número fica vago no livro e não volta.</p>
+              <p className="field-hint">{traduzirUi("Apagar o registro nº {numero}? O número fica vago no livro e não volta.", { numero: numeroFmt(r.numero) })}</p>
               <div className="sec-apagar-acts">
-                <Botao compacto onClick={() => setApagar(false)}>Manter registro</Botao>
-                <Botao variante="perigo" compacto desativado={saving} onClick={remover}>Apagar registro</Botao>
+                <Botao compacto onClick={() => setApagar(false)}>{traduzirUi("Manter registro")}</Botao>
+                <Botao variante="perigo" compacto desativado={saving} onClick={remover}>{traduzirUi("Apagar registro")}</Botao>
               </div>
             </div>
-          ) : <Botao compacto onClick={() => setApagar(true)}>Apagar este registro</Botao>}
+          ) : <Botao compacto onClick={() => setApagar(true)}>{traduzirUi("Apagar este registro")}</Botao>}
         </FormSection>
       ) : null}
     </FormScreen>

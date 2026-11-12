@@ -7,11 +7,11 @@ import { useEffect, useState } from "react";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { formatDateBR } from "../../lib/date";
 import { Icon } from "../../lib/icons";
-import { plural } from "../../lib/plural";
-import { useTermos } from "../../lib/vocabulario-context";
 
 import { Cartao } from "../../ui/Cartao";
 import { Linha } from "../../ui/Linha";
+import { useTexto } from "../../lib/internacional/contexto";
+import type { Text } from "../../lib/internacional/mensagens";
 type Metricas = {
   periodo: { ini: string; fim: string; semanas: number };
   participacao: { pessoas: number; media_semanas: number | null };
@@ -23,10 +23,10 @@ type Metricas = {
 };
 
 const pct = (a: number, b: number) => (b ? `${Math.round((a / b) * 100)}%` : "·");
-const duracao = (min: number | null) => (min === null ? "·" : min < 60 ? plural(Math.round(min), "minuto") : min < 2880 ? plural(Math.round(min / 60), "hora") : plural(Math.round(min / 1440), "dia"));
+const duracao = (min: number | null, traduzirUi: Text) => (min === null ? "·" : min < 60 ? traduzirUi("{count, plural, =1 {# minuto} other {# minutos}}", { count: Math.round(min) }) : min < 2880 ? traduzirUi("{count, plural, =1 {# hora} other {# horas}}", { count: Math.round(min / 60) }) : traduzirUi("{count, plural, =1 {# dia} other {# dias}}", { count: Math.round(min / 1440) }));
 
 export function MetricasInternas({ organizationId }: { organizationId: string }) {
-  const { comTermos: ct } = useTermos();
+  const traduzirUi = useTexto();
   const [m, setM] = useState<Metricas | null>(null);
   const [erro, setErro] = useState(false);
   useEffect(() => {
@@ -39,25 +39,26 @@ export function MetricasInternas({ organizationId }: { organizationId: string })
   }, [organizationId]);
 
   if (erro) return null;
-  const linhas: [string, string, string][] = m ? [
-    ["Semanas com participação", m.participacao.media_semanas === null ? "·" : `${String(m.participacao.media_semanas).replace(".", ",")} de ${m.periodo.semanas}`, `média por pessoa que fez check-in (${plural(m.participacao.pessoas, "pessoa")})`],
-    [ct("Vagas cobertas 48h antes do {culto}"), pct(m.vagas48h.cobertas, m.vagas48h.pedidas), `${m.vagas48h.cobertas} de ${plural(m.vagas48h.pedidas, "vaga")} em ${plural(m.vagas48h.cultos, ct("{culto}"), ct("{cultos}"))}`],
-    ["Tempo para fechar a escala", duracao(m.fechar_escala.mediana_minutos), `mediana entre a primeira e a última escalação, em ${plural(m.fechar_escala.cultos, ct("{culto}"), ct("{cultos}"))} completos`],
-    ["Visitantes contatados em 48h", pct(m.visitantes48h.contatados, m.visitantes48h.visitantes), `${m.visitantes48h.contatados} de ${plural(m.visitantes48h.visitantes, "visitante")}`],
-    ["Sem notificações", pct(m.notificacoes.sem_aviso, m.notificacoes.com_app), `${m.notificacoes.sem_aviso} de ${plural(m.notificacoes.com_app, "pessoa")} com acesso ao app não recebem aviso`],
-    ["Cartões do Início", `${m.cartoes.card_acted ?? 0} usados`, `${m.cartoes.card_shown ?? 0} vistos, ${m.cartoes.card_dismissed ?? 0} dispensados`],
-    ["Notificações", `${m.cartoes.notification_opened ?? 0} abertas`, `de ${m.cartoes.notification_sent ?? 0} enviadas`],
+  /* [id estável, título, valor, detalhe]: o título traduzido não serve de key */
+  const linhas: [string, string, string, string][] = m ? [
+    ["participacao", traduzirUi("Semanas com participação"), m.participacao.media_semanas === null ? "·" : traduzirUi("{media} de {semanas}", { media: String(m.participacao.media_semanas).replace(".", ","), semanas: String(m.periodo.semanas) }), traduzirUi("média por pessoa que fez check-in ({count, plural, =1 {# pessoa} other {# pessoas}})", { count: m.participacao.pessoas })],
+    ["vagas", traduzirUi("Vagas cobertas 48h antes do {culto}"), pct(m.vagas48h.cobertas, m.vagas48h.pedidas), traduzirUi("{cobertas} de {vagas, plural, =1 {# vaga} other {# vagas}} em {cultos, plural, =1 {# {culto}} other {# {cultos}}}", { cobertas: String(m.vagas48h.cobertas), vagas: m.vagas48h.pedidas, cultos: m.vagas48h.cultos })],
+    ["escala", traduzirUi("Tempo para fechar a escala"), duracao(m.fechar_escala.mediana_minutos, traduzirUi), traduzirUi("mediana entre a primeira e a última escalação, em {count, plural, =1 {# {culto}} other {# {cultos}}} completos", { count: m.fechar_escala.cultos })],
+    ["visitantes", traduzirUi("Visitantes contatados em 48h"), pct(m.visitantes48h.contatados, m.visitantes48h.visitantes), traduzirUi("{contatados} de {count, plural, =1 {# visitante} other {# visitantes}}", { contatados: String(m.visitantes48h.contatados), count: m.visitantes48h.visitantes })],
+    ["sem-aviso", traduzirUi("Sem notificações"), pct(m.notificacoes.sem_aviso, m.notificacoes.com_app), traduzirUi("{sem} de {count, plural, =1 {# pessoa} other {# pessoas}} com acesso ao app não recebem aviso", { sem: String(m.notificacoes.sem_aviso), count: m.notificacoes.com_app })],
+    ["cartoes", traduzirUi("Cartões do Início"), traduzirUi("{n} usados", { n: String(m.cartoes.card_acted ?? 0) }), traduzirUi("{vistos} vistos, {dispensados} dispensados", { vistos: String(m.cartoes.card_shown ?? 0), dispensados: String(m.cartoes.card_dismissed ?? 0) })],
+    ["notificacoes", traduzirUi("Notificações"), traduzirUi("{n} abertas", { n: String(m.cartoes.notification_opened ?? 0) }), traduzirUi("de {n} enviadas", { n: String(m.cartoes.notification_sent ?? 0) })],
   ] : [];
 
   return (
     <Cartao style={{ marginTop: 22 }}>
       <div className="panel-head">
-        <span className="panel-title"><Icon name="relatorios" size={14} /> Como o Service está funcionando</span>
-        <span className="panel-meta">{m ? `${formatDateBR(m.periodo.ini)} a ${formatDateBR(m.periodo.fim)}` : "Carregando..."}</span>
+        <span className="panel-title"><Icon name="relatorios" size={14} /> {traduzirUi("Como o Service está funcionando")}</span>
+        <span className="panel-meta">{m ? traduzirUi("{inicio} a {fim}", { inicio: formatDateBR(m.periodo.ini), fim: formatDateBR(m.periodo.fim) }) : traduzirUi("Carregando...")}</span>
       </div>
       <div className="panel-body flush">
-        {linhas.map(([t, v, s]) => (
-          <Linha key={t}>
+        {linhas.map(([id, t, v, s]) => (
+          <Linha key={id}>
             <div className="mini-main"><div className="mini-title">{t}</div><div className="mini-sub">{s}</div></div>
             <div className="mini-right metrica-v">{v}</div>
           </Linha>

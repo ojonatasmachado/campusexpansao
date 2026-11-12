@@ -9,6 +9,7 @@ import { Botao } from "../../ui/Botao";
 import { Opcao } from "../../ui/Opcao";
 import { Marcar } from "../../ui/Campo";
 import { Selecao } from "../../ui/Selecao";
+import { useTexto } from "../../lib/internacional/contexto";
 type Campo = "nome" | "tel" | "email" | "consent";
 type Erros = Partial<Record<Campo, string>>;
 
@@ -30,6 +31,7 @@ export default function AutocadastroForm({
   /** O9: veio pelo link "Convidar um amigo"; o nome já entra no campo e pode ser apagado */
   convite?: { codigo: string; nome: string } | null;
 }) {
+  const traduzirUi = useTexto();
   const [nome, setNome] = useState("");
   const [tel, setTel] = useState("");
   const [email, setEmail] = useState("");
@@ -45,11 +47,11 @@ export default function AutocadastroForm({
 
   const validar = (): Erros => {
     const e: Erros = {};
-    if (nome.trim().length < 2) e.nome = "Digite seu nome.";
+    if (nome.trim().length < 2) e.nome = traduzirUi("Digite seu nome.");
     const d = digitosTelefone(tel);
-    if (d.length !== 10 && d.length !== 11) e.tel = "Confira o número com DDD. Exemplo: (11) 9 1234-5678.";
-    if (email.trim() && !EMAIL_RE.test(email.trim())) e.email = "Confira o e-mail ou deixe em branco.";
-    if (!consent) e.consent = "Para enviar, marque a autorização de contato.";
+    if (d.length !== 10 && d.length !== 11) e.tel = traduzirUi("Confira o número com DDD. Exemplo: (11) 9 1234-5678.");
+    if (email.trim() && !EMAIL_RE.test(email.trim())) e.email = traduzirUi("Confira o e-mail ou deixe em branco.");
+    if (!consent) e.consent = traduzirUi("Para enviar, marque a autorização de contato.");
     return e;
   };
 
@@ -94,10 +96,10 @@ export default function AutocadastroForm({
       return;
     }
     const porCampo: Record<string, Erros> = {
-      nome: { nome: "Digite seu nome." },
-      telefone: { tel: "Confira o número com DDD. Exemplo: (11) 9 1234-5678." },
-      email: { email: "Confira o e-mail ou deixe em branco." },
-      consentimento: { consent: "Para enviar, marque a autorização de contato." },
+      nome: { nome: traduzirUi("Digite seu nome.") },
+      telefone: { tel: traduzirUi("Confira o número com DDD. Exemplo: (11) 9 1234-5678.") },
+      email: { email: traduzirUi("Confira o e-mail ou deixe em branco.") },
+      consentimento: { consent: traduzirUi("Para enviar, marque a autorização de contato.") },
     };
     if (porCampo[r]) {
       setErros(porCampo[r]);
@@ -106,10 +108,10 @@ export default function AutocadastroForm({
     }
     setFalha(
       r === "fechado"
-        ? "Este link parou de receber cadastros. Procure alguém da recepção."
+        ? traduzirUi("Este link parou de receber cadastros. Procure alguém da recepção.")
         : r === "limite"
-          ? "Muitos cadastros chegaram ao mesmo tempo. Espere um minuto e envie de novo."
-          : "Não deu para enviar agora. Confira sua internet e tente de novo.",
+          ? traduzirUi("Muitos cadastros chegaram ao mesmo tempo. Espere um minuto e envie de novo.")
+          : traduzirUi("Não deu para enviar agora. Confira sua internet e tente de novo."),
     );
   };
 
@@ -118,10 +120,10 @@ export default function AutocadastroForm({
       <AuthShell
         logoUrl={logoUrl}
         churchName={churchName}
-        eyebrow="Contato recebido"
-        title={`Obrigado, ${feito}`}
-        subtitle={`Alguém da ${churchName} vai falar com você pelo WhatsApp nos próximos dias. Que bom que você veio.`}
-        footer="Pode fechar esta página."
+        eyebrow={traduzirUi("Contato recebido")}
+        title={traduzirUi("Obrigado, {nome}", { nome: feito })}
+        subtitle={traduzirUi("Alguém da {igreja} vai falar com você pelo WhatsApp nos próximos dias. Que bom que você veio.", { igreja: churchName })}
+        footer={traduzirUi("Pode fechar esta página.")}
       />
     );
   }
@@ -139,13 +141,13 @@ export default function AutocadastroForm({
     <AuthShell
       logoUrl={logoUrl}
       churchName={churchName}
-      eyebrow="Primeira visita"
-      title="Que bom ter você aqui"
-      subtitle="Deixe seu contato para a gente te conhecer melhor. Leva menos de um minuto."
+      eyebrow={traduzirUi("Primeira visita")}
+      title={traduzirUi("Que bom ter você aqui")}
+      subtitle={traduzirUi("Deixe seu contato para a gente te conhecer melhor. Leva menos de um minuto.")}
     >
       <form ref={formRef} className="login-form vis-form" onSubmit={enviar} noValidate>
         <label className="login-field">
-          <span className="login-label">Seu nome</span>
+          <span className="login-label">{traduzirUi("Seu nome")}</span>
           <input
             className="login-input"
             name="nome"
@@ -161,7 +163,7 @@ export default function AutocadastroForm({
         </label>
 
         <label className="login-field">
-          <span className="login-label">WhatsApp</span>
+          <span className="login-label">{traduzirUi("WhatsApp")}</span>
           <input
             className="login-input"
             name="tel"
@@ -179,7 +181,7 @@ export default function AutocadastroForm({
 
         <label className="login-field">
           <span className="login-label">
-            E-mail <span className="vis-opt">opcional</span>
+            {traduzirUi.rich("E-mail <opt>opcional</opt>", { opt: (c) => <span className="vis-opt">{c}</span> })}
           </span>
           <input
             className="login-input"
@@ -200,14 +202,14 @@ export default function AutocadastroForm({
 
         <div className="login-field">
           <span className="login-label">
-            Como conheceu a igreja? <span className="vis-opt">opcional</span>
+            {traduzirUi.rich("Como conheceu a igreja? <opt>opcional</opt>", { opt: (c) => <span className="vis-opt">{c}</span> })}
           </span>
-          <Selecao rotulo="Como conheceu a igreja" valor={como} aoMudar={setComo} vazio="Escolha uma opção" opcoes={COMO_CONHECEU} />
+          <Selecao rotulo={traduzirUi("Como conheceu a igreja")} valor={como} aoMudar={setComo} vazio={traduzirUi("Escolha uma opção")} opcoes={COMO_CONHECEU} />
         </div>
 
         <label className="login-field">
           <span className="login-label">
-            Quem te convidou? <span className="vis-opt">opcional</span>
+            {traduzirUi.rich("Quem te convidou? <opt>opcional</opt>", { opt: (c) => <span className="vis-opt">{c}</span> })}
           </span>
           <input
             className="login-input"
@@ -216,21 +218,19 @@ export default function AutocadastroForm({
             autoCapitalize="words"
             enterKeyHint="next"
             maxLength={120}
-            placeholder="Nome de quem te chamou"
+            placeholder={traduzirUi("Nome de quem te chamou")}
             value={convidou}
             onChange={(e) => setConvidou(e.target.value)}
             {...(convite ? { "aria-describedby": "vis-convidou-dica" } : {})}
           />
           {convite ? (
-            <span className="vis-dica" id="vis-convidou-dica">
-              Veio do convite. Se não foi essa pessoa, é só apagar ou trocar.
-            </span>
+            <span className="vis-dica" id="vis-convidou-dica">{traduzirUi("Veio do convite. Se não foi essa pessoa, é só apagar ou trocar.")}</span>
           ) : null}
         </label>
 
         <fieldset className="login-field vis-fs">
           <legend className="login-label">
-            Quer saber mais sobre <span className="vis-opt">opcional</span>
+            {traduzirUi.rich("Quer saber mais sobre <opt>opcional</opt>", { opt: (c) => <span className="vis-opt">{c}</span> })}
           </legend>
           <div className="vis-chips">
             {interesses.map((o) => {
@@ -246,8 +246,7 @@ export default function AutocadastroForm({
 
         <div className="login-field">
           <Marcar className={`vis-consent${erros.consent ? " err" : ""}`} name="consent" checked={consent} onChange={(e) => setConsent(e.target.checked)} {...aria("consent")}>
-            Autorizo a {churchName} a guardar meu nome e contato para falar comigo sobre a igreja. Meus dados não são
-            compartilhados com ninguém de fora, e posso pedir para apagar quando quiser.
+            {traduzirUi("Autorizo a {igreja} a guardar meu nome e contato para falar comigo sobre a igreja. Meus dados não são compartilhados com ninguém de fora, e posso pedir para apagar quando quiser.", { igreja: churchName })}
           </Marcar>
           {erroDe("consent")}
         </div>
@@ -259,7 +258,7 @@ export default function AutocadastroForm({
         ) : null}
 
         <Botao tamanho="entrada" variante="principal" className="vis-send" type="submit" desativado={enviando}>
-          {enviando ? "Enviando..." : "Enviar meu contato"}
+          {enviando ? traduzirUi("Enviando...") : traduzirUi("Enviar meu contato")}
         </Botao>
       </form>
     </AuthShell>
