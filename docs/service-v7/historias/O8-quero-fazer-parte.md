@@ -2,10 +2,10 @@
 id: O8
 titulo: Criar o pedido Quero fazer parte no app
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-11-12
+branch: historia/O8-quero-fazer-parte
 depende: []
 tamanho: P
 ---
