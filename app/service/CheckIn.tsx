@@ -17,6 +17,7 @@ import { Janela } from "./ui/Janela";
 import { Vazio } from "./ui/Estados";
 import { Avatar } from "./ui/Avatar";
 import { confirmar } from "./ui/confirmar";
+import { useTexto } from "./lib/internacional/contexto";
 // ── tipos externos (subconjunto dos tipos de ServiceExactApp) ─────────────────
 
 type EventView = {
@@ -118,33 +119,34 @@ export function CheckinLanding({
   churchName?: string;
   logoUrl?: string | null;
 }) {
+  const traduzirUi = useTexto();
   const { comTermos: ct } = useTermos();
   let cor = "var(--olive)";
-  let titulo = "Verificando...";
+  let titulo = traduzirUi("Verificando...");
   let txt = "";
   let icone = "✓";
 
   if (result) {
     if (result.ok) {
       cor = result.extra ? "var(--olive-soft)" : "var(--olive)";
-      titulo = result.extra ? "Presença registrada (extra)" : "Presença confirmada!";
+      titulo = result.extra ? traduzirUi("Presença registrada (extra)") : traduzirUi("Presença confirmada!");
       txt = result.extra
-        ? "Você não estava escalado, mas a igreja permite presença extra. Bom serviço!"
-        : `Tudo certo. Bom serviço, ${person?.name.split(" ")[0] ?? ""}!`;
+        ? traduzirUi("Você não estava escalado, mas a igreja permite presença extra. Bom serviço!")
+        : traduzirUi("Tudo certo. Bom serviço, {nome}!", { nome: person?.name.split(" ")[0] ?? "" });
       icone = "✓";
     } else if (result.dup) {
       cor = "var(--olive-soft)";
-      titulo = "Você já está presente";
-      txt = "Seu check-in neste evento já foi registrado.";
+      titulo = traduzirUi("Você já está presente");
+      txt = traduzirUi("Seu check-in neste evento já foi registrado.");
       icone = "✓";
     } else if (result.bloq) {
       cor = "var(--amber)";
-      titulo = "Check-in não liberado";
+      titulo = traduzirUi("Check-in não liberado");
       txt = result.motivo ?? "";
       icone = "!";
     } else {
       cor = "var(--danger)";
-      titulo = "Não foi possível";
+      titulo = traduzirUi("Não foi possível");
       txt = result.motivo ?? "";
       icone = "!";
     }
@@ -166,7 +168,7 @@ export function CheckinLanding({
             <ChurchLockup logoUrl={logoUrl} name={churchName} />
           </div>
           <div className="ck-land-event">
-            <div className="ck-land-ey">{ct("Check-in de {voluntario}")}</div>
+            <div className="ck-land-ey">{ct(traduzirUi("Check-in de {voluntario}"))}</div>
             <div className="ck-land-name">{event.name}</div>
             <div className="ck-land-when">
               {joinDot(`${event.weekday} ${formatDateBR(event.eventDate)}`.trim(), event.time, event.location)}
@@ -193,7 +195,7 @@ export function CheckinLanding({
             style={{ width: "100%", justifyContent: "center" }}
             onClick={onDone}
           >
-            {result?.ok ? "Concluir" : "Voltar"}
+            {result?.ok ? traduzirUi("Concluir") : traduzirUi("Voltar")}
           </Botao>
         </div>
       </div>
@@ -222,6 +224,7 @@ function ManualCheckinModal({
   onAdd: (personId: string) => void;
   onClose: () => void;
 }) {
+  const traduzirUi = useTexto();
   const { comTermos: ct } = useTermos();
   const [q, setQ] = useState("");
   const presentIds = new Set(present.map((r) => r.person_id));
@@ -237,13 +240,13 @@ function ManualCheckinModal({
   );
 
   return (
-    <Janela acima sobretitulo="Registro manual" titulo="Quem está presente"
-      texto="Para quem chegou sem escanear. Entra na presença com marca de registro manual."
-      aoFechar={onClose} corpoBloco rodape={<Botao onClick={onClose}>Fechar</Botao>}>
+    <Janela acima sobretitulo={traduzirUi("Registro manual")} titulo={traduzirUi("Quem está presente")}
+      texto={traduzirUi("Para quem chegou sem escanear. Entra na presença com marca de registro manual.")}
+      aoFechar={onClose} corpoBloco rodape={<Botao onClick={onClose}>{traduzirUi("Fechar")}</Botao>}>
           <div className="tb-search" style={{ marginBottom: 12 }}>
             <span className="si" aria-hidden="true"><Icon name="buscar" size={14} /></span>
             <input
-              placeholder={ct("Buscar {voluntario}...")}
+              placeholder={ct(traduzirUi("Buscar {voluntario}..."))}
               value={q}
               onChange={(e) => setQ(e.target.value)}
               autoFocus
@@ -251,8 +254,8 @@ function ManualCheckinModal({
           </div>
           {lista.length === 0 && (
             <Vazio titulo={q
-              ? "Nenhum resultado."
-              : ct("Todos os {voluntarios} elegíveis já estão presentes.")} />
+              ? traduzirUi("Nenhum resultado.")
+              : ct(traduzirUi("Todos os {voluntarios} elegíveis já estão presentes."))} />
           )}
           {lista.map((p) => {
             const escalado = escaladoIds.has(p.id);
@@ -272,8 +275,8 @@ function ManualCheckinModal({
                   <div className="flag-nome">{p.name}</div>
                   <div className="flag-meta">
                     {escalado
-                      ? slotFn ?? "Escalado"
-                      : "Não escalado · entra como extra"}
+                      ? slotFn ?? traduzirUi("Escalado")
+                      : traduzirUi("Não escalado · entra como extra")}
                   </div>
                 </div>
                 <span style={{ marginLeft: "auto", color: "var(--muted)" }}>→</span>
@@ -303,6 +306,7 @@ function CheckinRoster({
   onRemove: (personId: string) => void;
   onManualAdd: (personId: string) => void;
 }) {
+  const traduzirUi = useTexto();
   const escaladoIds = roster
     .filter((r) => r.event_id === event.id && r.status !== "no")
     .map((r) => r.person_id);
@@ -322,7 +326,7 @@ function CheckinRoster({
   return (
     <div className="ck-roster">
       {sorted.length === 0 && faltam.length === 0 && (
-        <Vazio titulo="Ninguém escalado neste evento ainda." />
+        <Vazio titulo={traduzirUi("Ninguém escalado neste evento ainda.")} />
       )}
 
       {sorted.map((rec) => {
@@ -336,19 +340,19 @@ function CheckinRoster({
             <div className="ck-row-main">
               <div className="ck-row-name">
                 {p.name}
-                {rec.is_extra && <span className="ck-extra">extra</span>}
+                {rec.is_extra && <span className="ck-extra">{traduzirUi("extra")}</span>}
               </div>
               <div className="ck-row-meta">
-                {fn ?? (rec.is_extra ? "Presença extra" : "Escalado")}
+                {fn ?? (rec.is_extra ? traduzirUi("Presença extra") : traduzirUi("Escalado"))}
                 {" · "}
-                {rec.via === "manual" ? "manual" : "QR"}
+                {rec.via === "manual" ? traduzirUi("manual") : traduzirUi("QR")}
                 {" · "}
                 {timeCurto(rec.checked_in_at)}
               </div>
             </div>
             <Acao
               className="ck-undo"
-              title="Desfazer presença"
+              title={traduzirUi("Desfazer presença")}
               onClick={() => onRemove(rec.person_id)}
             >
               ✕
@@ -367,14 +371,12 @@ function CheckinRoster({
             <Avatar nome={p.name} tamanho="sm" />
             <div className="ck-row-main">
               <div className="ck-row-name">{p.name}</div>
-              <div className="ck-row-meta">{fn ?? "Escalado"} · não chegou</div>
+              <div className="ck-row-meta">{traduzirUi("{funcao} · não chegou", { funcao: fn ?? traduzirUi("Escalado") })}</div>
             </div>
             <Botao
               variante="discreto" compacto
               onClick={() => onManualAdd(pid)}
-            >
-              Marcar presente
-            </Botao>
+            >{traduzirUi("Marcar presente")}</Botao>
           </div>
         );
       })}
@@ -403,6 +405,7 @@ export function QRCheckinModal({
   logoUrl?: string | null;
   onClose: () => void;
 }) {
+  const traduzirUi = useTexto();
   const { comTermos: ct } = useTermos();
   const router = useRouter();
   const [tab, setTab] = useState<"qr" | "presenca">("qr");
@@ -451,12 +454,12 @@ export function QRCheckinModal({
 
   const registrar = async (personId: string, via: "qr" | "manual", token?: string): Promise<CheckinResult> => {
     if (via === "qr") {
-      if (!qrActive) return { ok: false, motivo: "Este QR Code está desativado. Procure a liderança." };
-      if (token && token !== qrToken) return { ok: false, motivo: "QR Code inválido ou expirado. Peça o atual à liderança." };
+      if (!qrActive) return { ok: false, motivo: traduzirUi("Este QR Code está desativado. Procure a liderança.") };
+      if (token && token !== qrToken) return { ok: false, motivo: traduzirUi("QR Code inválido ou expirado. Peça o atual à liderança.") };
     }
-    if (presentIds.has(personId)) return { ok: false, dup: true, motivo: "Você já fez check-in neste evento." };
+    if (presentIds.has(personId)) return { ok: false, dup: true, motivo: traduzirUi("Você já fez check-in neste evento.") };
     const escalado = escaladoIds.has(personId);
-    if (!escalado && !permitirExtra) return { ok: false, bloq: true, motivo: "Você não está escalado neste evento. Fale com a liderança." };
+    if (!escalado && !permitirExtra) return { ok: false, bloq: true, motivo: traduzirUi("Você não está escalado neste evento. Fale com a liderança.") };
     const extra = !escalado;
     const { data, error } = await createServiceBrowserClient()
       .schema("service")
@@ -465,8 +468,8 @@ export function QRCheckinModal({
       .select()
       .single();
     if (error) {
-      if (error.code === "23505") return { ok: false, dup: true, motivo: "Você já fez check-in neste evento." };
-      return { ok: false, motivo: "Não foi possível registrar agora." };
+      if (error.code === "23505") return { ok: false, dup: true, motivo: traduzirUi("Você já fez check-in neste evento.") };
+      return { ok: false, motivo: traduzirUi("Não foi possível registrar agora.") };
     }
     setAttendance((prev) => [...prev, data as AttendanceRow]);
     router.refresh();
@@ -533,7 +536,7 @@ export function QRCheckinModal({
       a.download = `checkin-${event.id}.png`;
       a.click();
     };
-    img.onerror = () => avisar("Não consegui gerar a imagem agora.", "warn");
+    img.onerror = () => avisar(traduzirUi("Não consegui gerar a imagem agora."), "warn");
     img.src = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(checkinLink)}`;
   };
 
@@ -545,7 +548,7 @@ export function QRCheckinModal({
   };
 
   const regenerar = async () => {
-    if (!(await confirmar({ titulo: "Gerar um novo QR Code?", texto: "O anterior deixa de funcionar.", acao: "Gerar novo código", perigo: false }))) return;
+    if (!(await confirmar({ titulo: traduzirUi("Gerar um novo QR Code?"), texto: traduzirUi("O anterior deixa de funcionar."), acao: traduzirUi("Gerar novo código"), perigo: false }))) return;
     const token = generateToken();
     setQrToken(token);
     setQrActive(true);
@@ -557,22 +560,22 @@ export function QRCheckinModal({
     const demo = people.find((p) => p.status === "ativo" && !presentIds.has(p.id)) ?? null;
     const result = demo
       ? await registrar(demo.id, "qr", qrToken ?? undefined)
-      : { ok: false, motivo: ct("Nenhum {voluntario} ativo disponível para demonstração.") };
+      : { ok: false, motivo: ct(traduzirUi("Nenhum {voluntario} ativo disponível para demonstração.")) };
     setLanding({ person: demo, result });
   };
 
   return (
     <>
       <Janela larga
-        sobretitulo={joinDot("Check-in", `${event.weekday} ${formatDateBR(event.eventDate)}`.trim(), event.time)}
+        sobretitulo={joinDot(traduzirUi("Check-in"), `${event.weekday} ${formatDateBR(event.eventDate)}`.trim(), event.time)}
         titulo={event.name}
-        texto={ct("QR Code único deste evento. Os {voluntarios} escaneiam e confirmam presença pela própria conta. Você acompanha em tempo real.")}
+        texto={ct(traduzirUi("QR Code único deste evento. Os {voluntarios} escaneiam e confirmam presença pela própria conta. Você acompanha em tempo real."))}
         aoFechar={onClose} corpoBloco
         cabecalho={
-          <Abas rotulo="Partes do check-in" ativa={tab} aoMudar={(v) => setTab(v as typeof tab)}
-            abas={[{ id: "qr", rotulo: "QR Code" }, { id: "presenca", rotulo: "Presença ao vivo", contador: presentes }]} />
+          <Abas rotulo={traduzirUi("Partes do check-in")} ativa={tab} aoMudar={(v) => setTab(v as typeof tab)}
+            abas={[{ id: "qr", rotulo: traduzirUi("QR Code") }, { id: "presenca", rotulo: traduzirUi("Presença ao vivo"), contador: presentes }]} />
         }
-        rodape={<Botao variante="principal" onClick={onClose}>Concluído</Botao>}>
+        rodape={<Botao variante="principal" onClick={onClose}>{traduzirUi("Concluído")}</Botao>}>
             {tab === "qr" && (
               <div className="ck-qr-wrap">
                 <div className={`ck-qr ${!qrActive ? "off" : ""}`}>
@@ -586,7 +589,7 @@ export function QRCheckinModal({
                   ) : (
                     <div className="ck-qr-off">
                       <span style={{ fontSize: "var(--fs-app-28)" }}>✕</span>
-                      <span>QR desativado</span>
+                      <span>{traduzirUi("QR desativado")}</span>
                     </div>
                   )}
                 </div>
@@ -594,7 +597,7 @@ export function QRCheckinModal({
                 <div className="ck-qr-side">
                   <div className={`ck-status ${qrActive ? "on" : "off"}`}>
                     <span className="ck-dot" />
-                    {qrActive ? "Ativo, aceitando check-ins" : "Desativado"}
+                    {qrActive ? traduzirUi("Ativo, aceitando check-ins") : traduzirUi("Desativado")}
                   </div>
 
                   <div className="ck-link">
@@ -602,25 +605,17 @@ export function QRCheckinModal({
                   </div>
 
                   <div className="ck-actions">
-                    <Botao compacto onClick={salvar}>
-                      Salvar
-                    </Botao>
-                    <Botao compacto onClick={imprimir}>
-                      Imprimir
-                    </Botao>
-                    <Botao compacto onClick={copiar}>
-                      Copiar link
-                    </Botao>
+                    <Botao compacto onClick={salvar}>{traduzirUi("Salvar")}</Botao>
+                    <Botao compacto onClick={imprimir}>{traduzirUi("Imprimir")}</Botao>
+                    <Botao compacto onClick={copiar}>{traduzirUi("Copiar link")}</Botao>
                     <Botao compacto onClick={toggleActive}>
-                      {qrActive ? "Desativar" : "Ativar"}
+                      {qrActive ? traduzirUi("Desativar") : traduzirUi("Ativar")}
                     </Botao>
-                    <Botao compacto onClick={regenerar}>
-                      Regenerar
-                    </Botao>
+                    <Botao compacto onClick={regenerar}>{traduzirUi("Regenerar")}</Botao>
                   </div>
 
                   <div className="ck-hint">
-                    {ct("Imprima e cole na entrada dos {voluntarios}, backstage ou secretaria. Quem escanear confirma presença pela conta logada.")}
+                    {ct(traduzirUi("Imprima e cole na entrada dos {voluntarios}, backstage ou secretaria. Quem escanear confirma presença pela conta logada."))}
                   </div>
 
                   <Botao
@@ -628,7 +623,7 @@ export function QRCheckinModal({
                     style={{ marginTop: 4, justifyContent: "center" }}
                     onClick={simularScan}
                   >
-                    {ct("Simular leitura (abrir como {voluntario}) →")}
+                    {ct(traduzirUi("Simular leitura (abrir como {voluntario}) →"))}
                   </Botao>
                 </div>
               </div>
@@ -639,20 +634,20 @@ export function QRCheckinModal({
                 <div className="ck-counters">
                   <div className="ck-counter">
                     <b>{presentes}</b>
-                    <span>presentes</span>
+                    <span>{traduzirUi("presentes")}</span>
                   </div>
                   <div className="ck-counter">
                     <b style={{ color: "var(--amber)" }}>{faltam}</b>
-                    <span>não chegaram</span>
+                    <span>{traduzirUi("não chegaram")}</span>
                   </div>
                   <div className="ck-counter">
                     <b>{escalados}</b>
-                    <span>escalados</span>
+                    <span>{traduzirUi("escalados")}</span>
                   </div>
                   {extras > 0 && (
                     <div className="ck-counter">
                       <b style={{ color: "var(--olive-soft)" }}>{extras}</b>
-                      <span>extras</span>
+                      <span>{traduzirUi("extras")}</span>
                     </div>
                   )}
                 </div>
@@ -666,7 +661,7 @@ export function QRCheckinModal({
                   onRemove={remover}
                   onManualAdd={async (pid) => {
                     const r = await registrar(pid, "manual");
-                    if (!r.ok) avisar(r.motivo ?? "Não foi possível registrar agora.", "warn");
+                    if (!r.ok) avisar(r.motivo ?? traduzirUi("Não foi possível registrar agora."), "warn");
                   }}
                 />
 
@@ -674,9 +669,7 @@ export function QRCheckinModal({
                   compacto
                   style={{ marginTop: 6 }}
                   onClick={() => setShowManual(true)}
-                >
-                  + Registrar presença manualmente
-                </Botao>
+                >{traduzirUi("+ Registrar presença manualmente")}</Botao>
               </div>
             )}
       </Janela>
@@ -691,7 +684,7 @@ export function QRCheckinModal({
           permitirExtra={permitirExtra}
           onAdd={async (personId) => {
             const r = await registrar(personId, "manual");
-            if (!r.ok) avisar(r.motivo ?? "Não foi possível registrar agora.", "warn");
+            if (!r.ok) avisar(r.motivo ?? traduzirUi("Não foi possível registrar agora."), "warn");
           }}
           onClose={() => setShowManual(false)}
         />

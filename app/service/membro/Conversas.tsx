@@ -14,11 +14,15 @@ import { avisar } from "../lib/avisar";
 import { useRascunho } from "../lib/retorno";
 import { Acao } from "../ui/Acao";
 import { Cartao } from "../ui/Cartao";
+import { useTexto } from "../lib/internacional/contexto";
+
 // ── aba: Inicio ───────────────────────────────────────────────────────────────
 
 // ── aba: Tarefas ──────────────────────────────────────────────────────────────
 
 export function TabTarefas({ person, cards, boards, onAddCardComment, initialCardId }: { initialCardId?: string | null; person: P; cards: Card[]; boards: Board[]; onAddCardComment?: (cardId: string, author: string, body: string) => void }) {
+  const traduzirUi = useTexto();
+
   const [open, setOpen] = useState<string | null>(initialCardId && cards.some((c) => c.id === initialCardId && c.assignees.includes(person.id)) ? initialCardId : null);
   const [commentTexts, setCommentTexts] = useState<Record<string, string>>({});
   const [savedComments, setSavedComments] = useState<Record<string, { author: string; body: string }[]>>({});
@@ -82,7 +86,7 @@ export function TabTarefas({ person, cards, boards, onAddCardComment, initialCar
           <span className={`prio-dot prio-${c.priority ?? "media"}`} aria-hidden="true" />
           <div className="m-task-main">
             <div className="m-task-title">{c.title}</div>
-            <div className="m-task-meta">{joinDot(board?.name ?? "Quadro", `Prioridade ${PRIORIDADE[c.priority ?? "media"] ?? "média"}`)}</div>
+            <div className="m-task-meta">{joinDot(board?.name ?? traduzirUi("Quadro"), c.priority === "alta" ? traduzirUi("Prioridade alta") : c.priority === "baixa" ? traduzirUi("Prioridade baixa") : traduzirUi("Prioridade média"))}</div>
           </div>
           <span className="m-task-caret"><Caret open={isOpen} /></span>
         </Acao>
@@ -108,7 +112,7 @@ export function TabTarefas({ person, cards, boards, onAddCardComment, initialCar
               <div className="m-task-cm-add">
                 <input
                   className="input"
-                  placeholder="Comentar..."
+                  placeholder={traduzirUi("Comentar...")}
                   value={commentTexts[c.id] ?? ""}
                   onChange={(e) => setCommentTexts((p) => ({ ...p, [c.id]: e.target.value }))}
                   onKeyDown={(e) => e.key === "Enter" && addComment(c.id)}
@@ -117,9 +121,7 @@ export function TabTarefas({ person, cards, boards, onAddCardComment, initialCar
                   tamanho="toque" variante="principal" compacto
                   style={{ padding: "8px 14px" }}
                   onClick={() => addComment(c.id)}
-                >
-                  Enviar
-                </Botao>
+                >{traduzirUi("Enviar")}</Botao>
               </div>
             </div>
           </div>
@@ -130,14 +132,12 @@ export function TabTarefas({ person, cards, boards, onAddCardComment, initialCar
 
   return (
     <>
-      <div className="m-section-t">Tarefas com você · {pending.length} {pending.length === 1 ? "aberta" : "abertas"}</div>
-      <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)", lineHeight: 1.5, marginBottom: 14 }}>
-        O que a liderança deixou no quadro para você. Atualize e comente.
-      </div>
+      <div className="m-section-t">{traduzirUi("Tarefas com você · {count, plural, =1 {{n} aberta} other {{n} abertas}}", { count: pending.length, n: String(pending.length) })}</div>
+      <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)", lineHeight: 1.5, marginBottom: 14 }}>{traduzirUi("O que a liderança deixou no quadro para você. Atualize e comente.")}</div>
       {pending.map(cardEl)}
       {done.length > 0 && (
         <>
-          <div className="m-section-t" style={{ marginTop: 22 }}>Concluídas · {done.length}</div>
+          <div className="m-section-t" style={{ marginTop: 22 }}>{traduzirUi("Concluídas · {n}", { n: String(done.length) })}</div>
           {done.map(cardEl)}
         </>
       )}
@@ -182,6 +182,8 @@ export function TabConversas({
   onSendMessage?: (chatId: string, senderId: string, body: string) => void | Promise<boolean | void>;
   onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
 }) {
+  const traduzirUi = useTexto();
+
   const { quandoMensagem } = useRelogioDaIgreja();
   const [selId, setSelIdRaw] = useState<string | null>(openChatId ?? null);
   /* M3: o que a pessoa digitou volta na recarga, por conversa */
@@ -209,11 +211,11 @@ export function TabConversas({
     setRespondendo(null);
     if (error) {
       if (error.message.includes("encerrada")) setPerguntas((p) => ({ ...p, [messageId]: { ...p[messageId], aberta: false } }));
-      avisar(error.message.includes("encerrada") ? "Essa emergência já foi encerrada." : error.message.includes("fora_da_area") ? "Seu endereço não está mais na área desta emergência. Fale com a igreja pela conversa." : "Não foi possível responder agora. Tente de novo.", "warn");
+      avisar(error.message.includes("encerrada") ? traduzirUi("Essa emergência já foi encerrada.") : error.message.includes("fora_da_area") ? traduzirUi("Seu endereço não está mais na área desta emergência. Fale com a igreja pela conversa.") : traduzirUi("Não foi possível responder agora. Tente de novo."), "warn");
       return;
     }
     setPerguntas((p) => ({ ...p, [messageId]: { ...p[messageId], resposta: status, minha: true } }));
-    avisar(status === "bem" ? "Obrigado. A igreja já sabe que vocês estão bem." : "A igreja já sabe que vocês precisam de ajuda.");
+    avisar(status === "bem" ? traduzirUi("Obrigado. A igreja já sabe que vocês estão bem.") : traduzirUi("A igreja já sabe que vocês precisam de ajuda."));
   };
 
   const myChats = member
@@ -264,7 +266,7 @@ export function TabConversas({
       const liderMember = lider ? members.find((mm) => mm.volunteerId === lider.personId) : undefined;
       return liderMember?.id === targetId;
     });
-    return min ? `Líder · ${min.name}` : "";
+    return min ? traduzirUi("Líder · {time}", { time: min.name }) : "";
   };
 
   const enviar = async () => {
@@ -274,7 +276,7 @@ export function TabConversas({
     /* sem gravar, o texto volta para a caixa (e para o rascunho) */
     if ((await onSendMessage?.(chat.id, member.id, corpo)) === false) {
       setTexto(corpo);
-      avisar("A mensagem não foi enviada. Tente de novo.", "warn");
+      avisar(traduzirUi("A mensagem não foi enviada. Tente de novo."), "warn");
     }
   };
 
@@ -299,7 +301,7 @@ export function TabConversas({
         <div className="chat-thread">
           <div className="chat-msgs" style={{ display: "flex", flexDirection: "column", gap: 10, padding: 14 }}>
             {chatMsgs.length === 0 && (
-              <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)" }}>Nenhuma mensagem ainda.</div>
+              <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)" }}>{traduzirUi("Nenhuma mensagem ainda.")}</div>
             )}
             {chatMsgs.map((msg) => {
               const sender = members.find((m) => m.id === msg.sender_id);
@@ -325,11 +327,11 @@ export function TabConversas({
                   </div>
                   {!isMine && perguntas[msg.id] && (
                     <div className="m-pergunta">
-                      {perguntas[msg.id].resposta && <div className="m-pergunta-resp">{perguntas[msg.id].minha ? "Você respondeu" : "Sua família respondeu"}: {perguntas[msg.id].resposta === "bem" ? "Estamos bem" : "Precisamos de ajuda"}</div>}
+                      {perguntas[msg.id].resposta && <div className="m-pergunta-resp">{traduzirUi("{quem, select, eu {Você respondeu} other {Sua família respondeu}}: {resposta, select, bem {Estamos bem} other {Precisamos de ajuda}}", { quem: perguntas[msg.id].minha ? "eu" : "familia", resposta: perguntas[msg.id].resposta === "bem" ? "bem" : "ajuda" })}</div>}
                       {perguntas[msg.id].aberta && (
                         <div className="m-pergunta-botoes">
-                          <Botao tamanho="toque" compacto aria-pressed={perguntas[msg.id].resposta === "bem"} variante={perguntas[msg.id].resposta === "bem" ? "principal" : "secundario"} desativado={respondendo === msg.id} onClick={() => responder(msg.id, "bem")}>Estamos bem</Botao>
-                          <Botao tamanho="toque" compacto aria-pressed={perguntas[msg.id].resposta === "ajuda"} variante={perguntas[msg.id].resposta === "ajuda" ? "perigo" : "secundario"} desativado={respondendo === msg.id} onClick={() => responder(msg.id, "ajuda")}>Precisamos de ajuda</Botao>
+                          <Botao tamanho="toque" compacto aria-pressed={perguntas[msg.id].resposta === "bem"} variante={perguntas[msg.id].resposta === "bem" ? "principal" : "secundario"} desativado={respondendo === msg.id} onClick={() => responder(msg.id, "bem")}>{traduzirUi("Estamos bem")}</Botao>
+                          <Botao tamanho="toque" compacto aria-pressed={perguntas[msg.id].resposta === "ajuda"} variante={perguntas[msg.id].resposta === "ajuda" ? "perigo" : "secundario"} desativado={respondendo === msg.id} onClick={() => responder(msg.id, "ajuda")}>{traduzirUi("Precisamos de ajuda")}</Botao>
                         </div>
                       )}
                     </div>
@@ -341,12 +343,12 @@ export function TabConversas({
           <div className="chat-compose">
             <input
               className="input"
-              placeholder="Escreva uma mensagem..."
+              placeholder={traduzirUi("Escreva uma mensagem...")}
               value={texto}
               onChange={(e) => setTexto(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && enviar()}
             />
-            <Botao variante="principal" compacto desativado={!texto.trim()} onClick={enviar}>Enviar</Botao>
+            <Botao variante="principal" compacto desativado={!texto.trim()} onClick={enviar}>{traduzirUi("Enviar")}</Botao>
           </div>
         </div>
       </div>
@@ -355,14 +357,14 @@ export function TabConversas({
 
   return (
     <>
-      <div className="m-section-t">Conversas</div>
+      <div className="m-section-t">{traduzirUi("Conversas")}</div>
 
       {novo && (
         <Cartao estilo="app-solto" style={{ marginBottom: 14 }}>
-          <div className="m-section-t" style={{ marginTop: 0 }}>{souLider ? "Falar com alguém do time" : "Falar com um líder"}</div>
+          <div className="m-section-t" style={{ marginTop: 0 }}>{souLider ? traduzirUi("Falar com alguém do time") : traduzirUi("Falar com um líder")}</div>
           <input
             className="input"
-            placeholder="Primeira mensagem (opcional)"
+            placeholder={traduzirUi("Primeira mensagem (opcional)")}
             value={novoMsg}
             onChange={(e) => setNovoMsg(e.target.value)}
             style={{ marginBottom: 10 }}
@@ -376,14 +378,14 @@ export function TabConversas({
             </Acao>
           ))}
           {candidatos.length === 0 && (
-            <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)" }}>Nenhum líder disponível ainda.</div>
+            <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)" }}>{traduzirUi("Nenhum líder disponível ainda.")}</div>
           )}
         </Cartao>
       )}
 
       {myChats.length === 0 && (
         <Cartao estilo="app-solto">
-          <div style={{ fontSize: "var(--fs-app-15)", color: "var(--muted)" }}>Nenhuma conversa ainda. Toque em Nova mensagem para falar com um líder.</div>
+          <div style={{ fontSize: "var(--fs-app-15)", color: "var(--muted)" }}>{traduzirUi("Nenhuma conversa ainda. Toque em Nova mensagem para falar com um líder.")}</div>
         </Cartao>
       )}
       {[...myChats].sort((a, b) => (ultimaDe(b.id)?.created_at ?? "").localeCompare(ultimaDe(a.id)?.created_at ?? "")).map((c) => {
@@ -391,14 +393,14 @@ export function TabConversas({
         const n = naoLidas?.get(c.id) ?? 0;
         const nome = nomeDa(c);
         const autor = last && c.kind !== "dm" ? members.find((m) => m.id === last.sender_id)?.name.split(" ")[0] : undefined;
-        const quem = !last ? "" : last.sender_id === member?.id ? "Você: " : autor ? `${autor}: ` : "";
+        const previa = !last ? "" : last.sender_id === member?.id ? traduzirUi("Você: {texto}", { texto: last.body }) : autor ? `${autor}: ${last.body}` : last.body;
         return (
           <Acao className={`m-conv${n ? " unread" : ""}`} key={c.id} onClick={() => setSelId(c.id)}
-            aria-label={n ? `${nome}, ${n === 1 ? "1 mensagem não lida" : `${n} mensagens não lidas`}` : undefined}>
+            aria-label={n ? traduzirUi("{nome}, {count, plural, =1 {1 mensagem não lida} other {{n} mensagens não lidas}}", { nome, count: n, n: String(n) }) : undefined}>
             <Av name={nome} photoUrl={fotoDa(c)} />
             <div className="m-conv-main">
               <div className="m-conv-name">{nome}</div>
-              <div className="m-conv-prev">{last ? `${quem}${last.body}` : "Nenhuma mensagem ainda"}</div>
+              <div className="m-conv-prev">{last ? previa : traduzirUi("Nenhuma mensagem ainda")}</div>
             </div>
             <div className="m-conv-side">
               {last && <span className="m-conv-when">{quandoMensagem(last.created_at)}</span>}

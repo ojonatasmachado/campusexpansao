@@ -9,6 +9,7 @@ import ChurchLockup from "./ChurchLockup";
 
 import { Opcao } from "./ui/Opcao";
 import { Selo } from "./ui/Selo";
+import { useTexto } from "./lib/internacional/contexto";
 /* Tela de marca do app da igreja (Configurações → Personalização): cor da
    igreja, fundos do modo escuro e do claro, e o modo padrão. Tudo aqui é
    decidido pela gestão; o membro só alterna claro/escuro no próprio app.
@@ -24,6 +25,7 @@ export default function ThemePicker({
   churchName?: string;
   logoUrl?: string | null;
 }) {
+  const traduzirUi = useTexto();
   const accent = brand.accent || brand.accentDark || DEFAULT_ACCENT;
   const darkFam = familyById(brand.neutralDark, "dark");
   const defaultMode = brand.defaultMode ?? "dark";
@@ -37,11 +39,8 @@ export default function ThemePicker({
           servidor, então sobrescreve). Saiu da tela sem salvar, volta ao salvo. */}
       <style dangerouslySetInnerHTML={{ __html: themeCss(brand) }} />
       <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
-        <div className="cfg-card-t">Cor da igreja</div>
-        <div className="cfg-card-s">
-          A cor da identidade visual da sua igreja: botões, destaques e ícones do app. Escolha uma só. O app ajusta o tom
-          sozinho para ler bem no modo escuro e no claro.
-        </div>
+        <div className="cfg-card-t">{traduzirUi("Cor da igreja")}</div>
+        <div className="cfg-card-s">{traduzirUi("A cor da identidade visual da sua igreja: botões, destaques e ícones do app. Escolha uma só. O app ajusta o tom sozinho para ler bem no modo escuro e no claro.")}</div>
         <div className="seg-check" style={{ marginBottom: 12 }}>
           {ACCENT_PRESETS.map((p) => (
             <Opcao
@@ -54,17 +53,17 @@ export default function ThemePicker({
             </Opcao>
           ))}
         </div>
-        <AccentField compact label="Outra cor (hex)" bgHex={darkFam.tokens.graphite} value={accent} defaultHex={DEFAULT_ACCENT} onChange={(hex) => onChange({ accent: hex })} />
+        <AccentField compact label={traduzirUi("Outra cor (hex)")} bgHex={darkFam.tokens.graphite} value={accent} defaultHex={DEFAULT_ACCENT} onChange={(hex) => onChange({ accent: hex })} />
         {ajustada && (
           <p className="tp-note">
-            Os botões usam a sua cor exata. Nos textos e ícones em destaque, {report.dark.adjusted && report.light.adjusted ? "nos dois modos" : report.light.adjusted ? "no modo claro" : "no modo escuro"}, escurecemos ou clareamos um pouco para garantir a leitura.
+            {traduzirUi("Os botões usam a sua cor exata. Nos textos e ícones em destaque, {modo, select, ambos {nos dois modos} claro {no modo claro} other {no modo escuro}}, escurecemos ou clareamos um pouco para garantir a leitura.", { modo: report.dark.adjusted && report.light.adjusted ? "ambos" : report.light.adjusted ? "claro" : "escuro" })}
           </p>
         )}
       </div>
 
       <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
-        <div className="cfg-card-t">Prévia do app do membro</div>
-        <div className="cfg-card-s">Assim fica o Início no celular, no modo claro e no escuro, com as escolhas desta tela.</div>
+        <div className="cfg-card-t">{traduzirUi("Prévia do app do membro")}</div>
+        <div className="cfg-card-s">{traduzirUi("Assim fica o Início no celular, no modo claro e no escuro, com as escolhas desta tela.")}</div>
         <div className="tp-prev-row">
           {(["light", "dark"] as ThemeMode[]).map((m) => (
             <ThemePreview key={m} brand={brand} mode={m} churchName={churchName} logoUrl={logoUrl} />
@@ -73,23 +72,20 @@ export default function ThemePicker({
       </div>
 
       <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
-        <div className="cfg-card-t">Fundos do app</div>
-        <div className="cfg-card-s">
-          Preto, cinza escuro, branco e cinza claro em combinações já testadas para leitura. Escolha uma para o modo
-          escuro e outra para o claro.
-        </div>
-        <FamilyRow title="Modo escuro" mode="dark" selected={darkFam.id} accent={accent} onSelect={(id) => onChange({ neutralDark: id })} />
-        <FamilyRow title="Modo claro" mode="light" selected={familyById(brand.neutralLight, "light").id} accent={accent} onSelect={(id) => onChange({ neutralLight: id })} />
+        <div className="cfg-card-t">{traduzirUi("Fundos do app")}</div>
+        <div className="cfg-card-s">{traduzirUi("Preto, cinza escuro, branco e cinza claro em combinações já testadas para leitura. Escolha uma para o modo escuro e outra para o claro.")}</div>
+        <FamilyRow title={traduzirUi("Modo escuro")} mode="dark" selected={darkFam.id} accent={accent} onSelect={(id) => onChange({ neutralDark: id })} />
+        <FamilyRow title={traduzirUi("Modo claro")} mode="light" selected={familyById(brand.neutralLight, "light").id} accent={accent} onSelect={(id) => onChange({ neutralLight: id })} />
       </div>
 
       <div className="cfg-card" style={{ gridColumn: "1 / -1" }}>
-        <div className="cfg-card-t">Modo padrão</div>
-        <div className="cfg-card-s">Como o app abre para todo mundo. Cada pessoa ainda pode alternar entre claro e escuro no próprio perfil.</div>
+        <div className="cfg-card-t">{traduzirUi("Modo padrão")}</div>
+        <div className="cfg-card-s">{traduzirUi("Como o app abre para todo mundo. Cada pessoa ainda pode alternar entre claro e escuro no próprio perfil.")}</div>
         <div className="opt-row">
           {(["dark", "light"] as ThemeMode[]).map((m) => (
             <Opcao key={m} marcada={defaultMode === m} estilo="opt" onClick={() => onChange({ defaultMode: m })}>
-              <div className="opt-t">{m === "dark" ? "Escuro" : "Claro"}</div>
-              <div className="opt-s">{m === "dark" ? "Fundo escuro" : "Fundo claro"}</div>
+              <div className="opt-t">{m === "dark" ? traduzirUi("Escuro") : traduzirUi("Claro")}</div>
+              <div className="opt-s">{m === "dark" ? traduzirUi("Fundo escuro") : traduzirUi("Fundo claro")}</div>
             </Opcao>
           ))}
         </div>
@@ -138,27 +134,28 @@ function FamilyPreview({ family, accent }: { family: NeutralFamily; accent: stri
 /* Início do app do membro em miniatura, com as variáveis do tema aplicadas
    só neste bloco (não mexe no resto da tela). */
 function ThemePreview({ brand, mode, churchName, logoUrl }: { brand: BrandCfg; mode: ThemeMode; churchName?: string; logoUrl?: string | null }) {
+  const traduzirUi = useTexto();
   const vars = themeVars(brand, mode) as CSSProperties;
   return (
-    <figure className="tp-prev" aria-label={`Prévia no modo ${mode === "dark" ? "escuro" : "claro"}`}>
-      <figcaption className="tp-cap">{mode === "dark" ? "Modo escuro" : "Modo claro"}</figcaption>
+    <figure className="tp-prev" aria-label={traduzirUi("Prévia no modo {modo, select, dark {escuro} other {claro}}", { modo: mode })}>
+      <figcaption className="tp-cap">{mode === "dark" ? traduzirUi("Modo escuro") : traduzirUi("Modo claro")}</figcaption>
       <div className="tp-screen" style={vars}>
         <div className="tp-head">
           <ChurchLockup size="sm" logoUrl={logoUrl} name={churchName} />
         </div>
-        <div className="tp-h1">Boa tarde, <em>Maria</em></div>
-        <div className="tp-lbl">Para você agora</div>
+        <div className="tp-h1">{traduzirUi.rich("Boa tarde, <em>Maria</em>", { em: (nome) => <em>{nome}</em> })}</div>
+        <div className="tp-lbl">{traduzirUi("Para você agora")}</div>
         <div className="tp-card">
-          <div className="tp-t">Culto de domingo</div>
-          <div className="tp-s">Domingo · 19:00 · Louvor</div>
+          <div className="tp-t">{traduzirUi("Culto de domingo")}</div>
+          <div className="tp-s">{traduzirUi("Domingo · 19:00 · Louvor")}</div>
           <div className="tp-btns">
-            <span className="tp-btn pri">Confirmar</span>
-            <span className="tp-btn sec">Não posso</span>
+            <span className="tp-btn pri">{traduzirUi("Confirmar")}</span>
+            <span className="tp-btn sec">{traduzirUi("Não posso")}</span>
           </div>
         </div>
         <div className="tp-card tp-row">
-          <span className="tp-t">Fundamentos da fé</span>
-          <Selo tom="ok">Concluída</Selo>
+          <span className="tp-t">{traduzirUi("Fundamentos da fé")}</span>
+          <Selo tom="ok">{traduzirUi("Concluída")}</Selo>
         </div>
         <div className="tp-tabs" aria-hidden="true">
           {(["inicio", "agenda", "conversas", "cursos", "perfil"] as const).map((ic, i) => (

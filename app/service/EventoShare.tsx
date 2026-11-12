@@ -8,6 +8,7 @@ import { formatDateBR, joinDot } from "./lib/date";
 import { Botao } from "./ui/Botao";
 import { Opcao } from "./ui/Opcao";
 import { Segmentado } from "./ui/Segmentado";
+import { useTexto } from "./lib/internacional/contexto";
 // ── tipos (subconjunto dos tipos de ServiceExactApp) ──────────────────────────
 
 type EventView = {
@@ -45,6 +46,7 @@ export type EventoShareProps = {
    duas versões : simplificada (a de sempre, compacta) e completa (tudo,
    sem cortar nada — pode ficar bem alta verticalmente, sem problema). */
 export default function EventoShare({ event, ministries, churchName = "Service", logoUrl, onClose }: EventoShareProps) {
+  const traduzirUi = useTexto();
   const artRef = useRef<HTMLDivElement>(null);
   const [modo, setModo] = useState<"simples" | "completa">("simples");
   const completa = modo === "completa";
@@ -65,7 +67,7 @@ export default function EventoShare({ event, ministries, churchName = "Service",
       a.download = `evento-${event.name.toLowerCase().replace(/\s+/g, "-")}-${modo}.png`;
       a.click();
     } catch {
-      avisar("Não consegui exportar agora. Tente novamente.", "warn");
+      avisar(traduzirUi("Não consegui exportar agora. Tente novamente."), "warn");
     }
   };
 
@@ -107,9 +109,9 @@ export default function EventoShare({ event, ministries, churchName = "Service",
 
     const txt = L.join("\n");
     if (navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(txt).catch(() => window.prompt("Copie o texto:", txt));
+      navigator.clipboard.writeText(txt).catch(() => window.prompt(traduzirUi("Copie o texto:"), txt));
     } else {
-      window.prompt("Copie o texto:", txt);
+      window.prompt(traduzirUi("Copie o texto:"), txt);
     }
   };
 
@@ -223,15 +225,12 @@ export default function EventoShare({ event, ministries, churchName = "Service",
 
         {/* ── painel lateral ── */}
         <div className="evt2-side">
-          <div className="evt2-side-t">Arte do evento</div>
-          <div className="evt2-side-s">
-            Cartão pra avisar a equipe internamente : roteiro, quem serve e repertório do culto.
-            Baixe a imagem ou copie o texto formatado pra colar no grupo da igreja.
-          </div>
+          <div className="evt2-side-t">{traduzirUi("Arte do evento")}</div>
+          <div className="evt2-side-s">{traduzirUi("Cartão pra avisar a equipe internamente : roteiro, quem serve e repertório do culto. Baixe a imagem ou copie o texto formatado pra colar no grupo da igreja.")}</div>
 
           <Segmentado style={{ marginBottom: 18 }}>
-            <Opcao marcada={modo === "simples"} onClick={() => setModo("simples")}>Simplificada</Opcao>
-            <Opcao marcada={modo === "completa"} onClick={() => setModo("completa")}>Completa</Opcao>
+            <Opcao marcada={modo === "simples"} onClick={() => setModo("simples")}>{traduzirUi("Simplificada")}</Opcao>
+            <Opcao marcada={modo === "completa"} onClick={() => setModo("completa")}>{traduzirUi("Completa")}</Opcao>
           </Segmentado>
 
           {!completa && setlist.length > 0 && (
@@ -242,9 +241,7 @@ export default function EventoShare({ event, ministries, churchName = "Service",
                   color: "var(--muted)",
                   marginBottom: 8,
                 }}
-              >
-                Repertório
-              </div>
+              >{traduzirUi("Repertório")}</div>
               {setlist.map((s, i) => (
                 <div
                   key={i}
@@ -265,27 +262,21 @@ export default function EventoShare({ event, ministries, churchName = "Service",
             variante="principal"
             style={{ width: "100%", justifyContent: "center" }}
             onClick={baixar}
-          >
-            ↓ Baixar imagem
-          </Botao>
+          >{traduzirUi("↓ Baixar imagem")}</Botao>
           <Botao
             style={{ width: "100%", justifyContent: "center", marginTop: 10 }}
             onClick={copiarTexto}
-          >
-            Copiar texto p/ WhatsApp
-          </Botao>
+          >{traduzirUi("Copiar texto p/ WhatsApp")}</Botao>
           <Botao
             variante="discreto"
             style={{ width: "100%", justifyContent: "center", marginTop: 10 }}
             onClick={onClose}
-          >
-            Fechar
-          </Botao>
+          >{traduzirUi("Fechar")}</Botao>
 
           <div className="evt2-side-tip">
             {completa
-              ? "Versão completa : todo o roteiro, todas as equipes com função de cada um e o repertório inteiro. Pode ficar alta, é só rolar."
-              : "A imagem traz o resumo; o texto traz a programação completa pra colar na conversa."}
+              ? traduzirUi("Versão completa : todo o roteiro, todas as equipes com função de cada um e o repertório inteiro. Pode ficar alta, é só rolar.")
+              : traduzirUi("A imagem traz o resumo; o texto traz a programação completa pra colar na conversa.")}
           </div>
         </div>
       </div>

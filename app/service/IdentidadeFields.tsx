@@ -9,6 +9,8 @@ import { IDENTIDADE_CFG_DEFAULT, LOGO_FONTS } from "../lib/church-page";
 import type { IdentidadeCfg, LogoFontKey } from "../lib/church-page";
 
 import { Opcao } from "./ui/Opcao";
+import { useTexto } from "./lib/internacional/contexto";
+
 /* Campos da identidade única da igreja (logo, fundo, texto, caixas) :
    editados uma vez em Configurações → Personalização, consumidos pela
    Página da igreja e pelo login temático. Reaproveitados só ali (não dentro
@@ -26,6 +28,8 @@ const BG_ANGLE_PRESETS: { angle: number; label: string }[] = [
    (com uma camada escura por cima, ajustável, pra sempre continuar dando
    pra ler o texto e os botões). */
 export function BackgroundField({ identidade, onSave, organizationId, churchId }: { identidade: IdentidadeCfg; onSave: (patch: Partial<IdentidadeCfg>) => void; organizationId: string; churchId: string }) {
+  const traduzirUi = useTexto();
+
   const mode = identidade.bgMode ?? "solida";
   const from = identidade.bgFrom ?? IDENTIDADE_CFG_DEFAULT.bgFrom;
   const to = identidade.bgTo ?? IDENTIDADE_CFG_DEFAULT.bgTo;
@@ -34,30 +38,30 @@ export function BackgroundField({ identidade, onSave, organizationId, churchId }
 
   return (
     <div>
-      <div className="field-label" style={{ marginBottom: 8 }}>Cor de fundo</div>
+      <div className="field-label" style={{ marginBottom: 8 }}>{traduzirUi("Cor de fundo")}</div>
       <div className="opt-row" style={{ marginBottom: 10 }}>
         <Opcao marcada={mode === "solida"} estilo="opt" style={{ padding: "8px 14px" }} onClick={() => onSave({ bgMode: "solida" })}>
-          <div className="opt-t">Sólida</div>
+          <div className="opt-t">{traduzirUi("Sólida")}</div>
         </Opcao>
         <Opcao marcada={mode === "degrade"} estilo="opt" style={{ padding: "8px 14px" }} onClick={() => onSave({ bgMode: "degrade" })}>
-          <div className="opt-t">Degradê</div>
+          <div className="opt-t">{traduzirUi("Degradê")}</div>
         </Opcao>
         <Opcao marcada={mode === "imagem"} estilo="opt" style={{ padding: "8px 14px" }} onClick={() => onSave({ bgMode: "imagem" })}>
-          <div className="opt-t">Imagem</div>
+          <div className="opt-t">{traduzirUi("Imagem")}</div>
         </Opcao>
       </div>
 
       {mode === "solida" && (
-        <AccentField compact label="Cor de fundo" bgHex="#0E110D" value={identidade.bgColor ?? IDENTIDADE_CFG_DEFAULT.bgColor} defaultHex={IDENTIDADE_CFG_DEFAULT.bgColor} onChange={(hex) => onSave({ bgColor: hex })} />
+        <AccentField compact label={traduzirUi("Cor de fundo")} bgHex="#0E110D" value={identidade.bgColor ?? IDENTIDADE_CFG_DEFAULT.bgColor} defaultHex={IDENTIDADE_CFG_DEFAULT.bgColor} onChange={(hex) => onSave({ bgColor: hex })} />
       )}
 
       {mode === "degrade" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div style={{ height: 40, borderRadius: 10, background: `linear-gradient(${angle}deg, ${from}, ${to})`, border: "1px solid var(--border-2)" }} />
-          <AccentField compact label="Cor inicial" bgHex="#0E110D" value={from} defaultHex={IDENTIDADE_CFG_DEFAULT.bgFrom} onChange={(hex) => onSave({ bgFrom: hex })} />
-          <AccentField compact label="Cor final" bgHex="#0E110D" value={to} defaultHex={IDENTIDADE_CFG_DEFAULT.bgTo} onChange={(hex) => onSave({ bgTo: hex })} />
+          <AccentField compact label={traduzirUi("Cor inicial")} bgHex="#0E110D" value={from} defaultHex={IDENTIDADE_CFG_DEFAULT.bgFrom} onChange={(hex) => onSave({ bgFrom: hex })} />
+          <AccentField compact label={traduzirUi("Cor final")} bgHex="#0E110D" value={to} defaultHex={IDENTIDADE_CFG_DEFAULT.bgTo} onChange={(hex) => onSave({ bgTo: hex })} />
           <div>
-            <div className="field-label" style={{ marginBottom: 6 }}>Direção</div>
+            <div className="field-label" style={{ marginBottom: 6 }}>{traduzirUi("Direção")}</div>
             <div style={{ display: "flex", gap: 8 }}>
               {BG_ANGLE_PRESETS.map((p) => (
                 <Opcao
@@ -77,20 +81,20 @@ export function BackgroundField({ identidade, onSave, organizationId, churchId }
       {mode === "imagem" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <ImageUpload
-            label="Foto de fundo"
-            hint="Cobre a página inteira. Escureça um pouco pra manter os botões legíveis."
+            label={traduzirUi("Foto de fundo")}
+            hint={traduzirUi("Cobre a página inteira. Escureça um pouco pra manter os botões legíveis.")}
             url={identidade.bgImageUrl}
             aspectRatio={0.75}
             onUpload={async (file) => {
               const path = `${organizationId}/paginas/${churchId}-fundo.${imageExtension(file)}`;
-              const url = await uploadServiceImage(createServiceBrowserClient(), file, path);
+              const url = await uploadServiceImage(createServiceBrowserClient(), file, path, traduzirUi);
               await onSave({ bgImageUrl: url });
             }}
             onRemove={() => onSave({ bgImageUrl: undefined })}
           />
           {identidade.bgImageUrl && (
             <div>
-              <div className="field-label" style={{ marginBottom: 6 }}>Escurecer a foto</div>
+              <div className="field-label" style={{ marginBottom: 6 }}>{traduzirUi("Escurecer a foto")}</div>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <input
                   type="range"
@@ -123,6 +127,8 @@ export function LogoField({
   onUploadLogo: (file: File) => Promise<void>;
   onRemoveLogo: () => void | Promise<void>;
 }) {
+  const traduzirUi = useTexto();
+
   const mode = identidade.logoMode ?? "imagem";
   const [textDraft, setTextDraft] = useState(identidade.logoText ?? "");
   const [textoAnterior, setTextoAnterior] = useState(identidade.logoText);
@@ -130,20 +136,20 @@ export function LogoField({
 
   return (
     <div>
-      <div className="field-label" style={{ marginBottom: 8 }}>Logo</div>
+      <div className="field-label" style={{ marginBottom: 8 }}>{traduzirUi("Logo")}</div>
       <div className="opt-row" style={{ marginBottom: 10 }}>
         <Opcao marcada={mode === "imagem"} estilo="opt" style={{ padding: "8px 14px" }} onClick={() => onSave({ logoMode: "imagem" })}>
-          <div className="opt-t">Imagem</div>
+          <div className="opt-t">{traduzirUi("Imagem")}</div>
         </Opcao>
         <Opcao marcada={mode === "texto"} estilo="opt" style={{ padding: "8px 14px" }} onClick={() => onSave({ logoMode: "texto" })}>
-          <div className="opt-t">Texto</div>
+          <div className="opt-t">{traduzirUi("Texto")}</div>
         </Opcao>
       </div>
 
       {mode === "imagem" ? (
         <ImageUpload
-          label="Logotipo da igreja"
-          hint="Tamanho ideal: 480×160px (proporção 3:1), PNG com fundo transparente."
+          label={traduzirUi("Logotipo da igreja")}
+          hint={traduzirUi("Tamanho ideal: 480×160px (proporção 3:1), PNG com fundo transparente.")}
           url={logoUrl}
           aspectRatio={3}
           onUpload={onUploadLogo}
@@ -154,7 +160,7 @@ export function LogoField({
           <input
             className="input"
             value={textDraft}
-            placeholder="Nome da igreja"
+            placeholder={traduzirUi("Nome da igreja")}
             onChange={(e) => setTextDraft(e.target.value)}
             onBlur={() => onSave({ logoText: textDraft })}
           />
@@ -172,7 +178,7 @@ export function LogoField({
           </div>
 
           <div>
-            <div className="field-label" style={{ marginBottom: 6 }}>Posição do texto</div>
+            <div className="field-label" style={{ marginBottom: 6 }}>{traduzirUi("Posição do texto")}</div>
             <div style={{ display: "flex", gap: 8 }}>
               {([["left", "⟵"], ["center", "•"], ["right", "⟶"]] as const).map(([align, mark]) => (
                 <Opcao

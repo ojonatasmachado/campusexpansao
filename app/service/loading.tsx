@@ -1,5 +1,9 @@
+"use client";
+
 import { Carregando } from "./ui/Estados";
+import { useTexto } from "./lib/internacional/contexto";
 
 export default function Loading() {
-  return <Carregando telaInteira rotulo="Carregando o Service…" />;
+  const traduzirUi = useTexto();
+  return <Carregando telaInteira rotulo={traduzirUi("Carregando o Service…")} />;
 }

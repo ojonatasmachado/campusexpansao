@@ -2,7 +2,6 @@
 
 import { Icon } from "./lib/icons";
 import { htmlSeguro } from "./lib/html-seguro";
-import { plural } from "./lib/plural";
 import { useEffect, useRef, useState } from "react";
 import { FormScreen, FormSection, type FormScreenHandle } from "./painel/form/FormScreen";
 import { useRouter } from "next/navigation";
@@ -21,6 +20,9 @@ import { Campo, Entrada, TextoLongo } from "./ui/Campo";
 import { Selecao } from "./ui/Selecao";
 import { SeletorData, SeletorHora } from "./ui/Data";
 import { Vazio, Carregando } from "./ui/Estados";
+import { useTexto } from "./lib/internacional/contexto";
+import type { Text } from "./lib/internacional/mensagens";
+
 /* ─── tipos internos do editor ─────────────────────────────── */
 
 type QuizQ = { q: string; opts: string[]; correta: number };
@@ -73,33 +75,33 @@ export type CursoEditorProps = {
 
 /* ─── constantes ────────────────────────────────────────────── */
 
-const MODALIDADES = [
-  { v: "presencial", l: "Presencial" },
-  { v: "remoto", l: "Remoto (app)" },
-  { v: "hibrido", l: "Híbrido" },
-  { v: "ao_vivo", l: "Ao vivo online" },
+const modalidades = (traduzirUi: Text) => [
+  { v: "presencial", l: traduzirUi("Presencial") },
+  { v: "remoto", l: traduzirUi("Remoto (app)") },
+  { v: "hibrido", l: traduzirUi("Híbrido") },
+  { v: "ao_vivo", l: traduzirUi("Ao vivo online") },
 ] as const;
 
-const AULA_TIPOS = [
-  { v: "video", l: "Vídeo" },
-  { v: "texto", l: "Texto" },
-  { v: "ao_vivo", l: "Ao vivo" },
-  { v: "presencial", l: "Presencial" },
+const aulaTipos = (traduzirUi: Text) => [
+  { v: "video", l: traduzirUi("Vídeo") },
+  { v: "texto", l: traduzirUi("Texto") },
+  { v: "ao_vivo", l: traduzirUi("Ao vivo") },
+  { v: "presencial", l: traduzirUi("Presencial") },
 ] as const;
 
-const MAT_TIPOS = [
-  { v: "video", l: "Vídeo" },
-  { v: "link", l: "Link / PDF" },
-  { v: "texto", l: "Texto" },
+const matTipos = (traduzirUi: Text) => [
+  { v: "video", l: traduzirUi("Vídeo") },
+  { v: "link", l: traduzirUi("Link / PDF") },
+  { v: "texto", l: traduzirUi("Texto") },
 ] as const;
 
-const CORES = [
-  { v: "olive", l: "Oliva" },
-  { v: "wheat", l: "Trigo" },
-  { v: "clay", l: "Barro" },
-  { v: "terra", l: "Terra" },
-  { v: "sand", l: "Areia" },
-  { v: "amber", l: "Âmbar" },
+const cores = (traduzirUi: Text) => [
+  { v: "olive", l: traduzirUi("Oliva") },
+  { v: "wheat", l: traduzirUi("Trigo") },
+  { v: "clay", l: traduzirUi("Barro") },
+  { v: "terra", l: traduzirUi("Terra") },
+  { v: "sand", l: traduzirUi("Areia") },
+  { v: "amber", l: traduzirUi("Âmbar") },
 ];
 
 function uid() {
@@ -121,6 +123,8 @@ function RichText({
 }: {
   value: string; onChange: (v: string) => void; placeholder?: string; minH?: number;
 }) {
+  const traduzirUi = useTexto();
+
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     /* o texto gravado passa pela mesma limpeza da tela do membro antes de virar HTML editável */
@@ -136,7 +140,7 @@ function RichText({
     if (ref.current) { ref.current.focus(); onChange(ref.current.innerHTML); }
   };
   const addLink = () => {
-    const u = window.prompt("Endereço do link (https://...)");
+    const u = window.prompt(traduzirUi("Endereço do link (https://...)"));
     if (u) cmd("createLink", u);
   };
 
@@ -145,17 +149,17 @@ function RichText({
       <div className="rt-bar">
         <Acao onMouseDown={(e) => e.preventDefault()} onClick={() => cmd("bold")}><b>B</b></Acao>
         <Acao onMouseDown={(e) => e.preventDefault()} onClick={() => cmd("italic")}><i>I</i></Acao>
-        <Acao onMouseDown={(e) => e.preventDefault()} onClick={() => cmd("formatBlock", "<h3>")}>Título</Acao>
-        <Acao onMouseDown={(e) => e.preventDefault()} onClick={() => cmd("insertUnorderedList")}>· Lista</Acao>
-        <Acao onMouseDown={(e) => e.preventDefault()} onClick={() => cmd("insertOrderedList")}>1. Lista</Acao>
-        <Acao onMouseDown={(e) => e.preventDefault()} onClick={addLink}>→ Link</Acao>
+        <Acao onMouseDown={(e) => e.preventDefault()} onClick={() => cmd("formatBlock", "<h3>")}>{traduzirUi("Título")}</Acao>
+        <Acao onMouseDown={(e) => e.preventDefault()} onClick={() => cmd("insertUnorderedList")}>{traduzirUi("· Lista")}</Acao>
+        <Acao onMouseDown={(e) => e.preventDefault()} onClick={() => cmd("insertOrderedList")}>{traduzirUi("1. Lista")}</Acao>
+        <Acao onMouseDown={(e) => e.preventDefault()} onClick={addLink}>{traduzirUi("→ Link")}</Acao>
       </div>
       <div
         ref={ref}
         className="rt-area"
         contentEditable
         suppressContentEditableWarning
-        data-ph={placeholder || "Escreva aqui…"}
+        data-ph={placeholder || traduzirUi("Escreva aqui…")}
         style={{ minHeight: minH ?? 120 }}
         onInput={(e) => onChange(e.currentTarget.innerHTML)}
       />
@@ -170,6 +174,8 @@ function MateriaisEditor({
 }: {
   value: Material[]; onChange: (v: Material[]) => void;
 }) {
+  const traduzirUi = useTexto();
+
   const [tipo, setTipo] = useState<Material["tipo"]>("video");
   const [titulo, setTitulo] = useState("");
   const [url, setUrl] = useState("");
@@ -186,45 +192,43 @@ function MateriaisEditor({
     <div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
         {value.length === 0 && (
-          <div style={{ fontSize: "var(--fs-ui-sm)", color: "var(--muted)" }}>
-            Nenhum material ainda. Adicione vídeos, links ou textos para apresentar o curso.
-          </div>
+          <div style={{ fontSize: "var(--fs-ui-sm)", color: "var(--muted)" }}>{traduzirUi("Nenhum material ainda. Adicione vídeos, links ou textos para apresentar o curso.")}</div>
         )}
         {value.map((m) => (
           <div className="mat-row" key={m.id}>
-            <span className="mat-tipo">{MAT_TIPOS.find((t) => t.v === m.tipo)?.l ?? m.tipo}</span>
+            <span className="mat-tipo">{matTipos(traduzirUi).find((t) => t.v === m.tipo)?.l ?? m.tipo}</span>
             <div className="mat-main">
               <div className="mat-titulo">{m.titulo}</div>
               {m.url && <div className="mat-url">{m.url}</div>}
             </div>
-            <Acao className="ce-x" onClick={() => del(m.id)} title="Remover">✕</Acao>
+            <Acao className="ce-x" onClick={() => del(m.id)} title={traduzirUi("Remover")}>✕</Acao>
           </div>
         ))}
       </div>
       <div className="mat-add">
         <div style={{ flex: "0 0 110px" }}>
           <Selecao
-            rotulo="Tipo do material"
+            rotulo={traduzirUi("Tipo do material")}
             valor={tipo}
             aoMudar={(v) => setTipo(v as Material["tipo"])}
-            opcoes={MAT_TIPOS.map((t) => ({ v: t.v, l: t.l }))}
+            opcoes={matTipos(traduzirUi).map((t) => ({ v: t.v, l: t.l }))}
           />
         </div>
         <input
           className="input"
-          placeholder="Título"
+          placeholder={traduzirUi("Título")}
           value={titulo}
           onChange={(e) => setTitulo(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && add()}
         />
         <input
           className="input"
-          placeholder="Link (YouTube, PDF…)"
+          placeholder={traduzirUi("Link (YouTube, PDF…)")}
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && add()}
         />
-        <Botao compacto onClick={add}>+ Material</Botao>
+        <Botao compacto onClick={add}>{traduzirUi("+ Material")}</Botao>
       </div>
     </div>
   );
@@ -241,6 +245,8 @@ function QuizEditor({
   onSave: (prova: QuizQ[], min: number) => void;
   onClose: () => void;
 }) {
+  const traduzirUi = useTexto();
+
   const [qs, setQs] = useState<QuizQ[]>(() => prova ? JSON.parse(JSON.stringify(prova)) : []);
   const [minA, setMinA] = useState<number | "">(minAcertos || "");
 
@@ -262,47 +268,47 @@ function QuizEditor({
   const displayMin = minA === "" ? Math.max(1, Math.ceil(qs.length * 0.7)) : minA;
 
   return (
-    <Janela larga sobretitulo="Prova de evolução" titulo={aulaName || "Aula"}
-      texto="Perguntas respondidas ao terminar a aula. Marque a alternativa correta."
+    <Janela larga sobretitulo={traduzirUi("Prova de evolução")} titulo={aulaName || traduzirUi("Aula")}
+      texto={traduzirUi("Perguntas respondidas ao terminar a aula. Marque a alternativa correta.")}
       aoFechar={onClose} corpoBloco
-      rodape={<><Botao onClick={onClose}>Cancelar</Botao><Botao variante="principal" onClick={save}>Salvar prova</Botao></>}>
+      rodape={<><Botao onClick={onClose}>{traduzirUi("Cancelar")}</Botao><Botao variante="principal" onClick={save}>{traduzirUi("Salvar prova")}</Botao></>}>
           <div className="quiz-cfg">
             <div className="quiz-cfg-main">
-              <div className="quiz-cfg-t">Mínimo de acertos para aprovar</div>
-              <div className="quiz-cfg-s">Quantas a pessoa precisa acertar para concluir a aula.</div>
+              <div className="quiz-cfg-t">{traduzirUi("Mínimo de acertos para aprovar")}</div>
+              <div className="quiz-cfg-s">{traduzirUi("Quantas a pessoa precisa acertar para concluir a aula.")}</div>
             </div>
             <div className="stepper">
               <Acao onClick={() => setMinA((n) => Math.max(0, (Number(n) || 0) - 1))}>-</Acao>
               <span>{displayMin}</span>
               <Acao onClick={() => setMinA((n) => Math.min(qs.length, (Number(n) || 0) + 1))}>+</Acao>
             </div>
-            <span className="quiz-cfg-tot">de {qs.length}</span>
+            <span className="quiz-cfg-tot">{traduzirUi("de {total}", { total: String(qs.length) })}</span>
           </div>
-          {qs.length === 0 && <Vazio titulo="Sem perguntas ainda." />}
+          {qs.length === 0 && <Vazio titulo={traduzirUi("Sem perguntas ainda.")} />}
           {qs.map((q, i) => (
             <div className="quiz-q" key={i}>
               <div className="quiz-q-head">
                 <span className="quiz-q-n">{i + 1}</span>
                 <input
                   className="input"
-                  placeholder="Enunciado da pergunta"
+                  placeholder={traduzirUi("Enunciado da pergunta")}
                   value={q.q}
                   onChange={(e) => setQ(i, "q", e.target.value)}
                 />
-                <BotaoIcone className="ce-x" onClick={() => del(i)} rotulo="Remover">✕</BotaoIcone>
+                <BotaoIcone className="ce-x" onClick={() => del(i)} rotulo={traduzirUi("Remover")}>✕</BotaoIcone>
               </div>
               {q.opts.map((o, oi) => (
                 <div className="quiz-opt" key={oi}>
                   <Opcao
                     marcada={q.correta === oi} estilo="quiz-radio"
                     onClick={() => setQ(i, "correta", oi)}
-                    title="Correta"
+                    title={traduzirUi("Correta")}
                   >
                     {q.correta === oi ? <Icon name="ok" size={14} /> : <Icon name="circulo" size={14} />}
                   </Opcao>
                   <input
                     className="input"
-                    placeholder={`Alternativa ${oi + 1}`}
+                    placeholder={traduzirUi("Alternativa {n}", { n: String(oi + 1) })}
                     value={o}
                     onChange={(e) => setOpt(i, oi, e.target.value)}
                   />
@@ -310,9 +316,7 @@ function QuizEditor({
               ))}
             </div>
           ))}
-          <Botao compacto style={{ marginTop: 12 }} onClick={add}>
-            + Pergunta
-          </Botao>
+          <Botao compacto style={{ marginTop: 12 }} onClick={add}>{traduzirUi("+ Pergunta")}</Botao>
     </Janela>
   );
 }
@@ -320,6 +324,8 @@ function QuizEditor({
 /* ─── CursoEditor (editor completo) ────────────────────────── */
 
 export default function CursoEditor({ courseId, church, allCourses, onClose }: CursoEditorProps) {
+  const traduzirUi = useTexto();
+
   const router = useRouter();
   const supabase = createServiceBrowserClient();
   const access = useServiceAccess();
@@ -441,7 +447,7 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
 
   /* salvar */
   const salvar = async () => {
-    if (!c.nome.trim()) { setError("Dê um nome ao curso."); return; }
+    if (!c.nome.trim()) { setError(traduzirUi("Dê um nome ao curso.")); return; }
     setSaving(true);
     setError("");
     /* separado do resto: antes da migração 0049 a coluna não existe e o
@@ -529,7 +535,7 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
       if (telaRef.current) await telaRef.current.fechar(); else onClose();
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao salvar.");
+      setError(err instanceof Error ? err.message : traduzirUi("Erro ao salvar."));
     } finally {
       setSaving(false);
     }
@@ -538,93 +544,91 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
   return (
     <FormScreen
       ref={telaRef}
-      eyebrow={isEdit ? "Editar curso" : "Novo curso"}
-      title={c.nome.trim() || (isEdit ? "Editar curso" : "Novo curso")}
-      saveLabel={isEdit ? "Salvar curso" : "Criar curso"}
+      eyebrow={isEdit ? traduzirUi("Editar curso") : traduzirUi("Novo curso")}
+      title={c.nome.trim() || (isEdit ? traduzirUi("Editar curso") : traduzirUi("Novo curso"))}
+      saveLabel={isEdit ? traduzirUi("Salvar curso") : traduzirUi("Criar curso")}
       saving={saving}
-      missing={loading || c.nome.trim() ? [] : ["nome do curso"]}
+      missing={loading || c.nome.trim() ? [] : [traduzirUi("nome do curso")]}
       dirty={retratoInicial !== null && JSON.stringify(c) !== retratoInicial}
       error={error}
       onSave={salvar}
       onClose={onClose}
     >
-      {loading ? <Carregando forma="linhas" rotulo="Carregando curso" /> : (<>
-          <FormSection title="Curso">
-            <Campo rotulo="Nome do curso" obrigatorio id="ce-nome">
-              <Entrada aria-required="true" placeholder="ex: Fundamentos da fé" value={c.nome} onChange={(e) => set("nome", e.target.value)} />
+      {loading ? <Carregando forma="linhas" rotulo={traduzirUi("Carregando curso")} /> : (<>
+          <FormSection title={traduzirUi("Curso")}>
+            <Campo rotulo={traduzirUi("Nome do curso")} obrigatorio id="ce-nome">
+              <Entrada aria-required="true" placeholder={traduzirUi("ex: Fundamentos da fé")} value={c.nome} onChange={(e) => set("nome", e.target.value)} />
             </Campo>
           </FormSection>
 
           {/* identificação */}
-          <FormSection title="Onde fica e como é">
+          <FormSection title={traduzirUi("Onde fica e como é")}>
             <div className="ce-grid">
-              <Campo rotulo="Nível">
-                <Entrada value={c.nivel} placeholder="Entrada, Discipulado…" onChange={(e) => set("nivel", e.target.value)} />
+              <Campo rotulo={traduzirUi("Nível")}>
+                <Entrada value={c.nivel} placeholder={traduzirUi("Entrada, Discipulado…")} onChange={(e) => set("nivel", e.target.value)} />
               </Campo>
-              <Campo rotulo="Cor de destaque" grupo>
+              <Campo rotulo={traduzirUi("Cor de destaque")} grupo>
                 <div className="seg-check">
-                  {CORES.map((o) => (
+                  {cores(traduzirUi).map((o) => (
                     <Opcao key={o.v} marcada={c.cor === o.v} estilo="seg-chip" onClick={() => set("cor", o.v)}>{o.l}</Opcao>
                   ))}
                 </div>
               </Campo>
             </div>
-            <Campo rotulo="Formato" grupo>
+            <Campo rotulo={traduzirUi("Formato")} grupo>
               <div className="seg-check">
-                {([{ v: "trilha", l: "Trilha (módulos)" }, { v: "conteudo", l: "Conteúdo no app" }, { v: "presencial", l: "Presencial" }] as const).map((o) => (
+                {([{ v: "trilha", l: traduzirUi("Trilha (módulos)") }, { v: "conteudo", l: traduzirUi("Conteúdo no app") }, { v: "presencial", l: traduzirUi("Presencial") }] as const).map((o) => (
                   <Opcao key={o.v} marcada={c.tipo === o.v} estilo="seg-chip" onClick={() => set("tipo", o.v)}>{o.l}</Opcao>
                 ))}
               </div>
             </Campo>
-            <Campo rotulo="Modalidade" grupo>
+            <Campo rotulo={traduzirUi("Modalidade")} grupo>
               <div className="seg-check">
-                {MODALIDADES.map((o) => (
+                {modalidades(traduzirUi).map((o) => (
                   <Opcao key={o.v} marcada={c.modalidade === o.v} estilo="seg-chip" onClick={() => set("modalidade", o.v)}>{o.l}</Opcao>
                 ))}
               </div>
             </Campo>
-            <Campo rotulo="Descrição">
-              <TextoLongo value={c.desc} placeholder="Para quem é e o que vão aprender" onChange={(e) => set("desc", e.target.value)} />
+            <Campo rotulo={traduzirUi("Descrição")}>
+              <TextoLongo value={c.desc} placeholder={traduzirUi("Para quem é e o que vão aprender")} onChange={(e) => set("desc", e.target.value)} />
             </Campo>
           </FormSection>
 
-          <FormSection title="No app">
+          <FormSection title={traduzirUi("No app")}>
             <Linha estilo="config" style={{ borderBottom: "none", padding: 0 }}>
               <div className="cfg-row-main">
-                <div className="cfg-row-t">Aparece no app do membro</div>
-                <div className="cfg-row-s">{c.publicado ? "Publicado: os membros veem e podem se inscrever" : "Rascunho: só a liderança vê"}</div>
+                <div className="cfg-row-t">{traduzirUi("Aparece no app do membro")}</div>
+                <div className="cfg-row-s">{c.publicado ? traduzirUi("Publicado: os membros veem e podem se inscrever") : traduzirUi("Rascunho: só a liderança vê")}</div>
               </div>
-              <Interruptor ligado={c.publicado} rotulo="Aparece no app do membro" onClick={() => set("publicado", !c.publicado)} />
+              <Interruptor ligado={c.publicado} rotulo={traduzirUi("Aparece no app do membro")} onClick={() => set("publicado", !c.publicado)} />
             </Linha>
           </FormSection>
 
           {/* divulgação */}
-          <FormSection title="Divulgação · antes de inscrever">
-            <div className="cfg-card-s" style={{ marginBottom: 12 }}>
-              Texto e materiais que aparecem para quem ainda não se inscreveu.
-            </div>
+          <FormSection title={traduzirUi("Divulgação · antes de inscrever")}>
+            <div className="cfg-card-s" style={{ marginBottom: 12 }}>{traduzirUi("Texto e materiais que aparecem para quem ainda não se inscreveu.")}</div>
             <div className="field">
-              <label className="field-label">Texto de apresentação</label>
+              <label className="field-label">{traduzirUi("Texto de apresentação")}</label>
               <RichText
                 value={c.divulgacao}
                 onChange={(v) => set("divulgacao", v)}
-                placeholder="O que é, para quem é, por que fazer…"
+                placeholder={traduzirUi("O que é, para quem é, por que fazer…")}
                 minH={120}
               />
             </div>
             <div className="field">
-              <label className="field-label">Materiais de divulgação</label>
+              <label className="field-label">{traduzirUi("Materiais de divulgação")}</label>
               <MateriaisEditor value={c.materiais} onChange={(v) => set("materiais", v)} />
             </div>
           </FormSection>
 
           {/* pré-requisitos */}
-          <FormSection title="Pré-requisitos para se inscrever">
+          <FormSection title={traduzirUi("Pré-requisitos para se inscrever")}>
             <RequisitosEditor value={c.preReqs} onChange={(v) => set("preReqs", v)} courses={outros} events={access.events} groupsLabel={access.groupsLabel} />
           </FormSection>
 
           {/* conteúdo */}
-          <FormSection title={`Conteúdo · ${plural(c.modulos.length, "módulo")} · ${plural(totalAulas, "aula")}`}>
+          <FormSection title={traduzirUi("Conteúdo · {modulos, plural, =1 {# módulo} other {# módulos}} · {aulas, plural, =1 {# aula} other {# aulas}}", { modulos: c.modulos.length, aulas: totalAulas })}>
             {c.modulos.map((mod, mi) => (
               <div className="ce-mod" key={mod.id}>
                 <div className="ce-mod-head">
@@ -634,23 +638,23 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
                     value={mod.nome}
                     onChange={(e) => setModulo(mi, "nome", e.target.value)}
                   />
-                  <Acao className="ce-x" onClick={() => delModulo(mi)} title="Remover módulo">✕</Acao>
+                  <Acao className="ce-x" onClick={() => delModulo(mi)} title={traduzirUi("Remover módulo")}>✕</Acao>
                 </div>
                 {mod.aulas.map((aula, ai) => (
                   <div className="ce-aula" key={aula.id}>
                     <div className="ce-aula-row">
                       <input
                         className="input ce-aula-name"
-                        placeholder="Título da aula"
+                        placeholder={traduzirUi("Título da aula")}
                         value={aula.nome}
                         onChange={(e) => setAula(mi, ai, "nome", e.target.value)}
                       />
                       <Selecao
                         className="ce-aula-tipo"
-                        rotulo="Tipo da aula"
+                        rotulo={traduzirUi("Tipo da aula")}
                         valor={aula.tipo}
                         aoMudar={(v) => setAula(mi, ai, "tipo", v as AulaState["tipo"])}
-                        opcoes={AULA_TIPOS.map((t) => ({ v: t.v, l: t.l }))}
+                        opcoes={aulaTipos(traduzirUi).map((t) => ({ v: t.v, l: t.l }))}
                       />
                       <Acao className="ce-x" onClick={() => delAula(mi, ai)}>✕</Acao>
                     </div>
@@ -658,43 +662,43 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
                       {(aula.tipo === "video" || aula.tipo === "ao_vivo") && (
                         <input
                           className="input"
-                          placeholder="Link do vídeo (YouTube, Vimeo…)"
+                          placeholder={traduzirUi("Link do vídeo (YouTube, Vimeo…)")}
                           value={aula.link}
                           onChange={(e) => setAula(mi, ai, "link", e.target.value)}
                         />
                       )}
                       <input
                         className="input ce-aula-dur"
-                        placeholder="Duração (ex: 8 min)"
+                        placeholder={traduzirUi("Duração (ex: 8 min)")}
                         value={aula.dur}
                         onChange={(e) => setAula(mi, ai, "dur", e.target.value)}
                       />
                     </div>
                     {(aula.tipo === "presencial" || aula.tipo === "ao_vivo") && (
                       <div className="ce-aula-row">
-                        <SeletorData rotulo="Dia da aula" valor={aula.data} aoMudar={(v) => setAula(mi, ai, "data", v)} />
-                        <SeletorHora className="ce-aula-dur" rotulo="Hora da aula" valor={aula.hora} aoMudar={(v) => setAula(mi, ai, "hora", v)} />
-                        <input className="input" placeholder={aula.tipo === "ao_vivo" ? "Onde (ex: link no grupo)" : "Sala (ex: Sala 2)"} value={aula.sala} onChange={(e) => setAula(mi, ai, "sala", e.target.value)} />
+                        <SeletorData rotulo={traduzirUi("Dia da aula")} valor={aula.data} aoMudar={(v) => setAula(mi, ai, "data", v)} />
+                        <SeletorHora className="ce-aula-dur" rotulo={traduzirUi("Hora da aula")} valor={aula.hora} aoMudar={(v) => setAula(mi, ai, "hora", v)} />
+                        <input className="input" placeholder={aula.tipo === "ao_vivo" ? traduzirUi("Onde (ex: link no grupo)") : traduzirUi("Sala (ex: Sala 2)")} value={aula.sala} onChange={(e) => setAula(mi, ai, "sala", e.target.value)} />
                       </div>
                     )}
                     {aula.tipo === "texto" && (
                       <div className="ce-aula-conteudo">
-                        <div className="ce-aula-conteudo-lbl">Conteúdo da aula (o aluno lê no app)</div>
+                        <div className="ce-aula-conteudo-lbl">{traduzirUi("Conteúdo da aula (o aluno lê no app)")}</div>
                         <RichText
                           value={aula.conteudo}
                           onChange={(v) => setAula(mi, ai, "conteudo", v)}
-                          placeholder="Escreva a aula: texto, tópicos, versículos…"
+                          placeholder={traduzirUi("Escreva a aula: texto, tópicos, versículos…")}
                           minH={140}
                         />
                       </div>
                     )}
                     {(aula.tipo === "video" || aula.tipo === "ao_vivo" || aula.tipo === "presencial") && (
                       <div className="ce-aula-conteudo">
-                        <div className="ce-aula-conteudo-lbl">Material de apoio (opcional)</div>
+                        <div className="ce-aula-conteudo-lbl">{traduzirUi("Material de apoio (opcional)")}</div>
                         <RichText
                           value={aula.conteudo}
                           onChange={(v) => setAula(mi, ai, "conteudo", v)}
-                          placeholder="Resumo, referências, o que estudar antes…"
+                          placeholder={traduzirUi("Resumo, referências, o que estudar antes…")}
                           minH={80}
                         />
                       </div>
@@ -704,17 +708,17 @@ export default function CursoEditor({ courseId, church, allCourses, onClose }: C
                       onClick={() => setQuiz({ mi, ai })}
                     >
                       {aula.prova?.length
-                        ? `Prova · ${plural(aula.prova.length, "pergunta")}${aula.minAcertos ? ` · min. ${aula.minAcertos}` : ""}`
-                        : "+ Adicionar prova ao fim da aula"}
+                        ? (aula.minAcertos
+                          ? traduzirUi("Prova · {count, plural, =1 {# pergunta} other {# perguntas}} · min. {min}", { count: aula.prova.length, min: String(aula.minAcertos) })
+                          : traduzirUi("Prova · {count, plural, =1 {# pergunta} other {# perguntas}}", { count: aula.prova.length }))
+                        : traduzirUi("+ Adicionar prova ao fim da aula")}
                     </Opcao>
                   </div>
                 ))}
-                <Botao compacto onClick={() => addAula(mi)}>+ aula neste módulo</Botao>
+                <Botao compacto onClick={() => addAula(mi)}>{traduzirUi("+ aula neste módulo")}</Botao>
               </div>
             ))}
-            <Botao compacto style={{ marginTop: 12 }} onClick={addModulo}>
-              Novo módulo
-            </Botao>
+            <Botao compacto style={{ marginTop: 12 }} onClick={addModulo}>{traduzirUi("Novo módulo")}</Botao>
           </FormSection>
       </>)}
 

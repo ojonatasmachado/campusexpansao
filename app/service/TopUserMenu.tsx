@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "./lib/icons";
 import { instalarApp, jaInstalado } from "./lib/instalar";
+import { useTexto } from "./lib/internacional/contexto";
 
 import { Acao } from "./ui/Acao";
 import { Avatar } from "./ui/Avatar";
@@ -30,6 +31,7 @@ export default function TopUserMenu({
   theme?: "dark" | "light";
   onToggleTheme?: () => void;
 }) {
+  const traduzirUi = useTexto();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -48,7 +50,7 @@ export default function TopUserMenu({
     };
   }, []);
 
-  const parts = (name.trim() || "Você").split(/\s+/);
+  const parts = (name.trim() || traduzirUi("Você")).split(/\s+/);
 
   return (
     <div className="top-user" ref={ref}>
@@ -65,30 +67,30 @@ export default function TopUserMenu({
           {churchPageUrl ? (
             <a role="menuitem" href={churchPageUrl} target="_blank" rel="noreferrer">
               <span className="ic"><Icon name="globo" size={16} /></span>
-              Ver a página da igreja
+              {traduzirUi("Ver a página da igreja")}
             </a>
           ) : null}
           {onOpenApp ? (
             <Acao role="menuitem" onClick={() => { setOpen(false); onOpenApp(); }}>
               <span className="ic"><Icon name="perfil" size={16} /></span>
-              Abrir o app
+              {traduzirUi("Abrir o app")}
             </Acao>
           ) : null}
           {!jaInstalado() ? (
             <Acao role="menuitem" onClick={() => { setOpen(false); void instalarApp(); }}>
               <span className="ic"><Icon name="baixar" size={16} /></span>
-              Instalar o app
+              {traduzirUi("Instalar o app")}
             </Acao>
           ) : null}
           {onToggleTheme ? (
             <Acao role="menuitem" onClick={onToggleTheme}>
               <span className="ic"><Icon name={theme === "dark" ? "sol" : "lua"} size={16} /></span>
-              {theme === "dark" ? "Tema claro" : "Tema escuro"}
+              {theme === "dark" ? traduzirUi("Tema claro") : traduzirUi("Tema escuro")}
             </Acao>
           ) : null}
           <Acao role="menuitem" onClick={onLogout}>
             <span className="ic"><Icon name="sair" size={16} /></span>
-            Sair
+            {traduzirUi("Sair")}
           </Acao>
         </div>
       )}
