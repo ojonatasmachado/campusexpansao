@@ -2,10 +2,10 @@
 id: O9
 titulo: Convidar um amigo com link que já diz quem convidou
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-11-12
+branch: historia/O9-convidar-amigo
 depende: []
 tamanho: P
 ---
