@@ -368,10 +368,12 @@ function MobileMembro({
   const abrirEvento = (eventId: string) => {
     const ev = events.find((e) => e.id === eventId);
     if (!ev) return;
-    const slot = roster.find((r) => r.event_id === ev.id && r.person_id === person.id);
+    /* E5: com duas funções no mesmo evento, a vaga confirmada vem primeiro (é a que pode pedir troca) */
+    const minhas = roster.filter((r) => r.event_id === ev.id && r.person_id === person.id);
+    const slot = minhas.find((r) => r.status === "ok") ?? minhas[0];
     const ministry = slot ? ministries.find((m) => m.positions?.some((p) => p.id === slot.position_id)) : undefined;
     const rsvp = eventRsvps.find((r) => r.event_id === ev.id)?.kind ?? null;
-    setFolha({ el: <SheetEvento key={ev.id} ev={ev} slot={slot} ministry={ministry} rsvp={rsvp} onRespond={onRespondEvent} paginaUrl={paginaUrl} churchName={churchName} />, evento: ev.id });
+    setFolha({ el: <SheetEvento key={ev.id} ev={ev} slot={slot} ministry={ministry} rsvp={rsvp} onRespond={onRespondEvent} paginaUrl={paginaUrl} churchName={churchName} member={member} onStartChat={onStartChat} />, evento: ev.id });
   };
   useEffect(() => {
     const pendente = eventoPendente.current;

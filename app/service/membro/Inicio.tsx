@@ -96,7 +96,7 @@ export function EscalaCard({ slot, ev, ministry, person, member, members, onResp
         {st === "ok" && (
           <div className="m6-after">
             <M6St k="ok" ic="ok">Confirmado</M6St>
-            {onStartChat && member && destTroca && <Botao tamanho="toque" variante="texto" onClick={pedirTroca}>Troca</Botao>}
+            {onStartChat && member && destTroca && destTroca.member_id !== member.id && <Botao tamanho="toque" variante="texto" onClick={pedirTroca}>Troca</Botao>}
           </div>
         )}
         {st === "no" && (
@@ -129,7 +129,7 @@ export function EscalaCard({ slot, ev, ministry, person, member, members, onResp
       {st === "ok" && (
         <div className="m6-after">
           <M6St k="ok" ic="ok">Presença confirmada</M6St>
-          {onStartChat && member && destTroca && <Botao tamanho="toque" variante="texto" onClick={pedirTroca}>Pedir troca</Botao>}
+          {onStartChat && member && destTroca && destTroca.member_id !== member.id && <Botao tamanho="toque" variante="texto" onClick={pedirTroca}>Pedir troca</Botao>}
         </div>
       )}
       {st === "no" && (

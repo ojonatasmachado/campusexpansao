@@ -10,7 +10,7 @@ import { conflitos, horaDeChegada } from "../lib/agenda";
 import { baixarIcs } from "../lib/ics";
 import { plural } from "../lib/plural";
 import { M6Row, M6St, MESES, MemberUiContext, chegadaDoTime, dataLonga } from "./comum";
-import { EscalaCard } from "./Inicio";
+import { EscalaCard, SheetTroca } from "./Inicio";
 import type { AgendaSeg } from "../lib/member-navigation";
 import { TabOnde } from "./Onde";
 import { TabTarefas } from "./Conversas";
@@ -307,13 +307,16 @@ export function AgendaV6({ organizationId, initialCardId, seg, setSeg, person, m
 /* Detalhe do evento numa folha (v7 4.5): uma área de ação só, conforme o que o
    evento pede (só aviso, confirmar presença, inscrição); valor e instruções da
    igreja; quem serve vê "Serve · função · chegar HH:MM"; Compartilhar e
-   Adicionar ao calendário. */
-export function SheetEvento({ ev, slot, ministry, rsvp, onRespond, paginaUrl, churchName }: {
+   Adicionar ao calendário. E5: escala já confirmada também pede troca daqui
+   (antes, só logo depois de tocar em Confirmar no Início). */
+export function SheetEvento({ ev, slot, ministry, rsvp, onRespond, paginaUrl, churchName, member, onStartChat }: {
   ev: Ev; slot?: Slot; ministry?: Ministry; rsvp: EventRsvp["kind"] | null;
   onRespond?: (eventId: string, vai: boolean) => Promise<boolean>;
   paginaUrl?: string | null; churchName?: string;
+  member?: M | null; onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
 }) {
   const ui = useContext(MemberUiContext);
+  const destTroca = useDestinatario("troca", slot ? ministry?.id ?? null : null);
   const [resp, setResp] = useState<EventRsvp["kind"] | null>(rsvp);
   const [enviando, setEnviando] = useState(false);
   const pede = ev.pede ?? "aviso";
@@ -335,9 +338,12 @@ export function SheetEvento({ ev, slot, ministry, rsvp, onRespond, paginaUrl, ch
     if (nav.share) { try { await nav.share({ title: ev.name, text: texto }); return; } catch { return; } }
     window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, "_blank", "noopener");
   };
-  const { fuso } = useRelogioDaIgreja();
+  const { fuso, aindaVaiAcontecer } = useRelogioDaIgreja();
   const calendario = () => { try { baixarIcs({ fuso: ev.timeZone ?? fuso, id: ev.id, titulo: ev.name, data: ev.eventDate, hora: ev.time, local: ev.location, descricao: churchName ?? null }); } catch (error) { ui.toast(error instanceof Error ? error.message : "Não foi possível adicionar ao calendário."); } };
   const servindo = slot && slot.status !== "no";
+  /* lei 6: sem destinatário (ou quando o destinatário é a própria pessoa), sem conversa ou evento que já passou, sem o botão */
+  const podeTrocar = slot?.status === "ok" && !!member && !!destTroca && destTroca.member_id !== member.id && !!onStartChat && aindaVaiAcontecer(ev.eventDate, ev.time, ev.timeZone);
+  const pedirTroca = () => { if (slot && member && destTroca && onStartChat) ui.sheet(<SheetTroca slot={slot} ev={ev} funcao={funcao} member={member} dest={destTroca} onStartChat={onStartChat} />); };
   return (
     <div>
       <div className="m6-kick">{ev.kind && ev.kind !== "Culto" ? ev.kind : "Na igreja"}</div>
@@ -347,6 +353,12 @@ export function SheetEvento({ ev, slot, ministry, rsvp, onRespond, paginaUrl, ch
         {ev.location && <li><Icon name="mapapin" size={20} /><span>{ev.location}</span></li>}
         {servindo && <li><Icon name="times" size={20} /><span>{joinDot("Serve", funcao ?? ministry?.name, chegar && `chegar ${chegar}`)}</span></li>}
       </ul>
+      {podeTrocar && (
+        <div className="m6-after">
+          <M6St k="ok" ic="ok">Presença confirmada</M6St>
+          <Botao tamanho="toque" variante="texto" onClick={pedirTroca}>Pedir troca</Botao>
+        </div>
+      )}
       {(ev.valor || ev.instrucoes) && (
         <Cartao estilo="app" className="m6-ev-info">
           {ev.valor && <div className="m6-ct">{ev.valor}</div>}
