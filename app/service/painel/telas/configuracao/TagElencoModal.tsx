@@ -1,6 +1,5 @@
 "use client";
 
-import { plural } from "../../../lib/plural";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createServiceBrowserClient } from "../../../lib/supabase-browser";
@@ -12,6 +11,8 @@ import { Botao } from "../../../ui/Botao";
 import { Acao } from "../../../ui/Acao";
 import { Vazio } from "../../../ui/Estados";
 import { Janela } from "../../../ui/Janela";
+import { useTexto } from "../../../lib/internacional/contexto";
+
 
 export function TagElencoModal({
   tag, people, onClose,
@@ -20,6 +21,8 @@ export function TagElencoModal({
   people: PersonView[];
   onClose: () => void;
 }) {
+  const traduzirUi = useTexto();
+
   const { comTermos: ct } = useTermos();
   const router = useRouter();
   const [q, setQ] = useState("");
@@ -63,16 +66,16 @@ export function TagElencoModal({
   };
 
   return (
-    <Janela larga sobretitulo={<>Frente · {tag.name}</>} titulo={<>Quem serve nos {tag.name}</>} aoFechar={onClose} cabecalho={<>
+    <Janela larga sobretitulo={<>{traduzirUi("Frente · {nome}", { nome: tag.name })}</>} titulo={<>{traduzirUi("Quem serve nos {nome}", { nome: tag.name })}</>} aoFechar={onClose} cabecalho={<>
           <div className="modal-sub">
-            {ct("Marque os {voluntarios} que fazem parte deste time.")} Toque na estrela para definir quem é líder do time. {plural(dentro, "marcado")}.
+            {ct(traduzirUi("Marque os {voluntarios} que fazem parte deste time. Toque na estrela para definir quem é líder do time. {count, plural, =1 {# marcado} other {# marcados}}.", { count: dentro }))}
           </div>
       </>} corpoBloco rodape={<>
-          <Botao variante="principal" onClick={onClose}>Concluído</Botao>
+          <Botao variante="principal" onClick={onClose}>{traduzirUi("Concluído")}</Botao>
       </>}>
       <div className="tb-search" style={{ marginBottom: 14 }}>
         <span className="si"><Icon name="buscar" size={13} /></span>
-        <input placeholder={ct("Buscar {voluntario}...")} value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
+        <input placeholder={ct(traduzirUi("Buscar {voluntario}..."))} value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
       </div>
       {lista.map((p) => {
         const on = p.tags.includes(tag.id);
@@ -81,11 +84,11 @@ export function TagElencoModal({
           <div className={`flag-row${on ? " on" : ""}`} key={p.id} style={{ cursor: "pointer" }} onClick={() => toggleElenco(p.id)}>
             <Av name={p.name} size="sm" photoUrl={p.photoUrl} />
             <div className="flag-main">
-              <div className="flag-nome">{p.name}{lider && <span style={{ marginLeft: 8, fontSize: "var(--fs-pn-12)", color: "var(--amber)", display: "inline-flex", alignItems: "center", gap: 4 }}><Icon name="estrela" size={12} /> líder</span>}</div>
+              <div className="flag-nome">{p.name}{lider && <span style={{ marginLeft: 8, fontSize: "var(--fs-pn-12)", color: "var(--amber)", display: "inline-flex", alignItems: "center", gap: 4 }}><Icon name="estrela" size={12} /> {traduzirUi("líder")}</span>}</div>
             </div>
             <Acao
-              title={lider ? "Remover como líder" : "Tornar líder do time"}
-              aria-label={lider ? "Remover como líder" : "Tornar líder do time"}
+              title={lider ? traduzirUi("Remover como líder") : traduzirUi("Tornar líder do time")}
+              aria-label={lider ? traduzirUi("Remover como líder") : traduzirUi("Tornar líder do time")}
               aria-pressed={lider}
               onClick={(e) => { e.stopPropagation(); toggleLider(p.id); }}
               style={{ background: "none", border: "none", cursor: "pointer", fontSize: "var(--fs-pn-16)", color: lider ? "var(--amber)" : "var(--muted)" }}
@@ -95,7 +98,7 @@ export function TagElencoModal({
           </div>
         );
       })}
-      {lista.length === 0 && <Vazio titulo="Ninguém encontrado." />}
+      {lista.length === 0 && <Vazio titulo={traduzirUi("Ninguém encontrado.")} />}
     </Janela>
   );
 }

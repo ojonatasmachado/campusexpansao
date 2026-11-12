@@ -18,6 +18,8 @@ import { Linha } from "../../ui/Linha";
 import { Campo, Entrada, Marcar } from "../../ui/Campo";
 import { Carregando, Vazio } from "../../ui/Estados";
 import { Janela } from "../../ui/Janela";
+import { useTexto } from "../../lib/internacional/contexto";
+import { sourceText, type Text } from "../../lib/internacional/mensagens";
 export const novaPesquisaDraft = (): PesquisaDraft => ({
   id: `nova-${Date.now()}`,
   nome: "",
@@ -46,12 +48,18 @@ export const modeloPulsoPosEscala = (): PesquisaDraft => {
   };
 };
 
-export function disparoLabelPesquisa(p: Pick<PesquisaAdminRow, "disparoModo" | "recorrentePorEscala" | "ativoComoLivre" | "emitidaEm">): string {
-  if (p.disparoModo === "posescala") return p.recorrentePorEscala ? "Pós-escala · recorrente" : "Pós-escala · uma vez";
-  if (p.disparoModo === "campanha") return p.emitidaEm ? "Campanha · disparada" : "Campanha · não disparada";
-  if (p.disparoModo === "periodica") return "Periódica";
-  return p.ativoComoLivre ? "Livre · atalho ativo" : "Livre · atalho desligado";
+export function disparoLabelPesquisa(p: Pick<PesquisaAdminRow, "disparoModo" | "recorrentePorEscala" | "ativoComoLivre" | "emitidaEm">, traduzirUi: Text = sourceText): string {
+  if (p.disparoModo === "posescala") return p.recorrentePorEscala ? traduzirUi("Pós-escala · recorrente") : traduzirUi("Pós-escala · uma vez");
+  if (p.disparoModo === "campanha") return p.emitidaEm ? traduzirUi("Campanha · disparada") : traduzirUi("Campanha · não disparada");
+  if (p.disparoModo === "periodica") return traduzirUi("Periódica");
+  return p.ativoComoLivre ? traduzirUi("Livre · atalho ativo") : traduzirUi("Livre · atalho desligado");
 }
+
+/* status gravado em pesquisas.status: o valor fica em pt-BR, só o rótulo muda */
+const rotuloStatusPesquisa = (t: Text, status: string) => ({ ativa: t("ativa"), pausada: t("pausada"), encerrada: t("encerrada") } as Record<string, string>)[status] ?? status;
+
+/* reações gravadas na resposta: o valor fica em pt-BR, só o rótulo muda */
+const rotuloReacaoPesquisa = (t: Text, r: string) => ({ "Péssimo": t("Péssimo"), Ruim: t("Ruim"), Regular: t("Regular"), Bom: t("Bom"), "Ótimo": t("Ótimo") } as Record<string, string>)[r] ?? r;
 
 export function toPesquisaDraft(p: PesquisaAdminRow): PesquisaDraft {
   const { totalRespostas: _totalRespostas, ...draft } = p;
@@ -180,6 +188,8 @@ export async function fetchRespostasPesquisa(pesquisaId: string): Promise<{ perg
 }
 
 export function PesquisasView({ organizationId, ministries }: { organizationId: string; ministries: MinistryView[] }) {
+  const traduzirUi = useTexto();
+
   const [pesquisas, setPesquisas] = useState<PesquisaAdminRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
@@ -204,7 +214,7 @@ export function PesquisasView({ organizationId, ministries }: { organizationId: 
       setErrorMsg("");
     } catch (err) {
       console.error("PesquisasView: falhou ao carregar", err);
-      setErrorMsg("Não foi possível carregar as pesquisas.");
+      setErrorMsg(traduzirUi("Não foi possível carregar as pesquisas."));
     }
     setLoading(false);
   };
@@ -226,7 +236,7 @@ export function PesquisasView({ organizationId, ministries }: { organizationId: 
         onSave={async (draft) => {
           setSaving(true); setSaveError("");
           try { await savePesquisa(organizationId, draft); await carregar(); setRoute({ screen: "lista" }); }
-          catch (err) { console.error("PesquisasView: falhou ao salvar", err); setSaveError("Não foi possível salvar a pesquisa."); }
+          catch (err) { console.error("PesquisasView: falhou ao salvar", err); setSaveError(traduzirUi("Não foi possível salvar a pesquisa.")); }
           setSaving(false);
         }}
       />
@@ -239,8 +249,8 @@ export function PesquisasView({ organizationId, ministries }: { organizationId: 
 
   return (
     <div className="cfg-card">
-      <div className="cfg-card-t">Pesquisas da igreja</div>
-      <div className="cfg-card-s">Pesquise a própria congregação: pulso pós-escala, satisfação, o que quiser saber. Master, pastor e líder veem as respostas e podem criar pesquisas novas.</div>
+      <div className="cfg-card-t">{traduzirUi("Pesquisas da igreja")}</div>
+      <div className="cfg-card-s">{traduzirUi("Pesquise a própria congregação: pulso pós-escala, satisfação, o que quiser saber. Master, pastor e líder veem as respostas e podem criar pesquisas novas.")}</div>
       {errorMsg ? <p className="field-error">{errorMsg}</p> : null}
       <div style={{ marginBottom: 16 }}>
         {(() => {
@@ -251,12 +261,12 @@ export function PesquisasView({ organizationId, ministries }: { organizationId: 
                 variante="principal" compacto
                 onClick={() => (temPulso ? setRoute({ screen: "editor", draft: novaPesquisaDraft() }) : setNovaMenuOpen((o) => !o))}
               >
-                + Nova pesquisa
+                {traduzirUi("+ Nova pesquisa")}
               </Botao>
               {novaMenuOpen && !temPulso && (
                 <div className="sel-pop" style={{ left: 0, right: "auto", width: 260 }}>
-                  <Acao className="sel-opt" onClick={() => { setNovaMenuOpen(false); setRoute({ screen: "editor", draft: novaPesquisaDraft() }); }}>Em branco</Acao>
-                  <Acao className="sel-opt" onClick={() => { setNovaMenuOpen(false); setRoute({ screen: "editor", draft: modeloPulsoPosEscala() }); }}>Modelo: Pulso pós-escala</Acao>
+                  <Acao className="sel-opt" onClick={() => { setNovaMenuOpen(false); setRoute({ screen: "editor", draft: novaPesquisaDraft() }); }}>{traduzirUi("Em branco")}</Acao>
+                  <Acao className="sel-opt" onClick={() => { setNovaMenuOpen(false); setRoute({ screen: "editor", draft: modeloPulsoPosEscala() }); }}>{traduzirUi("Modelo: Pulso pós-escala")}</Acao>
                 </div>
               )}
             </div>
@@ -264,36 +274,36 @@ export function PesquisasView({ organizationId, ministries }: { organizationId: 
         })()}
       </div>
       {loading && <Carregando forma="lista" />}
-      {!loading && pesquisas.length === 0 && <Vazio titulo="Nenhuma pesquisa ainda. Clique em + Nova pesquisa pra criar." />}
+      {!loading && pesquisas.length === 0 && <Vazio titulo={traduzirUi("Nenhuma pesquisa ainda. Clique em + Nova pesquisa pra criar.")} />}
       <div className="acesso-list">
         {pesquisas.map((p) => (
           <div key={p.id} className="flag-row" style={{ cursor: "default" }}>
             <div className="flag-main" style={{ cursor: "pointer" }} onClick={() => setRoute({ screen: "resultados", pesquisa: p })}>
-              <div className="flag-nome">{p.nome || "Sem nome"}</div>
-              <div className="flag-meta">{disparoLabelPesquisa(p)} · {p.totalRespostas} resposta{p.totalRespostas === 1 ? "" : "s"} · {p.status}</div>
+              <div className="flag-nome">{p.nome || traduzirUi("Sem nome")}</div>
+              <div className="flag-meta">{traduzirUi("{disparo} · {count, plural, =1 {{n} resposta} other {{n} respostas}} · {status}", { disparo: disparoLabelPesquisa(p, traduzirUi), count: p.totalRespostas, n: String(p.totalRespostas), status: rotuloStatusPesquisa(traduzirUi, p.status) })}</div>
             </div>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {p.disparoModo === "campanha" && !p.emitidaEm && (
-                <Botao compacto onClick={() => { void emitirCampanhaPesquisa(p.id).then(carregar); }}>Disparar agora</Botao>
+                <Botao compacto onClick={() => { void emitirCampanhaPesquisa(p.id).then(carregar); }}>{traduzirUi("Disparar agora")}</Botao>
               )}
-              <Botao compacto onClick={() => setRoute({ screen: "editor", draft: toPesquisaDraft(p) })}>Editar</Botao>
+              <Botao compacto onClick={() => setRoute({ screen: "editor", draft: toPesquisaDraft(p) })}>{traduzirUi("Editar")}</Botao>
               <Botao compacto onClick={() => { void setStatusPesquisa(p.id, p.status === "ativa" ? "pausada" : "ativa").then(carregar); }}>
-                {p.status === "ativa" ? "Pausar" : "Reativar"}
+                {p.status === "ativa" ? traduzirUi("Pausar") : traduzirUi("Reativar")}
               </Botao>
-              <Botao variante="perigo" compacto onClick={() => setToDelete(p)}>Excluir</Botao>
+              <Botao variante="perigo" compacto onClick={() => setToDelete(p)}>{traduzirUi("Excluir")}</Botao>
             </div>
           </div>
         ))}
       </div>
       {toDelete && (
-        <Janela titulo={<>Excluir &ldquo;{toDelete.nome}&rdquo;?</>} texto="Remove a pesquisa, as perguntas e todas as respostas já recebidas. Não pode ser desfeito." aoFechar={() => setToDelete(null)}>
+        <Janela titulo={<>{traduzirUi("Excluir “{nome}”?", { nome: toDelete.nome })}</>} texto={traduzirUi("Remove a pesquisa, as perguntas e todas as respostas já recebidas. Não pode ser desfeito.")} aoFechar={() => setToDelete(null)}>
           <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-            <Botao onClick={() => setToDelete(null)}>Cancelar</Botao>
+            <Botao onClick={() => setToDelete(null)}>{traduzirUi("Cancelar")}</Botao>
             <Botao
               variante="perigo"
               onClick={async () => { try { await deletePesquisaRemota(toDelete.id); setToDelete(null); await carregar(); } catch (err) { console.error(err); } }}
             >
-              Excluir pesquisa
+              {traduzirUi("Excluir pesquisa")}
             </Botao>
           </div>
         </Janela>
@@ -310,15 +320,17 @@ export function PesquisaEditor({ draft: initial, ministries, saving, saveError, 
   onSave: (d: PesquisaDraft) => Promise<void>;
   onCancel: () => void;
 }) {
+  const traduzirUi = useTexto();
+
   const { comTermos: ct } = useTermos();
   const [d, setD] = useState<PesquisaDraft>(initial);
   const isNew = initial.id.startsWith("nova-");
   const fid = useId();
   const [retratoInicial] = useState(() => JSON.stringify(initial));
   const falta = [
-    !d.nome.trim() && "nome",
-    d.perguntas.length === 0 && "uma pergunta",
-    d.perguntas.some((p) => !p.texto.trim()) && "o texto de cada pergunta",
+    !d.nome.trim() && traduzirUi("nome"),
+    d.perguntas.length === 0 && traduzirUi("uma pergunta"),
+    d.perguntas.some((p) => !p.texto.trim()) && traduzirUi("o texto de cada pergunta"),
   ].filter(Boolean) as string[];
   const times = Array.from(new Set(ministries.map((m) => m.name))).sort((a, b) => a.localeCompare(b, "pt-BR"));
 
@@ -337,9 +349,9 @@ export function PesquisaEditor({ draft: initial, ministries, saving, saveError, 
 
   return (
     <FormScreen
-      eyebrow="Pesquisas"
-      title={d.nome.trim() || (isNew ? "Nova pesquisa" : "Editar pesquisa")}
-      saveLabel="Salvar pesquisa"
+      eyebrow={traduzirUi("Pesquisas")}
+      title={d.nome.trim() || (isNew ? traduzirUi("Nova pesquisa") : traduzirUi("Editar pesquisa"))}
+      saveLabel={traduzirUi("Salvar pesquisa")}
       saving={saving}
       missing={falta}
       dirty={JSON.stringify(d) !== retratoInicial}
@@ -347,16 +359,16 @@ export function PesquisaEditor({ draft: initial, ministries, saving, saveError, 
       onSave={() => { void onSave(d); }}
       onClose={onCancel}
     >
-      <FormSection title="Pesquisa">
-        <Campo rotulo="Nome da pesquisa" obrigatorio><Entrada id={`${fid}-nome`} aria-required="true" placeholder="ex: Pulso pós-escala" value={d.nome} onChange={(e) => setD({ ...d, nome: e.target.value })} /></Campo>
+      <FormSection title={traduzirUi("Pesquisa")}>
+        <Campo rotulo={traduzirUi("Nome da pesquisa")} obrigatorio><Entrada id={`${fid}-nome`} aria-required="true" placeholder={traduzirUi("ex: Pulso pós-escala")} value={d.nome} onChange={(e) => setD({ ...d, nome: e.target.value })} /></Campo>
       </FormSection>
 
-      <FormSection title="Quem vê">
+      <FormSection title={traduzirUi("Quem vê")}>
       <div className="field">
-        <div className="fs-chips" role="group" aria-label="Quem vê essa pesquisa" style={{ marginBottom: 8 }}>
+        <div className="fs-chips" role="group" aria-label={traduzirUi("Quem vê essa pesquisa")} style={{ marginBottom: 8 }}>
           {(["todos", "papel", "time"] as const).map((m) => (
             <Opcao key={m} marcada={d.segmentacaoModo === m} estilo="seg-chip" onClick={() => setD({ ...d, segmentacaoModo: m, segmentacaoValores: [] })}>
-              {m === "todos" ? "Todo mundo" : m === "papel" ? "Por papel" : "Por time"}
+              {m === "todos" ? traduzirUi("Todo mundo") : m === "papel" ? traduzirUi("Por papel") : traduzirUi("Por time")}
             </Opcao>
           ))}
         </div>
@@ -369,7 +381,7 @@ export function PesquisaEditor({ draft: initial, ministries, saving, saveError, 
         )}
         {d.segmentacaoModo === "time" && (
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {times.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum time cadastrado ainda.</span>}
+            {times.length === 0 && <span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>{traduzirUi("Nenhum time cadastrado ainda.")}</span>}
             {times.map((t) => (
               <Opcao key={t} marcada={d.segmentacaoValores.includes(t)} estilo="seg-chip" onClick={() => toggleValor(t)}>{t}</Opcao>
             ))}
@@ -379,32 +391,32 @@ export function PesquisaEditor({ draft: initial, ministries, saving, saveError, 
 
       </FormSection>
 
-      <FormSection title="Quando aparece">
+      <FormSection title={traduzirUi("Quando aparece")}>
       <div className="field">
-        <div className="fs-chips" role="group" aria-label="Quando aparece" style={{ marginBottom: 8 }}>
+        <div className="fs-chips" role="group" aria-label={traduzirUi("Quando aparece")} style={{ marginBottom: 8 }}>
           {(["posescala", "campanha", "periodica", "livre"] as const).map((m) => (
             <Opcao key={m} marcada={d.disparoModo === m} estilo="seg-chip" onClick={() => setD({ ...d, disparoModo: m })}>
-              {m === "posescala" ? "Pós-escala" : m === "campanha" ? "Campanha pontual" : m === "periodica" ? "Periódica" : "Atalho livre"}
+              {m === "posescala" ? traduzirUi("Pós-escala") : m === "campanha" ? traduzirUi("Campanha pontual") : m === "periodica" ? traduzirUi("Periódica") : traduzirUi("Atalho livre")}
             </Opcao>
           ))}
         </div>
         {d.disparoModo === "posescala" && (
-          <Marcar checked={d.recorrentePorEscala} onChange={(e) => setD({ ...d, recorrentePorEscala: e.target.checked })}>Repete a cada escala nova (senão, responde só uma vez)</Marcar>
+          <Marcar checked={d.recorrentePorEscala} onChange={(e) => setD({ ...d, recorrentePorEscala: e.target.checked })}>{traduzirUi("Repete a cada escala nova (senão, responde só uma vez)")}</Marcar>
         )}
         {d.disparoModo === "periodica" && (
-          <Campo rotulo="Intervalo (dias)" className="field-half"><Entrada type="number" min={1} value={d.intervaloDias ?? 30} onChange={(e) => setD({ ...d, intervaloDias: Number(e.target.value) })} /></Campo>
+          <Campo rotulo={traduzirUi("Intervalo (dias)")} className="field-half"><Entrada type="number" min={1} value={d.intervaloDias ?? 30} onChange={(e) => setD({ ...d, intervaloDias: Number(e.target.value) })} /></Campo>
         )}
         {d.disparoModo === "livre" && (
-          <Marcar checked={d.ativoComoLivre} onChange={(e) => setD({ ...d, ativoComoLivre: e.target.checked })}>Ativa como atalho livre (só uma por igreja; ligar essa desliga qualquer outra)</Marcar>
+          <Marcar checked={d.ativoComoLivre} onChange={(e) => setD({ ...d, ativoComoLivre: e.target.checked })}>{traduzirUi("Ativa como atalho livre (só uma por igreja; ligar essa desliga qualquer outra)")}</Marcar>
         )}
         {d.disparoModo === "campanha" && (
-          <p style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>{d.emitidaEm ? `Disparada em ${formatDateBR(d.emitidaEm.slice(0, 10))}.` : "Salve e depois clique em “Disparar agora” na lista."}</p>
+          <p style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>{d.emitidaEm ? traduzirUi("Disparada em {data}.", { data: formatDateBR(d.emitidaEm.slice(0, 10)) }) : traduzirUi("Salve e depois clique em “Disparar agora” na lista.")}</p>
         )}
       </div>
 
       </FormSection>
 
-      <FormSection title="Perguntas">
+      <FormSection title={traduzirUi("Perguntas")}>
       <div className="field">
         <div style={{ display: "grid", gap: 12 }}>
           {d.perguntas.map((p, idx) => (
@@ -414,27 +426,27 @@ export function PesquisaEditor({ draft: initial, ministries, saving, saveError, 
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap", flex: 1 }}>
                   {(["emoji", "nota", "texto", "simnao", "multipla"] as const).map((t) => (
                     <Opcao key={t} marcada={p.tipo === t} estilo="seg-chip" onClick={() => updatePergunta(p.id, { tipo: t })}>
-                      {t === "emoji" ? "Emoji" : t === "nota" ? "Nota" : t === "texto" ? "Texto livre" : t === "simnao" ? "Sim/Não" : "Múltipla escolha"}
+                      {t === "emoji" ? traduzirUi("Emoji") : t === "nota" ? traduzirUi("Nota") : t === "texto" ? traduzirUi("Texto livre") : t === "simnao" ? traduzirUi("Sim/Não") : traduzirUi("Múltipla escolha")}
                     </Opcao>
                   ))}
                 </div>
-                <Botao compacto onClick={() => removePergunta(p.id)}>Remover</Botao>
+                <Botao compacto onClick={() => removePergunta(p.id)}>{traduzirUi("Remover")}</Botao>
               </div>
-              <input className="input" placeholder="Texto da pergunta" value={p.texto} onChange={(e) => updatePergunta(p.id, { texto: e.target.value })} style={{ marginBottom: 8 }} />
-              {p.tipo === "emoji" && <div style={{ display: "flex", gap: 6, fontSize: "var(--fs-pn-20)" }}>{REACOES_PESQUISA.map((r) => <span key={r}>{r}</span>)}</div>}
+              <input className="input" placeholder={traduzirUi("Texto da pergunta")} value={p.texto} onChange={(e) => updatePergunta(p.id, { texto: e.target.value })} style={{ marginBottom: 8 }} />
+              {p.tipo === "emoji" && <div style={{ display: "flex", gap: 6, fontSize: "var(--fs-pn-20)" }}>{REACOES_PESQUISA.map((r) => <span key={r}>{rotuloReacaoPesquisa(traduzirUi, r)}</span>)}</div>}
               {p.tipo === "nota" && (
                 <div style={{ display: "flex", gap: 8 }}>
-                  {[5, 10].map((s) => <Opcao key={s} marcada={(p.escala ?? 5) === s} estilo="seg-chip" onClick={() => updatePergunta(p.id, { escala: s as 5 | 10 })}>0 a {s}</Opcao>)}
+                  {[5, 10].map((escala) => <Opcao key={escala} marcada={(p.escala ?? 5) === escala} estilo="seg-chip" onClick={() => updatePergunta(p.id, { escala: escala as 5 | 10 })}>{traduzirUi("0 a {max}", { max: String(escala) })}</Opcao>)}
                 </div>
               )}
               {p.tipo === "multipla" && (
-                <input className="input" placeholder="Opções separadas por vírgula" value={(p.opcoes ?? []).join(", ")} onChange={(e) => updatePergunta(p.id, { opcoes: e.target.value.split(",").map((o) => o.trim()).filter(Boolean) })} />
+                <input className="input" placeholder={traduzirUi("Opções separadas por vírgula")} value={(p.opcoes ?? []).join(", ")} onChange={(e) => updatePergunta(p.id, { opcoes: e.target.value.split(",").map((o) => o.trim()).filter(Boolean) })} />
               )}
-              <Marcar checked={p.obrigatoria} onChange={(e) => updatePergunta(p.id, { obrigatoria: e.target.checked })}>Obrigatória</Marcar>
+              <Marcar checked={p.obrigatoria} onChange={(e) => updatePergunta(p.id, { obrigatoria: e.target.checked })}>{traduzirUi("Obrigatória")}</Marcar>
             </div>
           ))}
         </div>
-        <Botao compacto style={{ marginTop: 10 }} onClick={addPergunta}>Adicionar pergunta</Botao>
+        <Botao compacto style={{ marginTop: 10 }} onClick={addPergunta}>{traduzirUi("Adicionar pergunta")}</Botao>
       </div>
 
       </FormSection>
@@ -443,6 +455,8 @@ export function PesquisaEditor({ draft: initial, ministries, saving, saveError, 
 }
 
 export function PesquisaResultados({ pesquisa, onVoltar }: { pesquisa: PesquisaAdminRow; onVoltar: () => void }) {
+  const traduzirUi = useTexto();
+
   const [itens, setItens] = useState<{ perguntaId: string; valor: string }[] | null>(null);
 
   useEffect(() => {
@@ -454,11 +468,11 @@ export function PesquisaResultados({ pesquisa, onVoltar }: { pesquisa: PesquisaA
   return (
     <div className="cfg-card">
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-        <Botao compacto onClick={onVoltar}>← Voltar</Botao>
+        <Botao compacto onClick={onVoltar}>{traduzirUi("← Voltar")}</Botao>
         <div className="cfg-card-t" style={{ margin: 0 }}>{pesquisa.nome}</div>
       </div>
-      <div className="cfg-card-s">{pesquisa.totalRespostas} resposta{pesquisa.totalRespostas === 1 ? "" : "s"} · {disparoLabelPesquisa(pesquisa)}</div>
-      {itens === null && <Carregando forma="lista" rotulo="Carregando respostas" />}
+      <div className="cfg-card-s">{traduzirUi("{count, plural, =1 {{n} resposta} other {{n} respostas}} · {disparo}", { count: pesquisa.totalRespostas, n: String(pesquisa.totalRespostas), disparo: disparoLabelPesquisa(pesquisa, traduzirUi) })}</div>
+      {itens === null && <Carregando forma="lista" rotulo={traduzirUi("Carregando respostas")} />}
       {itens !== null && pesquisa.perguntas.map((p) => {
         const valores = itens.filter((i) => i.perguntaId === p.id).map((i) => i.valor);
         if (p.tipo === "texto") {
@@ -466,7 +480,7 @@ export function PesquisaResultados({ pesquisa, onVoltar }: { pesquisa: PesquisaA
             <Cartao key={p.id} style={{ marginTop: 14 }}>
               <div className="panel-head"><span className="panel-title">{p.texto}</span></div>
               <div className="panel-body flush">
-                {valores.length === 0 && <Vazio titulo="Ninguém respondeu ainda." />}
+                {valores.length === 0 && <Vazio titulo={traduzirUi("Ninguém respondeu ainda.")} />}
                 {valores.map((v, i) => <Linha key={i}><div className="mini-main"><div className="mini-sub">{v}</div></div></Linha>)}
               </div>
             </Cartao>
@@ -479,7 +493,7 @@ export function PesquisaResultados({ pesquisa, onVoltar }: { pesquisa: PesquisaA
           <Cartao key={p.id} style={{ marginTop: 14 }}>
             <div className="panel-head"><span className="panel-title">{p.texto}</span></div>
             <div className="panel-body flush">
-              {valores.length === 0 && <Vazio titulo="Ninguém respondeu ainda." />}
+              {valores.length === 0 && <Vazio titulo={traduzirUi("Ninguém respondeu ainda.")} />}
               {Array.from(contagem.entries()).map(([valor, count]) => (
                 <div className="dist-row" key={valor}>
                   <span className="dist-name">{valor}</span>

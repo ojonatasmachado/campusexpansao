@@ -11,6 +11,8 @@ import { Linha } from "../../../ui/Linha";
 import { Campo } from "../../../ui/Campo";
 import { SeletorData } from "../../../ui/Data";
 import { Janela } from "../../../ui/Janela";
+import { useTexto } from "../../../lib/internacional/contexto";
+
 
 export function JornadaEditModal({
   member, events, church, onClose, onRefresh,
@@ -21,6 +23,8 @@ export function JornadaEditModal({
   onClose: () => void;
   onRefresh: () => void;
 }) {
+  const traduzirUi = useTexto();
+
   const { comTermos: ct } = useTermos();
   const [rows, setRows] = useState<Record<JourneyStepKind, { done: boolean; date: string }>>(() =>
     Object.fromEntries(JRN_STEPS.map((step) => [step.kind, { done: false, date: "" }])) as Record<JourneyStepKind, { done: boolean; date: string }>,
@@ -43,16 +47,16 @@ export function JornadaEditModal({
       onRefresh();
       onClose();
     } catch {
-      avisar(ct("Não conseguimos salvar a {caminhada}. Tente de novo."), "warn");
+      avisar(ct(traduzirUi("Não conseguimos salvar a {caminhada}. Tente de novo.")), "warn");
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <Janela sobretitulo={<>{ct("{Caminhada}")}</>} titulo={member.name} texto="Marque as etapas já concluídas, com a data real de cada uma." aoFechar={onClose} corpoBloco rodape={<>
-          <Botao onClick={onClose}>Cancelar</Botao>
-          <Botao variante="principal" desativado={saving} onClick={salvar}>Salvar</Botao>
+    <Janela sobretitulo={<>{ct("{Caminhada}")}</>} titulo={member.name} texto={traduzirUi("Marque as etapas já concluídas, com a data real de cada uma.")} aoFechar={onClose} corpoBloco rodape={<>
+          <Botao onClick={onClose}>{traduzirUi("Cancelar")}</Botao>
+          <Botao variante="principal" desativado={saving} onClick={salvar}>{traduzirUi("Salvar")}</Botao>
       </>}>
       {JRN_STEPS.map((step) => {
         const jaConcluido = !!member.journey[JORNADA_KIND_INDEX[step.kind]];
@@ -62,13 +66,13 @@ export function JornadaEditModal({
             <div className="cfg-row-main">
               <div className="cfg-row-t">{ct(step.label)}</div>
               {jaConcluido ? (
-                <div className="cfg-row-s">Concluído{event?.when_label ? ` em ${event.when_label}` : ""}</div>
+                <div className="cfg-row-s">{event?.when_label ? traduzirUi("Concluído em {data}", { data: event.when_label }) : traduzirUi("Concluído")}</div>
               ) : rows[step.kind].done ? (
-                <Campo rotulo="Data" style={{ marginTop: 8 }}>
+                <Campo rotulo={traduzirUi("Data")} style={{ marginTop: 8 }}>
                   <SeletorData valor={rows[step.kind].date} aoMudar={(v) => setData(step.kind, v)} />
                 </Campo>
               ) : (
-                <Botao compacto style={{ marginTop: 8 }} onClick={() => marcar(step.kind)}>Marcar como concluído</Botao>
+                <Botao compacto style={{ marginTop: 8 }} onClick={() => marcar(step.kind)}>{traduzirUi("Marcar como concluído")}</Botao>
               )}
             </div>
           </Linha>

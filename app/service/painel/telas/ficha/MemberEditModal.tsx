@@ -10,6 +10,8 @@ import { Campo, Entrada } from "../../../ui/Campo";
 import { Selecao } from "../../../ui/Selecao";
 import { SeletorData } from "../../../ui/Data";
 import { Janela } from "../../../ui/Janela";
+import { useTexto } from "../../../lib/internacional/contexto";
+
 
 export function MemberEditModal({
   member, fellowshipGroups, church, onClose, onRefresh,
@@ -20,6 +22,8 @@ export function MemberEditModal({
   onClose: () => void;
   onRefresh: () => void;
 }) {
+  const traduzirUi = useTexto();
+
   const { termo } = useTermos();
   const [birth, setBirth] = useState(member.birth ?? "");
   const [neighborhood, setNeighborhood] = useState(member.neighborhood ?? "");
@@ -50,18 +54,18 @@ export function MemberEditModal({
   };
 
   return (
-    <Janela sobretitulo="Editar dados" titulo={member.name} texto="Aniversário, bairro, grupo de comunhão e família." aoFechar={onClose} corpoBloco rodape={<>
-          <Botao onClick={onClose}>Cancelar</Botao>
-          <Botao variante="principal" desativado={saving} onClick={salvar}>Salvar</Botao>
+    <Janela sobretitulo={traduzirUi("Editar dados")} titulo={member.name} texto={traduzirUi("Aniversário, bairro, grupo de comunhão e família.")} aoFechar={onClose} corpoBloco rodape={<>
+          <Botao onClick={onClose}>{traduzirUi("Cancelar")}</Botao>
+          <Botao variante="principal" desativado={saving} onClick={salvar}>{traduzirUi("Salvar")}</Botao>
       </>}>
-      <Campo rotulo="Aniversário"><SeletorData valor={birth} aoMudar={setBirth} limpavel /></Campo>
-      <Campo rotulo="Bairro"><Entrada value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Onde mora" /></Campo>
+      <Campo rotulo={traduzirUi("Aniversário")}><SeletorData valor={birth} aoMudar={setBirth} limpavel /></Campo>
+      <Campo rotulo={traduzirUi("Bairro")}><Entrada value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder={traduzirUi("Onde mora")} /></Campo>
       {(church?.settings?.gruposCfg?.ativo ?? true) && (
         <Campo rotulo={termo("grupo")}>
-          <Selecao valor={groupId} aoMudar={setGroupId} vazio="Sem grupo" opcoes={fellowshipGroups.map((g) => ({ v: g.id, l: g.name }))} />
+          <Selecao valor={groupId} aoMudar={setGroupId} vazio={traduzirUi("Sem grupo")} opcoes={fellowshipGroups.map((g) => ({ v: g.id, l: g.name }))} />
         </Campo>
       )}
-      <Campo rotulo="Família"><Entrada value={family} onChange={(e) => setFamily(e.target.value)} placeholder="ex: Família Lima (agrupa parentes na ficha)" /></Campo>
+      <Campo rotulo={traduzirUi("Família")}><Entrada value={family} onChange={(e) => setFamily(e.target.value)} placeholder={traduzirUi("ex: Família Lima (agrupa parentes na ficha)")} /></Campo>
     </Janela>
   );
 }

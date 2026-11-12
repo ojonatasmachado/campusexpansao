@@ -17,6 +17,8 @@ import type { BaptismCandidateView, BaptismClassView, ChurchView, DecisionView, 
 import { Botao, botaoClasse, BotaoIcone } from "../../ui/Botao";
 import { Selo, tomDaClasse } from "../../ui/Selo";
 import { Janela } from "../../ui/Janela";
+import { useTexto } from "../../lib/internacional/contexto";
+
 export function DecisaoDrawer({
   decision, people, members, church, timelineEvents, onClose, onOpenMember,
 }: {
@@ -24,7 +26,9 @@ export function DecisaoDrawer({
   timelineEvents: TimelineEventView[];
   onClose: () => void; onOpenMember: (id: string) => void;
 }) {
-  const { termo, comTermos: ct } = useTermos();
+  const traduzirUi = useTexto();
+
+  const { comTermos: ct } = useTermos();
   const router = useRouter();
   const responsible = decision.responsible_id ? people.find((p) => p.id === decision.responsible_id) : null;
   const linkedMember = decision.member_id ? members.find((m) => m.id === decision.member_id) : null;
@@ -54,56 +58,56 @@ export function DecisaoDrawer({
   };
 
   const DEC_CHIP: Record<string, { label: string; cls: string }> = {
-    novo: { label: "A contatar", cls: "chip-wait" },
-    acompanhando: { label: "Acompanhando", cls: "chip-ok" },
-    encaminhado: { label: "Encaminhado", cls: "chip-neutral" },
+    novo: { label: traduzirUi("A contatar"), cls: "chip-wait" },
+    acompanhando: { label: traduzirUi("Acompanhando"), cls: "chip-ok" },
+    encaminhado: { label: traduzirUi("Encaminhado"), cls: "chip-neutral" },
   };
   const chip = DEC_CHIP[decision.status] ?? DEC_CHIP.novo;
 
   return (
     <DrawerShell onClose={onClose}>
       <div className="drawer-head">
-        <BotaoIcone className="drawer-close" rotulo="Fechar" onClick={onClose}>✕</BotaoIcone>
+        <BotaoIcone className="drawer-close" rotulo={traduzirUi("Fechar")} onClick={onClose}>✕</BotaoIcone>
         <div className="profile-top">
           <Av name={decision.name} size="lg" />
           <div>
             <div className="profile-name">{decision.name}</div>
-            <div className="profile-role">{decision.kind === "reconciliacao" ? "Reconciliação" : "Decisão"} · {formatDateBR(decision.happened_on) || "sem data"}{decision.age ? ` · ${decision.age} anos` : ""}</div>
+            <div className="profile-role">{decision.kind === "reconciliacao" ? traduzirUi("Reconciliação") : traduzirUi("Decisão")} · {formatDateBR(decision.happened_on) || traduzirUi("sem data")}{decision.age ? traduzirUi(" · {idade} anos", { idade: String(decision.age) }) : ""}</div>
             <div style={{ marginTop: 10 }}><Selo tom={tomDaClasse(chip.cls)}>{chip.label}</Selo></div>
           </div>
         </div>
       </div>
       <div className="drawer-body">
-        <DrawerSection title="Registro da decisão">
+        <DrawerSection title={traduzirUi("Registro da decisão")}>
           <dl className="kv">
-            <dt>Telefone</dt><dd>{decision.phone || "-"}</dd>
-            <dt>{ct("{Culto}")}</dt><dd>{decision.service_name || "-"}</dd>
-            <dt>Responsável</dt><dd>{responsible?.name || "a definir"}</dd>
+            <dt>{traduzirUi("Telefone")}</dt><dd>{decision.phone || "-"}</dd>
+            <dt>{ct(traduzirUi("{Culto}"))}</dt><dd>{decision.service_name || "-"}</dd>
+            <dt>{traduzirUi("Responsável")}</dt><dd>{responsible?.name || traduzirUi("a definir")}</dd>
           </dl>
           {decision.notes && (
             <div style={{ marginTop: 14, fontSize: "var(--fs-pn-14)", color: "var(--light)", lineHeight: 1.6, padding: "14px 16px", background: "var(--ink)", borderRadius: "var(--r-md)", border: "0.5px solid var(--border-2)" }}>
-              <span style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)", display: "block", marginBottom: 6 }}>Observação</span>
+              <span style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)", display: "block", marginBottom: 6 }}>{traduzirUi("Observação")}</span>
               {decision.notes}
             </div>
           )}
         </DrawerSection>
         {linkedMember && (
-          <DrawerSection title={ct("{Caminhada} do membro")}>
+          <DrawerSection title={ct(traduzirUi("{Caminhada} do membro"))}>
             <PersonTimeline member={linkedMember} events={timelineEvents.filter((e) => e.member_id === linkedMember.id)} compact />
           </DrawerSection>
         )}
-        <DrawerSection title="Próximos passos">
+        <DrawerSection title={traduzirUi("Próximos passos")}>
           <div className="step-stack">
-            <div className="step-do"><span className="step-ic">→</span> Fazer o primeiro contato (ligar · WhatsApp)</div>
-            <div className="step-do"><span className="step-ic">→</span> Iniciar acompanhamento 1-a-1</div>
-            <div className="step-do"><span className="step-ic">→</span> Matricular em Novos Convertidos</div>
-            {(church?.settings?.gruposCfg?.ativo ?? true) && <div className="step-do"><span className="step-ic">→</span> Inserir num {termo("grupo")}</div>}
+            <div className="step-do"><span className="step-ic">→</span> {traduzirUi("Fazer o primeiro contato (ligar · WhatsApp)")}</div>
+            <div className="step-do"><span className="step-ic">→</span> {traduzirUi("Iniciar acompanhamento 1-a-1")}</div>
+            <div className="step-do"><span className="step-ic">→</span> {traduzirUi("Matricular em {curso}", { curso: "Novos Convertidos" })}</div>
+            {(church?.settings?.gruposCfg?.ativo ?? true) && <div className="step-do"><span className="step-ic">→</span> {ct(traduzirUi("Inserir num {Grupo}"))}</div>}
           </div>
         </DrawerSection>
         <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
           {linkedMember
-            ? <Botao variante="principal" style={{ flex: 1, justifyContent: "center" }} onClick={() => { onClose(); onOpenMember(linkedMember.id); }}>Ver ficha</Botao>
-            : <Botao variante="principal" style={{ flex: 1, justifyContent: "center" }} onClick={encaminhar} desativado={loading}>{loading ? "Salvando…" : "Encaminhar"}</Botao>
+            ? <Botao variante="principal" style={{ flex: 1, justifyContent: "center" }} onClick={() => { onClose(); onOpenMember(linkedMember.id); }}>{traduzirUi("Ver ficha")}</Botao>
+            : <Botao variante="principal" style={{ flex: 1, justifyContent: "center" }} onClick={encaminhar} desativado={loading}>{loading ? traduzirUi("Salvando…") : traduzirUi("Encaminhar")}</Botao>
           }
         </div>
       </div>
@@ -117,6 +121,8 @@ export function AddCandidatoModal({
   classData: BaptismClassView; existingIds: string[]; members: MemberView[];
   church: ChurchView; onClose: () => void; onRefresh: () => void;
 }) {
+  const traduzirUi = useTexto();
+
   const [q, setQ] = useState("");
   const [saving, setSaving] = useState<string | null>(null);
   const available = members.filter((m) => !existingIds.includes(m.id) && (!q || m.name.toLowerCase().includes(q.toLowerCase())));
@@ -129,24 +135,24 @@ export function AddCandidatoModal({
   };
 
   return (
-    <Janela sobretitulo="Adicionar candidato" titulo={classData.label} texto="Escolha quem será batizado nesta turma." aoFechar={onClose} corpoBloco corpoStyle={{ maxHeight: 360, overflowY: "auto" }} rodape={<>
-          <Botao variante="principal" onClick={onClose}>Concluído</Botao>
+    <Janela sobretitulo={traduzirUi("Adicionar candidato")} titulo={classData.label} texto={traduzirUi("Escolha quem será batizado nesta turma.")} aoFechar={onClose} corpoBloco corpoStyle={{ maxHeight: 360, overflowY: "auto" }} rodape={<>
+          <Botao variante="principal" onClick={onClose}>{traduzirUi("Concluído")}</Botao>
       </>}>
       <div className="tb-search" style={{ marginBottom: 12 }}>
         <span className="si"><Icon name="buscar" size={13} /></span>
-        <input placeholder="Buscar membro…" value={q} onChange={(e) => setQ(e.target.value)} />
+        <input placeholder={traduzirUi("Buscar membro…")} value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
       {available.map((m) => (
         <div className="flag-row" key={m.id} style={{ cursor: "pointer" }} onClick={() => addCandidate(m.id)}>
           <Av name={m.name} size="sm" />
           <div className="flag-main">
             <div className="flag-nome">{m.name}</div>
-            <div className="flag-meta">{m.neighborhood || "Membro"}</div>
+            <div className="flag-meta">{m.neighborhood || traduzirUi("Membro")}</div>
           </div>
-          <span className={botaoClasse({ variante: "discreto", compacto: true })}>{saving === m.id ? "…" : "Adicionar"}</span>
+          <span className={botaoClasse({ variante: "discreto", compacto: true })}>{saving === m.id ? "…" : traduzirUi("Adicionar")}</span>
         </div>
       ))}
-      {available.length === 0 && <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", padding: "16px 0" }}>Nenhum membro disponível.</div>}
+      {available.length === 0 && <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", padding: "16px 0" }}>{traduzirUi("Nenhum membro disponível.")}</div>}
     </Janela>
   );
 }
@@ -158,6 +164,8 @@ export function BatismoDrawer({
   decisions: DecisionView[]; church: ChurchView | undefined;
   onClose: () => void; onOpenMember: (id: string) => void; onRefresh: () => void;
 }) {
+  const traduzirUi = useTexto();
+
   const { comTermos: ct } = useTermos();
   const [showAdd, setShowAdd] = useState(false);
   const [actionMsg, setActionMsg] = useState("");
@@ -176,7 +184,7 @@ export function BatismoDrawer({
 
   const concluirTurma = async () => {
     if (!church?.organizationId) {
-      avisar(ct("Não conseguimos concluir a turma de batismo. Tente de novo."), "warn");
+      avisar(ct(traduzirUi("Não conseguimos concluir a turma de batismo. Tente de novo.")), "warn");
       return;
     }
     setConcluindo(true);
@@ -198,7 +206,7 @@ export function BatismoDrawer({
       }
       onRefresh();
     } catch {
-      avisar(ct("Não conseguimos concluir a turma de batismo. Tente de novo."), "warn");
+      avisar(ct(traduzirUi("Não conseguimos concluir a turma de batismo. Tente de novo.")), "warn");
     } finally {
       setConcluindo(false);
     }
@@ -207,7 +215,7 @@ export function BatismoDrawer({
   return (
     <DrawerShell onClose={onClose}>
       <div className="drawer-head">
-        <BotaoIcone className="drawer-close" rotulo="Fechar" onClick={onClose}>✕</BotaoIcone>
+        <BotaoIcone className="drawer-close" rotulo={traduzirUi("Fechar")} onClick={onClose}>✕</BotaoIcone>
         <div className="profile-top">
           <div className="bat-mark"><Icon name="batismos" size={22} /></div>
           <div>
@@ -218,15 +226,15 @@ export function BatismoDrawer({
         </div>
       </div>
       <div className="drawer-body">
-        <DrawerSection title="Detalhes">
+        <DrawerSection title={traduzirUi("Detalhes")}>
           <dl className="kv">
-            <dt>Data</dt><dd>{formatDateBR(classData.baptism_date) || "-"}</dd>
-            <dt>Local</dt><dd>{classData.location || "-"}</dd>
-            <dt>Pastor</dt><dd>{classData.pastor || "-"}</dd>
-            {classData.notes ? <><dt>Observação</dt><dd>{classData.notes}</dd></> : null}
+            <dt>{traduzirUi("Data")}</dt><dd>{formatDateBR(classData.baptism_date) || "-"}</dd>
+            <dt>{traduzirUi("Local")}</dt><dd>{classData.location || "-"}</dd>
+            <dt>{traduzirUi("Pastor")}</dt><dd>{classData.pastor || "-"}</dd>
+            {classData.notes ? <><dt>{traduzirUi("Observação")}</dt><dd>{classData.notes}</dd></> : null}
           </dl>
         </DrawerSection>
-        <DrawerSection title={`Candidatos · ${classCandidates.length}`}>
+        <DrawerSection title={traduzirUi("Candidatos · {n}", { n: String(classCandidates.length) })}>
           {classCandidates.map((cand) => {
             const member = cand.member_id ? memberById.get(cand.member_id) : null;
             const decision = cand.decision_id ? decisionById.get(cand.decision_id) : null;
@@ -236,23 +244,23 @@ export function BatismoDrawer({
                 <Av name={name} size="sm" />
                 <div className="cand-main">
                   <div className="cand-name">{name}</div>
-                  <div className="cand-meta">{member ? "Membro" : "Nova decisão"}</div>
+                  <div className="cand-meta">{member ? traduzirUi("Membro") : traduzirUi("Nova decisão")}</div>
                 </div>
-                {member ? <span className="cand-fit good">ver →</span> : <span className="cand-fit busy">decisão</span>}
+                {member ? <span className="cand-fit good">{traduzirUi("ver →")}</span> : <span className="cand-fit busy">{traduzirUi("decisão")}</span>}
               </div>
             );
           })}
-          {classCandidates.length === 0 && <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>Nenhum candidato ainda.</div>}
+          {classCandidates.length === 0 && <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)" }}>{traduzirUi("Nenhum candidato ainda.")}</div>}
         </DrawerSection>
         <div style={{ display: "flex", gap: 10, marginTop: 28 }}>
-          <Botao variante="principal" style={{ flex: 1, justifyContent: "center" }} onClick={() => setShowAdd(true)}>+ Adicionar candidato</Botao>
+          <Botao variante="principal" style={{ flex: 1, justifyContent: "center" }} onClick={() => setShowAdd(true)}>{traduzirUi("+ Adicionar candidato")}</Botao>
           {concluida
-            ? <Botao style={{ flex: 1, justifyContent: "center" }} onClick={() => dispararAcao("Certificados gerados para os batizados.")}>Emitir certificados</Botao>
-            : <Botao style={{ flex: 1, justifyContent: "center" }} onClick={() => dispararAcao("Aviso enviado aos candidatos.")}>Avisar candidatos</Botao>}
+            ? <Botao style={{ flex: 1, justifyContent: "center" }} onClick={() => dispararAcao(traduzirUi("Certificados gerados para os batizados."))}>{traduzirUi("Emitir certificados")}</Botao>
+            : <Botao style={{ flex: 1, justifyContent: "center" }} onClick={() => dispararAcao(traduzirUi("Aviso enviado aos candidatos."))}>{traduzirUi("Avisar candidatos")}</Botao>}
         </div>
         {!concluida && (
           <Botao variante="principal" style={{ width: "100%", justifyContent: "center", marginTop: 10 }} desativado={concluindo} onClick={concluirTurma}>
-            {concluindo ? "Concluindo…" : "Marcar turma como realizada →"}
+            {concluindo ? traduzirUi("Concluindo…") : traduzirUi("Marcar turma como realizada →")}
           </Botao>
         )}
         {actionMsg && <div style={{ marginTop: 12, fontSize: "var(--fs-pn-13)", color: "var(--olive-soft)", textAlign: "right" }}><Icon name="ok" size={14} /> {actionMsg}</div>}

@@ -6,14 +6,18 @@ import { porData, tipoDoFato } from "../../../lib/historico";
 import { tituloDoFato } from "../../../lib/titulo-historico";
 import type { MemberView, TimelineEventView } from "../../tipos";
 import { Etapas, type Etapa } from "../../../ui/Etapas";
+import { useTexto } from "../../../lib/internacional/contexto";
+
 
 export function PersonTimeline({ member, events, compact }: { member: MemberView; events: TimelineEventView[]; compact?: boolean }) {
+  const traduzirUi = useTexto();
+
   const { comTermos: ct } = useTermos();
   const sorted = porData(events);
   const stepsWithoutEvent = JRN_STEPS.filter((step, i) => !!member.journey[i] && !events.some((e) => e.event_type === step.kind));
 
   if (!sorted.length && !stepsWithoutEvent.length) {
-    return <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", padding: "12px 0" }}>Nada registrado ainda.</div>;
+    return <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", padding: "12px 0" }}>{traduzirUi("Nada registrado ainda.")}</div>;
   }
   /* evento com data real; etapa marcada sem fato registrado diz que falta a data */
   return (
