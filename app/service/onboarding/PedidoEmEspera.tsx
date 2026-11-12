@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createServiceBrowserClient } from "../lib/supabase-browser";
+import { limparRetorno } from "../lib/retorno";
 
 import { Botao } from "../ui/Botao";
 /* Espera do pedido feito pelo link da igreja (0071): "Ver de novo" relê o
@@ -13,6 +14,7 @@ export default function PedidoEmEspera({ recusado = false }: { recusado?: boolea
   const [saindo, setSaindo] = useState(false);
   const sair = async () => {
     setSaindo(true);
+    limparRetorno();
     await createServiceBrowserClient().auth.signOut();
     router.push("/service/login");
     router.refresh();

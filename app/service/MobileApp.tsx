@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Icon } from "./lib/icons";
 import { readMemberLocation, writeMemberLocation, type AgendaSeg } from "./lib/member-navigation";
+import { guardarRolagem, lerRolagem, RetornoContext } from "./lib/retorno";
 import { useRelogioDaIgreja } from "./lib/relogio-context";
 import { porPublicacao } from "./lib/date";
 import ChurchLockup from "./ChurchLockup";
@@ -112,7 +113,13 @@ function MobileMembro({
   const [agSeg, setAgSeg] = useState<AgendaSeg>("minha");
   const [chatTarget, setChatTarget] = useState<{ id: string | null; novo: boolean; n: number }>({ id: null, novo: false, n: 0 });
   const [chatAberto, setChatAberto] = useState<string | null>(null);
-  const [sheetEl, setSheetEl] = useState<React.ReactNode | null>(null);
+  /* M3: a folha guarda o ID do evento quando é a folha do evento, para voltar na recarga */
+  const [folha, setFolha] = useState<{ el: React.ReactNode; evento: string | null } | null>(null);
+  const setSheetEl = useCallback((el: React.ReactNode | null) => setFolha(el ? { el, evento: null } : null), [setFolha]);
+  const sheetEl = folha?.el ?? null;
+  /* M3: volta à mesma rolagem na recarga e no Voltar (troca de aba continua indo ao topo) */
+  const [restauro, setRestauro] = useState(0);
+  const restaurarRolagem = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   /* troca de aba com direção (prancha 1): a tela nova desliza do lado de onde vem */
   const tabAnterior = useRef(tab);
@@ -227,7 +234,42 @@ function MobileMembro({
   /* o aviso do app é o mesmo do painel (avisar), com Desfazer quando há ação */
   const toast = (msg: string, action?: { label: string; fn: () => void }) =>
     avisar(msg, "ok", action ? { acao: { rotulo: action.label, fn: action.fn }, duracao: UNDO_MS, chave: "membro" } : { duracao: 3600, chave: "membro" });
-  useEffect(() => { if (!cardTarget && !announcementTarget) scrollRef.current?.scrollTo({ top: 0 }); }, [tab, sub, cardTarget, announcementTarget]);
+  const chaveRolagem = `${organizationId ?? ""}:${person.id}:${tab}:${sub ?? ""}:${tab === "agenda" ? agSeg : ""}`;
+  useEffect(() => {
+    if (restaurarRolagem.current && mode === "self") {
+      restaurarRolagem.current = false;
+      const topo = lerRolagem(chaveRolagem);
+      const el = scrollRef.current;
+      if (!el || topo <= 0) return;
+      /* o conteúdo ainda cresce depois da recarga: tenta por até 1,5 s e desiste se a pessoa mexer */
+      const limite = performance.now() + 1500;
+      let quadro = 0;
+      const desistir = () => cancelAnimationFrame(quadro);
+      const tentar = () => {
+        el.scrollTo({ top: topo });
+        if (Math.abs(el.scrollTop - topo) > 2 && performance.now() < limite) quadro = requestAnimationFrame(tentar);
+      };
+      quadro = requestAnimationFrame(tentar);
+      el.addEventListener("pointerdown", desistir, { once: true });
+      el.addEventListener("wheel", desistir, { once: true });
+      return () => { desistir(); el.removeEventListener("pointerdown", desistir); el.removeEventListener("wheel", desistir); };
+    }
+    if (!cardTarget && !announcementTarget) scrollRef.current?.scrollTo({ top: 0 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- a chave muda junto com tab/sub; `restauro` marca a volta pela URL
+  }, [tab, sub, cardTarget, announcementTarget, restauro]);
+  /* a posição é lida na hora do evento, com a chave da tela em que ele aconteceu */
+  const rolagemQuadro = useRef(0);
+  const rolagemPendente = useRef<{ chave: string; topo: number } | null>(null);
+  const aoRolar = (e: React.UIEvent<HTMLDivElement>) => {
+    if (mode !== "self") return;
+    rolagemPendente.current = { chave: chaveRolagem, topo: e.currentTarget.scrollTop };
+    if (rolagemQuadro.current) return;
+    rolagemQuadro.current = requestAnimationFrame(() => {
+      rolagemQuadro.current = 0;
+      const p = rolagemPendente.current;
+      if (p) guardarRolagem(p.chave, p.topo);
+    });
+  };
 
   /* v7 4.10: o atalho na tela de início é pedido no segundo acesso (contador no aparelho) */
   const acessos = useSyncExternalStore(semAssinatura, contarAcesso, () => 0);
@@ -263,6 +305,11 @@ function MobileMembro({
     if (mode === "self") {
       const current = new URL(window.location.href);
       const next = writeMemberLocation(current, { tab: t, sub: destination, segment, announcement: extra.announcementId ?? null, card: extra.cardId ?? null });
+      /* M3: a entrada que fica para trás não guarda conversa nem folha, senão o Voltar as reabriria */
+      const atras = new URL(current);
+      atras.searchParams.delete("mconversa");
+      atras.searchParams.delete("mevento");
+      if (atras.href !== current.href) window.history.replaceState(window.history.state, "", atras.pathname + atras.search + atras.hash);
       if (next.href !== current.href) window.history.pushState({ ...window.history.state, cexMemberFrom: { tab, sub } }, "", next.pathname + next.search + next.hash);
     }
   };
@@ -272,10 +319,12 @@ function MobileMembro({
      (que perde ?maba da URL) NÃO deve disparar o restore de novo, senão o
      app volta sozinho para o Início. Os valores que mudam com o refresh ficam
      em refs para o listener de popstate ler sem depender deles no useEffect. */
-  const navCtxRef = useRef({ modulosMembro, serves, isRecep, isKids, isGuardian, pixOn, oracaoOn });
+  const navCtxRef = useRef({ modulosMembro, serves, isRecep, isKids, isGuardian, pixOn, oracaoOn, chats });
   useEffect(() => {
-    navCtxRef.current = { modulosMembro, serves, isRecep, isKids, isGuardian, pixOn, oracaoOn };
+    navCtxRef.current = { modulosMembro, serves, isRecep, isKids, isGuardian, pixOn, oracaoOn, chats };
   });
+  /* a folha do evento é montada com os dados da hora: a restauração deixa o pedido aqui */
+  const eventoPendente = useRef<string | null>(null);
   // eslint-disable-next-line react-hooks/preserve-manual-memoization -- compilador do React não está ligado; estável por design (lê refs)
   const applyLocation = useCallback((url: URL) => {
     const ctx = navCtxRef.current;
@@ -288,9 +337,15 @@ function MobileMembro({
     setAgSeg(next.segment);
     setAnnouncementTarget(next.announcement);
     setCardTarget(next.card);
-    setSheetEl(null);
-    setChatAberto(null);
-    setChatTarget((c) => ({ id: null, novo: false, n: c.n + 1 }));
+    setFolha(null);
+    /* a conversa volta como subtela (nome da pessoa e Voltar), igual a quando foi aberta */
+    const conversa = next.chat && ctx.chats.some((c) => c.id === next.chat) ? next.chat : null;
+    setChatAberto(conversa);
+    if (conversa) setSub("chat");
+    setChatTarget((c) => ({ id: conversa, novo: false, n: c.n + 1 }));
+    eventoPendente.current = next.event ?? null;
+    restaurarRolagem.current = true;
+    setRestauro((n) => n + 1);
   }, []);
   /* Hidratação: lê a URL uma vez na montagem. As dependências são só as que
      exigem re-leitura real da URL (troca de pessoa ou organização). */
@@ -312,8 +367,25 @@ function MobileMembro({
     const slot = roster.find((r) => r.event_id === ev.id && r.person_id === person.id);
     const ministry = slot ? ministries.find((m) => m.positions?.some((p) => p.id === slot.position_id)) : undefined;
     const rsvp = eventRsvps.find((r) => r.event_id === ev.id)?.kind ?? null;
-    setSheetEl(<SheetEvento key={ev.id} ev={ev} slot={slot} ministry={ministry} rsvp={rsvp} onRespond={onRespondEvent} paginaUrl={paginaUrl} churchName={churchName} />);
+    setFolha({ el: <SheetEvento key={ev.id} ev={ev} slot={slot} ministry={ministry} rsvp={rsvp} onRespond={onRespondEvent} paginaUrl={paginaUrl} churchName={churchName} />, evento: ev.id });
   };
+  useEffect(() => {
+    const pendente = eventoPendente.current;
+    if (!pendente) return;
+    eventoPendente.current = null;
+    abrirEvento(pendente);
+  });
+  /* M3: conversa aberta e folha do evento ficam na URL (só o ID), sem nova entrada no histórico */
+  const conversaAberta = tab === "mensagens" && (!sub || sub === "chat") ? chatAberto ?? chatTarget.id : null;
+  const eventoAberto = folha?.evento ?? null;
+  useEffect(() => {
+    if (mode !== "self") return;
+    const atual = new URL(window.location.href);
+    const prox = new URL(atual);
+    if (conversaAberta) prox.searchParams.set("mconversa", conversaAberta); else prox.searchParams.delete("mconversa");
+    if (eventoAberto) prox.searchParams.set("mevento", eventoAberto); else prox.searchParams.delete("mevento");
+    if (prox.href !== atual.href) window.history.replaceState(window.history.state, "", prox.pathname + prox.search + prox.hash);
+  }, [mode, conversaAberta, eventoAberto]);
   /* v7 5.3: depois da primeira escala confirmada, uma vez por aparelho, se o navegador ainda não respondeu */
   const escalaConfirmada = useCallback(() => {
     try {
@@ -341,7 +413,7 @@ function MobileMembro({
       setSheetEl(<SheetAceiteMapa memberId={member.id} churchName={churchName} usaGrupos={ligadosMembro.has("grupos")} onDecidido={() => {}} />);
     }, 800);
     return () => clearTimeout(timer);
-  }, [mode, onboarded, member, churchName, ligadosMembro]);
+  }, [mode, onboarded, member, churchName, ligadosMembro, setSheetEl]);
   const ui: MemberUi = { go, sheet: setSheetEl, toast, respostas, responderEscala: responderEscalaUi, tamanhoTexto: abrirTamanhoTexto, abrirEvento, escalaConfirmada };
 
   const pedirEtapa = (step: JourneyStep) => {
@@ -374,7 +446,8 @@ function MobileMembro({
     ? identidadeAberta?.nome ?? traduzirUi("Pessoa indisponível")
     : sub ? moduleTitle(sub) : "";
   const voltar = () => {
-    if (sub === "chat") { setChatTarget((c) => ({ id: null, novo: false, n: c.n + 1 })); setChatAberto(null); }
+    /* M3: fechar a conversa não cria entrada nova; o efeito da URL tira o mconversa desta mesma */
+    if (sub === "chat") { setChatTarget((c) => ({ id: null, novo: false, n: c.n + 1 })); setChatAberto(null); setSub(null); return; }
     const from = mode === "self" ? window.history.state?.cexMemberFrom : null;
     if (from?.tab === tab && from.sub === null) window.history.back();
     else go(tab);
@@ -382,6 +455,7 @@ function MobileMembro({
 
   return (
     <JourneyContext.Provider value={journey}>
+    <RetornoContext.Provider value={mode === "self"}>
     <MemberUiContext.Provider value={ui}>
     <StepsHost
       person={person} member={member} ministries={ministries} courses={courses} enrollments={enrollments} baptismClasses={baptismClasses}
@@ -444,7 +518,7 @@ function MobileMembro({
         </div>
 
         {/* marco principal só no app de verdade; a prévia do líder fica dentro do painel, que já tem o seu */}
-        <div className="m-scroll" ref={scrollRef} role={mode === "self" ? "main" : undefined} tabIndex={0} aria-labelledby="m-screen-title">
+        <div className="m-scroll" ref={scrollRef} onScroll={aoRolar} role={mode === "self" ? "main" : undefined} tabIndex={0} aria-labelledby="m-screen-title">
           {tab === "inicio" && (
             <InicioV6 contribuir={pix} onContribuir={() => go("caminhada", "contribuir")} person={person} member={member} ministries={ministries} members={members} people={people} events={events} roster={roster} cards={cards}
               announcements={muralOn ? announcements : []} unreadIds={unreadIds} kidsChildren={kidsChildren} childGuardians={childGuardians}
@@ -496,7 +570,7 @@ function MobileMembro({
                 <TabConversas key={chatTarget.n} member={member} chats={chats} chatMembers={chatMembers} messages={messages} members={members} ministries={ministries}
                   naoLidas={naoLidas} onLida={marcarConversaLida}
                   onSendMessage={onSendMessage} onStartChat={onStartChat} openChatId={chatTarget.id} startNew={chatTarget.novo}
-                  onChatOpen={(id) => { setChatAberto(id); setSub(id ? "chat" : null); }} />
+                  onChatOpen={(id) => { setChatAberto(id); setSub(id ? "chat" : null); if (!id) setChatTarget((c) => ({ ...c, id: null, novo: false })); }} />
               </div>
               {!sub && (
                 <div className="m6-pad">
@@ -591,6 +665,7 @@ function MobileMembro({
     )}
     </StepsHost>
     </MemberUiContext.Provider>
+    </RetornoContext.Provider>
     </JourneyContext.Provider>
   );
 }

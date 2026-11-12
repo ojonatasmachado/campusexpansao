@@ -11,6 +11,7 @@ import { useId, useState } from "react";
 import { Icon } from "../../lib/icons";
 import { plural } from "../../lib/plural";
 import { useRelogioDaIgreja } from "../../lib/relogio-context";
+import { useRascunho } from "../../lib/retorno";
 
 import { papelDoDestinatario, type Destinatario } from "../../lib/destinatario";
 import {
@@ -41,10 +42,16 @@ export function SheetPedidoOracao({ organizationId, memberId, dest, muralOn, onS
 }) {
   const fid = useId();
   const podeIntercessao = !!dest && !!onStartChat;
-  const [txt, setTxt] = useState("");
-  const [categoria, setCategoria] = useState<Categoria | null>(null);
-  const [publico, setPublico] = useState<Publico>(podeIntercessao ? (muralOn ? inicial : "intercessao") : "mural");
-  const [anonimo, setAnonimo] = useState(false);
+  /* M3: o pedido em escrita volta na recarga (sessionStorage, some na saída da conta) */
+  const [rascunho, setRascunho, limparRascunho] = useRascunho<{ txt: string; categoria: Categoria | null; publico: Publico | null; anonimo: boolean }>(
+    `oracao:${memberId}`, { txt: "", categoria: null, publico: null, anonimo: false });
+  const { txt, categoria, anonimo } = rascunho;
+  const publicoPadrao: Publico = podeIntercessao ? (muralOn ? inicial : "intercessao") : "mural";
+  const publico: Publico = rascunho.publico && (rascunho.publico === "mural" ? muralOn || !podeIntercessao : podeIntercessao) ? rascunho.publico : publicoPadrao;
+  const setTxt = (v: string) => setRascunho((r) => ({ ...r, txt: v }));
+  const setCategoria = (v: Categoria | null) => setRascunho((r) => ({ ...r, categoria: v }));
+  const setPublico = (v: Publico) => setRascunho((r) => ({ ...r, publico: v }));
+  const setAnonimo = (v: boolean) => setRascunho((r) => ({ ...r, anonimo: v }));
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");
   const [feito, setFeito] = useState<{ publico: Publico; chatId: string | null } | null>(null);
@@ -80,12 +87,12 @@ export function SheetPedidoOracao({ organizationId, memberId, dest, muralOn, onS
       void pedirOracao(organizationId, { body, audience: "intercessao", anonymous: false, category: categoria ?? "outro" });
       const id = await onStartChat(memberId, dest.member_id, `Pedido de oração: ${body}`);
       setEnviando(false);
-      if (id) setFeito({ publico, chatId: id }); else setErro("Não foi possível enviar agora. Tente de novo.");
+      if (id) { limparRascunho(); setFeito({ publico, chatId: id }); } else setErro("Não foi possível enviar agora. Tente de novo.");
       return;
     }
     const r = await pedirOracao(organizationId, { body, audience: "mural", anonymous: anonimo, category: categoria ?? "outro" });
     setEnviando(false);
-    if (r.id) setFeito({ publico, chatId: null }); else setErro(r.erro ?? "Não foi possível enviar agora. Tente de novo.");
+    if (r.id) { limparRascunho(); setFeito({ publico, chatId: null }); } else setErro(r.erro ?? "Não foi possível enviar agora. Tente de novo.");
   };
 
   return (

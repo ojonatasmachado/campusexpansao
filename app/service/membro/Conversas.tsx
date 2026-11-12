@@ -11,6 +11,7 @@ import type { Board, Card, Chat, ChatMember, M, Message, Ministry, P } from "./t
 
 import { Botao } from "../ui/Botao";
 import { avisar } from "../lib/avisar";
+import { useRascunho } from "../lib/retorno";
 import { Acao } from "../ui/Acao";
 import { Cartao } from "../ui/Cartao";
 // ── aba: Inicio ───────────────────────────────────────────────────────────────
@@ -178,14 +179,15 @@ export function TabConversas({
   messages: Message[];
   members: M[];
   ministries: Ministry[];
-  onSendMessage?: (chatId: string, senderId: string, body: string) => void;
+  onSendMessage?: (chatId: string, senderId: string, body: string) => void | Promise<boolean | void>;
   onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
 }) {
   const { quandoMensagem } = useRelogioDaIgreja();
   const [selId, setSelIdRaw] = useState<string | null>(openChatId ?? null);
-  const [texto, setTexto] = useState("");
+  /* M3: o que a pessoa digitou volta na recarga, por conversa */
+  const [texto, setTexto, limparTexto] = useRascunho(member && selId ? `conversa:${member.id}:${selId}` : null, "");
   const [novo, setNovo] = useState(!!startNew);
-  const [novoMsg, setNovoMsg] = useState("");
+  const [novoMsg, setNovoMsg, limparNovoMsg] = useRascunho(member ? `conversa-nova:${member.id}` : null, "");
   const [starting, setStarting] = useState(false);
   /* perguntas de emergência (G15): a mensagem traz "Estamos bem" e "Precisamos de ajuda" */
   const [perguntas, setPerguntas] = useState<Record<string, { aberta: boolean; resposta: "bem" | "ajuda" | null; minha: boolean }>>({});
@@ -265,10 +267,15 @@ export function TabConversas({
     return min ? `Líder · ${min.name}` : "";
   };
 
-  const enviar = () => {
+  const enviar = async () => {
     if (!texto.trim() || !chat || !member) return;
-    onSendMessage?.(chat.id, member.id, texto.trim());
-    setTexto("");
+    const corpo = texto.trim();
+    limparTexto();
+    /* sem gravar, o texto volta para a caixa (e para o rascunho) */
+    if ((await onSendMessage?.(chat.id, member.id, corpo)) === false) {
+      setTexto(corpo);
+      avisar("A mensagem não foi enviada. Tente de novo.", "warn");
+    }
   };
 
   const abrir = async (targetMemberId: string) => {
@@ -277,8 +284,7 @@ export function TabConversas({
     const id = await onStartChat?.(member.id, targetMemberId, novoMsg);
     setStarting(false);
     setNovo(false);
-    setNovoMsg("");
-    if (id) setSelId(id);
+    if (id) { limparNovoMsg(); setSelId(id); }
   };
 
   if (chat) {

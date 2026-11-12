@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { clearMemberLocation, memberNotificationUrl, readMemberLocation, writeMemberLocation } from "../app/service/lib/member-navigation";
 const allowed = (tab: string, sub: string) => (tab === "caminhada" && sub === "cursos") || (tab === "mensagens" && sub === "mural") || (tab === "agenda" && sub === "tarefas");
 const original = new URL("http://localhost:3003/service?modo=light#conteudo");
-const aula = { tab: "caminhada" as const, sub: "cursos", segment: "minha" as const, announcement: null, card: null };
+const aula = { tab: "caminhada" as const, sub: "cursos", segment: "minha" as const, announcement: null, card: null, chat: null, event: null };
 const url = writeMemberLocation(original, aula);
 assert.deepEqual(readMemberLocation(url, allowed), aula);
 assert.equal(original.searchParams.has("maba"), false);
@@ -40,3 +40,17 @@ for (const [category, tab] of [["escala", "agenda"], ["mensagens", "mensagens"],
 assert.equal(memberNotificationUrl("externo"), "/service");
 assert.equal(clearMemberLocation(agenda).search, "?modo=light");
 assert.equal(clearMemberLocation(agenda).hash, "#conteudo");
+
+/* M3: conversa aberta e folha do evento voltam na recarga, só com ID e só onde cabem */
+const conversa = writeMemberLocation(original, { tab: "mensagens", sub: null, segment: "minha", announcement: null, card: null, chat: "chat-1" });
+assert.equal(conversa.searchParams.get("mconversa"), "chat-1");
+assert.equal(readMemberLocation(conversa, allowed).chat, "chat-1");
+assert.equal(writeMemberLocation(original, { tab: "inicio", sub: null, segment: "minha", announcement: null, card: null, chat: "chat-1" }).searchParams.has("mconversa"), false);
+assert.equal(readMemberLocation(new URL("http://localhost/service?maba=inicio&mconversa=chat-1"), allowed).chat, null);
+assert.equal(readMemberLocation(new URL("http://localhost/service?maba=mensagens&mtela=mural&mconversa=chat-1"), allowed).chat, null);
+assert.equal(readMemberLocation(new URL("http://localhost/service?maba=mensagens&mconversa=Pedido%20de%20ora%C3%A7%C3%A3o"), allowed).chat, null);
+const evento = writeMemberLocation(original, { tab: "agenda", sub: null, segment: "igreja", announcement: null, card: null, event: "ev_9" });
+assert.equal(readMemberLocation(evento, allowed).event, "ev_9");
+assert.equal(readMemberLocation(new URL("http://localhost/service?maba=agenda&mevento=https://x.y"), allowed).event, null);
+assert.equal(clearMemberLocation(evento).searchParams.has("mevento"), false);
+assert.equal(writeMemberLocation(evento, { tab: "inicio", sub: null, segment: "minha", announcement: null, card: null }).searchParams.has("mevento"), false);
