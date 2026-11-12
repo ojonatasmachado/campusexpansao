@@ -55,6 +55,22 @@ Continuidade explícita da entrega parcial N1, autorizada pelo usuário em 25/10
 - `app/service/painel/form/FormScreen.tsx` (fatia 3)
 - `app/service/painel/telas/ServiceModal.tsx` (fatia 3)
 - `app/service/painel/telas/ficha/PersonTimeline.tsx` (fatia 3)
+- `app/service/modules/mural/Mural.tsx` (fatia 4a)
+- `app/service/modules/mural/Boletim.tsx` (fatia 4a)
+- `app/service/modules/escalas/Escalas.tsx` (fatia 4a)
+- `app/service/modules/escalas/GerarPeriodo.tsx` (fatia 4a)
+- `app/service/modules/escalas/EscalaExtra.tsx` (fatia 4a)
+- `app/service/modules/escalas/PublicarEscala.tsx` (fatia 4a)
+- `app/service/modules/mapa/Mesa.tsx` (fatia 4a)
+- `app/service/modules/mapa/MapaIgreja.tsx` (fatia 4a)
+- `app/service/modules/mapa/Emergencia.tsx` (fatia 4a)
+- `app/service/modules/mapa/LiberarMapa.tsx` (fatia 4a)
+- `app/service/modules/mapa/Rota.tsx` (fatia 4a)
+- `app/service/modules/mapa/LinhaDoTempo.tsx` (fatia 4a)
+- `app/service/modules/mapa/CriarArea.tsx` (fatia 4a)
+- `app/service/modules/mapa/Pontos.tsx` (fatia 4a)
+- `app/service/modules/mapa/AreaDesenhada.tsx` (fatia 4a)
+- `app/service/modules/mapa/MapaBase.tsx` (fatia 4a)
 
 Definir na reserva, conferindo especialmente I10: ui/, painel/comum.tsx, modules/inicio/Saude.tsx, modules/financeiro/ e modules/relatorios/. Não trabalhar simultaneamente no branch de outra frente.
 
