@@ -1,4 +1,7 @@
-export type ShowIf = { field: string; equals: string };
+/* O10: `notEquals` mostra o campo para qualquer valor menos um (ex.: "Até" quando repete) */
+export type ShowIf = { field: string } & ({ equals: string } | { notEquals: string });
+export const mostraCampo = (showIf: ShowIf | undefined, values: Record<string, string>) =>
+  !showIf || ("equals" in showIf ? values[showIf.field] === showIf.equals : values[showIf.field] !== showIf.notEquals);
 
 export type FieldDef =
   | { k: string; label: string; type: "text"; req?: boolean; half?: boolean; ph?: string; hint?: string; value?: string; showIf?: ShowIf; secao?: string }

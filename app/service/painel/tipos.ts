@@ -153,6 +153,9 @@ export type EventView = {
   pede?: "aviso" | "presenca" | "inscricao";
   valor?: string;
   instrucoes?: string;
+  /* O10 (0108): encontros criados juntos; null no avulso */
+  seriesId?: string | null;
+  seriesRule?: "semanal" | "quinzenal" | "mensal" | null;
 };
 
 export type RosterAssignmentView = {

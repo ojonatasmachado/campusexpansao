@@ -4127,3 +4127,7 @@ button.imp-step-btn{cursor:pointer;transition:color .14s ease}
 @media (min-width: 981px) {
   .painel-inicio .service-preparacao { margin-inline-end: calc(120px + var(--safe-right)); }
 }
+
+/* O10 · série do encontro na gaveta do evento: rótulo da série e as duas ações */
+.evento-serie { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:10px; }
+.evento-serie-acoes { display:flex; gap:8px; margin-left:auto; }

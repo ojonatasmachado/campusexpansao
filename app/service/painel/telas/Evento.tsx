@@ -12,6 +12,7 @@ import { Av } from "../ui";
 import { friendlyWriteError } from "../erros";
 import { type CoberturaTime } from "../../modules/escalas/cobertura";
 import { Panorama } from "./Panorama";
+import { AcoesDoEncontro } from "./EventoSerie";
 import { ROUTES } from "../comum";
 import { DrawerSection, DrawerShell, TimePicker } from "../campos";
 import type { CronoStep, DrawerState, EventRsvpView, EventView, MinistryView, PersonView, RosterAssignmentView } from "../tipos";
@@ -83,6 +84,7 @@ export function EventDrawer({
         <div className="ph-eyebrow" style={{ marginBottom: 8 }}>{joinDot(event.weekday, formatDateBR(event.eventDate))}</div>
         <div className="profile-name">{event.name}</div>
         <div className="profile-role">{joinDot(event.time, event.location, event.kind)}</div>
+        <AcoesDoEncontro event={event} onSaved={() => router.refresh()} />
         <Segmentado rolavel esconderEsfumadoNoFim contraste="reforcado" style={{ marginTop: 14 }}>
           <Opcao marcada={tab === "panorama"} onClick={() => setTab("panorama")}>Panorama</Opcao>
           <Opcao marcada={tab === "crono"} onClick={() => setTab("crono")}>Cronograma</Opcao>

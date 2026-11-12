@@ -172,5 +172,7 @@ export function toEventViews(
     pede: event.pede === "presenca" || event.pede === "inscricao" ? event.pede : "aviso",
     valor: event.valor ?? "",
     instrucoes: event.instrucoes ?? "",
+    seriesId: event.series_id ?? null,
+    seriesRule: event.series_rule === "semanal" || event.series_rule === "quinzenal" || event.series_rule === "mensal" ? event.series_rule : null,
   }));
 }
