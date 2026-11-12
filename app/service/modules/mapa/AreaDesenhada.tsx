@@ -10,6 +10,8 @@ import { Botao } from "../../ui/Botao";
 import { Opcao } from "../../ui/Opcao";
 import { Interruptor } from "../../ui/Interruptor";
 import { Segmentado } from "../../ui/Segmentado";
+import { useTexto } from "../../lib/internacional/contexto";
+import type { Text } from "../../lib/internacional/mensagens";
 
 /* Área desenhada no mapa (G10, usada no Criar área e na Emergência, G14):
    formas, bairros por toque, ímã, histórico do Desfazer e a barra de cima.
@@ -17,18 +19,18 @@ import { Segmentado } from "../../ui/Segmentado";
 
 type Passo = { forma: Forma; geo: GeoJSON.Polygon | null; bairros: string[] };
 
-const FORMAS: { f: Forma; rotulo: string; icone: "quadrado" | "circulo" | "bairros" | "livre" }[] = [
-  { f: "quadrado", rotulo: "Quadrado", icone: "quadrado" },
-  { f: "circulo", rotulo: "Círculo", icone: "circulo" },
-  { f: "bairros", rotulo: "Juntar bairros", icone: "bairros" },
-  { f: "livre", rotulo: "Livre", icone: "livre" },
+const formas = (t: Text): { f: Forma; rotulo: string; icone: "quadrado" | "circulo" | "bairros" | "livre" }[] => [
+  { f: "quadrado", rotulo: t("Quadrado"), icone: "quadrado" },
+  { f: "circulo", rotulo: t("Círculo"), icone: "circulo" },
+  { f: "bairros", rotulo: t("Juntar bairros"), icone: "bairros" },
+  { f: "livre", rotulo: t("Livre"), icone: "livre" },
 ];
-const DICAS: Record<Forma, string> = {
-  quadrado: "Arraste os cantos para mudar o tamanho. Puxe os pontos do meio para seguir as ruas.",
-  circulo: "Arraste a borda para mudar o raio. Puxe pelo meio para mover.",
-  bairros: "Toque nos bairros para juntar. Toque de novo para tirar.",
-  livre: "Toque para marcar os cantos. Toque no primeiro para fechar.",
-};
+const dicas = (t: Text): Record<Forma, string> => ({
+  quadrado: t("Arraste os cantos para mudar o tamanho. Puxe os pontos do meio para seguir as ruas."),
+  circulo: t("Arraste a borda para mudar o raio. Puxe pelo meio para mover."),
+  bairros: t("Toque nos bairros para juntar. Toque de novo para tirar."),
+  livre: t("Toque para marcar os cantos. Toque no primeiro para fechar."),
+});
 
 export type AreaDesenhada = {
   forma: Forma;
@@ -49,6 +51,7 @@ export type AreaDesenhada = {
 };
 
 export function useAreaDesenhada(ctx: ContextoMapa, { prefixo, corHex, inicial = "quadrado", bairrosIniciais = [], temBairros }: { prefixo: string; corHex: string; inicial?: Forma; bairrosIniciais?: string[]; temBairros: boolean }): AreaDesenhada {
+  const traduzirUi = useTexto();
   const [forma, setForma] = useState<Forma>(bairrosIniciais.length && temBairros ? "bairros" : inicial);
   const [bairros, setBairros] = useState<string[]>(bairrosIniciais);
   const [geo, setGeo] = useState<GeoJSON.Polygon | null>(null);
@@ -129,8 +132,8 @@ export function useAreaDesenhada(ctx: ContextoMapa, { prefixo, corHex, inicial =
 
   /* o círculo só muda o raio e a posição: não gruda em rua */
   const temIma = forma === "quadrado" || forma === "livre";
-  const base = forma === "livre" && geo ? "Arraste os cantos para seguir as ruas. Puxe os pontos do meio para criar cantos novos." : DICAS[forma];
-  const dica = rua !== null ? (rua ? `Grudou na ${rua}` : "Grudou na rua") : base + (ima && temIma && !ctx.celular ? " Segure Alt para soltar do ímã." : "");
+  const base = forma === "livre" && geo ? traduzirUi("Arraste os cantos para seguir as ruas. Puxe os pontos do meio para criar cantos novos.") : dicas(traduzirUi)[forma];
+  const dica = rua !== null ? (rua ? traduzirUi("Grudou na {rua}", { rua }) : traduzirUi("Grudou na rua")) : ima && temIma && !ctx.celular ? traduzirUi("{dica} Segure Alt para soltar do ímã.", { dica: base }) : base;
   const geometria = (): GeoJSON.Geometry | null => {
     if (forma !== "bairros") return geo;
     const poligonos = ctx.regioes.filter((r) => bairros.includes(r.codigo))
@@ -148,20 +151,22 @@ export function useAreaDesenhada(ctx: ContextoMapa, { prefixo, corHex, inicial =
 
 /* a barra de cima: formas, Desfazer, ímã e a dica do gesto */
 export function BarraForma({ area, celular, rotulo, id }: { area: AreaDesenhada; celular: boolean; rotulo?: string; id: string }) {
+  const traduzirUi = useTexto();
+
   return (
     <div className="ca-topo">
-      <div className="ca-barra" role="toolbar" aria-label="Forma da área">
+      <div className="ca-barra" role="toolbar" aria-label={traduzirUi("Forma da área")}>
         {rotulo && <span className="ca-rotulo">{rotulo}</span>}
-        <Segmentado role="group" aria-label="Forma" className="ca-formas" rolavel={celular}>
-          {FORMAS.filter((x) => x.f !== "bairros" || area.temBairros).map((x) => (
+        <Segmentado role="group" aria-label={traduzirUi("Forma")} className="ca-formas" rolavel={celular}>
+          {formas(traduzirUi).filter((x) => x.f !== "bairros" || area.temBairros).map((x) => (
             <Opcao key={x.f} marcada={area.forma === x.f} onClick={() => area.trocar(x.f)}><Icon name={x.icone} size={16} stroke={2} />{x.rotulo}</Opcao>
           ))}
         </Segmentado>
         <span className="ca-sep" aria-hidden="true" />
-        <Botao className="ca-desfazer" desativado={!area.podeDesfazer} onClick={area.desfazer}><Icon name="desfazer" size={16} stroke={2} />Desfazer</Botao>
+        <Botao className="ca-desfazer" desativado={!area.podeDesfazer} onClick={area.desfazer}><Icon name="desfazer" size={16} stroke={2} />{traduzirUi("Desfazer")}</Botao>
         {area.temIma && (
           <span className="ca-ima">
-            <span id={`${id}-ima`}>Ímã nas ruas</span>
+            <span id={`${id}-ima`}>{traduzirUi("Ímã nas ruas")}</span>
             <Interruptor rotuloId={`${id}-ima`} ligado={area.ima} onClick={area.alternarIma} />
           </span>
         )}

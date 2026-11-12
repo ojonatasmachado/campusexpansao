@@ -4,6 +4,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useRef, useState } from "react";
 import type { Map as MlMap } from "maplibre-gl";
 import { ESTILO_URL, aquecerEstilo, coresDoMapa, type CorMapa } from "./estilo";
+import { useTexto } from "../../lib/internacional/contexto";
 
 export type MapaPronto = { map: MlMap; ml: typeof import("maplibre-gl"); cores: Record<CorMapa, string> };
 
@@ -22,6 +23,8 @@ export default function MapaBase({
   style?: React.CSSProperties;
   children?: React.ReactNode;
 }) {
+  const traduzirUi = useTexto();
+
   const raiz = useRef<HTMLDivElement>(null);
   const alvo = useRef<HTMLDivElement>(null);
   const pronto = useRef(onPronto);
@@ -70,7 +73,7 @@ export default function MapaBase({
   return (
     <div ref={raiz} className={`mapa-root${className ? ` ${className}` : ""}`} style={style}>
       <div ref={alvo} role="region" aria-label={rotulo} style={{ position: "absolute", inset: 0 }} />
-      {falhou && <div className="mapa-falha" role="status">Não foi possível carregar o mapa agora. Confira a conexão e tente de novo.</div>}
+      {falhou && <div className="mapa-falha" role="status">{traduzirUi("Não foi possível carregar o mapa agora. Confira a conexão e tente de novo.")}</div>}
       {children}
     </div>
   );

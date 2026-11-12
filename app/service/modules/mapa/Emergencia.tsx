@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { GeoJSONSource, MapMouseEvent } from "maplibre-gl";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { avisar } from "../../lib/avisar";
-import { plural } from "../../lib/plural";
 import { limparCamadas, type ContextoMapa } from "./contexto";
 import { caixaDaGeometria } from "./geo";
 import { baixarCsv } from "./csv";
@@ -20,6 +19,8 @@ import { PainelMapa } from "../../ui/PainelMapa";
 import { Balao, LinhaBalao } from "../../ui/Balao";
 import { Campo, Entrada, TextoLongo } from "../../ui/Campo";
 import { confirmar } from "../../ui/confirmar";
+import { useTexto } from "../../lib/internacional/contexto";
+import type { Text } from "../../lib/internacional/mensagens";
 
 /* Ferramentas › Emergência (G14, pranchas P12 e P13). Quem coordena marca a
    área atingida com as formas do Criar área, vê cada família como um ponto
@@ -36,12 +37,16 @@ type Familia = {
 };
 type Endereco = { rua: string | null; numero: string | null; complemento: string | null; bairro: string | null; cidade: string | null; cep: string | null; quando: string };
 
+/* em pt-BR no CSV; na tela, rotulosDaSituacao */
 const SITUACAO: Record<Situacao, string> = { sem_resposta: "Sem resposta", bem: "Está bem", ajuda: "Precisa de ajuda" };
+const rotulosDaSituacao = (t: Text): Record<Situacao, string> => ({ sem_resposta: t("Sem resposta"), bem: t("Está bem"), ajuda: t("Precisa de ajuda") });
 const TOM: Record<Situacao, SeloTom> = { sem_resposta: "neutro", bem: "ok", ajuda: "cuidado" };
 const PERGUNTA = "Oi! Aqui é da igreja. Soubemos da situação na sua região. Vocês estão bem? Precisam de alguma ajuda?";
 const hora = (iso: string) => new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
 export function Emergencia({ ctx, nivel, onMensagem }: { ctx: ContextoMapa; nivel: "bairro" | "setor"; onMensagem: (memberId: string) => void }) {
+  const traduzirUi = useTexto();
+
   const db = () => createServiceBrowserClient().schema("service");
   const [atual, setAtual] = useState<Emerg | null>(null);
   const [carregou, setCarregou] = useState(false);
@@ -63,9 +68,9 @@ export function Emergencia({ ctx, nivel, onMensagem }: { ctx: ContextoMapa; nive
 
   if (!carregou) return null;
   if (falhou) return (
-    <PainelMapa rotulo="Emergência" sobretitulo="Emergência" titulo="Não foi possível carregar" voltar={{ aoTocar: ctx.fechar }}
-      rodape={<Botao variante="principal" onClick={() => { setCarregou(false); setTentativa((t) => t + 1); }}>Tentar de novo</Botao>}>
-      <p className="ca-obs">Confira a conexão e tente de novo.</p>
+    <PainelMapa rotulo={traduzirUi("Emergência")} sobretitulo={traduzirUi("Emergência")} titulo={traduzirUi("Não foi possível carregar")} voltar={{ aoTocar: ctx.fechar }}
+      rodape={<Botao variante="principal" onClick={() => { setCarregou(false); setTentativa((t) => t + 1); }}>{traduzirUi("Tentar de novo")}</Botao>}>
+      <p className="ca-obs">{traduzirUi("Confira a conexão e tente de novo.")}</p>
     </PainelMapa>
   );
   if (!atual) return <MarcarArea ctx={ctx} nivel={nivel} aoAbrir={setAtual} />;
@@ -74,6 +79,8 @@ export function Emergencia({ ctx, nivel, onMensagem }: { ctx: ContextoMapa; nive
 
 /* P12: marcar a área atingida e dar um nome */
 function MarcarArea({ ctx, nivel, aoAbrir }: { ctx: ContextoMapa; nivel: "bairro" | "setor"; aoAbrir: (e: Emerg) => void }) {
+  const traduzirUi = useTexto();
+
   const db = () => createServiceBrowserClient().schema("service");
   const temBairros = nivel === "bairro" && ctx.regioes.length > 0;
   const area = useAreaDesenhada(ctx, { prefixo: "em", corHex: ctx.cores.alerta, inicial: "circulo", temBairros });
@@ -102,34 +109,34 @@ function MarcarArea({ ctx, nivel, aoAbrir }: { ctx: ContextoMapa; nivel: "bairro
 
   const abrir = async () => {
     const g = area.geometria();
-    if (!g) { setErro("Marque a área atingida no mapa."); return; }
-    if (!titulo.trim()) { setErro("Dê um nome para a emergência."); return; }
+    if (!g) { setErro(traduzirUi("Marque a área atingida no mapa.")); return; }
+    if (!titulo.trim()) { setErro(traduzirUi("Dê um nome para a emergência.")); return; }
     setOcupado(true); setErro("");
     const { data, error } = await db().rpc("mapa_emergencia_abrir", { p_org: ctx.org, p_titulo: titulo.trim(), p_geojson: g });
     setOcupado(false);
-    if (error || !data) { setErro(error?.message.includes("area_grande") ? "A área passou de 30 km². Marque só a parte atingida." : "Não foi possível abrir a emergência. Tente de novo."); return; }
+    if (error || !data) { setErro(error?.message.includes("area_grande") ? traduzirUi("A área passou de 30 km². Marque só a parte atingida.") : traduzirUi("Não foi possível abrir a emergência. Tente de novo.")); return; }
     aoAbrir({ id: data as string, titulo: titulo.trim(), status: "aberta", aberta_em: new Date().toISOString(), geojson: g });
   };
 
   return (
     <>
-      <BarraForma area={area} celular={ctx.celular} rotulo="Área atingida" id="em" />
-      <PainelMapa rotulo="Abrir emergência" sobretitulo="Emergência" titulo="O que aconteceu?" voltar={{ aoTocar: ctx.fechar }}
+      <BarraForma area={area} celular={ctx.celular} rotulo={traduzirUi("Área atingida")} id="em" />
+      <PainelMapa rotulo={traduzirUi("Abrir emergência")} sobretitulo={traduzirUi("Emergência")} titulo={traduzirUi("O que aconteceu?")} voltar={{ aoTocar: ctx.fechar }}
         busca={(
           <div className="ca-numeros">
-            <div className="ca-num"><span>Famílias na área</span><b className="mp-num">{conta && !contando ? conta.familias : "-"}</b></div>
-            <div className="ca-num"><span>Pessoas</span><b className="mp-num">{conta && !contando ? conta.pessoas : "-"}</b></div>
+            <div className="ca-num"><span>{traduzirUi("Famílias na área")}</span><b className="mp-num">{conta && !contando ? conta.familias : "-"}</b></div>
+            <div className="ca-num"><span>{traduzirUi("Pessoas")}</span><b className="mp-num">{conta && !contando ? conta.pessoas : "-"}</b></div>
           </div>
         )}
         rodape={(
           <div className="ca-pe">
             {erro && <p className="ca-erro" role="alert">{erro}</p>}
-            <Botao variante="principal" desativado={ocupado} onClick={abrir}>{ocupado ? "Abrindo..." : "Abrir emergência"}</Botao>
+            <Botao variante="principal" desativado={ocupado} onClick={abrir}>{ocupado ? traduzirUi("Abrindo...") : traduzirUi("Abrir emergência")}</Botao>
           </div>
         )}>
         <div className="ca-form">
-          <Campo rotulo="Nome" id="em-titulo"><Entrada maxLength={80} placeholder="ex: Enchente do Rio das Pedras" value={titulo} onChange={(e) => { setTitulo(e.target.value); setErro(""); }} /></Campo>
-          <p className="ca-obs">Só quem coordena vê esta tela. Aqui o endereço das famílias pode ser aberto, e cada abertura fica registrada com nome e hora.</p>
+          <Campo rotulo={traduzirUi("Nome")} id="em-titulo"><Entrada maxLength={80} placeholder={traduzirUi("ex: Enchente do Rio das Pedras")} value={titulo} onChange={(e) => { setTitulo(e.target.value); setErro(""); }} /></Campo>
+          <p className="ca-obs">{traduzirUi("Só quem coordena vê esta tela. Aqui o endereço das famílias pode ser aberto, e cada abertura fica registrada com nome e hora.")}</p>
         </div>
       </PainelMapa>
     </>
@@ -138,6 +145,8 @@ function MarcarArea({ ctx, nivel, aoAbrir }: { ctx: ContextoMapa; nivel: "bairro
 
 /* P13: emergência aberta, uma família por ponto */
 function EmergenciaAberta({ ctx, atual, onMensagem }: { ctx: ContextoMapa; atual: Emerg; onMensagem: (memberId: string) => void }) {
+  const traduzirUi = useTexto();
+
   const db = () => createServiceBrowserClient().schema("service");
   const [familias, setFamilias] = useState<Familia[]>([]);
   const [filtro, setFiltro] = useState<"todas" | Situacao>("todas");
@@ -152,11 +161,11 @@ function EmergenciaAberta({ ctx, atual, onMensagem }: { ctx: ContextoMapa; atual
   const carregar = useCallback(async () => {
     const { data, error } = await db().rpc("mapa_emergencia_familias", { p_id: atual.id });
     if (error) {
-      if (error.message.includes("encerrada")) { avisar("Esta emergência foi encerrada."); ctx.fechar(); }
+      if (error.message.includes("encerrada")) { avisar(traduzirUi("Esta emergência foi encerrada.")); ctx.fechar(); }
       return;
     }
     if (gravando.current === 0) setFamilias((data ?? []) as Familia[]);
-  }, [atual.id, ctx]);
+  }, [atual.id, ctx, traduzirUi]);
   /* a resposta da família muda a situação sozinha (G15): a lista se atualiza a cada 15 s */
   useEffect(() => {
     carregar();
@@ -206,16 +215,16 @@ function EmergenciaAberta({ ctx, atual, onMensagem }: { ctx: ContextoMapa; atual
   }, [ctx.mapa, familias, sel]);
 
   const marcar = async (f: Familia, status: Situacao) => {
-    setFamilias((fs) => fs.map((x) => (x.chave === f.chave ? { ...x, status, atualizado_em: new Date().toISOString(), marcado_por: "você", fonte: "coordenacao" } : x)));
+    setFamilias((fs) => fs.map((x) => (x.chave === f.chave ? { ...x, status, atualizado_em: new Date().toISOString(), marcado_por: traduzirUi("você"), fonte: "coordenacao" } : x)));
     gravando.current += 1;
     const { error } = await db().rpc("mapa_emergencia_status", { p_id: atual.id, p_chave: f.chave, p_status: status });
     gravando.current -= 1;
-    if (error) { avisar("Não foi possível salvar a situação agora. Tente de novo.", "warn"); carregar(); }
+    if (error) { avisar(traduzirUi("Não foi possível salvar a situação agora. Tente de novo."), "warn"); carregar(); }
   };
   const verEndereco = async (f: Familia) => {
     const { data, error } = await db().rpc("mapa_revelar_endereco", { p_id: atual.id, p_member_id: f.contato_member_id });
     const e = ((data ?? []) as Omit<Endereco, "quando">[])[0];
-    if (error || !e) { avisar("Não foi possível abrir o endereço. Tente de novo.", "warn"); return; }
+    if (error || !e) { avisar(traduzirUi("Não foi possível abrir o endereço. Tente de novo."), "warn"); return; }
     setEnderecos((m) => ({ ...m, [f.chave]: { ...e, quando: hora(new Date().toISOString()) } }));
   };
   const semResposta = familias.filter((f) => f.status === "sem_resposta");
@@ -230,15 +239,15 @@ function EmergenciaAberta({ ctx, atual, onMensagem }: { ctx: ContextoMapa; atual
     setCompondo(false);
     carregar();
     const falhas = semResposta.length - n;
-    avisar(!n ? "Não foi possível mandar. Confira se você tem ficha de membro." : falhas ? `Mensagem enviada para ${plural(n, "família", "famílias")}. ${plural(falhas, "família não recebeu", "famílias não receberam")}.` : `Mensagem enviada para ${plural(n, "família", "famílias")}.`, n && !falhas ? "ok" : "warn");
+    avisar(!n ? traduzirUi("Não foi possível mandar. Confira se você tem ficha de membro.") : falhas ? traduzirUi("Mensagem enviada para {count, plural, =1 {# família} other {# famílias}}. {falhas, plural, =1 {# família não recebeu} other {# famílias não receberam}}.", { count: n, falhas }) : traduzirUi("Mensagem enviada para {count, plural, =1 {# família} other {# famílias}}.", { count: n }), n && !falhas ? "ok" : "warn");
   };
   const encerrar = async () => {
     const faltam = familias.filter((f) => f.status !== "bem").length;
-    const ok = await confirmar({ titulo: "Encerrar a emergência?", texto: faltam ? `${plural(faltam, "família ainda não está bem", "famílias ainda não estão bem")}. Depois de encerrar, os endereços deixam de abrir.` : "Depois de encerrar, os endereços deixam de abrir.", acao: "Encerrar" });
+    const ok = await confirmar({ titulo: traduzirUi("Encerrar a emergência?"), texto: faltam ? traduzirUi("{count, plural, =1 {# família ainda não está bem} other {# famílias ainda não estão bem}}. Depois de encerrar, os endereços deixam de abrir.", { count: faltam }) : traduzirUi("Depois de encerrar, os endereços deixam de abrir."), acao: traduzirUi("Encerrar") });
     if (!ok) return;
     const { error } = await db().rpc("mapa_emergencia_encerrar", { p_id: atual.id });
-    if (error) { avisar("Não foi possível encerrar. Tente de novo.", "warn"); return; }
-    avisar("Emergência encerrada.");
+    if (error) { avisar(traduzirUi("Não foi possível encerrar. Tente de novo."), "warn"); return; }
+    avisar(traduzirUi("Emergência encerrada."));
     ctx.fechar();
   };
   const baixar = async () => {
@@ -249,57 +258,58 @@ function EmergenciaAberta({ ctx, atual, onMensagem }: { ctx: ContextoMapa; atual
   const conta = useMemo(() => ({ bem: familias.filter((f) => f.status === "bem").length, ajuda: familias.filter((f) => f.status === "ajuda").length }), [familias]);
   const lista = familias.filter((f) => filtro === "todas" || f.status === filtro);
   const aberta = familias.find((f) => f.chave === sel) ?? null;
-  const meta = (f: Familia) => [plural(f.pessoas, "pessoa"), f.bairro, f.status === "sem_resposta" && !f.marcado_por ? "aguardando" : f.fonte === "familia" && f.atualizado_em ? `respondeu às ${hora(f.atualizado_em)}` : f.marcado_por && f.atualizado_em ? `marcado por ${f.marcado_por} às ${hora(f.atualizado_em)}` : null].filter(Boolean).join(" · ");
+  const meta = (f: Familia) => [traduzirUi("{count, plural, =1 {# pessoa} other {# pessoas}}", { count: f.pessoas }), f.bairro, f.status === "sem_resposta" && !f.marcado_por ? traduzirUi("aguardando") : f.fonte === "familia" && f.atualizado_em ? traduzirUi("respondeu às {hora}", { hora: hora(f.atualizado_em) }) : f.marcado_por && f.atualizado_em ? traduzirUi("marcado por {nome} às {hora}", { nome: f.marcado_por, hora: hora(f.atualizado_em) }) : null].filter(Boolean).join(" · ");
+  const rotulosSituacao = rotulosDaSituacao(traduzirUi);
 
   return (
     <>
-      <div className="em-legenda" aria-label="Legenda">
-        <span><span className="em-bola st-sem_resposta" aria-hidden="true" />Sem resposta</span>
-        <span><span className="em-bola st-bem" aria-hidden="true" />Está bem</span>
-        <span><span className="em-bola st-ajuda" aria-hidden="true" />Precisa de ajuda</span>
+      <div className="em-legenda" aria-label={traduzirUi("Legenda")}>
+        <span><span className="em-bola st-sem_resposta" aria-hidden="true" />{traduzirUi("Sem resposta")}</span>
+        <span><span className="em-bola st-bem" aria-hidden="true" />{traduzirUi("Está bem")}</span>
+        <span><span className="em-bola st-ajuda" aria-hidden="true" />{traduzirUi("Precisa de ajuda")}</span>
       </div>
 
-      <PainelMapa rotulo="Emergência aberta" sobretitulo={<>Emergência · aberta às <span className="mp-num">{hora(atual.aberta_em)}</span></>} titulo={atual.titulo} voltar={{ aoTocar: ctx.fechar }}
+      <PainelMapa rotulo={traduzirUi("Emergência aberta")} sobretitulo={<>{traduzirUi.rich("Emergência · aberta às <num>{hora}</num>", { hora: hora(atual.aberta_em), num: (c) => <span className="mp-num">{c}</span> })}</>} titulo={atual.titulo} voltar={{ aoTocar: ctx.fechar }}
         busca={(
           <div className="em-topo">
             <div className="em-numeros">
-              <div className="ca-num"><span>Famílias</span><b className="mp-num">{familias.length}</b></div>
-              <div className="ca-num"><span>Estão bem</span><b className="mp-num">{conta.bem}</b></div>
-              <div className="ca-num"><span>Precisam</span><b className="mp-num">{conta.ajuda}</b></div>
+              <div className="ca-num"><span>{traduzirUi("Famílias")}</span><b className="mp-num">{familias.length}</b></div>
+              <div className="ca-num"><span>{traduzirUi("Estão bem")}</span><b className="mp-num">{conta.bem}</b></div>
+              <div className="ca-num"><span>{traduzirUi("Precisam")}</span><b className="mp-num">{conta.ajuda}</b></div>
             </div>
-            <Segmentado role="group" aria-label="Mostrar" rolavel>
+            <Segmentado role="group" aria-label={traduzirUi("Mostrar")} rolavel>
               {(["todas", "sem_resposta", "ajuda", "bem"] as const).map((v) => (
-                <Opcao key={v} marcada={filtro === v} onClick={() => setFiltro(v)}>{v === "todas" ? "Todas" : v === "ajuda" ? "Precisam" : v === "bem" ? "Estão bem" : "Sem resposta"}</Opcao>
+                <Opcao key={v} marcada={filtro === v} onClick={() => setFiltro(v)}>{v === "todas" ? traduzirUi("Todas") : v === "ajuda" ? traduzirUi("Precisam") : v === "bem" ? traduzirUi("Estão bem") : traduzirUi("Sem resposta")}</Opcao>
               ))}
             </Segmentado>
           </div>
         )}
         rodape={compondo ? (
-          <section className="em-compor" aria-label="Prévia da mensagem">
-            <div className="em-compor-cab"><b>Para quem não respondeu</b><span>{plural(semResposta.length, "família", "famílias")}</span></div>
-            <TextoLongo aria-label="Texto da mensagem" rows={3} maxLength={500} value={texto} onChange={(e) => setTexto(e.target.value)} />
-            <p className="em-compor-nota">Respondem com um toque: <Selo tom="ok">Estamos bem</Selo> <Selo tom="cuidado">Precisamos de ajuda</Selo></p>
+          <section className="em-compor" aria-label={traduzirUi("Prévia da mensagem")}>
+            <div className="em-compor-cab"><b>{traduzirUi("Para quem não respondeu")}</b><span>{traduzirUi("{count, plural, =1 {# família} other {# famílias}}", { count: semResposta.length })}</span></div>
+            <TextoLongo aria-label={traduzirUi("Texto da mensagem")} rows={3} maxLength={500} value={texto} onChange={(e) => setTexto(e.target.value)} />
+            <p className="em-compor-nota">{traduzirUi.rich("Respondem com um toque: <ok>Estamos bem</ok> <ajuda>Precisamos de ajuda</ajuda>", { ok: (c) => <Selo tom="ok">{c}</Selo>, ajuda: (c) => <Selo tom="cuidado">{c}</Selo> })}</p>
             <div className="ca-pe-botoes">
-              <Botao onClick={() => setCompondo(false)}>Cancelar</Botao>
-              <Botao variante="principal" className="ca-salvar" desativado={ocupado || !texto.trim() || !semResposta.length} onClick={enviar}>{ocupado ? "Enviando..." : `Enviar para ${plural(semResposta.length, "família", "famílias")}`}</Botao>
+              <Botao onClick={() => setCompondo(false)}>{traduzirUi("Cancelar")}</Botao>
+              <Botao variante="principal" className="ca-salvar" desativado={ocupado || !texto.trim() || !semResposta.length} onClick={enviar}>{ocupado ? traduzirUi("Enviando...") : traduzirUi("Enviar para {count, plural, =1 {# família} other {# famílias}}", { count: semResposta.length })}</Botao>
             </div>
           </section>
         ) : (
           <div className="ca-pe">
-            <Botao variante="principal" desativado={!semResposta.length} onClick={() => setCompondo(true)}>Perguntar a quem não respondeu · <span className="mp-num">{semResposta.length}</span></Botao>
+            <Botao variante="principal" desativado={!semResposta.length} onClick={() => setCompondo(true)}>{traduzirUi.rich("Perguntar a quem não respondeu · <num>{n}</num>", { n: String(semResposta.length), num: (c) => <span className="mp-num">{c}</span> })}</Botao>
             <div className="ca-pe-botoes">
-              <Botao compacto desativado={!familias.length} onClick={baixar}>Baixar lista (sem endereço)</Botao>
-              <Botao variante="discreto" compacto onClick={encerrar}>Encerrar</Botao>
+              <Botao compacto desativado={!familias.length} onClick={baixar}>{traduzirUi("Baixar lista (sem endereço)")}</Botao>
+              <Botao variante="discreto" compacto onClick={encerrar}>{traduzirUi("Encerrar")}</Botao>
             </div>
           </div>
         )}>
         <div className="em-lista">
-          {lista.length === 0 && <p className="mp-fraco">{familias.length ? "Nenhuma família neste filtro." : "Nenhuma pessoa da igreja mora na área marcada."}</p>}
+          {lista.length === 0 && <p className="mp-fraco">{familias.length ? traduzirUi("Nenhuma família neste filtro.") : traduzirUi("Nenhuma pessoa da igreja mora na área marcada.")}</p>}
           {lista.map((f) => (
             <Acao key={f.chave} className="em-familia" aria-pressed={sel === f.chave} onClick={() => { setSel(f.chave); if (f.latitude != null && f.longitude != null) ctx.mapa.easeTo({ center: [f.longitude, f.latitude], duration: 400 }); }}>
               <span className={`em-bola st-${f.status}`} aria-hidden="true" />
               <span className="em-familia-txt"><b>{f.nome}</b><span>{meta(f)}</span></span>
-              <Selo tom={TOM[f.status]}>{SITUACAO[f.status]}</Selo>
+              <Selo tom={TOM[f.status]}>{rotulosSituacao[f.status]}</Selo>
             </Acao>
           ))}
         </div>
@@ -317,24 +327,26 @@ function BalaoFamilia({ ctx, f, endereco, meta, aoMensagem, aoFechar, aoMarcar, 
   ctx: ContextoMapa; f: Familia; endereco?: Endereco; meta: string; aoMensagem: (memberId: string) => void;
   aoFechar: () => void; aoMarcar: (s: Situacao) => void; aoVerEndereco: () => void;
 }) {
+  const traduzirUi = useTexto();
+
   const pos = usePosicaoNoMapa(ctx.mapa, [f.longitude as number, f.latitude as number]);
-  const linhaEndereco = endereco ? [[endereco.rua, endereco.numero].filter(Boolean).join(", "), endereco.complemento, endereco.bairro].filter(Boolean).join(" · ") || "Endereço não cadastrado" : "";
+  const linhaEndereco = endereco ? [[endereco.rua, endereco.numero].filter(Boolean).join(", "), endereco.complemento, endereco.bairro].filter(Boolean).join(" · ") || traduzirUi("Endereço não cadastrado") : "";
   return (
     <Balao x={pos.x} y={pos.y} oculto={pos.fora && !ctx.celular} folha={ctx.celular} aoFechar={aoFechar}
-      sobretitulo={SITUACAO[f.status]} titulo={f.nome}
+      sobretitulo={rotulosDaSituacao(traduzirUi)[f.status]} titulo={f.nome}
       rodape={(
         <>
-          {f.telefone && <a className={botaoClasse({})} href={`tel:${f.telefone.replace(/[^\d+]/g, "")}`}>Ligar</a>}
-          <Botao onClick={() => aoMensagem(f.contato_member_id)}>Mensagem</Botao>
+          {f.telefone && <a className={botaoClasse({})} href={`tel:${f.telefone.replace(/[^\d+]/g, "")}`}>{traduzirUi("Ligar")}</a>}
+          <Botao onClick={() => aoMensagem(f.contato_member_id)}>{traduzirUi("Mensagem")}</Botao>
         </>
       )}>
       <LinhaBalao icone="membros">{meta}</LinhaBalao>
-      <Segmentado role="group" className="em-situacao" aria-label={`Situação de ${f.nome}`}>
-        {(["sem_resposta", "bem", "ajuda"] as const).map((sit) => <Opcao key={sit} marcada={f.status === sit} onClick={() => aoMarcar(sit)}>{sit === "ajuda" ? "Precisa" : SITUACAO[sit]}</Opcao>)}
+      <Segmentado role="group" className="em-situacao" aria-label={traduzirUi("Situação de {nome}", { nome: f.nome })}>
+        {(["sem_resposta", "bem", "ajuda"] as const).map((sit) => <Opcao key={sit} marcada={f.status === sit} onClick={() => aoMarcar(sit)}>{sit === "ajuda" ? traduzirUi("Precisa") : rotulosDaSituacao(traduzirUi)[sit]}</Opcao>)}
       </Segmentado>
       {endereco
-        ? <LinhaBalao icone="mapapin"><b>{linhaEndereco}</b> · aberto por você às {endereco.quando}, registrado</LinhaBalao>
-        : <Botao variante="discreto" compacto onClick={aoVerEndereco}>Ver endereço · fica registrado</Botao>}
+        ? <LinhaBalao icone="mapapin">{traduzirUi.rich("<b>{endereco}</b> · aberto por você às {hora}, registrado", { endereco: linhaEndereco, hora: endereco.quando, b: (c) => <b>{c}</b> })}</LinhaBalao>
+        : <Botao variante="discreto" compacto onClick={aoVerEndereco}>{traduzirUi("Ver endereço · fica registrado")}</Botao>}
       <LinhaBalao icone="pessoa">{f.membros.map((m) => m.nome).join(", ")}</LinhaBalao>
     </Balao>
   );

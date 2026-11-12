@@ -12,6 +12,8 @@ import { Campo, Entrada, TextoLongo } from "../../ui/Campo";
 import { Opcao } from "../../ui/Opcao";
 import { Balao } from "../../ui/Balao";
 import { confirmar } from "../../ui/confirmar";
+import { useTexto } from "../../lib/internacional/contexto";
+import { sourceText, type Text } from "../../lib/internacional/mensagens";
 
 /* Ferramentas › Marcar lugar (G11, mapa/PLANO.md §10, prancha P11). Só marca
    lugar da igreja: tocar no mapa solta o marcador e abre o balão com nome,
@@ -31,14 +33,19 @@ export const CATEGORIAS: { id: string; nome: string; grupo: "igrejas" | "onibus"
   { id: "igreja_parceiro", nome: "Pontos da igreja · Parceiro", grupo: "igreja" },
   { id: "igreja_encontro", nome: "Pontos da igreja · Ponto de encontro", grupo: "igreja" },
 ];
+/* nome na tela (o CATEGORIAS.nome acima segue no CSV) */
+export const nomesDasCategorias = (t: Text): Record<string, string> => ({
+  igrejas: t("Igrejas na região"), onibus: t("Parada de ônibus"), escolas: t("Escola, praça ou quadra"), saude: t("CRAS, posto de saúde, hospital ou asilo"),
+  igreja_acao: t("Local de ação já feita"), igreja_casa: t("Casa que oferece espaço"), igreja_parceiro: t("Parceiro"), igreja_encontro: t("Ponto de encontro"),
+});
 /* tipos que a igreja marca (P11) */
-const TIPOS: { id: string; nome: string; icone: string }[] = [
-  { id: "igreja_acao", nome: "Local de ação", icone: "bandeira" },
-  { id: "igreja_casa", nome: "Casa que oferece espaço", icone: "inicio" },
-  { id: "igreja_parceiro", nome: "Parceiro", icone: "ok" },
-  { id: "igreja_encontro", nome: "Ponto de encontro", icone: "mapapin" },
+const tipos = (t: Text): { id: string; nome: string; icone: string }[] => [
+  { id: "igreja_acao", nome: t("Local de ação"), icone: "bandeira" },
+  { id: "igreja_casa", nome: t("Casa que oferece espaço"), icone: "inicio" },
+  { id: "igreja_parceiro", nome: t("Parceiro"), icone: "ok" },
+  { id: "igreja_encontro", nome: t("Ponto de encontro"), icone: "mapapin" },
 ];
-export const nomeDaCategoria = (id: string) => CATEGORIAS.find((c) => c.id === id)?.nome.replace("Pontos da igreja · ", "") ?? id;
+export const nomeDaCategoria = (id: string, t: Text = sourceText) => nomesDasCategorias(t)[id] ?? id;
 
 const db = () => createServiceBrowserClient().schema("service");
 
@@ -49,28 +56,30 @@ export async function carregarPontos(org: string): Promise<Ponto[]> {
 }
 
 /* ocultar ou mostrar: o lugar do OpenStreetMap ganha uma linha própria na primeira vez */
-export async function ocultarLugar(org: string, pt: Ponto, oculto: boolean) {
+export async function ocultarLugar(org: string, pt: Ponto, oculto: boolean, t: Text) {
   const r = pt.ponto_id
     ? await db().from("map_points").update({ oculto, updated_at: new Date().toISOString() }).eq("id", pt.ponto_id)
     : await db().from("map_points").insert({ organization_id: org, nome: pt.nome || "Sem nome", categoria: pt.categoria, origem: "osm", osm_id: pt.id.replace(/^osm:/, ""), latitude: pt.latitude, longitude: pt.longitude, oculto });
-  if (r.error) { avisar("Não foi possível salvar agora. Tente de novo.", "warn"); return false; }
-  avisar(oculto ? "Lugar oculto do mapa." : "Lugar de volta no mapa.");
+  if (r.error) { avisar(t("Não foi possível salvar agora. Tente de novo."), "warn"); return false; }
+  avisar(oculto ? t("Lugar oculto do mapa.") : t("Lugar de volta no mapa."));
   return true;
 }
 
 /* excluir só o que a igreja marcou à mão */
-export async function excluirLugar(pt: Ponto) {
+export async function excluirLugar(pt: Ponto, t: Text) {
   if (!pt.ponto_id || pt.origem !== "manual") return false;
-  if (!(await confirmar({ titulo: `Excluir ${pt.nome || "este lugar"}?`, texto: "O lugar sai do mapa para todos. Não dá para desfazer.", acao: "Excluir" }))) return false;
+  if (!(await confirmar({ titulo: pt.nome ? t("Excluir {nome}?", { nome: pt.nome }) : t("Excluir este lugar?"), texto: t("O lugar sai do mapa para todos. Não dá para desfazer."), acao: t("Excluir") }))) return false;
   const { error } = await db().from("map_points").delete().eq("id", pt.ponto_id);
-  if (error) { avisar("Não foi possível excluir agora. Tente de novo.", "warn"); return false; }
-  avisar("Lugar excluído.");
+  if (error) { avisar(t("Não foi possível excluir agora. Tente de novo."), "warn"); return false; }
+  avisar(t("Lugar excluído."));
   return true;
 }
 
 type Form = { ponto?: Ponto; nome: string; categoria: string; lnglat: [number, number]; endereco: string; observacao: string };
 
 export function Pontos({ ctx, editar }: { ctx: ContextoMapa; editar?: Ponto | null }) {
+  const traduzirUi = useTexto();
+
   const [form, setForm] = useState<Form | null>(() => (editar ? { ponto: editar, nome: editar.nome, categoria: editar.categoria, lnglat: [editar.longitude, editar.latitude], endereco: editar.endereco ?? "", observacao: editar.observacao ?? "" } : null));
   const [salvando, setSalvando] = useState(false);
   const [marcados, setMarcados] = useState<Ponto[]>([]);
@@ -130,8 +139,8 @@ export function Pontos({ ctx, editar }: { ctx: ContextoMapa; editar?: Ponto | nu
         ? await db().from("map_points").insert({ organization_id: ctx.org, origem: "osm", osm_id: p.id.replace(/^osm:/, ""), ...dados, nome: p.nome, categoria: p.categoria, latitude: p.latitude, longitude: p.longitude })
         : await db().from("map_points").insert({ organization_id: ctx.org, origem: "manual", ...dados });
     setSalvando(false);
-    if (r.error) { avisar("Não foi possível salvar o lugar. Tente de novo.", "warn"); return; }
-    avisar(p ? "Lugar atualizado." : `${dados.nome} marcado no mapa.`);
+    if (r.error) { avisar(traduzirUi("Não foi possível salvar o lugar. Tente de novo."), "warn"); return; }
+    avisar(p ? traduzirUi("Lugar atualizado.") : traduzirUi("{nome} marcado no mapa.", { nome: dados.nome }));
     if (p) { ctx.fechar(); return; }
     setForm(null);
     recarregar();
@@ -142,26 +151,26 @@ export function Pontos({ ctx, editar }: { ctx: ContextoMapa; editar?: Ponto | nu
     <>
       <div className="mp-dica" role="status">
         <span className="mp-dica-ic" aria-hidden="true"><Icon name="marcarlugar" size={16} stroke={2} /></span>
-        <span>{form?.ponto ? `Editando ${form.ponto.nome || "o lugar"}.` : "Toque no mapa onde fica o lugar."}</span>
-        <Botao compacto onClick={ctx.fechar}>Concluir</Botao>
+        <span>{form?.ponto ? (form.ponto.nome ? traduzirUi("Editando {nome}.", { nome: form.ponto.nome }) : traduzirUi("Editando o lugar.")) : traduzirUi("Toque no mapa onde fica o lugar.")}</span>
+        <Botao compacto onClick={ctx.fechar}>{traduzirUi("Concluir")}</Botao>
       </div>
       {form && pos && (
         <Balao x={pos.x} y={pos.y} oculto={pos.fora && !ctx.celular} folha={ctx.celular} largura={340}
-          sobretitulo={osm ? "OpenStreetMap · só a observação muda" : form.ponto ? "Lugar da igreja" : "Novo lugar da igreja"}
-          titulo={form.nome.trim() || (form.ponto?.nome ?? "") || "Lugar sem nome"}
+          sobretitulo={osm ? traduzirUi("OpenStreetMap · só a observação muda") : form.ponto ? traduzirUi("Lugar da igreja") : traduzirUi("Novo lugar da igreja")}
+          titulo={form.nome.trim() || (form.ponto?.nome ?? "") || traduzirUi("Lugar sem nome")}
           aoFechar={() => (form.ponto ? ctx.fechar() : setForm(null))}
           rodape={(
             <>
-              <Botao onClick={() => (form.ponto ? ctx.fechar() : setForm(null))}>Cancelar</Botao>
-              <Botao variante="principal" className="ml-salvar" desativado={salvando || (!osm && !form.nome.trim())} onClick={salvar}>{form.ponto ? "Salvar" : "Marcar lugar"}</Botao>
+              <Botao onClick={() => (form.ponto ? ctx.fechar() : setForm(null))}>{traduzirUi("Cancelar")}</Botao>
+              <Botao variante="principal" className="ml-salvar" desativado={salvando || (!osm && !form.nome.trim())} onClick={salvar}>{form.ponto ? traduzirUi("Salvar") : traduzirUi("Marcar lugar")}</Botao>
             </>
           )}>
-          {!osm && <Campo rotulo="Nome" obrigatorio id="ml-nome"><Entrada maxLength={80} value={form.nome} placeholder="ex: Casa da Dona Lúcia" onChange={(e) => setForm({ ...form, nome: e.target.value })} /></Campo>}
+          {!osm && <Campo rotulo={traduzirUi("Nome")} obrigatorio id="ml-nome"><Entrada maxLength={80} value={form.nome} placeholder={traduzirUi("ex: Casa da Dona Lúcia")} onChange={(e) => setForm({ ...form, nome: e.target.value })} /></Campo>}
           {!osm && (
             <div className="ml-tipos-campo">
-              <span className="field-label" id="ml-tipo-r">Tipo</span>
+              <span className="field-label" id="ml-tipo-r">{traduzirUi("Tipo")}</span>
               <div className="ml-tipos" role="group" aria-labelledby="ml-tipo-r">
-                {TIPOS.map((t) => (
+                {tipos(traduzirUi).map((t) => (
                   <Opcao key={t.id} className="ml-tipo" marcada={form.categoria === t.id} onClick={() => setForm({ ...form, categoria: t.id })}>
                     <span className="ml-tipo-ic" aria-hidden="true"><Icon name={t.icone} size={16} stroke={2} /></span>{t.nome}
                   </Opcao>
@@ -169,8 +178,8 @@ export function Pontos({ ctx, editar }: { ctx: ContextoMapa; editar?: Ponto | nu
               </div>
             </div>
           )}
-          {!osm && <Campo rotulo="Endereço" id="ml-end"><Entrada maxLength={160} placeholder="Opcional" value={form.endereco} onChange={(e) => setForm({ ...form, endereco: e.target.value })} /></Campo>}
-          <Campo rotulo="Observação" id="ml-obs"><TextoLongo rows={2} maxLength={500} placeholder="ex: cabe 20 pessoas, tem quintal" value={form.observacao} onChange={(e) => setForm({ ...form, observacao: e.target.value })} /></Campo>
+          {!osm && <Campo rotulo={traduzirUi("Endereço")} id="ml-end"><Entrada maxLength={160} placeholder={traduzirUi("Opcional")} value={form.endereco} onChange={(e) => setForm({ ...form, endereco: e.target.value })} /></Campo>}
+          <Campo rotulo={traduzirUi("Observação")} id="ml-obs"><TextoLongo rows={2} maxLength={500} placeholder={traduzirUi("ex: cabe 20 pessoas, tem quintal")} value={form.observacao} onChange={(e) => setForm({ ...form, observacao: e.target.value })} /></Campo>
         </Balao>
       )}
     </>

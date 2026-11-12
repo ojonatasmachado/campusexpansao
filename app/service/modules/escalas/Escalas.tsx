@@ -9,7 +9,6 @@ import { limitesDaSemana } from "./semana";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { friendlyWriteError } from "../../painel/erros";
-import { plural } from "../../lib/plural";
 import { baixarCsv } from "../../lib/csv";
 import { useRelogioDaIgreja } from "../../lib/relogio-context";
 import { formatDateBR, joinDot, todayISO } from "../../lib/date";
@@ -34,6 +33,7 @@ import { Segmentado } from "../../ui/Segmentado";
 import { Campo, Entrada } from "../../ui/Campo";
 import { Selecao } from "../../ui/Selecao";
 import { Vazio } from "../../ui/Estados";
+import { useTexto } from "../../lib/internacional/contexto";
 type Candidato = CandidatoBase<PersonView>;
 
 /* carga da semana corrente (segunda a domingo contendo hoje) por pessoa:
@@ -64,6 +64,8 @@ function FuncoesEscalaModal({
   onClose: () => void;
   onRefresh: () => void;
 }) {
+  const traduzirUi = useTexto();
+
   const [positions, setPositions] = useState(ministry.positions);
   const [nome, setNome] = useState("");
   const [need, setNeed] = useState(1);
@@ -105,9 +107,9 @@ function FuncoesEscalaModal({
   };
 
   return (
-    <Janela sobretitulo={`Funções · ${ministry.name}`} titulo="Quem o time precisa" texto="Adicione, renomeie ou remova funções e diga quantas pessoas cada uma precisa. Vale para todos os eventos deste time." aoFechar={onClose} corpoBloco
+    <Janela sobretitulo={traduzirUi("Funções · {time}", { time: ministry.name })} titulo={traduzirUi("Quem o time precisa")} texto={traduzirUi("Adicione, renomeie ou remova funções e diga quantas pessoas cada uma precisa. Vale para todos os eventos deste time.")} aoFechar={onClose} corpoBloco
       rodape={<>
-        <Botao variante="principal" onClick={onClose}>Concluído</Botao>
+        <Botao variante="principal" onClick={onClose}>{traduzirUi("Concluído")}</Botao>
       </>}>
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
             {positions.map((position) => (
@@ -118,16 +120,16 @@ function FuncoesEscalaModal({
                   <span>{position.need_count}</span>
                   <Acao onClick={() => setNeedAt(position.id, 1)}>+</Acao>
                 </div>
-                <Acao className="func-edit-x" title="Remover função" onClick={() => remove(position.id)}><Icon name="recusou" size={15} /></Acao>
+                <Acao className="func-edit-x" title={traduzirUi("Remover função")} onClick={() => remove(position.id)}><Icon name="recusou" size={15} /></Acao>
               </div>
             ))}
-            {positions.length === 0 && <div className="empty" style={{ padding: "8px 0" }}>Nenhuma função ainda.</div>}
+            {positions.length === 0 && <div className="empty" style={{ padding: "8px 0" }}>{traduzirUi("Nenhuma função ainda.")}</div>}
           </div>
-          <div className="dsec-title" style={{ marginBottom: 8 }}>Nova função</div>
+          <div className="dsec-title" style={{ marginBottom: 8 }}>{traduzirUi("Nova função")}</div>
           <div className="func-edit-add">
-            <input className="input" placeholder="ex: Vocal, Câmera, Recepção" value={nome} onChange={(e) => setNome(e.target.value)} onKeyDown={(e) => e.key === "Enter" && add()} />
+            <input className="input" placeholder={traduzirUi("ex: Vocal, Câmera, Recepção")} value={nome} onChange={(e) => setNome(e.target.value)} onKeyDown={(e) => e.key === "Enter" && add()} />
             <div className="stepper"><Acao onClick={() => setNeed((n) => Math.max(1, n - 1))}>−</Acao><span>{need}</span><Acao onClick={() => setNeed((n) => n + 1)}>+</Acao></div>
-            <Botao compacto desativado={saving} onClick={add}>+ Função</Botao>
+            <Botao compacto desativado={saving} onClick={add}>{traduzirUi("+ Função")}</Botao>
           </div>
     </Janela>
   );
@@ -144,6 +146,8 @@ function DelegarModal({
   onClose: () => void;
   onRefresh: () => void;
 }) {
+  const traduzirUi = useTexto();
+
   const { comTermos: ct } = useTermos();
   const [ministryId, setMinistryId] = useState(ministries[0]?.id ?? "");
   const [saving, setSaving] = useState(false);
@@ -163,16 +167,16 @@ function DelegarModal({
   };
 
   return (
-    <Janela sobretitulo="Delegar gestão da escala" titulo="Quem mais pode montar a escala" texto="As pessoas escolhidas passam a ver e gerir a escala deste time, como você." aoFechar={onClose} corpoBloco
+    <Janela sobretitulo={traduzirUi("Delegar gestão da escala")} titulo={traduzirUi("Quem mais pode montar a escala")} texto={traduzirUi("As pessoas escolhidas passam a ver e gerir a escala deste time, como você.")} aoFechar={onClose} corpoBloco
       rodape={<>
-        <Botao variante="principal" onClick={onClose}>Concluído</Botao>
+        <Botao variante="principal" onClick={onClose}>{traduzirUi("Concluído")}</Botao>
       </>}>
           {ministries.length > 1 && (
             <Segmentado style={{ marginBottom: 14, flexWrap: "wrap" }}>
               {ministries.map((m) => <Opcao key={m.id} marcada={ministryId === m.id} onClick={() => setMinistryId(m.id)}>{m.name.split(" ")[0]}</Opcao>)}
             </Segmentado>
           )}
-          {elenco.length === 0 && <Vazio titulo="Ninguém mais neste time ainda." />}
+          {elenco.length === 0 && <Vazio titulo={traduzirUi("Ninguém mais neste time ainda.")} />}
           {elenco.map((link) => {
             const on = delegados.includes(link.personId);
             return (
@@ -198,6 +202,8 @@ function PresetSaveModal({
   onClose: () => void;
   onRefresh: () => void;
 }) {
+  const traduzirUi = useTexto();
+
   const [nome, setNome] = useState("");
   const [saving, setSaving] = useState(false);
   const salvar = async () => {
@@ -214,12 +220,12 @@ function PresetSaveModal({
     onClose();
   };
   return (
-    <Janela sobretitulo="Configuração padrão" titulo="Salvar como…" texto={'Guarda as funções e quantidades atuais de todos os times. Crie uma para "Culto", outra para "Reunião", e aplique quando quiser.'} aoFechar={onClose} corpoBloco
+    <Janela sobretitulo={traduzirUi("Configuração padrão")} titulo={traduzirUi("Salvar como…")} texto={traduzirUi("Guarda as funções e quantidades atuais de todos os times. Crie uma para \"Culto\", outra para \"Reunião\", e aplique quando quiser.")} aoFechar={onClose} corpoBloco
       rodape={<>
-        <Botao onClick={onClose}>Cancelar</Botao>
-          <Botao variante="principal" desativado={saving} onClick={salvar}>Salvar</Botao>
+        <Botao onClick={onClose}>{traduzirUi("Cancelar")}</Botao>
+          <Botao variante="principal" desativado={saving} onClick={salvar}>{traduzirUi("Salvar")}</Botao>
       </>}>
-          <Campo rotulo="Nome da configuração"><Entrada placeholder="ex: Culto de domingo" value={nome} onChange={(e) => setNome(e.target.value)} onKeyDown={(e) => e.key === "Enter" && salvar()} /></Campo>
+          <Campo rotulo={traduzirUi("Nome da configuração")}><Entrada placeholder={traduzirUi("ex: Culto de domingo")} value={nome} onChange={(e) => setNome(e.target.value)} onKeyDown={(e) => e.key === "Enter" && salvar()} /></Campo>
     </Janela>
   );
 }
@@ -253,6 +259,8 @@ export function Escalas({
   /* v7 4.16: veio da cobertura (Início, detalhe do culto): abre neste culto e rola até o time */
   foco?: { eventId: string; timeId?: string } | null;
 }) {
+  const traduzirUi = useTexto();
+
   const { aindaVaiAcontecer } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
   // gaps/semanaAtual removidos: cobertura vai para Panorama (lei 14), não é usada na tabela por time
@@ -333,8 +341,8 @@ export function Escalas({
 
   const conferirGravacao = async (consulta: PromiseLike<{ data: unknown; error: { message: string } | null }>) => {
     const { data, error } = await consulta;
-    if (error) throw new Error(friendlyWriteError(error.message));
-    if (!data) throw new Error("A escala mudou ou você não pode alterá-la. Atualize a tela e tente novamente.");
+    if (error) throw new Error(friendlyWriteError(error.message, traduzirUi));
+    if (!data) throw new Error(traduzirUi("A escala mudou ou você não pode alterá-la. Atualize a tela e tente novamente."));
   };
   const confirmarAssignment = async (assignmentId: string) => {
     await conferirGravacao(createServiceBrowserClient().schema("service").from("roster_assignments").update({ status: "ok" }).eq("id", assignmentId).select("id").single());
@@ -350,7 +358,7 @@ export function Escalas({
   };
   const trocarAssignment = async (assignmentId: string, novoPersonId: string) => {
     const atual = roster.find((r) => r.id === assignmentId);
-    if (!atual) throw new Error("Essa vaga mudou. Atualize a tela antes de substituir.");
+    if (!atual) throw new Error(traduzirUi("Essa vaga mudou. Atualize a tela antes de substituir."));
     await conferirGravacao(createServiceBrowserClient().schema("service").from("roster_assignments").update({ person_id: novoPersonId, status: "wait" }).eq("id", assignmentId).eq("person_id", atual.person_id).select("id").single());
     router.refresh();
   };
@@ -443,28 +451,28 @@ export function Escalas({
 
   /* líder de time ouve quais times está vendo; a gestão vê todos e não precisa do aviso */
   const perspectiveText = scopeMinistryIds
-    ? (timesDoEscopo.length > 1 ? `Você está vendo os ${timesDoEscopo.length} times que lidera.` : `Você está vendo só o ${timesDoEscopo[0]?.name ?? "seu time"}.`)
+    ? (timesDoEscopo.length > 1 ? traduzirUi("Você está vendo os {n} times que lidera.", { n: String(timesDoEscopo.length) }) : timesDoEscopo[0]?.name != null ? traduzirUi("Você está vendo só o {time}.", { time: timesDoEscopo[0].name }) : traduzirUi("Você está vendo só o seu time."))
     : "";
 
   /* Legenda inline com bolinhas coloridas */
   return (
     <div className="content wide">
       <PageHead
-        title="Escalas por time"
-        eyebrow="Operação"
+        title={traduzirUi("Escalas por time")}
+        eyebrow={traduzirUi("Operação")}
         subtitle={scopeMinistryIds ? perspectiveText : undefined}
-        help={ct(`Monte quem serve em cada {culto} por time. As pessoas confirmam ou recusam direto no celular, e a vaga em aberto aparece na tabela. Toque numa pessoa para confirmar, trocar ou remover; em Escalar para preencher a vaga. ${perspectiveText}`)}
+        help={ct(traduzirUi("Monte quem serve em cada {culto} por time. As pessoas confirmam ou recusam direto no celular, e a vaga em aberto aparece na tabela. Toque numa pessoa para confirmar, trocar ou remover; em Escalar para preencher a vaga. {perspectiva}", { perspectiva: perspectiveText }))}
         action={
           <>
-            <Botao variante="discreto" onClick={() => setAutoOpen(true)}><Icon name="escalas" size={15} /> Preencher automaticamente</Botao>
+            <Botao variante="discreto" onClick={() => setAutoOpen(true)}><Icon name="escalas" size={15} /> {traduzirUi("Preencher automaticamente")}</Botao>
             <MenuMais acoes={[
-              { rotulo: "Montar período", icone: "agenda", onClick: () => setPeriodoOpen(true) },
-              { rotulo: "Escala extra", icone: "add", onClick: () => setExtraOpen(true) },
-              { rotulo: "Delegar a gestão", icone: "membros", onClick: () => setDelegarOpen(true) },
-              { rotulo: "QR do check-in", icone: "cultos", onClick: () => setCheckinEventId(eventoAtual?.id ?? null), desligada: !eventoAtual },
-              { rotulo: "Baixar a escala", icone: "relatorios", onClick: baixarCSV, desligada: !selectedMinistry },
+              { rotulo: traduzirUi("Montar período"), icone: "agenda", onClick: () => setPeriodoOpen(true) },
+              { rotulo: traduzirUi("Escala extra"), icone: "add", onClick: () => setExtraOpen(true) },
+              { rotulo: traduzirUi("Delegar a gestão"), icone: "membros", onClick: () => setDelegarOpen(true) },
+              { rotulo: traduzirUi("QR do check-in"), icone: "cultos", onClick: () => setCheckinEventId(eventoAtual?.id ?? null), desligada: !eventoAtual },
+              { rotulo: traduzirUi("Baixar a escala"), icone: "relatorios", onClick: baixarCSV, desligada: !selectedMinistry },
             ]} />
-            <Botao variante="principal" onClick={() => setPublicarOpen(true)}>Publicar e avisar{rascunhos.length ? ` (${rascunhos.length})` : ""}</Botao>
+            <Botao variante="principal" onClick={() => setPublicarOpen(true)}>{rascunhos.length ? traduzirUi("Publicar e avisar ({n})", { n: String(rascunhos.length) }) : traduzirUi("Publicar e avisar")}</Botao>
           </>
         }
       />
@@ -483,13 +491,13 @@ export function Escalas({
         <div className="esc-tbl-wrap">
           {/* Navegação mobile */}
           <div className="esc-tbl-nav">
-            <BotaoIcone className="fin-mes-b" rotulo="Evento anterior" desativado={eventoIdx === 0} onClick={() => setEventoIdx((i) => i - 1)}>
+            <BotaoIcone className="fin-mes-b" rotulo={traduzirUi("Evento anterior")} desativado={eventoIdx === 0} onClick={() => setEventoIdx((i) => i - 1)}>
               <Icon name="voltar" size={15} />
             </BotaoIcone>
             <span className="esc-tbl-nav-label">
-              {eventoAtual ? joinDot(eventoAtual.weekday, formatDateBR(eventoAtual.eventDate), eventoAtual.time) : "Nenhum evento"}
+              {eventoAtual ? joinDot(eventoAtual.weekday, formatDateBR(eventoAtual.eventDate), eventoAtual.time) : traduzirUi("Nenhum evento")}
             </span>
-            <BotaoIcone className="fin-mes-b" rotulo="Próximo evento" desativado={eventoIdx >= eventosFuturos.length - 1} onClick={() => setEventoIdx((i) => i + 1)}>
+            <BotaoIcone className="fin-mes-b" rotulo={traduzirUi("Próximo evento")} desativado={eventoIdx >= eventosFuturos.length - 1} onClick={() => setEventoIdx((i) => i + 1)}>
               <Icon name="avancar" size={15} />
             </BotaoIcone>
           </div>
@@ -498,10 +506,10 @@ export function Escalas({
           <table className="esc-tbl">
             <thead>
               <tr>
-                <th className="esc-tbl-fn">Função</th>
+                <th className="esc-tbl-fn">{traduzirUi("Função")}</th>
                 {eventosFuturos.map((ev) => (
                   <th key={ev.id} className={`esc-tbl-ev${ev.id === eventoAtual?.id ? " on" : ""}`}>
-                    <Acao className="esc-tbl-ev-btn" onClick={() => setEventoIdx(eventosFuturos.indexOf(ev))} aria-label={`Ver ${joinDot(ev.weekday, formatDateBR(ev.eventDate))} às ${ev.time}`}>
+                    <Acao className="esc-tbl-ev-btn" onClick={() => setEventoIdx(eventosFuturos.indexOf(ev))} aria-label={traduzirUi("Ver {dia} às {hora}", { dia: joinDot(ev.weekday, formatDateBR(ev.eventDate)), hora: `${ev.time}` })}>
                       <span className="esc-tbl-ev-dia">{joinDot(ev.weekday, formatDateBR(ev.eventDate))}</span>
                       <span className="esc-tbl-ev-time">{ev.time}</span>
                     </Acao>
@@ -533,10 +541,10 @@ export function Escalas({
                                   onClick={() => setSlotAction({ kind: "slot", event: ev, ministry: selectedMinistry, position: { ...position, need_count: need }, assignment: a })}
                                 >
                                   <Av name={person?.name ?? "Voluntário"} size="xs" photoUrl={person?.photoUrl} />
-                                  <span className="esc-tbl-name">{person?.name.split(" ")[0] ?? "Pessoa"}</span>
+                                  <span className="esc-tbl-name">{person?.name.split(" ")[0] ?? traduzirUi("Pessoa")}</span>
                                   {person && indisponivel(person, ev.slot, ev.eventDate, ev.time, selectedMinistry.id)
-                                    ? <Selo tom="cuidado" tamanho="lista">Indisponível</Selo>
-                                    : <Selo tom={a.status === "ok" ? "ok" : "pendente"} tamanho="lista">{a.status === "ok" ? "Confirmado" : "Aguardando"}</Selo>}
+                                    ? <Selo tom="cuidado" tamanho="lista">{traduzirUi("Indisponível")}</Selo>
+                                    : <Selo tom={a.status === "ok" ? "ok" : "pendente"} tamanho="lista">{a.status === "ok" ? traduzirUi("Confirmado") : traduzirUi("Aguardando")}</Selo>}
                                 </Acao>
                               );
                             })}
@@ -549,8 +557,8 @@ export function Escalas({
                                   onClick={() => setSlotAction({ kind: "slot", event: ev, ministry: selectedMinistry, position: { ...position, need_count: need }, assignment: a })}
                                 >
                                   <Av name={person?.name ?? "Voluntário"} size="xs" photoUrl={person?.photoUrl} />
-                                  <span className="esc-tbl-name">{person?.name.split(" ")[0] ?? "Pessoa"}</span>
-                                  <Selo tom="cuidado" tamanho="lista">Não pode</Selo>
+                                  <span className="esc-tbl-name">{person?.name.split(" ")[0] ?? traduzirUi("Pessoa")}</span>
+                                  <Selo tom="cuidado" tamanho="lista">{traduzirUi("Não pode")}</Selo>
                                 </Acao>
                               );
                             })}
@@ -561,9 +569,7 @@ export function Escalas({
                                 compacto
                                 className="esc-tbl-vaga"
                                 onClick={() => setSlotAction({ kind: "assign", event: ev, ministry: selectedMinistry, position: { ...position, need_count: need } })}
-                              >
-                                Escalar
-                              </Botao>
+                              >{traduzirUi("Escalar")}</Botao>
                             ))}
                           </div>
                         </td>
@@ -578,42 +584,42 @@ export function Escalas({
           {/* Cada vaga já diz o estado no Selo; legenda que repete a cor é proibida (lei 14) */}
           {rascunhos.length > 0 && (
             <div className="esc-tbl-legend">
-              <Selo tom="rascunho" tamanho="lista">Rascunho</Selo>
+              <Selo tom="rascunho" tamanho="lista">{traduzirUi("Rascunho")}</Selo>
             </div>
           )}
         </div>
       )}
 
-      {!selectedMinistry && <Vazio titulo="Nenhum time disponível" texto="Você ainda não lidera nenhum time ou não há times neste escopo." />}
+      {!selectedMinistry && <Vazio titulo={traduzirUi("Nenhum time disponível")} texto={traduzirUi("Você ainda não lidera nenhum time ou não há times neste escopo.")} />}
 
       {/* Janela de preenchimento automático */}
       {autoOpen && (
-        <Janela sobretitulo="Preencher automaticamente" titulo="Como gerar a escala" texto="Escolha o modo de geração e aplique configurações salvas." aoFechar={() => setAutoOpen(false)} corpoBloco
+        <Janela sobretitulo={traduzirUi("Preencher automaticamente")} titulo={traduzirUi("Como gerar a escala")} texto={traduzirUi("Escolha o modo de geração e aplique configurações salvas.")} aoFechar={() => setAutoOpen(false)} corpoBloco
           rodape={<>
-            <Botao onClick={() => setAutoOpen(false)}>Fechar</Botao>
-            <Botao variante="principal" desativado={gerando} onClick={gerarAuto}><Icon name="escalas" size={14} /> {gerando ? "Gerando…" : (escalaCfg.modo === "automatico" ? "Gerar a escala" : "Sugerir nomes")}</Botao>
+            <Botao onClick={() => setAutoOpen(false)}>{traduzirUi("Fechar")}</Botao>
+            <Botao variante="principal" desativado={gerando} onClick={gerarAuto}><Icon name="escalas" size={14} /> {gerando ? traduzirUi("Gerando…") : (escalaCfg.modo === "automatico" ? traduzirUi("Gerar a escala") : traduzirUi("Sugerir nomes"))}</Botao>
           </>}>
             <div className="esc-modo">
-              <span className="esc-modo-lbl">Geração da escala</span>
+              <span className="esc-modo-lbl">{traduzirUi("Geração da escala")}</span>
               <Segmentado className="seg-sm">
                 {(["manual", "assistido", "automatico"] as const).map((key) => (
-                  <Opcao key={key} marcada={escalaCfg.modo === key} onClick={() => setModoEscala(key)}>{key === "manual" ? "Manual" : key === "assistido" ? "Assistida" : "Automática"}</Opcao>
+                  <Opcao key={key} marcada={escalaCfg.modo === key} onClick={() => setModoEscala(key)}>{key === "manual" ? traduzirUi("Manual") : key === "assistido" ? traduzirUi("Assistida") : traduzirUi("Automática")}</Opcao>
                 ))}
               </Segmentado>
               <span className="esc-modo-hint">
-                {escalaCfg.modo === "manual" ? "Você monta tudo na mão." : null}
-                {escalaCfg.modo === "assistido" ? "O sistema sugere os nomes; você confirma cada um." : null}
-                {escalaCfg.modo === "automatico" ? "O sistema gera e já confirma. Na recusa, chama o próximo apto." : null}
+                {escalaCfg.modo === "manual" ? traduzirUi("Você monta tudo na mão.") : null}
+                {escalaCfg.modo === "assistido" ? traduzirUi("O sistema sugere os nomes; você confirma cada um.") : null}
+                {escalaCfg.modo === "automatico" ? traduzirUi("O sistema gera e já confirma. Na recusa, chama o próximo apto.") : null}
               </span>
               <span className="tb-spacer" />
               <span className="esc-preset">
                 <Icon name="escalas" size={13} />
-                <Selecao valor="" vazio="Aplicar configuração…" rotulo="Aplicar configuração"
+                <Selecao valor="" vazio={traduzirUi("Aplicar configuração…")} rotulo={traduzirUi("Aplicar configuração")}
                   aoMudar={(v) => { const preset = (church?.settings?.escalaPresets ?? []).find((p) => p.id === v); if (preset) aplicarPreset(preset); }}
                   opcoes={(church?.settings?.escalaPresets ?? []).map((preset) => ({ v: preset.id, l: preset.nome }))} />
-                <Acao className="esc-preset-save" onClick={() => setPresetSaveOpen(true)}>Salvar atual</Acao>
+                <Acao className="esc-preset-save" onClick={() => setPresetSaveOpen(true)}>{traduzirUi("Salvar atual")}</Acao>
               </span>
-              <Acao className="esc-modo-cfg" onClick={() => setRoute("config")}><Icon name="config" size={13} /> Regras</Acao>
+              <Acao className="esc-modo-cfg" onClick={() => setRoute("config")}><Icon name="config" size={13} /> {traduzirUi("Regras")}</Acao>
             </div>
         </Janela>
       )}
@@ -688,6 +694,8 @@ function RosterActionModal({
   onTrocar: (assignmentId: string, personId: string) => Promise<void>;
   setDrawer: (drawer: DrawerState) => void;
 }) {
+  const traduzirUi = useTexto();
+
   const { comTermos: ct } = useTermos();
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
@@ -696,7 +704,7 @@ function RosterActionModal({
     if (operando.current) return;
     operando.current = true; setSalvando(true); setErro("");
     try { await acao(); onClose(); }
-    catch (error) { setErro(error instanceof Error ? error.message : "Não foi possível salvar. Tente novamente."); }
+    catch (error) { setErro(error instanceof Error ? error.message : traduzirUi("Não foi possível salvar. Tente novamente.")); }
     finally { operando.current = false; setSalvando(false); }
   };
   const [trocando, setTrocando] = useState(false);
@@ -708,7 +716,7 @@ function RosterActionModal({
     const assignment = action.assignment;
     return (
       <div /* lei17-ok: Alterar escala: cabeçalho com avatar e selo */ className="modal-bg" onClick={salvando ? undefined : onClose}>
-        <div className="modal" role="dialog" aria-modal="true" aria-label="Alterar escala" aria-busy={salvando} onClick={(event) => event.stopPropagation()}>
+        <div className="modal" role="dialog" aria-modal="true" aria-label={traduzirUi("Alterar escala")} aria-busy={salvando} onClick={(event) => event.stopPropagation()}>
           <div className="modal-head">
             <div className="modal-eyebrow">{joinDot(action.position.name, action.ministry.name, action.event.weekday)}</div>
             <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
@@ -721,22 +729,22 @@ function RosterActionModal({
           </div>
           <div className="modal-body">
             <div style={{ display: "grid", gap: 8 }}>
-              <Botao variante="principal" desativado={salvando} onClick={() => executar(() => onConfirmar(assignment.id))}><Icon name="ok" size={15} /> Marcar como confirmado</Botao>
-              <Botao desativado={salvando} onClick={() => setTrocando(true)}>Substituir pessoa</Botao>
-              <details className="service-preparacao"><summary>Outras ações</summary>
+              <Botao variante="principal" desativado={salvando} onClick={() => executar(() => onConfirmar(assignment.id))}><Icon name="ok" size={15} /> {traduzirUi("Marcar como confirmado")}</Botao>
+              <Botao desativado={salvando} onClick={() => setTrocando(true)}>{traduzirUi("Substituir pessoa")}</Botao>
+              <details className="service-preparacao"><summary>{traduzirUi("Outras ações")}</summary>
                 <div style={{ display: "grid", gap: 8 }}>
-                  <Botao desativado={salvando} onClick={() => executar(() => onPendente(assignment.id))}>Voltar para aguardar confirmação</Botao>
-                  <Botao desativado={salvando} onClick={() => executar(() => onRecusar(assignment))}>Marcar que recusou</Botao>
-                  {assignedPerson ? <Botao desativado={salvando} onClick={() => setDrawer({ kind: "person", id: assignedPerson.id })}>{ct("Ver perfil do {voluntario}")}</Botao> : null}
-                  <Botao variante="perigo" desativado={salvando} onClick={() => executar(() => onRemover(assignment.id))}>Remover da escala</Botao>
+                  <Botao desativado={salvando} onClick={() => executar(() => onPendente(assignment.id))}>{traduzirUi("Voltar para aguardar confirmação")}</Botao>
+                  <Botao desativado={salvando} onClick={() => executar(() => onRecusar(assignment))}>{traduzirUi("Marcar que recusou")}</Botao>
+                  {assignedPerson ? <Botao desativado={salvando} onClick={() => setDrawer({ kind: "person", id: assignedPerson.id })}>{ct(traduzirUi("Ver perfil do {voluntario}"))}</Botao> : null}
+                  <Botao variante="perigo" desativado={salvando} onClick={() => executar(() => onRemover(assignment.id))}>{traduzirUi("Remover da escala")}</Botao>
                 </div>
               </details>
-              {salvando && <p role="status">Salvando alteração...</p>}
+              {salvando && <p role="status">{traduzirUi("Salvando alteração...")}</p>}
               {erro && <p className="field-error" role="alert">{erro}</p>}
             </div>
           </div>
           <div className="modal-foot">
-            <Botao desativado={salvando} onClick={onClose}>Fechar</Botao>
+            <Botao desativado={salvando} onClick={onClose}>{traduzirUi("Fechar")}</Botao>
           </div>
         </div>
       </div>
@@ -753,7 +761,7 @@ function RosterActionModal({
   const demais = podem.filter((c) => !sugeridos.includes(c));
   const naoPodem = soDisponiveis ? [] : achados.filter((c) => c.fit === "block");
   const motivoTexto = (m: Candidato["motivo"]) =>
-    m === "evento" ? ct("Já está na escala deste {culto}") : m === "ferias" ? "De férias" : m === "teto" ? (maxPorMes ? `Já serviu ${plural(maxPorMes, "vez", "vezes")} este mês, o limite` : "Chegou ao limite do mês") : m === "folga" ? "Em semana de folga" : "";
+    m === "evento" ? traduzirUi("Já está na escala deste {culto}") : m === "ferias" ? traduzirUi("De férias") : m === "teto" ? (maxPorMes ? traduzirUi("Já serviu {count, plural, =1 {# vez} other {# vezes}} este mês, o limite", { count: maxPorMes }) : traduzirUi("Chegou ao limite do mês")) : m === "folga" ? traduzirUi("Em semana de folga") : "";
   const escolher = (c: Candidato) => {
     if (c.fit === "block") return;
     void executar(() => isSwap && action.assignment ? onTrocar(action.assignment.id, c.person.id) : onEscalar(c.person.id));
@@ -768,41 +776,41 @@ function RosterActionModal({
           : <div className="cand-meta">{fraseRodizio(c.ultima, c.vezes, todayISO())}</div>}
         {c.person.tags.length > 0 ? <div className="cand-meta">{c.person.tags.join(" · ")}</div> : null}
       </div>
-      {c.fit !== "block" && <span className={`cand-fit ${c.fit}`}>{c.fit === "good" ? <><Icon name="ok" size={13} /> disponível</> : <><Icon name="pendente" size={13} /> indisponível</>}</span>}
+      {c.fit !== "block" && <span className={`cand-fit ${c.fit}`}>{c.fit === "good" ? <><Icon name="ok" size={13} /> {traduzirUi("disponível")}</> : <><Icon name="pendente" size={13} /> {traduzirUi("indisponível")}</>}</span>}
     </Acao>
   );
   return (
-    <Janela larga sobretitulo={`${isSwap ? "Escolher substituto" : "Escalar"} · ${action.position.name} · ${action.ministry.name}`} titulo={action.event.name}
-      texto={`${joinDot(action.event.weekday, action.event.time)}${joinDot(action.event.weekday, action.event.time) ? ". " : ""}Indisponível é quem marcou que não pode neste horário ou data.`}
+    <Janela larga sobretitulo={isSwap ? traduzirUi("Escolher substituto · {funcao} · {time}", { funcao: action.position.name, time: action.ministry.name }) : traduzirUi("Escalar · {funcao} · {time}", { funcao: action.position.name, time: action.ministry.name })} titulo={action.event.name}
+      texto={joinDot(action.event.weekday, action.event.time) ? traduzirUi("{quando}. Indisponível é quem marcou que não pode neste horário ou data.", { quando: joinDot(action.event.weekday, action.event.time) }) : traduzirUi("Indisponível é quem marcou que não pode neste horário ou data.")}
       aoFechar={onClose} ocupada={salvando} corpoBloco
       cabecalho={<>
-        {isSwap && <p className="modal-sub">A pessoa escolhida passa a ocupar a vaga e precisa confirmar no app.</p>}
+        {isSwap && <p className="modal-sub">{traduzirUi("A pessoa escolhida passa a ocupar a vaga e precisa confirmar no app.")}</p>}
         <div className="cand-tools">
-          <input className="input" type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar pelo nome" aria-label="Buscar pelo nome" />
-          <Opcao marcada={soDisponiveis} estilo="chip-toggle" aria-pressed={soDisponiveis} onClick={() => setSoDisponiveis((v) => !v)}>Disponíveis</Opcao>
+          <input className="input" type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder={traduzirUi("Buscar pelo nome")} aria-label={traduzirUi("Buscar pelo nome")} />
+          <Opcao marcada={soDisponiveis} estilo="chip-toggle" aria-pressed={soDisponiveis} onClick={() => setSoDisponiveis((v) => !v)}>{traduzirUi("Disponíveis")}</Opcao>
         </div>
       </>}
-      rodape={<Botao variante="discreto" desativado={salvando} onClick={onClose}>Cancelar</Botao>}>
+      rodape={<Botao variante="discreto" desativado={salvando} onClick={onClose}>{traduzirUi("Cancelar")}</Botao>}>
       <div className="cand-list">
-          {salvando && <p role="status">Salvando alteração...</p>}
+          {salvando && <p role="status">{traduzirUi("Salvando alteração...")}</p>}
           {erro && <p className="field-error" role="alert">{erro}</p>}
-          {podem.length === 0 && naoPodem.length === 0 ? <Vazio titulo={busca.trim() ? "Ninguém com esse nome neste time." : "Ninguém disponível neste time."} /> : null}
+          {podem.length === 0 && naoPodem.length === 0 ? <Vazio titulo={busca.trim() ? traduzirUi("Ninguém com esse nome neste time.") : traduzirUi("Ninguém disponível neste time.")} /> : null}
           {sugeridos.length > 0 && (
             <>
-              <div className="cand-grp">Sugeridos pelo rodízio</div>
-              <div className="cand-grp-sub">Quem serviu menos vezes no mês e há mais tempo.</div>
+              <div className="cand-grp">{traduzirUi("Sugeridos pelo rodízio")}</div>
+              <div className="cand-grp-sub">{traduzirUi("Quem serviu menos vezes no mês e há mais tempo.")}</div>
               {sugeridos.map(linha)}
             </>
           )}
           {demais.length > 0 && (
             <>
-              {sugeridos.length > 0 && <div className="cand-grp">Outras pessoas do time</div>}
+              {sugeridos.length > 0 && <div className="cand-grp">{traduzirUi("Outras pessoas do time")}</div>}
               {demais.map(linha)}
             </>
           )}
           {naoPodem.length > 0 && (
             <>
-              <div className="cand-grp">Não podem nesta vaga</div>
+              <div className="cand-grp">{traduzirUi("Não podem nesta vaga")}</div>
               {naoPodem.map(linha)}
             </>
           )}

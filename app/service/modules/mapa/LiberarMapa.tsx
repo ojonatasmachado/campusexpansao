@@ -16,6 +16,8 @@ import { Interruptor } from "../../ui/Interruptor";
 import { Linha } from "../../ui/Linha";
 import { Selecao } from "../../ui/Selecao";
 import { confirmar } from "../../ui/confirmar";
+import { useTexto } from "../../lib/internacional/contexto";
+import type { Text } from "../../lib/internacional/mensagens";
 
 /* Quem vê o mapa (G13, prancha P8). Duas listas: quem o pastor liberou
    (map_access) e os líderes de área, que veem a área deles sem liberação
@@ -26,20 +28,22 @@ import { confirmar } from "../../ui/confirmar";
 type Escopo = "cidade" | "area" | "nenhum";
 type Liberacao = { person_id: string; escopo: Escopo; area_id: string | null; detalhe: "pessoas" | "numeros"; pode_mesa: boolean; pode_csv: boolean; pode_editar: boolean; created_at?: string };
 const NOVA = (person_id: string, area_id: string | null = null): Liberacao => ({ person_id, escopo: area_id ? "area" : "cidade", area_id, detalhe: "pessoas", pode_mesa: true, pode_csv: false, pode_editar: false });
-const PERMISSOES: [keyof Pick<Liberacao, "pode_mesa" | "pode_csv" | "pode_editar">, string][] = [
-  ["pode_mesa", "Abrir Analisar"],
-  ["pode_csv", "Baixar CSV com pessoas"],
-  ["pode_editar", "Criar áreas e marcar lugares"],
+const permissoes = (t: Text): [keyof Pick<Liberacao, "pode_mesa" | "pode_csv" | "pode_editar">, string][] => [
+  ["pode_mesa", t("Abrir Analisar")],
+  ["pode_csv", t("Baixar CSV com pessoas")],
+  ["pode_editar", t("Criar áreas e marcar lugares")],
 ];
 
 export function LiberarMapa({ org, people, areas, onVoltar }: { org: string; people: PessoaLider[]; areas: Area[]; onVoltar: () => void }) {
+  const traduzirUi = useTexto();
+
   const db = () => createServiceBrowserClient().schema("service");
   const [lista, setLista] = useState<Liberacao[]>([]);
   const [edit, setEdit] = useState<Liberacao | null>(null);
   const [nova, setNova] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [inicial, setInicial] = useState("");
-  const nome = (id: string) => people.find((p) => p.id === id)?.name ?? "Pessoa";
+  const nome = (id: string) => people.find((p) => p.id === id)?.name ?? traduzirUi("Pessoa");
   const carregar = useCallback(async () => {
     const { data } = await db().from("map_access").select("person_id, escopo, area_id, detalhe, pode_mesa, pode_csv, pode_editar, created_at").eq("organization_id", org);
     setLista((data ?? []) as Liberacao[]);
@@ -56,17 +60,17 @@ export function LiberarMapa({ org, people, areas, onVoltar }: { org: string; peo
   const linhaDe = (id: string) => lista.find((l) => l.person_id === id);
   const liberados = lista.filter((l) => l.escopo !== "nenhum" && !areasDe.has(l.person_id));
   const lideres = [...areasDe.keys()].sort((a, b) => nome(a).localeCompare(nome(b), "pt-BR"));
-  const nomeArea = (id: string | null) => areas.find((a) => a.id === id)?.nome ?? "Uma área";
+  const nomeArea = (id: string | null) => areas.find((a) => a.id === id)?.nome ?? traduzirUi("Uma área");
 
-  const resumo = (l: Liberacao) => (l.escopo === "nenhum" ? "Sem acesso" : `${l.escopo === "area" ? nomeArea(l.area_id) : "Cidade inteira"} · ${l.detalhe === "pessoas" ? "pessoas" : "só números"}`);
-  const resumoLider = (id: string) => { const l = linhaDe(id); return l ? resumo(l) : `${(areasDe.get(id) ?? []).map((a) => a.nome).join(", ")} · pessoas`; };
+  const resumo = (l: Liberacao) => (l.escopo === "nenhum" ? traduzirUi("Sem acesso") : traduzirUi("{escopo, select, area {{area}} other {Cidade inteira}} · {detalhe, select, pessoas {pessoas} other {só números}}", { escopo: l.escopo, area: nomeArea(l.area_id), detalhe: l.detalhe }));
+  const resumoLider = (id: string) => { const l = linhaDe(id); return l ? resumo(l) : traduzirUi("{areas} · pessoas", { areas: (areasDe.get(id) ?? []).map((a) => a.nome).join(", ") }); };
   const abrir = (id: string) => { setNova(""); const l = linhaDe(id); const e = l && l.escopo !== "nenhum" ? l : NOVA(id, areasDe.get(id)?.[0]?.id ?? null); setEdit(e); setInicial(JSON.stringify(e)); };
   /* cor da linha do líder: a da área que ele vê de fato (a da liberação, se houver) */
   const corDe = (id: string) => { const l = linhaDe(id); return (l?.escopo === "area" ? areas.find((a) => a.id === l.area_id)?.cor : undefined) ?? areasDe.get(id)?.[0]?.cor ?? "terra"; };
 
   const salvar = async () => {
     if (!edit) return;
-    if (edit.escopo === "area" && !edit.area_id) { avisar("Escolha a área.", "warn"); return; }
+    if (edit.escopo === "area" && !edit.area_id) { avisar(traduzirUi("Escolha a área."), "warn"); return; }
     setSalvando(true);
     const { data: eu } = await createServiceBrowserClient().auth.getUser();
     const { data: quem } = await db().from("people").select("id").eq("organization_id", org).eq("user_id", eu.user?.id ?? "").maybeSingle();
@@ -74,22 +78,22 @@ export function LiberarMapa({ org, people, areas, onVoltar }: { org: string; peo
     const r1 = await db().from("map_access").upsert({ ...linha, organization_id: org, area_id: edit.escopo === "area" ? edit.area_id : null, liberado_por: quem?.id ?? null }, { onConflict: "person_id" });
     const r2 = r1.error ? r1 : await db().from("person_grants").upsert({ organization_id: org, person_id: edit.person_id, grant_code: "mapa", granted_by: quem?.id ?? null }, { onConflict: "person_id,grant_code", ignoreDuplicates: true });
     setSalvando(false);
-    if (r1.error || r2.error) { avisar("Não foi possível salvar o acesso. Tente de novo.", "warn"); return; }
-    avisar("Acesso salvo.");
+    if (r1.error || r2.error) { avisar(traduzirUi("Não foi possível salvar o acesso. Tente de novo."), "warn"); return; }
+    avisar(traduzirUi("Acesso salvo."));
     setEdit(null);
     carregar();
   };
 
   /* tirar: de quem é líder de área grava 'nenhum' (senão o acesso automático volta) */
   const tirar = async (personId: string) => {
-    const ok = await confirmar({ titulo: `Tirar o mapa de ${nome(personId)}?`, texto: "O mapa sai do menu dessa pessoa. Dá para liberar de novo depois.", acao: "Tirar o acesso" });
+    const ok = await confirmar({ titulo: traduzirUi("Tirar o mapa de {nome}?", { nome: nome(personId) }), texto: traduzirUi("O mapa sai do menu dessa pessoa. Dá para liberar de novo depois."), acao: traduzirUi("Tirar o acesso") });
     if (!ok) return;
     const r1 = areasDe.has(personId)
       ? await db().from("map_access").upsert({ person_id: personId, organization_id: org, escopo: "nenhum", area_id: null }, { onConflict: "person_id" })
       : await db().from("map_access").delete().eq("person_id", personId);
     const r2 = r1.error ? r1 : await db().from("person_grants").delete().eq("person_id", personId).eq("grant_code", "mapa");
-    if (r1.error || r2.error) { avisar("Não foi possível tirar o acesso. Tente de novo.", "warn"); return; }
-    avisar("O mapa saiu do menu dessa pessoa.");
+    if (r1.error || r2.error) { avisar(traduzirUi("Não foi possível tirar o acesso. Tente de novo."), "warn"); return; }
+    avisar(traduzirUi("O mapa saiu do menu dessa pessoa."));
     setEdit(null);
     carregar();
   };
@@ -98,8 +102,8 @@ export function LiberarMapa({ org, people, areas, onVoltar }: { org: string; peo
   const automatico = async (personId: string) => {
     const r1 = await db().from("map_access").delete().eq("person_id", personId);
     const r2 = r1.error ? r1 : await db().from("person_grants").upsert({ organization_id: org, person_id: personId, grant_code: "mapa" }, { onConflict: "person_id,grant_code", ignoreDuplicates: true });
-    if (r1.error || r2.error) { avisar("Não foi possível voltar ao acesso automático. Tente de novo.", "warn"); return; }
-    avisar("Voltou a ver as áreas que cuida.");
+    if (r1.error || r2.error) { avisar(traduzirUi("Não foi possível voltar ao acesso automático. Tente de novo."), "warn"); return; }
+    avisar(traduzirUi("Voltou a ver as áreas que cuida."));
     setEdit(null);
     carregar();
   };
@@ -109,10 +113,10 @@ export function LiberarMapa({ org, people, areas, onVoltar }: { org: string; peo
   const atual = edit ? linhaDe(edit.person_id) : undefined;
   const nomesLider = lider?.map((a) => a.nome).join(", ") ?? "";
   const porque = !edit ? "" : lider
-    ? !atual ? `Vê o mapa porque é responsável por ${nomesLider}.`
-      : atual.escopo === "nenhum" ? `É responsável por ${nomesLider}, mas o acesso foi tirado.`
-      : `Responsável por ${nomesLider}. Liberado pelo pastor: ${resumo(atual)}.`
-    : atual ? "Liberado pelo pastor." : "Ainda não vê o mapa.";
+    ? !atual ? traduzirUi("Vê o mapa porque é responsável por {areas}.", { areas: nomesLider })
+      : atual.escopo === "nenhum" ? traduzirUi("É responsável por {areas}, mas o acesso foi tirado.", { areas: nomesLider })
+      : traduzirUi("Responsável por {areas}. Liberado pelo pastor: {resumo}.", { areas: nomesLider, resumo: resumo(atual) })
+    : atual ? traduzirUi("Liberado pelo pastor.") : traduzirUi("Ainda não vê o mapa.");
   const podeTirar = !!edit && (lider ? atual?.escopo !== "nenhum" : !!atual);
   /* líder no automático: só grava se o pastor mudou algo (senão viraria liberação fixa de uma área só) */
   const semMudanca = !!edit && !!lider && !atual && JSON.stringify(edit) === inicial;
@@ -122,24 +126,24 @@ export function LiberarMapa({ org, people, areas, onVoltar }: { org: string; peo
     <div className="content mesa mapa-cores">
       <header className="mesa-cab">
         <div>
-          <Botao variante="discreto" compacto onClick={onVoltar}><Icon name="voltar" size={14} />Mapa da igreja</Botao>
-          <div className="mp-sobre lm-sobre">Acesso ao mapa</div>
-          <h1 className="mesa-titulo">Quem vê o mapa</h1>
-          <p className="mp-texto lm-intro">Só quem o pastor liberar vê o mapa. Quem é responsável por uma área vê só a dela.</p>
+          <Botao variante="discreto" compacto onClick={onVoltar}><Icon name="voltar" size={14} />{traduzirUi("Mapa da igreja")}</Botao>
+          <div className="mp-sobre lm-sobre">{traduzirUi("Acesso ao mapa")}</div>
+          <h1 className="mesa-titulo">{traduzirUi("Quem vê o mapa")}</h1>
+          <p className="mp-texto lm-intro">{traduzirUi("Só quem o pastor liberar vê o mapa. Quem é responsável por uma área vê só a dela.")}</p>
         </div>
       </header>
       <div className="mesa-corpo">
         <section className="mesa-caixa mesa-lado lm-lista">
-          <h2 className="lm-grupo">Liberados pelo pastor</h2>
-          {liberados.length === 0 && <p className="mp-fraco">Ninguém ainda.</p>}
+          <h2 className="lm-grupo">{traduzirUi("Liberados pelo pastor")}</h2>
+          {liberados.length === 0 && <p className="mp-fraco">{traduzirUi("Ninguém ainda.")}</p>}
           {liberados.map((l) => (
             <Acao key={l.person_id} className="mp-visao lm-pessoa" aria-pressed={edit?.person_id === l.person_id} onClick={() => abrir(l.person_id)}>
               <Avatar nome={nome(l.person_id)} tamanho="sm" />
               <span><b>{nome(l.person_id)}</b><span>{resumo(l)}</span></span>
             </Acao>
           ))}
-          <h2 className="lm-grupo">Líderes de área</h2>
-          {lideres.length === 0 && <p className="mp-fraco">Nenhuma área tem responsável ainda.</p>}
+          <h2 className="lm-grupo">{traduzirUi("Líderes de área")}</h2>
+          {lideres.length === 0 && <p className="mp-fraco">{traduzirUi("Nenhuma área tem responsável ainda.")}</p>}
           {lideres.map((id) => (
             <Acao key={id} className="mp-visao lm-pessoa" aria-pressed={edit?.person_id === id} onClick={() => abrir(id)}>
               <Avatar nome={nome(id)} tamanho="sm" />
@@ -147,11 +151,11 @@ export function LiberarMapa({ org, people, areas, onVoltar }: { org: string; peo
             </Acao>
           ))}
           <div className="lm-nova">
-            <Campo rotulo="Liberar para alguém" id="lm-nova">
-              <Selecao valor={nova} aoMudar={(v) => { setNova(v); if (v) setEdit(NOVA(v)); }} vazio="Escolher pessoa"
+            <Campo rotulo={traduzirUi("Liberar para alguém")} id="lm-nova">
+              <Selecao valor={nova} aoMudar={(v) => { setNova(v); if (v) setEdit(NOVA(v)); }} vazio={traduzirUi("Escolher pessoa")}
                 opcoes={semAcesso.map((p) => ({ v: p.id, l: p.name }))} />
             </Campo>
-            <p className="mp-fraco">Pastores e quem administra a igreja já veem tudo e não aparecem aqui.</p>
+            <p className="mp-fraco">{traduzirUi("Pastores e quem administra a igreja já veem tudo e não aparecem aqui.")}</p>
           </div>
         </section>
 
@@ -162,42 +166,42 @@ export function LiberarMapa({ org, people, areas, onVoltar }: { org: string; peo
               <div>
                 <div className="lm-quem-linha">
                   <h2 className="mp-titulo">{nome(edit.person_id)}</h2>
-                  {lider ? <Etiqueta destaque>Líder de área</Etiqueta> : atual ? <Etiqueta>Liberado pelo pastor</Etiqueta> : null}
+                  {lider ? <Etiqueta destaque>{traduzirUi("Líder de área")}</Etiqueta> : atual ? <Etiqueta>{traduzirUi("Liberado pelo pastor")}</Etiqueta> : null}
                 </div>
                 <p className="mp-fraco">{porque}</p>
               </div>
             </div>
             <fieldset className="mesa-fs">
-              <legend className="mp-pergunta">O que vê</legend>
+              <legend className="mp-pergunta">{traduzirUi("O que vê")}</legend>
               <div className="mesa-opcoes">
-                <Marcar tipo="radio" className="mp-visao" name="lm-escopo" checked={edit.escopo === "cidade"} onChange={() => setEdit({ ...edit, escopo: "cidade", area_id: null })}><b>A cidade inteira</b><span>Para pastores e coordenação.</span></Marcar>
-                <Marcar tipo="radio" className="mp-visao" name="lm-escopo" disabled={!areas.length} checked={edit.escopo === "area"} onChange={() => setEdit({ ...edit, escopo: "area", area_id: lider?.[0]?.id ?? areas[0]?.id ?? null })}><b>Só uma área</b><span>{areas.length ? "O resto do mapa fica apagado." : "Desenhe uma área no mapa primeiro."}</span>
-                  {edit.escopo === "area" && <div className="lm-area-campo"><Selecao rotulo="Área" valor={edit.area_id ?? ""} aoMudar={(v) => setEdit({ ...edit, area_id: v })} opcoes={areas.map((a) => ({ v: a.id, l: a.nome }))} /></div>}</Marcar>
+                <Marcar tipo="radio" className="mp-visao" name="lm-escopo" checked={edit.escopo === "cidade"} onChange={() => setEdit({ ...edit, escopo: "cidade", area_id: null })}><b>{traduzirUi("A cidade inteira")}</b><span>{traduzirUi("Para pastores e coordenação.")}</span></Marcar>
+                <Marcar tipo="radio" className="mp-visao" name="lm-escopo" disabled={!areas.length} checked={edit.escopo === "area"} onChange={() => setEdit({ ...edit, escopo: "area", area_id: lider?.[0]?.id ?? areas[0]?.id ?? null })}><b>{traduzirUi("Só uma área")}</b><span>{areas.length ? traduzirUi("O resto do mapa fica apagado.") : traduzirUi("Desenhe uma área no mapa primeiro.")}</span>
+                  {edit.escopo === "area" && <div className="lm-area-campo"><Selecao rotulo={traduzirUi("Área")} valor={edit.area_id ?? ""} aoMudar={(v) => setEdit({ ...edit, area_id: v })} opcoes={areas.map((a) => ({ v: a.id, l: a.nome }))} /></div>}</Marcar>
               </div>
             </fieldset>
             <fieldset className="mesa-fs">
-              <legend className="mp-pergunta">Nível de detalhe</legend>
+              <legend className="mp-pergunta">{traduzirUi("Nível de detalhe")}</legend>
               <div className="mesa-opcoes">
-                <Marcar tipo="radio" className="mp-visao" name="lm-det" checked={edit.detalhe === "pessoas"} onChange={() => setEdit({ ...edit, detalhe: "pessoas" })}><b>Pessoas uma a uma</b><span>Ponto, nome, situação e grupo. Nunca o endereço.</span></Marcar>
-                <Marcar tipo="radio" className="mp-visao" name="lm-det" checked={edit.detalhe === "numeros"} onChange={() => setEdit({ ...edit, detalhe: "numeros" })}><b>Só números por bairro</b><span>Presença e totais, sem nomes.</span></Marcar>
+                <Marcar tipo="radio" className="mp-visao" name="lm-det" checked={edit.detalhe === "pessoas"} onChange={() => setEdit({ ...edit, detalhe: "pessoas" })}><b>{traduzirUi("Pessoas uma a uma")}</b><span>{traduzirUi("Ponto, nome, situação e grupo. Nunca o endereço.")}</span></Marcar>
+                <Marcar tipo="radio" className="mp-visao" name="lm-det" checked={edit.detalhe === "numeros"} onChange={() => setEdit({ ...edit, detalhe: "numeros" })}><b>{traduzirUi("Só números por bairro")}</b><span>{traduzirUi("Presença e totais, sem nomes.")}</span></Marcar>
               </div>
             </fieldset>
             <fieldset className="mesa-fs lm-perms">
-              <legend className="mp-pergunta">Também pode</legend>
-              {PERMISSOES.map(([k, rotulo]) => (
+              <legend className="mp-pergunta">{traduzirUi("Também pode")}</legend>
+              {permissoes(traduzirUi).map(([k, rotulo]) => (
                 <Linha key={k} estilo="config">
                   <span id={`lm-${k}`}>{rotulo}</span>
                   <Interruptor rotuloId={`lm-${k}`} ligado={edit[k]} onClick={() => setEdit({ ...edit, [k]: !edit[k] })} />
                 </Linha>
               ))}
-              <p className="mp-fraco">Escolher o responsável de uma área continua só com o pastor e a administração.</p>
+              <p className="mp-fraco">{traduzirUi("Escolher o responsável de uma área continua só com o pastor e a administração.")}</p>
             </fieldset>
             <div className="lm-pe">
-              {podeTirar && <Botao variante="perigo" onClick={() => tirar(edit.person_id)}>Tirar o acesso</Botao>}
-              {podeAutomatico && <Botao variante="discreto" onClick={() => automatico(edit.person_id)}>Voltar ao automático</Botao>}
+              {podeTirar && <Botao variante="perigo" onClick={() => tirar(edit.person_id)}>{traduzirUi("Tirar o acesso")}</Botao>}
+              {podeAutomatico && <Botao variante="discreto" onClick={() => automatico(edit.person_id)}>{traduzirUi("Voltar ao automático")}</Botao>}
               <span className="lm-espaco" />
-              <Botao onClick={() => { setEdit(null); setNova(""); }}>Cancelar</Botao>
-              <Botao variante="principal" desativado={salvando || semMudanca} onClick={salvar}>{salvando ? "Salvando..." : "Salvar acesso"}</Botao>
+              <Botao onClick={() => { setEdit(null); setNova(""); }}>{traduzirUi("Cancelar")}</Botao>
+              <Botao variante="principal" desativado={salvando || semMudanca} onClick={salvar}>{salvando ? traduzirUi("Salvando...") : traduzirUi("Salvar acesso")}</Botao>
             </div>
           </section>
         )}
