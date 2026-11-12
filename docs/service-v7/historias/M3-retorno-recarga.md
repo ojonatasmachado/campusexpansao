@@ -2,10 +2,10 @@
 id: M3
 titulo: Persistir formulário e posição ao retornar
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-11-12
+branch: historia/M3-retorno-recarga
 depende: []
 tamanho: M
 ---
