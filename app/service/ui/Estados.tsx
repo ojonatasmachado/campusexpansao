@@ -8,6 +8,7 @@
 
 import type { ReactNode } from "react";
 import { Botao } from "./Botao";
+import { useTexto } from "../lib/internacional/contexto";
 
 type AcaoEstado = { rotulo: string; onClick: () => void };
 
@@ -32,18 +33,20 @@ export function Vazio({ titulo, texto, icone, acao, tamanho = "lista", className
   );
 }
 
-export function ErroEstado({ titulo = "Não consegui carregar agora.", texto, tentar, tamanho = "lista", className }: {
+export function ErroEstado({ titulo: tituloProp, texto, tentar, tamanho = "lista", className }: {
   titulo?: ReactNode;
   texto?: ReactNode;
   tentar?: () => void;
   tamanho?: EstadoTamanho;
   className?: string;
 }) {
+  const traduzirUi = useTexto();
+  const titulo = tituloProp === undefined ? traduzirUi("Não consegui carregar agora.") : tituloProp;
   return (
     <div className={`estado estado-erro estado-${tamanho}${className ? ` ${className}` : ""}`} role="alert">
       <div className="estado-t">{titulo}</div>
       {texto ? <p className="estado-s">{texto}</p> : null}
-      {tentar ? <Botao variante="secundario" compacto onClick={tentar}>Tentar de novo</Botao> : null}
+      {tentar ? <Botao variante="secundario" compacto onClick={tentar}>{traduzirUi("Tentar de novo")}</Botao> : null}
     </div>
   );
 }
@@ -52,13 +55,15 @@ export function ErroEstado({ titulo = "Não consegui carregar agora.", texto, te
    lista = linhas com avatar; linhas = parágrafo; cartoes = blocos; indicadores = números do painel. */
 export type EsqueletoForma = "lista" | "linhas" | "cartoes" | "indicadores";
 
-export function Carregando({ forma = "lista", quantos = 3, rotulo = "Carregando", className, telaInteira = false }: {
+export function Carregando({ forma = "lista", quantos = 3, rotulo: rotuloProp, className, telaInteira = false }: {
   telaInteira?: boolean;
   forma?: EsqueletoForma;
   quantos?: number;
   rotulo?: string;
   className?: string;
 }) {
+  const traduzirUi = useTexto();
+  const rotulo = rotuloProp ?? traduzirUi("Carregando");
   if (telaInteira) {
     return (
       <div className="svc-carregando svc-carregando-tela" role="status" aria-live="polite">

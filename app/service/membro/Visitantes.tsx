@@ -10,6 +10,8 @@ import { Acao } from "../ui/Acao";
 import { Cartao } from "../ui/Cartao";
 import { Selo } from "../ui/Selo";
 import { Selecao } from "../ui/Selecao";
+import { useTexto } from "../lib/internacional/contexto";
+
 export const ETAPAS = [
   { id: "novo", nome: "Novo" },
   { id: "contato", nome: "Contato" },
@@ -24,6 +26,9 @@ export function TabVisitantes({ visitors, onAdvanceVisitorStage, onRegisterVisit
   onAdvanceVisitorStage?: (visitorId: string, nextStageId: string) => void;
   onRegisterVisitor?: (data: { name: string; phone: string; origin: string }) => void;
 }) {
+  const traduzirUi = useTexto();
+  /* id e origem são gravados como estão; só o texto mostrado muda de idioma */
+  const nomeEtapa: Record<string, string> = { novo: traduzirUi("Novo"), contato: traduzirUi("Contato"), integrando: traduzirUi("Integrando"), membro: traduzirUi("Membro") };
   const [novo, setNovo] = useState(false);
   const [aberto, setAberto] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", phone: "", origin: "Primeira visita" });
@@ -41,42 +46,38 @@ export function TabVisitantes({ visitors, onAdvanceVisitorStage, onRegisterVisit
 
   return (
     <>
-      <div className="m-section-t">Acolhida de visitantes</div>
-      <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)", lineHeight: 1.5, marginBottom: 14 }}>
-        Registre quem chegou e evolua o acompanhamento direto pelo celular.
-      </div>
-      <Botao tamanho="toque" variante="principal" largo style={{ width: "100%", marginBottom: 16 }} onClick={() => setNovo(true)}>
-        + Registrar visitante
-      </Botao>
+      <div className="m-section-t">{traduzirUi("Acolhida de visitantes")}</div>
+      <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)", lineHeight: 1.5, marginBottom: 14 }}>{traduzirUi("Registre quem chegou e evolua o acompanhamento direto pelo celular.")}</div>
+      <Botao tamanho="toque" variante="principal" largo style={{ width: "100%", marginBottom: 16 }} onClick={() => setNovo(true)}>{traduzirUi("+ Registrar visitante")}</Botao>
 
       {novo && (
         <Cartao estilo="app-solto" style={{ borderColor: "var(--olive-line)" }}>
-          <div className="m-when" style={{ marginBottom: 10 }}>Novo visitante</div>
+          <div className="m-when" style={{ marginBottom: 10 }}>{traduzirUi("Novo visitante")}</div>
           <input
             className="input"
-            placeholder="Nome"
+            placeholder={traduzirUi("Nome")}
             value={form.name}
             onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
             style={{ marginBottom: 8 }}
           />
           <input
             className="input"
-            placeholder="Telefone"
+            placeholder={traduzirUi("Telefone")}
             value={form.phone}
             onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
             style={{ marginBottom: 8 }}
           />
           <div style={{ marginBottom: 12 }}>
             <Selecao
-              rotulo="Como chegou"
+              rotulo={traduzirUi("Como chegou")}
               valor={form.origin}
               aoMudar={(v) => setForm((p) => ({ ...p, origin: v }))}
-              opcoes={["Primeira visita", "Convite de membro", "Instagram", "Indicacao", "Evangelismo"].map((o) => ({ v: o, l: o }))}
+              opcoes={[{ v: "Primeira visita", l: traduzirUi("Primeira visita") }, { v: "Convite de membro", l: traduzirUi("Convite de membro") }, { v: "Instagram", l: "Instagram" }, { v: "Indicacao", l: traduzirUi("Indicacao") }, { v: "Evangelismo", l: traduzirUi("Evangelismo") }]}
             />
           </div>
           <div style={{ display: "flex", gap: 8 }}>
-            <Botao tamanho="toque" variante="principal" style={{ flex: 1 }} onClick={salvar}>Salvar</Botao>
-            <Botao tamanho="toque" variante="secundario" style={{ flex: 1 }} onClick={() => setNovo(false)}>Cancelar</Botao>
+            <Botao tamanho="toque" variante="principal" style={{ flex: 1 }} onClick={salvar}>{traduzirUi("Salvar")}</Botao>
+            <Botao tamanho="toque" variante="secundario" style={{ flex: 1 }} onClick={() => setNovo(false)}>{traduzirUi("Cancelar")}</Botao>
           </div>
         </Cartao>
       )}
@@ -92,7 +93,7 @@ export function TabVisitantes({ visitors, onAdvanceVisitorStage, onRegisterVisit
               <div className="m-vis-main">
                 <div className="m-culto" style={{ fontSize: "var(--fs-app-15)" }}>{v.name}</div>
                 <div className="m-fn">
-                  <Selo>{et.nome}</Selo>
+                  <Selo>{nomeEtapa[et.id] ?? et.nome}</Selo>
                   {v.origin ? ` · ${v.origin}` : ""}
                 </div>
               </div>
@@ -113,7 +114,7 @@ export function TabVisitantes({ visitors, onAdvanceVisitorStage, onRegisterVisit
                           marginTop: 6,
                         }}
                       >
-                        {e.nome}
+                        {nomeEtapa[e.id] ?? e.nome}
                       </div>
                     </div>
                   ))}
@@ -127,11 +128,11 @@ export function TabVisitantes({ visitors, onAdvanceVisitorStage, onRegisterVisit
                       setAberto(null);
                     }}
                   >
-                    Avancar para {`"${ETAPAS[etIdx + 1].nome}"`}
+                    {traduzirUi("Avancar para \"{etapa}\"", { etapa: nomeEtapa[ETAPAS[etIdx + 1].id] ?? ETAPAS[etIdx + 1].nome })}
                   </Botao>
                 )}
                 {etIdx === ETAPAS.length - 1 && (
-                  <div className="m-confirmed" style={{ marginTop: 10 }}><Icon name="ok" size={15} /> Pronto para virar membro</div>
+                  <div className="m-confirmed" style={{ marginTop: 10 }}><Icon name="ok" size={15} /> {traduzirUi("Pronto para virar membro")}</div>
                 )}
               </div>
             )}

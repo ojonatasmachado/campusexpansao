@@ -14,6 +14,8 @@
 import type { CSSProperties, ReactNode } from "react";
 import { Icon } from "../lib/icons";
 import { Acao } from "./Acao";
+import { useTexto } from "../lib/internacional/contexto";
+import type { Text } from "../lib/internacional/mensagens";
 
 export type EstadoEtapa = "feito" | "atual" | "futuro";
 
@@ -48,9 +50,12 @@ export type EtapasProps = {
   className?: string;
 };
 
-const ESTADO_FALADO: Record<EstadoEtapa, string> = { feito: "feito", atual: "etapa atual", futuro: "ainda não" };
+const estadoFalado = (t: Text): Record<EstadoEtapa, string> => ({ feito: t("feito"), atual: t("etapa atual"), futuro: t("ainda não") });
 
-export function Etapas({ itens, estilo = "linha", compacto, rotulo, aoEscolher, semData = "sem data registrada", className }: EtapasProps) {
+export function Etapas({ itens, estilo = "linha", compacto, rotulo, aoEscolher, semData: semDataProp, className }: EtapasProps) {
+  const traduzirUi = useTexto();
+  const semData = semDataProp ?? traduzirUi("sem data registrada");
+  const ESTADO_FALADO = estadoFalado(traduzirUi);
   const cls = ["etapas", `etapas-${estilo}`, compacto ? "compacto" : "", className ?? ""].filter(Boolean).join(" ");
   return (
     <ol className={cls} aria-label={rotulo}>
@@ -73,7 +78,7 @@ export function Etapas({ itens, estilo = "linha", compacto, rotulo, aoEscolher, 
           <span className="etapa-corpo">
             {quando ? <span className="etapa-quando">{e.icone ? <Icon name={e.icone} size={11} /> : null}{quando}</span> : null}
             <span className="etapa-texto">{e.titulo ? <b>{e.titulo}</b> : null}{e.detalhe ? <>{e.titulo ? " · " : ""}{e.detalhe}</> : null}</span>
-            {e.por ? <span className="etapa-por">por {e.por}</span> : null}
+            {e.por ? <span className="etapa-por">{traduzirUi.rich("por <pessoa></pessoa>", { pessoa: () => e.por })}</span> : null}
           </span>
         );
         const podeVoltar = !!aoEscolher && e.estado === "feito";

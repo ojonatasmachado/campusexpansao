@@ -9,7 +9,6 @@ import { useRelogioDaIgreja } from "../lib/relogio-context";
 import { horaAgoraBR, formatDateBR, joinDot, todayISO } from "../lib/date";
 import { suggestKidsClassId, imageAuthorizationCopy } from "../lib/kids";
 import { PhotoPicker } from "../PhotoPicker";
-import { useTermos } from "../lib/vocabulario-context";
 import { checkinAberto, horaQueAbre, sessaoDoCulto, statusDaCrianca, useKidsCheckin } from "../lib/kids-checkin";
 import { Av } from "./comum";
 import type { Child, ChildGuardian, Ev, KidsAttendance, KidsClass, KidsEvent, KidsEventEnrollment, KidsSession, M, P, WallPost } from "./tipos";
@@ -22,6 +21,8 @@ import { Marcar } from "../ui/Campo";
 import { Vazio } from "../ui/Estados";
 import { Selecao } from "../ui/Selecao";
 import { SeletorData } from "../ui/Data";
+import { useTexto } from "../lib/internacional/contexto";
+
 // ── aba: Kids (professor) ───────────────────────────────────────────────────────
 
 export function TabKids({
@@ -49,7 +50,7 @@ export function TabKids({
   organizationId?: string;
   churchId?: string;
 }) {
-  const { comTermos: ct } = useTermos();
+  const traduzirUi = useTexto();
   const [attendance, setAttendance] = useState(kidsAttendance);
   const [sessionId, setSessionId] = useState<string | null>(kidsSessions.find((s) => s.checkin_active)?.id ?? null);
   const [q, setQ] = useState("");
@@ -79,14 +80,14 @@ export function TabKids({
   const avisarResponsavel = async (childId: string) => {
     const guardians = guardianOf(childId);
     const targetMember = guardians.map((g) => memberByPersonId.get(g.guardian_person_id)).find(Boolean);
-    if (!targetMember || !organizationId) { avisar("Não encontrei um contato no app para esse responsável.", "warn"); return; }
+    if (!targetMember || !organizationId) { avisar(traduzirUi("Não encontrei um contato no app para esse responsável."), "warn"); return; }
     const child = childById.get(childId);
     await fetch("/api/service/push/notify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ organizationId, recipientMemberIds: [targetMember.id], title: "Aviso da sala Kids", body: `${child?.name ?? "Sua criança"} precisa de você na sala Kids.` }),
     }).catch(() => {});
-    avisar("Aviso enviado.");
+    avisar(traduzirUi("Aviso enviado."));
   };
 
   const confirmarRetirada = async (att: KidsAttendance) => {
@@ -112,8 +113,8 @@ export function TabKids({
 
   const criarFicha = async () => {
     if (!form.nome.trim() || !organizationId || !churchId) return;
-    if (!fotoCrianca) { setFichaError("A foto da criança é obrigatória."); return; }
-    if (!fotoRespEfetiva) { setFichaError("A foto do responsável é obrigatória."); return; }
+    if (!fotoCrianca) { setFichaError(traduzirUi("A foto da criança é obrigatória.")); return; }
+    if (!fotoRespEfetiva) { setFichaError(traduzirUi("A foto do responsável é obrigatória.")); return; }
     setFichaError("");
     const supabase = createServiceBrowserClient();
     const guardianPersonId = respMatch?.id ?? fichaIds.personId;
@@ -140,48 +141,48 @@ export function TabKids({
       setFichaIds({ childId: crypto.randomUUID(), personId: crypto.randomUUID() });
       setNovaFicha(false);
     } else {
-      setFichaError("Não foi possível salvar a ficha agora.");
+      setFichaError(traduzirUi("Não foi possível salvar a ficha agora."));
     }
   };
 
   if (!session) {
     return (
       <>
-        <div className="m-section-t">Kids</div>
-        <Vazio tamanho="toque" titulo={<>Nenhuma sessão Kids aberta agora. Peça para a liderança abrir o QR do {ct("{culto}")} de hoje em {ct("{Cultos} e eventos")}.</>} />
+        <div className="m-section-t">{traduzirUi("Kids")}</div>
+        <Vazio tamanho="toque" titulo={traduzirUi("Nenhuma sessão Kids aberta agora. Peça para a liderança abrir o QR do {culto} de hoje em {Cultos} e eventos.")} />
       </>
     );
   }
 
   return (
     <>
-      <div className="m-section-t">Kids · {kidsClass?.name ?? "Turma"}</div>
+      <div className="m-section-t">{traduzirUi("Kids · {turma}", { turma: kidsClass?.name ?? traduzirUi("Turma") })}</div>
       <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)", marginBottom: 12 }}>{joinDot(event?.name, `${event?.weekday ?? ""} ${formatDateBR(event?.eventDate)}`.trim())}</div>
 
       {activeSessions.length > 1 && (
         <div style={{ marginBottom: 12 }}>
-          <Selecao rotulo="Turma" valor={session.id} aoMudar={setSessionId} opcoes={activeSessions.map((s) => ({ v: s.id, l: kidsClasses.find((c) => c.id === s.class_id)?.name ?? "Turma" }))} />
+          <Selecao rotulo={traduzirUi("Turma")} valor={session.id} aoMudar={setSessionId} opcoes={activeSessions.map((s) => ({ v: s.id, l: kidsClasses.find((c) => c.id === s.class_id)?.name ?? traduzirUi("Turma") }))} />
         </div>
       )}
 
       {pending.length > 0 && (
         <>
-          <div className="m-when" style={{ marginBottom: 8 }}>Retirada pendente</div>
+          <div className="m-when" style={{ marginBottom: 8 }}>{traduzirUi("Retirada pendente")}</div>
           {pending.map((att) => {
             const child = childById.get(att.child_id);
             return (
               <Cartao estilo="app-solto" key={att.id} style={{ borderColor: "var(--amber-line)" }}>
-                <div className="m-culto">{child?.name ?? "Crianca"}</div>
-                <div className="m-fn">Compare o responsável na porta antes de confirmar.</div>
-                <Botao tamanho="toque" variante="principal" largo style={{ width: "100%", marginTop: 8 }} onClick={() => confirmarRetirada(att)}>Confirmar retirada</Botao>
+                <div className="m-culto">{child?.name ?? traduzirUi("Crianca")}</div>
+                <div className="m-fn">{traduzirUi("Compare o responsável na porta antes de confirmar.")}</div>
+                <Botao tamanho="toque" variante="principal" largo style={{ width: "100%", marginTop: 8 }} onClick={() => confirmarRetirada(att)}>{traduzirUi("Confirmar retirada")}</Botao>
               </Cartao>
             );
           })}
         </>
       )}
 
-      <div className="m-when" style={{ marginBottom: 8, marginTop: pending.length ? 14 : 0 }}>Na sala · {present.length}</div>
-      {present.length === 0 && <Vazio tamanho="toque" titulo="Nenhuma criança na sala ainda." />}
+      <div className="m-when" style={{ marginBottom: 8, marginTop: pending.length ? 14 : 0 }}>{traduzirUi("Na sala · {n}", { n: String(present.length) })}</div>
+      {present.length === 0 && <Vazio tamanho="toque" titulo={traduzirUi("Nenhuma criança na sala ainda.")} />}
       {present.map((att) => {
         const child = childById.get(att.child_id);
         return (
@@ -189,56 +190,56 @@ export function TabKids({
             <div className="m-vis-head">
               <Av name={child?.name ?? "?"} size="sm" photoUrl={child?.photo_url} />
               <div className="m-vis-main">
-                <div className="m-culto" style={{ fontSize: "var(--fs-app-15)" }}>{child?.name ?? "Crianca"}</div>
-                <div className="m-fn">{child?.allergies ? `Alergia: ${child.allergies}` : (att.dropped_off_via === "manual" ? "manual" : "QR")}</div>
+                <div className="m-culto" style={{ fontSize: "var(--fs-app-15)" }}>{child?.name ?? traduzirUi("Crianca")}</div>
+                <div className="m-fn">{child?.allergies ? traduzirUi("Alergia: {alergia}", { alergia: child.allergies }) : (att.dropped_off_via === "manual" ? traduzirUi("manual") : traduzirUi("QR"))}</div>
               </div>
-              <Botao tamanho="toque" variante="secundario" compacto style={{ padding: "6px 10px" }} onClick={() => avisarResponsavel(att.child_id)}>Avisar</Botao>
+              <Botao tamanho="toque" variante="secundario" compacto style={{ padding: "6px 10px" }} onClick={() => avisarResponsavel(att.child_id)}>{traduzirUi("Avisar")}</Botao>
             </div>
           </Cartao>
         );
       })}
 
-      <input className="input" placeholder="Buscar criança para check-in manual..." value={q} onChange={(e) => setQ(e.target.value)} style={{ marginTop: 16, marginBottom: 8 }} />
+      <input className="input" placeholder={traduzirUi("Buscar criança para check-in manual...")} value={q} onChange={(e) => setQ(e.target.value)} style={{ marginTop: 16, marginBottom: 8 }} />
       {notYetIn.slice(0, 5).map((child) => (
         <div className="m-vis-head" key={child.id} style={{ cursor: "pointer" }} onClick={() => checkinManual(child.id)}>
           <Av name={child.name} size="sm" photoUrl={child.photo_url} />
           <div className="m-vis-main"><div className="m-culto" style={{ fontSize: "var(--fs-app-15)" }}>{child.name}</div></div>
-          <span style={{ color: "var(--olive)", fontSize: "var(--fs-app-13)" }}>+ check-in</span>
+          <span style={{ color: "var(--olive)", fontSize: "var(--fs-app-13)" }}>{traduzirUi("+ check-in")}</span>
         </div>
       ))}
 
       <Botao tamanho="toque" variante="secundario" largo style={{ width: "100%", marginTop: 16 }} onClick={() => setNovaFicha((v) => !v)}>
-        {novaFicha ? "Cancelar" : "+ Criar ficha na hora"}
+        {novaFicha ? traduzirUi("Cancelar") : traduzirUi("+ Criar ficha na hora")}
       </Botao>
       {novaFicha && (
         <Cartao estilo="app-solto" style={{ borderColor: "var(--olive-line)", marginTop: 10 }}>
-          <PhotoPicker label="Foto da criança (obrigatória)" photoUrl={fotoCrianca} path={`${organizationId}/kids/children/${fichaIds.childId}`} onUploaded={setFotoCrianca} />
-          <input className="input" placeholder="Nome da criança" value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} style={{ marginTop: 10, marginBottom: 8 }} />
-          <div style={{ marginBottom: 8 }}><SeletorData rotulo="Nascimento" valor={form.nascimento} aoMudar={(v) => setForm((f) => ({ ...f, nascimento: v }))} /></div>
+          <PhotoPicker label={traduzirUi("Foto da criança (obrigatória)")} photoUrl={fotoCrianca} path={`${organizationId}/kids/children/${fichaIds.childId}`} onUploaded={setFotoCrianca} />
+          <input className="input" placeholder={traduzirUi("Nome da criança")} value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} style={{ marginTop: 10, marginBottom: 8 }} />
+          <div style={{ marginBottom: 8 }}><SeletorData rotulo={traduzirUi("Nascimento")} valor={form.nascimento} aoMudar={(v) => setForm((f) => ({ ...f, nascimento: v }))} /></div>
           <div style={{ marginBottom: 8 }}>
-            <Selecao rotulo="Gênero" valor={form.genero} aoMudar={(v) => setForm((f) => ({ ...f, genero: v }))} vazio="Gênero (opcional)" opcoes={[{ v: "menino", l: "Menino" }, { v: "menina", l: "Menina" }]} />
+            <Selecao rotulo={traduzirUi("Gênero")} valor={form.genero} aoMudar={(v) => setForm((f) => ({ ...f, genero: v }))} vazio={traduzirUi("Gênero (opcional)")} opcoes={[{ v: "menino", l: traduzirUi("Menino") }, { v: "menina", l: traduzirUi("Menina") }]} />
           </div>
-          <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)", marginBottom: 10 }}>Turma: {sugestaoTurma?.name ?? (session ? kidsClasses.find((kc) => kc.id === session.class_id)?.name ?? "nenhuma turma cobre essa idade" : "informe o nascimento")}</div>
+          <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)", marginBottom: 10 }}>{traduzirUi("Turma: {turma}", { turma: sugestaoTurma?.name ?? (session ? kidsClasses.find((kc) => kc.id === session.class_id)?.name ?? traduzirUi("nenhuma turma cobre essa idade") : traduzirUi("informe o nascimento")) })}</div>
 
-          <input className="input" list="service-kids-people-names" placeholder="Nome do responsável" value={form.respNome} onChange={(e) => setForm((f) => ({ ...f, respNome: e.target.value }))} style={{ marginBottom: 8 }} />
+          <input className="input" list="service-kids-people-names" placeholder={traduzirUi("Nome do responsável")} value={form.respNome} onChange={(e) => setForm((f) => ({ ...f, respNome: e.target.value }))} style={{ marginBottom: 8 }} />
           <datalist id="service-kids-people-names">
             {people.map((p) => <option key={p.id} value={p.name} />)}
           </datalist>
           {respMatch ? (
-            <div className="cell-sub" style={{ marginBottom: 8 }}>Ja tem cadastro no Service{fotoRespEfetiva ? ", foto reaproveitada do perfil" : ""}.</div>
+            <div className="cell-sub" style={{ marginBottom: 8 }}>{traduzirUi("Ja tem cadastro no Service{foto, select, sim {, foto reaproveitada do perfil} other {}}.", { foto: fotoRespEfetiva ? "sim" : "nao" })}</div>
           ) : (
-            <PhotoPicker label="Foto do responsável (obrigatória)" photoUrl={fotoResp} path={`${organizationId}/kids/guardians/${fichaIds.personId}`} onUploaded={setFotoResp} />
+            <PhotoPicker label={traduzirUi("Foto do responsável (obrigatória)")} photoUrl={fotoResp} path={`${organizationId}/kids/guardians/${fichaIds.personId}`} onUploaded={setFotoResp} />
           )}
-          <input className="input" placeholder="Telefone do responsável" value={form.respTel} onChange={(e) => setForm((f) => ({ ...f, respTel: e.target.value }))} style={{ marginTop: 8, marginBottom: 8 }} />
-          <input className="input" placeholder="Parentesco (mãe, avó...)" value={form.respParentesco} onChange={(e) => setForm((f) => ({ ...f, respParentesco: e.target.value }))} style={{ marginBottom: 8 }} />
-          <input className="input" placeholder="Contato de emergência: nome" aria-label="Contato de emergência: nome" value={form.emergenciaNome} onChange={(e) => setForm((f) => ({ ...f, emergenciaNome: e.target.value }))} style={{ marginBottom: 8 }} />
-          <input className="input" placeholder="Contato de emergência: telefone" aria-label="Contato de emergência: telefone" value={form.emergenciaTel} onChange={(e) => setForm((f) => ({ ...f, emergenciaTel: e.target.value }))} style={{ marginBottom: 12 }} />
+          <input className="input" placeholder={traduzirUi("Telefone do responsável")} value={form.respTel} onChange={(e) => setForm((f) => ({ ...f, respTel: e.target.value }))} style={{ marginTop: 8, marginBottom: 8 }} />
+          <input className="input" placeholder={traduzirUi("Parentesco (mãe, avó...)")} value={form.respParentesco} onChange={(e) => setForm((f) => ({ ...f, respParentesco: e.target.value }))} style={{ marginBottom: 8 }} />
+          <input className="input" placeholder={traduzirUi("Contato de emergência: nome")} aria-label={traduzirUi("Contato de emergência: nome")} value={form.emergenciaNome} onChange={(e) => setForm((f) => ({ ...f, emergenciaNome: e.target.value }))} style={{ marginBottom: 8 }} />
+          <input className="input" placeholder={traduzirUi("Contato de emergência: telefone")} aria-label={traduzirUi("Contato de emergência: telefone")} value={form.emergenciaTel} onChange={(e) => setForm((f) => ({ ...f, emergenciaTel: e.target.value }))} style={{ marginBottom: 12 }} />
 
           <div style={{ marginBottom: 12, fontSize: "var(--fs-app-13)", lineHeight: 1.4 }}>
             <Marcar checked={form.autorizaImagem} onChange={(e) => setForm((f) => ({ ...f, autorizaImagem: e.target.checked }))}>{imageAuthorizationCopy(form.nome)}</Marcar>
           </div>
           {fichaError && <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginBottom: 8 }}>{fichaError}</div>}
-          <Botao tamanho="toque" variante="principal" largo style={{ width: "100%" }} onClick={criarFicha}>Salvar e fazer check-in</Botao>
+          <Botao tamanho="toque" variante="principal" largo style={{ width: "100%" }} onClick={criarFicha}>{traduzirUi("Salvar e fazer check-in")}</Botao>
         </Cartao>
       )}
     </>
@@ -276,6 +277,7 @@ export function TabKidsArea({
   /* check-in de hoje (v7 2.3), o mesmo bloco do Início */
   checkinHoje?: React.ReactNode;
 }) {
+  const traduzirUi = useTexto();
   const emptyForm = { nome: "", nascimento: "", genero: "", autorizaImagem: false, alergias: "", restricoes: "", saude: "", medicamento: "", emergenciaNome: "", emergenciaTel: "", notas: "" };
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -328,7 +330,7 @@ export function TabKidsArea({
 
   const salvarFilho = async () => {
     if (!form.nome.trim() || !organizationId || !churchId) return;
-    if (!fotoFilho) { setFicarError("A foto da criança é obrigatória."); return; }
+    if (!fotoFilho) { setFicarError(traduzirUi("A foto da criança é obrigatória.")); return; }
     setFicarError("");
     const supabase = createServiceBrowserClient();
     const payload = {
@@ -348,14 +350,14 @@ export function TabKidsArea({
     if (editingId && editingId !== "novo") {
       const { error } = await supabase.schema("service").from("children").update(payload).eq("id", editingId);
       if (!error) setMyChildren((prev) => prev.map((c) => (c.id === editingId ? { ...c, ...payload } : c)));
-      else { setFicarError("Não consegui salvar agora."); return; }
+      else { setFicarError(traduzirUi("Não consegui salvar agora.")); return; }
     } else {
       const { error } = await supabase.schema("service").from("children").insert({ id: novoFilhoId, organization_id: organizationId, church_id: churchId, ...payload });
       if (!error) {
         await supabase.schema("service").from("child_guardians").insert({ organization_id: organizationId, child_id: novoFilhoId, guardian_person_id: person.id, relationship: "responsavel", can_pickup: true, is_primary: true });
         setMyChildren((prev) => [...prev, { id: novoFilhoId, church_id: churchId, ...payload } as Child]);
         setMyGuardians((prev) => [...prev, { id: `local-${novoFilhoId}`, child_id: novoFilhoId, guardian_person_id: person.id, relationship: "responsavel", can_pickup: true, is_primary: true }]);
-      } else { setFicarError("Não consegui salvar agora."); return; }
+      } else { setFicarError(traduzirUi("Não consegui salvar agora.")); return; }
     }
     setEditingId(null);
     setForm(emptyForm);
@@ -378,17 +380,17 @@ export function TabKidsArea({
     if (!organizationId) return;
     setCoError("");
     const matched = people.find((p) => p.name.toLowerCase().trim() === coForm.nome.toLowerCase().trim());
-    if (!matched) { setCoError("Pessoa não encontrada. Ela precisa já ter cadastro no Service."); return; }
-    if (matched.id === person.id) { setCoError("Você já é responsável."); return; }
-    if (guardiansOf(childId).some((g) => g.guardian_person_id === matched.id)) { setCoError("Essa pessoa já é responsável."); return; }
+    if (!matched) { setCoError(traduzirUi("Pessoa não encontrada. Ela precisa já ter cadastro no Service.")); return; }
+    if (matched.id === person.id) { setCoError(traduzirUi("Você já é responsável.")); return; }
+    if (guardiansOf(childId).some((g) => g.guardian_person_id === matched.id)) { setCoError(traduzirUi("Essa pessoa já é responsável.")); return; }
     const photo = coForm.photoUrl ?? matched.photoUrl ?? null;
-    if (!photo) { setCoError("O corresponsável precisa ter uma foto (envie abaixo)."); return; }
+    if (!photo) { setCoError(traduzirUi("O corresponsável precisa ter uma foto (envie abaixo).")); return; }
     const { data } = await createServiceBrowserClient().schema("service").from("child_guardians").insert({ organization_id: organizationId, child_id: childId, guardian_person_id: matched.id, relationship: coForm.relationship.trim() || null, can_pickup: coForm.canPickup, is_primary: false }).select("id,child_id,guardian_person_id,relationship,can_pickup,is_primary").single();
     if (data) {
       setMyGuardians((prev) => [...prev, data as ChildGuardian]);
       setCoForm({ nome: "", relationship: "", canPickup: true, photoUrl: null });
     } else {
-      setCoError("Não consegui adicionar agora.");
+      setCoError(traduzirUi("Não consegui adicionar agora."));
     }
   };
 
@@ -399,34 +401,34 @@ export function TabKidsArea({
 
   const fichaForm = (
     <Cartao estilo="app-solto" style={{ borderColor: "var(--olive-line)", marginTop: 10 }}>
-      <PhotoPicker label="Foto da criança (obrigatória)" photoUrl={fotoFilho} path={`${organizationId}/kids/children/${fotoFilhoTargetId}`} onUploaded={setFotoFilho} />
-      <input className="input" placeholder="Nome da criança" value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} style={{ marginTop: 10, marginBottom: 8 }} />
-      <div style={{ marginBottom: 8 }}><SeletorData rotulo="Nascimento" valor={form.nascimento} aoMudar={(v) => setForm((f) => ({ ...f, nascimento: v }))} /></div>
+      <PhotoPicker label={traduzirUi("Foto da criança (obrigatória)")} photoUrl={fotoFilho} path={`${organizationId}/kids/children/${fotoFilhoTargetId}`} onUploaded={setFotoFilho} />
+      <input className="input" placeholder={traduzirUi("Nome da criança")} value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} style={{ marginTop: 10, marginBottom: 8 }} />
+      <div style={{ marginBottom: 8 }}><SeletorData rotulo={traduzirUi("Nascimento")} valor={form.nascimento} aoMudar={(v) => setForm((f) => ({ ...f, nascimento: v }))} /></div>
       <div style={{ marginBottom: 8 }}>
-        <Selecao rotulo="Gênero" valor={form.genero} aoMudar={(v) => setForm((f) => ({ ...f, genero: v }))} vazio="Gênero (opcional)" opcoes={[{ v: "menino", l: "Menino" }, { v: "menina", l: "Menina" }]} />
+        <Selecao rotulo={traduzirUi("Gênero")} valor={form.genero} aoMudar={(v) => setForm((f) => ({ ...f, genero: v }))} vazio={traduzirUi("Gênero (opcional)")} opcoes={[{ v: "menino", l: traduzirUi("Menino") }, { v: "menina", l: traduzirUi("Menina") }]} />
       </div>
-      <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)", marginBottom: 10 }}>Turma: {sugestaoTurma?.name ?? (form.nascimento ? "nenhuma turma cobre essa idade ainda" : "calculada pelo nascimento")}</div>
-      <input className="input" placeholder="Alergias" value={form.alergias} onChange={(e) => setForm((f) => ({ ...f, alergias: e.target.value }))} style={{ marginBottom: 8 }} />
-      <input className="input" placeholder="Restrições alimentares" value={form.restricoes} onChange={(e) => setForm((f) => ({ ...f, restricoes: e.target.value }))} style={{ marginBottom: 8 }} />
-      <input className="input" placeholder="Plano de saúde ou convênio" value={form.saude} onChange={(e) => setForm((f) => ({ ...f, saude: e.target.value }))} style={{ marginBottom: 8 }} />
-      <input className="input" placeholder="Medicamento em uso contínuo" aria-label="Medicamento em uso contínuo" value={form.medicamento} onChange={(e) => setForm((f) => ({ ...f, medicamento: e.target.value }))} style={{ marginBottom: 8 }} />
-      <input className="input" placeholder="Contato de emergência: nome" aria-label="Contato de emergência: nome" value={form.emergenciaNome} onChange={(e) => setForm((f) => ({ ...f, emergenciaNome: e.target.value }))} style={{ marginBottom: 8 }} />
-      <input className="input" placeholder="Contato de emergência: telefone" aria-label="Contato de emergência: telefone" value={form.emergenciaTel} onChange={(e) => setForm((f) => ({ ...f, emergenciaTel: e.target.value }))} style={{ marginBottom: 12 }} />
+      <div style={{ fontSize: "var(--fs-app-13)", color: "var(--muted)", marginBottom: 10 }}>{traduzirUi("Turma: {turma}", { turma: sugestaoTurma?.name ?? (form.nascimento ? traduzirUi("nenhuma turma cobre essa idade ainda") : traduzirUi("calculada pelo nascimento")) })}</div>
+      <input className="input" placeholder={traduzirUi("Alergias")} value={form.alergias} onChange={(e) => setForm((f) => ({ ...f, alergias: e.target.value }))} style={{ marginBottom: 8 }} />
+      <input className="input" placeholder={traduzirUi("Restrições alimentares")} value={form.restricoes} onChange={(e) => setForm((f) => ({ ...f, restricoes: e.target.value }))} style={{ marginBottom: 8 }} />
+      <input className="input" placeholder={traduzirUi("Plano de saúde ou convênio")} value={form.saude} onChange={(e) => setForm((f) => ({ ...f, saude: e.target.value }))} style={{ marginBottom: 8 }} />
+      <input className="input" placeholder={traduzirUi("Medicamento em uso contínuo")} aria-label={traduzirUi("Medicamento em uso contínuo")} value={form.medicamento} onChange={(e) => setForm((f) => ({ ...f, medicamento: e.target.value }))} style={{ marginBottom: 8 }} />
+      <input className="input" placeholder={traduzirUi("Contato de emergência: nome")} aria-label={traduzirUi("Contato de emergência: nome")} value={form.emergenciaNome} onChange={(e) => setForm((f) => ({ ...f, emergenciaNome: e.target.value }))} style={{ marginBottom: 8 }} />
+      <input className="input" placeholder={traduzirUi("Contato de emergência: telefone")} aria-label={traduzirUi("Contato de emergência: telefone")} value={form.emergenciaTel} onChange={(e) => setForm((f) => ({ ...f, emergenciaTel: e.target.value }))} style={{ marginBottom: 12 }} />
       <div style={{ marginBottom: 12, fontSize: "var(--fs-app-13)", lineHeight: 1.4 }}>
         <Marcar checked={form.autorizaImagem} onChange={(e) => setForm((f) => ({ ...f, autorizaImagem: e.target.checked }))}>{imageAuthorizationCopy(form.nome)}</Marcar>
       </div>
       {ficarError && <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginBottom: 8 }}>{ficarError}</div>}
-      <div className="m6-fixo m6-fixo-mcard"><Botao tamanho="toque" variante="principal" largo style={{ width: "100%" }} onClick={salvarFilho}>Salvar</Botao></div>
+      <div className="m6-fixo m6-fixo-mcard"><Botao tamanho="toque" variante="principal" largo style={{ width: "100%" }} onClick={salvarFilho}>{traduzirUi("Salvar")}</Botao></div>
     </Cartao>
   );
 
   return (
     <>
       {checkinHoje}
-      <div className="m-section-t">Sua foto de responsável</div>
-      <PhotoPicker label="Foto do responsável" photoUrl={minhaFoto} path={`${organizationId}/kids/guardians/${person.id}`} onUploaded={salvarMinhaFoto} />
+      <div className="m-section-t">{traduzirUi("Sua foto de responsável")}</div>
+      <PhotoPicker label={traduzirUi("Foto do responsável")} photoUrl={minhaFoto} path={`${organizationId}/kids/guardians/${person.id}`} onUploaded={salvarMinhaFoto} />
 
-      <div className="m-section-t">Minhas crianças</div>
+      <div className="m-section-t">{traduzirUi("Minhas crianças")}</div>
       {meusFilhos.map((child) => {
         const turma = kidsClasses.find((kc) => kc.id === child.class_id);
         const historico = kidsAttendance.filter((a) => a.child_id === child.id).sort((a, b) => b.dropped_off_at.localeCompare(a.dropped_off_at)).slice(0, 3);
@@ -437,13 +439,13 @@ export function TabKidsArea({
                 <Av name={child.name} size="sm" photoUrl={child.photo_url} />
                 <div className="m-vis-main">
                   <div className="m-culto" style={{ fontSize: "var(--fs-app-15)" }}>{child.name}</div>
-                  <div className="m-fn">{turma?.name ?? "sem turma"}{child.allergies ? ` · alergia: ${child.allergies}` : ""}</div>
+                  <div className="m-fn">{turma?.name ?? traduzirUi("sem turma")}{child.allergies ? traduzirUi(" · alergia: {alergia}", { alergia: child.allergies }) : ""}</div>
                 </div>
                 <span className="m-task-caret" aria-hidden="true"><Icon name="editar" size={16} /></span>
               </div>
               {historico.length > 0 && (
                 <div style={{ marginTop: 10, fontSize: "var(--fs-app-13)", color: "var(--muted)" }}>
-                  {historico.map((h) => <div key={h.id}>{formatDateBR(h.dropped_off_at.slice(0, 10))} · {h.status === "retirado" ? "retirado" : "na sala"}</div>)}
+                  {historico.map((h) => <div key={h.id}>{formatDateBR(h.dropped_off_at.slice(0, 10))} · {h.status === "retirado" ? traduzirUi("retirado") : traduzirUi("na sala")}</div>)}
                 </div>
               )}
             </Acao>
@@ -451,43 +453,43 @@ export function TabKidsArea({
               <>
                 {fichaForm}
                 <Cartao estilo="app-solto" style={{ marginTop: 8 }}>
-                  <div className="m-when" style={{ marginBottom: 8 }}>Responsaveis autorizados a retirar</div>
+                  <div className="m-when" style={{ marginBottom: 8 }}>{traduzirUi("Responsaveis autorizados a retirar")}</div>
                   {guardiansOf(child.id).map((g) => {
                     const p = people.find((pp) => pp.id === g.guardian_person_id);
                     return (
                       <div className="m-vis-head" key={g.id} style={{ marginBottom: 8 }}>
                         <Av name={p?.name ?? "?"} size="sm" photoUrl={p?.photoUrl} />
                         <div className="m-vis-main">
-                          <div className="m-culto" style={{ fontSize: "var(--fs-app-13)" }}>{p?.name ?? "Responsavel"}{g.is_primary ? " · principal" : ""}</div>
-                          <div className="m-fn">{g.relationship || "sem parentesco informado"}</div>
+                          <div className="m-culto" style={{ fontSize: "var(--fs-app-13)" }}>{p?.name ?? traduzirUi("Responsavel")}{g.is_primary ? traduzirUi(" · principal") : ""}</div>
+                          <div className="m-fn">{g.relationship || traduzirUi("sem parentesco informado")}</div>
                         </div>
                         {isPrimaryFor(child.id) && !g.is_primary && (
-                          <Acao className="ob-foto-remover" onClick={() => removerCoResponsavel(g.id)}>Remover</Acao>
+                          <Acao className="ob-foto-remover" onClick={() => removerCoResponsavel(g.id)}>{traduzirUi("Remover")}</Acao>
                         )}
                       </div>
                     );
                   })}
                   {isPrimaryFor(child.id) ? (
                     <>
-                      <div className="cell-sub" style={{ margin: "10px 0" }}>Só você, como responsável principal, pode adicionar corresponsáveis.</div>
-                      <input className="input" list="service-mobile-people-names" placeholder="Nome (já precisa ter cadastro)" value={coForm.nome} onChange={(e) => setCoForm((f) => ({ ...f, nome: e.target.value, photoUrl: people.find((p) => p.name === e.target.value)?.photoUrl ?? null }))} style={{ marginBottom: 8 }} />
+                      <div className="cell-sub" style={{ margin: "10px 0" }}>{traduzirUi("Só você, como responsável principal, pode adicionar corresponsáveis.")}</div>
+                      <input className="input" list="service-mobile-people-names" placeholder={traduzirUi("Nome (já precisa ter cadastro)")} value={coForm.nome} onChange={(e) => setCoForm((f) => ({ ...f, nome: e.target.value, photoUrl: people.find((p) => p.name === e.target.value)?.photoUrl ?? null }))} style={{ marginBottom: 8 }} />
                       <datalist id="service-mobile-people-names">
                         {people.map((p) => <option key={p.id} value={p.name} />)}
                       </datalist>
-                      <input className="input" placeholder="Parentesco (mãe, avó, tio...)" value={coForm.relationship} onChange={(e) => setCoForm((f) => ({ ...f, relationship: e.target.value }))} style={{ marginBottom: 8 }} />
+                      <input className="input" placeholder={traduzirUi("Parentesco (mãe, avó, tio...)")} value={coForm.relationship} onChange={(e) => setCoForm((f) => ({ ...f, relationship: e.target.value }))} style={{ marginBottom: 8 }} />
                       {coForm.nome && !coForm.photoUrl && (
                         <div style={{ marginBottom: 8 }}>
-                          <PhotoPicker label="Foto do corresponsável (obrigatória)" photoUrl={coForm.photoUrl} path={`${organizationId}/kids/guardians/${people.find((p) => p.name === coForm.nome)?.id ?? "novo"}`} onUploaded={(url) => setCoForm((f) => ({ ...f, photoUrl: url }))} />
+                          <PhotoPicker label={traduzirUi("Foto do corresponsável (obrigatória)")} photoUrl={coForm.photoUrl} path={`${organizationId}/kids/guardians/${people.find((p) => p.name === coForm.nome)?.id ?? "novo"}`} onUploaded={(url) => setCoForm((f) => ({ ...f, photoUrl: url }))} />
                         </div>
                       )}
                       <div style={{ marginBottom: 8, fontSize: "var(--fs-app-13)" }}>
-                        <Marcar checked={coForm.canPickup} onChange={(e) => setCoForm((f) => ({ ...f, canPickup: e.target.checked }))}>Pode retirar</Marcar>
+                        <Marcar checked={coForm.canPickup} onChange={(e) => setCoForm((f) => ({ ...f, canPickup: e.target.checked }))}>{traduzirUi("Pode retirar")}</Marcar>
                       </div>
                       {coError && <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginBottom: 8 }}>{coError}</div>}
-                      <Botao tamanho="toque" variante="secundario" largo style={{ width: "100%" }} onClick={() => adicionarCoResponsavel(child.id)}>+ Adicionar corresponsável</Botao>
+                      <Botao tamanho="toque" variante="secundario" largo style={{ width: "100%" }} onClick={() => adicionarCoResponsavel(child.id)}>{traduzirUi("+ Adicionar corresponsável")}</Botao>
                     </>
                   ) : (
-                    <div className="cell-sub">Só o responsável principal pode adicionar outros corresponsáveis.</div>
+                    <div className="cell-sub">{traduzirUi("Só o responsável principal pode adicionar outros corresponsáveis.")}</div>
                   )}
                 </Cartao>
               </>
@@ -495,19 +497,19 @@ export function TabKidsArea({
           </div>
         );
       })}
-      {meusFilhos.length === 0 && <div className="cell-sub" style={{ marginBottom: 4 }}>Você ainda não tem nenhuma criança vinculada por aqui.</div>}
+      {meusFilhos.length === 0 && <div className="cell-sub" style={{ marginBottom: 4 }}>{traduzirUi("Você ainda não tem nenhuma criança vinculada por aqui.")}</div>}
 
       <Botao tamanho="toque" variante="secundario" largo style={{ width: "100%", marginTop: 10 }} onClick={abrirNovo}>
-        {editingId === "novo" ? "Cancelar" : "+ Adicionar criança"}
+        {editingId === "novo" ? traduzirUi("Cancelar") : traduzirUi("+ Adicionar criança")}
       </Botao>
       {editingId === "novo" && fichaForm}
 
       {kidsWall.length > 0 && (
         <>
-          <div className="m-section-t" style={{ marginTop: 22 }}>Mural dos professores</div>
+          <div className="m-section-t" style={{ marginTop: 22 }}>{traduzirUi("Mural dos professores")}</div>
           {kidsWall.map((post) => (
             <Cartao estilo="app-solto" key={post.id}>
-              <div className="m-fn">{post.author ?? "Kids"}</div>
+              <div className="m-fn">{post.author ?? traduzirUi("Kids")}</div>
               <div style={{ fontSize: "var(--fs-app-13)", marginTop: 4 }}>{post.body}</div>
             </Cartao>
           ))}
@@ -516,17 +518,17 @@ export function TabKidsArea({
 
       {kidsEvents.length > 0 && meusFilhos.length > 0 && (
         <>
-          <div className="m-section-t" style={{ marginTop: 22 }}>Eventos de crianças</div>
+          <div className="m-section-t" style={{ marginTop: 22 }}>{traduzirUi("Eventos de crianças")}</div>
           {kidsEvents.map((event) => (
             <Cartao estilo="app-solto" key={event.id}>
               <div className="m-culto">{event.title}</div>
-              <div className="m-fn">{[event.event_date, event.time, event.location].filter(Boolean).join(" · ") || "sem data definida"}</div>
+              <div className="m-fn">{[event.event_date, event.time, event.location].filter(Boolean).join(" · ") || traduzirUi("sem data definida")}</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
                 {meusFilhos.map((child) => {
                   const inscrito = enrollments.some((e) => e.kids_event_id === event.id && e.child_id === child.id);
                   return (
                     <Acao key={child.id} className={`${seloClasse({ tom: "neutro" })}${inscrito ? "chip-ok" : "chip-neutral"}`} desativado={inscrito} onClick={() => inscrever(event.id, child.id)}>
-                      {child.name.split(" ")[0]}{inscrito ? <> <Icon name="ok" size={13} /></> : " + inscrever"}
+                      {child.name.split(" ")[0]}{inscrito ? <> <Icon name="ok" size={13} /></> : traduzirUi(" + inscrever")}
                     </Acao>
                   );
                 })}
@@ -557,7 +559,7 @@ export function CheckinKidsHoje({ person, events, kidsChildren, childGuardians, 
   /* botão cheio só no primeiro cartão da fila do Início (lei 5) */
   destaque?: boolean;
 }) {
-  const { comTermos: ct } = useTermos();
+  const traduzirUi = useTexto();
   const { todayISO, horaAgoraBR, fuso } = useRelogioDaIgreja();
   const culto = cultoDeHoje(events, todayISO(), horaAgoraBR());
   const vinculos = childGuardians.filter((g) => g.guardian_person_id === person.id);
@@ -584,9 +586,9 @@ export function CheckinKidsHoje({ person, events, kidsChildren, childGuardians, 
   const aberto = checkinAberto(culto.time, new Date(), fuso);
   return (
     <Cartao estilo="app">
-      <div className="m6-kick">Kids hoje</div>
+      <div className="m6-kick">{traduzirUi("Kids hoje")}</div>
       <div className="m6-ct">{joinDot(culto.name, culto.time)}</div>
-      {!aberto && abre && <div className="m6-meta">O check-in abre às {abre}, 1 hora antes do {ct("{culto}")}.</div>}
+      {!aberto && abre && <div className="m6-meta">{traduzirUi("O check-in abre às {hora}, 1 hora antes do {culto}.", { hora: abre })}</div>}
       {filhos.map((c, i) => {
         const att = ck.attendance[c.id];
         const turma = kidsClasses.find((kc) => kc.id === c.class_id);
@@ -598,14 +600,14 @@ export function CheckinKidsHoje({ person, events, kidsChildren, childGuardians, 
               <Av name={c.name} photoUrl={c.photo_url} />
               <div className="m6-rb">
                 <div className="m6-rt">{c.name.split(" ")[0]}</div>
-                <div className="m6-rs">{turma ? joinDot(turma.name, statusDaCrianca(att)) : "Sem turma: fale com a recepção do Kids"}</div>
+                <div className="m6-rs">{turma ? joinDot(turma.name, statusDaCrianca(att)) : traduzirUi("Sem turma: fale com a recepção do Kids")}</div>
               </div>
             </div>
             {turma && !att && aberto && (
-              <div className="m6-btns"><Botao tamanho="toque" variante={destaque && i === 0 ? "principal" : "secundario"} desativado={busy} onClick={() => ck.checkin(c.id)}>{busy ? "Aguarde..." : `Fazer check-in de ${c.name.split(" ")[0]}`}</Botao></div>
+              <div className="m6-btns"><Botao tamanho="toque" variante={destaque && i === 0 ? "principal" : "secundario"} desativado={busy} onClick={() => ck.checkin(c.id)}>{busy ? traduzirUi("Aguarde...") : traduzirUi("Fazer check-in de {nome}", { nome: c.name.split(" ")[0] })}</Botao></div>
             )}
             {att?.status === "presente" && podeRetirar && (
-              <div className="m6-btns"><Botao tamanho="toque" desativado={busy} onClick={() => ck.pedirRetirada(c.id)}>{busy ? "Aguarde..." : "Solicitar retirada"}</Botao></div>
+              <div className="m6-btns"><Botao tamanho="toque" desativado={busy} onClick={() => ck.pedirRetirada(c.id)}>{busy ? traduzirUi("Aguarde...") : traduzirUi("Solicitar retirada")}</Botao></div>
             )}
           </div>
         );

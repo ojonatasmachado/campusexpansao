@@ -7,6 +7,7 @@
 
 import { useEffect } from "react";
 import { Botao } from "./Botao";
+import { useTexto } from "../lib/internacional/contexto";
 
 export type BarraSalvarProps = {
   /* há alteração não salva */
@@ -20,7 +21,10 @@ export type BarraSalvarProps = {
   className?: string;
 };
 
-export function BarraSalvar({ visivel, aoSalvar, salvando, aoDescartar, texto = "Você tem alterações não salvas.", rotuloSalvar = "Salvar", className }: BarraSalvarProps) {
+export function BarraSalvar({ visivel, aoSalvar, salvando, aoDescartar, texto: textoProp, rotuloSalvar: rotuloSalvarProp, className }: BarraSalvarProps) {
+  const traduzirUi = useTexto();
+  const texto = textoProp ?? traduzirUi("Você tem alterações não salvas.");
+  const rotuloSalvar = rotuloSalvarProp ?? traduzirUi("Salvar");
   useEffect(() => {
     if (!visivel) return;
     const segurar = (e: BeforeUnloadEvent) => { e.preventDefault(); };
@@ -30,11 +34,11 @@ export function BarraSalvar({ visivel, aoSalvar, salvando, aoDescartar, texto = 
 
   return (
     <div className={`save-bar barra-salvar${visivel ? " on" : ""}${className ? ` ${className}` : ""}`}
-      aria-hidden={!visivel} inert={!visivel} role="region" aria-label="Alterações">
+      aria-hidden={!visivel} inert={!visivel} role="region" aria-label={traduzirUi("Alterações")}>
       <span>{texto}</span>
       <div className="barra-salvar-acoes">
-        {aoDescartar ? <Botao variante="discreto" compacto desativado={salvando} onClick={aoDescartar}>Descartar</Botao> : null}
-        <Botao variante="principal" carregando={salvando} onClick={aoSalvar}>{salvando ? "Salvando..." : rotuloSalvar}</Botao>
+        {aoDescartar ? <Botao variante="discreto" compacto desativado={salvando} onClick={aoDescartar}>{traduzirUi("Descartar")}</Botao> : null}
+        <Botao variante="principal" carregando={salvando} onClick={aoSalvar}>{salvando ? traduzirUi("Salvando...") : rotuloSalvar}</Botao>
       </div>
     </div>
   );

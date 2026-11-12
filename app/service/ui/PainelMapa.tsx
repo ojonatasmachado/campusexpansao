@@ -16,6 +16,7 @@ import type { ReactNode } from "react";
 import { Icon } from "../lib/icons";
 import { Acao } from "./Acao";
 import { BotaoIcone } from "./Botao";
+import { useTexto } from "../lib/internacional/contexto";
 
 export type ItemTrilho = { id: string; rotulo: string; icone: ReactNode };
 
@@ -36,10 +37,11 @@ export type PainelMapaProps = {
 };
 
 export function PainelMapa({ titulo, sobretitulo, rotulo, busca, rodape, children, recolhido = false, aoRecolher, trilho = [], voltar }: PainelMapaProps) {
+  const traduzirUi = useTexto();
   if (recolhido && aoRecolher) {
     return (
       <nav className="pm-trilho" aria-label={rotulo}>
-        <BotaoIcone className="pm-trilho-abrir" rotulo="Abrir o painel" onClick={() => aoRecolher(false)}>
+        <BotaoIcone className="pm-trilho-abrir" rotulo={traduzirUi("Abrir o painel")} onClick={() => aoRecolher(false)}>
           <Icon name="avancar" size={18} stroke={2} />
         </BotaoIcone>
         {trilho.map((t) => (
@@ -56,7 +58,7 @@ export function PainelMapa({ titulo, sobretitulo, rotulo, busca, rodape, childre
         {voltar && (
           <Acao className="pm-voltar" onClick={voltar.aoTocar}>
             <Icon name="voltar" size={16} stroke={2.2} />
-            {voltar.rotulo ?? "Voltar ao mapa"}
+            {voltar.rotulo ?? traduzirUi("Voltar ao mapa")}
           </Acao>
         )}
         <div className="pm-cab-linha">
@@ -65,7 +67,7 @@ export function PainelMapa({ titulo, sobretitulo, rotulo, busca, rodape, childre
             <h2 className="pm-titulo">{titulo}</h2>
           </div>
           {!voltar && aoRecolher && (
-            <BotaoIcone className="pm-recolher" rotulo="Recolher o painel" onClick={() => aoRecolher(true)}>
+            <BotaoIcone className="pm-recolher" rotulo={traduzirUi("Recolher o painel")} onClick={() => aoRecolher(true)}>
               <Icon name="voltar" size={18} stroke={2} />
             </BotaoIcone>
           )}
@@ -153,7 +155,9 @@ export function MarcaCamada({ tipo }: { tipo: "igreja" | "celula" | "lugar" }) {
 }
 
 /* Transparência de uma camada: controle deslizante com nome falado. */
-export function TransparenciaCamada({ valor, aoMudar, rotulo = "Transparência" }: { valor: number; aoMudar: (v: number) => void; rotulo?: string }) {
+export function TransparenciaCamada({ valor, aoMudar, rotulo: rotuloProp }: { valor: number; aoMudar: (v: number) => void; rotulo?: string }) {
+  const traduzirUi = useTexto();
+  const rotulo = rotuloProp ?? traduzirUi("Transparência");
   const id = useId();
   return (
     <div className="pm-transp">

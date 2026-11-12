@@ -8,6 +8,7 @@
 
 import type { CSSProperties, ReactNode } from "react";
 import { Contagem } from "./Contagem";
+import { useTexto } from "../lib/internacional/contexto";
 
 const num = (n: number) => n.toLocaleString("pt-BR");
 const ordem = (i: number) => ({ "--i": i }) as CSSProperties;
@@ -45,6 +46,7 @@ export function EntradasSaidas({ meses, formatar = num, className }: {
   formatar?: (n: number) => string;
   className?: string;
 }) {
+  const traduzirUi = useTexto();
   if (!meses.length) return null;
   const safe = meses.map((m) => ({
     rotulo: m.rotulo,
@@ -52,7 +54,7 @@ export function EntradasSaidas({ meses, formatar = num, className }: {
     saida: Math.max(0, Number.isFinite(m.saida) ? m.saida : 0),
   }));
   const max = Math.max(...safe.flatMap((m) => [m.entrada, m.saida]), 1);
-  const falado = `Entradas e saídas: ${safe.map((m) => `${m.rotulo}, entrou ${formatar(m.entrada)} e saiu ${formatar(m.saida)}`).join("; ")}`;
+  const falado = traduzirUi("Entradas e saídas: {meses}", { meses: safe.map((m) => traduzirUi("{mes}, entrou {entrada} e saiu {saida}", { mes: m.rotulo, entrada: formatar(m.entrada), saida: formatar(m.saida) })).join("; ") });
   return (
     <div className={`graf-pares${className ? ` ${className}` : ""}`} role="img" aria-label={falado}>
       {safe.map((m, i) => (
@@ -106,11 +108,14 @@ export function Progresso({ pct, rotulo, tom, className, style }: {
   className?: string;
   style?: CSSProperties;
 }) {
+  const traduzirUi = useTexto();
   const raw = Number.isFinite(pct) ? pct : 0;
   const p = Math.max(0, Math.min(100, Math.round(raw)));
-  const estadoFalado = tom === "pendente" ? ", pendente" : tom === "cuidado" ? ", precisa de atenção" : "";
+  const falado = tom === "pendente" ? traduzirUi("{rotulo}: {pct}%, pendente", { rotulo, pct: String(p) })
+    : tom === "cuidado" ? traduzirUi("{rotulo}: {pct}%, precisa de atenção", { rotulo, pct: String(p) })
+      : `${rotulo}: ${p}%`;
   return (
-    <div className={`bar graf-prog${className ? ` ${className}` : ""}`} style={style} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={p} aria-label={`${rotulo}: ${p}%${estadoFalado}`}>
+    <div className={`bar graf-prog${className ? ` ${className}` : ""}`} style={style} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={p} aria-label={falado}>
       <div className={`bar-fill${tom === "pendente" ? " amber" : tom === "cuidado" ? " danger" : ""}`} style={{ width: `${p}%` }} />
     </div>
   );
@@ -123,16 +128,20 @@ export function Cobertura({ itens, limite = 80, className }: {
   limite?: number;
   className?: string;
 }) {
+  const traduzirUi = useTexto();
   if (!itens.length) return null;
   return (
-    <div className={`graf-cob${className ? ` ${className}` : ""}`} role="list" aria-label="Cobertura das escalas">
+    <div className={`graf-cob${className ? ` ${className}` : ""}`} role="list" aria-label={traduzirUi("Cobertura das escalas")}>
       {itens.map((it, i) => {
         const raw = Number.isFinite(it.pct) ? it.pct : 0;
         const p = Math.max(0, Math.min(100, Math.round(raw)));
         const estado = p >= 100 ? "ok" : p < limite ? "pendente" : "";
-        const estadoFalado = estado === "ok" ? ", completo" : estado === "pendente" ? ", precisa de atenção" : "";
+        const nome = typeof it.rotulo === "string" ? it.rotulo : traduzirUi("Escala");
+        const falado = estado === "ok" ? traduzirUi("{nome}: {pct}%, completo", { nome, pct: String(p) })
+          : estado === "pendente" ? traduzirUi("{nome}: {pct}%, precisa de atenção", { nome, pct: String(p) })
+            : `${nome}: ${p}%`;
         return (
-          <div className={`graf-cob-linha ${estado}`} key={`${i}-${it.id}`} style={ordem(i)} role="listitem" aria-label={`${typeof it.rotulo === "string" ? it.rotulo : "Escala"}: ${p}%${estadoFalado}`}>
+          <div className={`graf-cob-linha ${estado}`} key={`${i}-${it.id}`} style={ordem(i)} role="listitem" aria-label={falado}>
             <span className="graf-cob-nome">{it.rotulo}</span>
             <span className="graf-cob-trilho" aria-hidden="true"><span className="graf-cob-barra" style={{ width: `${p}%` }} /></span>
             <span className="graf-cob-pct num"><Contagem valor={`${p}%`} /></span>
@@ -153,12 +162,13 @@ export function Meta({ valor, total, unidade, rotulo, className }: {
   rotulo?: ReactNode;
   className?: string;
 }) {
+  const traduzirUi = useTexto();
   const safeValor = Number.isFinite(valor) ? Math.max(0, valor) : 0;
   const safeTotal = Number.isFinite(total) ? Math.max(0, total) : 0;
   const frac = safeTotal > 0 ? Math.max(0, Math.min(1, safeValor / safeTotal)) : 0;
   const pct = Math.round(frac * 100);
   return (
-    <div className={`graf-meta${className ? ` ${className}` : ""}`} role="img" aria-label={`${rotulo ?? "Meta"}: ${safeValor} de ${safeTotal} ${unidade}, ${pct}%`}>
+    <div className={`graf-meta${className ? ` ${className}` : ""}`} role="img" aria-label={traduzirUi("{rotulo}: {valor} de {total} {unidade}, {pct}%", { rotulo: `${rotulo ?? traduzirUi("Meta")}`, valor: String(safeValor), total: String(safeTotal), unidade, pct: String(pct) })}>
       <div className="graf-anel">
         <svg viewBox="0 0 200 200" aria-hidden="true">
           <circle className="graf-anel-fundo" cx="100" cy="100" r="82" />
@@ -166,7 +176,7 @@ export function Meta({ valor, total, unidade, rotulo, className }: {
         </svg>
         <div className="graf-anel-centro">
           <Contagem className="graf-anel-n" valor={safeValor} />
-          <span className="graf-anel-s">de {num(safeTotal)} {unidade}</span>
+          <span className="graf-anel-s">{traduzirUi("de {total} {unidade}", { total: num(safeTotal), unidade })}</span>
         </div>
       </div>
       {rotulo ? <div className="graf-meta-t">{rotulo}</div> : null}
@@ -182,6 +192,7 @@ export function Tendencia({ serie, eixo, rotulo, className }: {
   rotulo: string;
   className?: string;
 }) {
+  const traduzirUi = useTexto();
   if (!serie.length) return null;
   const safe = serie.map((v) => Number.isFinite(v) ? v : 0);
   const mn = Math.min(...safe);
@@ -193,7 +204,7 @@ export function Tendencia({ serie, eixo, rotulo, className }: {
   const area = `${linha} L100 100 L0 100 Z`;
   const ult = safe[safe.length - 1] ?? 0;
   return (
-    <div className={`graf-tend${className ? ` ${className}` : ""}`} role="img" aria-label={`${rotulo}: de ${num(safe[0] ?? 0)} a ${num(ult)}`}>
+    <div className={`graf-tend${className ? ` ${className}` : ""}`} role="img" aria-label={traduzirUi("{rotulo}: de {inicio} a {fim}", { rotulo, inicio: num(safe[0] ?? 0), fim: num(ult) })}>
       <div className="graf-tend-area" aria-hidden="true">
         <svg viewBox="0 0 100 100" preserveAspectRatio="none">
           <line className="graf-guia" x1="0" y1="33" x2="100" y2="33" />
@@ -218,6 +229,7 @@ export function Frequencia({ linhas, colunas, rotulo, className }: {
   rotulo: string;
   className?: string;
 }) {
+  const traduzirUi = useTexto();
   if (!linhas.length) return null;
   const safeLinhas = linhas.map((l) => ({
     ...l,
@@ -229,7 +241,7 @@ export function Frequencia({ linhas, colunas, rotulo, className }: {
   if (n === 0) return null;
   const falado = `${rotulo}: ${safeLinhas.map((l) => {
     const vals = l.valores;
-    return vals.length ? `${l.rotulo}, de ${num(Math.min(...vals))} a ${num(Math.max(...vals))}` : `${l.rotulo}, sem dados`;
+    return vals.length ? traduzirUi("{linha}, de {minimo} a {maximo}", { linha: l.rotulo, minimo: num(Math.min(...vals)), maximo: num(Math.max(...vals)) }) : traduzirUi("{linha}, sem dados", { linha: l.rotulo });
   }).join("; ")}`;
   return (
     <div className={`graf-freq${className ? ` ${className}` : ""}`} role="img" aria-label={falado} style={{ "--colunas": n } as CSSProperties}>

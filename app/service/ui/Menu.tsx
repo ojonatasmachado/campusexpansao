@@ -10,6 +10,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
+import { useTexto } from "../lib/internacional/contexto";
 import { Caret, Icon } from "../lib/icons";
 import { Acao } from "./Acao";
 import { Botao, BotaoIcone } from "./Botao";
@@ -42,7 +43,9 @@ export type MenuAcoesProps = {
 
 const SAIDA_MS = 140;
 
-export function MenuAcoes({ itens, rotulo = "Mais", soIcone, alinhar = "fim", className, gatilho: conteudo, compacto }: MenuAcoesProps) {
+export function MenuAcoes({ itens, rotulo: rotuloProp, soIcone, alinhar = "fim", className, gatilho: conteudo, compacto }: MenuAcoesProps) {
+  const traduzirUi = useTexto();
+  const rotulo = rotuloProp ?? traduzirUi("Mais");
   const [aberto, setAberto] = useState(false);
   const [saindo, setSaindo] = useState(false);
   /* fecha com a saída curta; o usePopover chama no clique fora e no Esc */

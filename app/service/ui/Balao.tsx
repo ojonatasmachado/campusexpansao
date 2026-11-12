@@ -17,6 +17,7 @@ import { Icon } from "../lib/icons";
 import { BotaoIcone } from "./Botao";
 import { Folha } from "./Janela";
 import { Selo } from "./Selo";
+import { useTexto } from "../lib/internacional/contexto";
 
 export type BalaoProps = {
   /* ponto em px dentro do contêiner */
@@ -43,6 +44,7 @@ export function Balao(props: BalaoProps) {
 }
 
 function BalaoFolha({ titulo, sobretitulo, aoFechar, children, rodape }: BalaoProps) {
+  const traduzirUi = useTexto();
   return (
     <Folha aoFechar={aoFechar} rotulo={titulo} className="balao-folha">
       <div className="balao-cab">
@@ -50,7 +52,7 @@ function BalaoFolha({ titulo, sobretitulo, aoFechar, children, rodape }: BalaoPr
           {sobretitulo && <div className="balao-sobre">{sobretitulo}</div>}
           <h3 className="balao-titulo">{titulo}</h3>
         </div>
-        <BotaoIcone className="balao-fechar" rotulo="Fechar" onClick={aoFechar}>
+        <BotaoIcone className="balao-fechar" rotulo={traduzirUi("Fechar")} onClick={aoFechar}>
           <Icon name="recusou" size={16} stroke={2.2} />
         </BotaoIcone>
       </div>
@@ -61,6 +63,7 @@ function BalaoFolha({ titulo, sobretitulo, aoFechar, children, rodape }: BalaoPr
 }
 
 function BalaoPreso({ x, y, titulo, sobretitulo, aoFechar, children, rodape, largura = 316, oculto }: BalaoProps) {
+  const traduzirUi = useTexto();
   const caixa = useRef<HTMLDivElement>(null);
   const fechar = useRef<HTMLButtonElement>(null);
   /* aoFechar costuma ser uma função nova a cada render: guardada num ref, o efeito
@@ -134,7 +137,7 @@ function BalaoPreso({ x, y, titulo, sobretitulo, aoFechar, children, rodape, lar
           {sobretitulo && <div className="balao-sobre">{sobretitulo}</div>}
           <h3 className="balao-titulo">{titulo}</h3>
         </div>
-        <BotaoIcone ref={fechar} className="balao-fechar" rotulo="Fechar" onClick={aoFechar}>
+        <BotaoIcone ref={fechar} className="balao-fechar" rotulo={traduzirUi("Fechar")} onClick={aoFechar}>
           <Icon name="recusou" size={16} stroke={2.2} />
         </BotaoIcone>
       </div>
@@ -158,11 +161,12 @@ export function LinhaBalao({ icone, children }: { icone: string; children: React
 /* Lotação no balão (prancha P1): "9 de 12 lugares", selo com as vagas (ou
    lotado) e a barra de ocupação. */
 export function LotacaoBalao({ ocupados, total, vagas, cheio }: { ocupados: number; total: number; vagas: string; cheio: boolean }) {
+  const traduzirUi = useTexto();
   const pct = total > 0 ? Math.min(100, Math.round((ocupados / total) * 100)) : 0;
   return (
     <div className="balao-lotacao">
       <div className="balao-lotacao-cab">
-        <span><b className="balao-lotacao-n">{ocupados} de {total}</b> lugares</span>
+        <span>{traduzirUi.rich("<n>{ocupados} de {total}</n> lugares", { n: (chunks) => <b className="balao-lotacao-n">{chunks}</b>, ocupados: String(ocupados), total: String(total) })}</span>
         <Selo tom={cheio ? "cuidado" : "ok"}>{vagas}</Selo>
       </div>
       <span className="balao-lotacao-barra" aria-hidden="true"><span style={{ width: `${pct}%` }} /></span>

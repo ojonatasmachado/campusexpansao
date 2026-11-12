@@ -16,6 +16,7 @@ import { useId } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { BotaoIcone } from "./Botao";
 import { useArrastarParaFechar } from "./arrastar";
+import { useTexto } from "../lib/internacional/contexto";
 
 const parar = (e: { stopPropagation: () => void }) => e.stopPropagation();
 
@@ -46,6 +47,7 @@ export type JanelaProps = {
 };
 
 export function Janela({ titulo, sobretitulo, texto, cabecalho, aoFechar, larga, rodape, fecharNoFundo = true, corpoBloco, corpoStyle, acima, ocupada, telaCheia, className, children }: JanelaProps) {
+  const traduzirUi = useTexto();
   const tituloId = useId();
   const { alvo, zona } = useArrastarParaFechar("baixo", aoFechar);
   return (
@@ -58,7 +60,7 @@ export function Janela({ titulo, sobretitulo, texto, cabecalho, aoFechar, larga,
           <h2 className="modal-title" id={tituloId}>{titulo}</h2>
           {texto ? <div className="modal-sub">{texto}</div> : null}
           {cabecalho}
-          <BotaoIcone className="janela-x" rotulo="Fechar" desativado={ocupada} onClick={aoFechar}>✕</BotaoIcone>
+          <BotaoIcone className="janela-x" rotulo={traduzirUi("Fechar")} desativado={ocupada} onClick={aoFechar}>✕</BotaoIcone>
         </div>
         {children != null && children !== false ? <div className="modal-body" style={corpoBloco ? { display: "block", ...corpoStyle } : corpoStyle}>{children}</div> : null}
         {rodape ? <div className="modal-foot">{rodape}</div> : null}
