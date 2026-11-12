@@ -18,9 +18,10 @@ export function ServiceLocaleProvider({ locale, messages, enabled = false, child
   }, [locale]);
   return (
     <Context.Provider value={value}>
-      {/* Linguagem do conteúdo já no HTML do servidor; sem caixa adicional de layout. */}
+      {/* Linguagem do conteúdo já no HTML do servidor (lang no div); o <html> recebe o idioma no
+          useLayoutEffect. Sem <script> aqui: montado no cliente (vindo do login da igreja), o React
+          acusa erro de console e o script nunca roda (M4). */}
       <div lang={locale} style={{ display: "contents" }} data-service-locale={locale}>
-        <script dangerouslySetInnerHTML={{ __html: `document.documentElement.lang=${JSON.stringify(locale)};` }} />
         {children}
       </div>
     </Context.Provider>

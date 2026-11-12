@@ -228,6 +228,8 @@ export function EntityDrawer({
     const grupoLider = grupo ? people.find((p) => p.id === grupo.leader_person_id) ?? null : null;
     const familiares = member.family ? members.filter((m) => m.family === member.family && m.id !== member.id) : [];
     const linkedPerson = member.volunteerId ? people.find((p) => p.id === member.volunteerId) ?? null : null;
+    /* acesso = login de verdade (people.user_id), como a API do convite decide; ficha ligada sem login (ex.: junção) ainda recebe convite */
+    const temLogin = !!linkedPerson?.userId;
     /* um aviso só, no lugar de "a completar" em cada campo */
     const faltando = [
       !member.phone && "telefone",
@@ -266,18 +268,24 @@ export function EntityDrawer({
               <dt>Aniversário</dt><dd>{currentRole === "master" || currentRole === "pastor" ? formatDateBR(member.birth) : formatDateBR(member.birth).slice(0, 5)}</dd>
               <dt>Bairro</dt><dd>{member.neighborhood}</dd>
               {(church?.settings?.gruposCfg?.ativo ?? true) && <><dt>{termo("grupo")}</dt><dd>{grupo ? <>{grupo.name}{grupoLider && <span style={{ color: "var(--muted)" }}> · líder {grupoLider.name.split(" ")[0]}</span>}</> : <span style={{ color: "var(--muted)" }}>sem grupo</span>}</dd></>}
-              <dt>Acesso ao app</dt><dd>{member.volunteerId ? <span style={{ color: "var(--olive-soft)" }}>liberado</span> : temTelefone ? <span style={{ color: "var(--amber)" }}>convite ainda não aceito</span> : <span style={{ color: "var(--amber)" }}>falta o telefone</span>}</dd>
+              <dt>Acesso ao app</dt><dd>{temLogin ? <span style={{ color: "var(--olive-soft)" }}>liberado</span> : temTelefone ? <span style={{ color: "var(--amber)" }}>convite ainda não aceito</span> : <span style={{ color: "var(--amber)" }}>falta o telefone</span>}</dd>
             </dl>
             <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
               <Botao compacto onClick={() => setEditingMember(true)}>Editar dados</Botao>
               {temTelefone && (
                 <Botao variante="principal" compacto desativado={sendingAccess} onClick={() => sendMemberAccessWhatsapp(member)}>
                   <Icon name="whatsapp" size={14} />
-                  {sendingAccess ? "Preparando…" : member.volunteerId ? "Reenviar acesso pelo WhatsApp" : "Enviar acesso pelo WhatsApp"}
+                  {sendingAccess ? "Preparando…" : temLogin ? "Reenviar acesso pelo WhatsApp" : "Enviar acesso pelo WhatsApp"}
                 </Botao>
               )}
             </div>
-            {temTelefone && (
+            {temTelefone && temLogin && (
+              <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)", marginTop: 10, lineHeight: 1.5 }}>
+                {member.name.split(" ")[0]} já criou o acesso. Ao clicar, abre o WhatsApp no seu celular com o
+                link de entrada da igreja, pronto pra você conferir e mandar.
+              </div>
+            )}
+            {temTelefone && !temLogin && (
               <div style={{ fontSize: "var(--fs-pn-12)", color: "var(--muted)", marginTop: 10, lineHeight: 1.5 }}>
                 Ao clicar, o app gera um convite só de {member.name.split(" ")[0]}, válido por 7 dias,
                 onde a pessoa informa o e-mail, cria a senha e coloca o CEP. Depois, abre o WhatsApp no

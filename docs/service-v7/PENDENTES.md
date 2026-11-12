@@ -62,7 +62,6 @@ Ordem por dependência; G3 cancelada (sem avisos automáticos de expansão).
 - **G12** Analisar (espera G1 para a idade) · **G8** Camadas do IBGE (espera G1)
 
 ### 5. Verificações em código e banco local
-- **M4** Convite e primeiro acesso
 - **O6** Kids e Financeiro com volume · **Q4** Push e imagem com serviços reais
 
 - **A4** Ponto branco · **Q9** Seletores acessíveis
