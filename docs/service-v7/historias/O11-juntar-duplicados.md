@@ -2,10 +2,10 @@
 id: O11
 titulo: Juntar cadastros duplicados
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-11-12
+branch: historia/O11-juntar-duplicados
 depende: []
 tamanho: M
 ---
