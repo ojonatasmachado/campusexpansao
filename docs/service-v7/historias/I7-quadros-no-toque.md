@@ -2,10 +2,10 @@
 id: I7
 titulo: Permitir mover tarefas do Quadros no toque
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-11-12
+branch: historia/I7-quadros-no-toque
 depende: []
 tamanho: M
 ---
