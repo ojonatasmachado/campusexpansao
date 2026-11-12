@@ -2,10 +2,10 @@
 id: O10
 titulo: Criar programação que se repete
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-11-12
+branch: historia/O10-programacao-repete
 depende: []
 tamanho: M
 ---
