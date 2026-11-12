@@ -15,6 +15,19 @@ Continuidade explícita da entrega parcial N1, autorizada pelo usuário em 25/10
 
 ## Arquivos (trilho)
 - `docs/service-v7/historias/N2-integracao-internacional.md`
+- `scripts/internacional/preparar-jsx.ts` (lê também este trilho)
+- `app/service/lib/internacional/mensagens/` (catálogos)
+- `app/service/ui/` (fatia 1)
+- `app/service/membro/Agenda.tsx` (fatia 1)
+- `app/service/membro/Biblia.tsx` (fatia 1)
+- `app/service/membro/comum.tsx` (fatia 1)
+- `app/service/membro/Cursos.tsx` (fatia 1)
+- `app/service/membro/Disponibilidade.tsx` (fatia 1)
+- `app/service/membro/Kids.tsx` (fatia 1)
+- `app/service/membro/Mural.tsx` (fatia 1)
+- `app/service/membro/Onboarding.tsx` (fatia 1)
+- `app/service/membro/Onde.tsx` (fatia 1)
+- `app/service/membro/Visitantes.tsx` (fatia 1)
 
 Definir na reserva, conferindo especialmente I10: ui/, painel/comum.tsx, modules/inicio/Saude.tsx, modules/financeiro/ e modules/relatorios/. Não trabalhar simultaneamente no branch de outra frente.
 

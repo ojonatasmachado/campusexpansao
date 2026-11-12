@@ -166,9 +166,10 @@ export function prepareJsxSource(fileName: string, code: string) {
 export function prepareJsx(fileName: string, apply = false) {
   const file = resolve(root, fileName);
   const relativeFile = relative(root, file).replaceAll("\\", "/");
-  const story = readFileSync(resolve(root, "docs/service-v7/historias/N1-fuso-idioma-moeda.md"), "utf8");
-  const rail = [...story.matchAll(/^- `([^`]+)`/gm)].map((match) => match[1]);
-  if (apply && !rail.some((path) => relativeFile === path || path.endsWith("/") && relativeFile.startsWith(path))) throw new Error(`Fora do trilho N1: ${relativeFile}`);
+  /* trilho da base (N1) e da integração nas telas (N2): só aplica em arquivo reservado por uma delas */
+  const stories = ["N1-fuso-idioma-moeda.md", "N2-integracao-internacional.md"].map((name) => readFileSync(resolve(root, "docs/service-v7/historias", name), "utf8"));
+  const rail = stories.flatMap((story) => [...story.matchAll(/^- `([^`]+)`/gm)].map((match) => match[1]));
+  if (apply && !rail.some((path) => relativeFile === path || path.endsWith("/") && relativeFile.startsWith(path))) throw new Error(`Fora do trilho N1/N2: ${relativeFile}`);
   const code = readFileSync(file, "utf8");
   const { output, ...result } = prepareJsxSource(fileName, code);
   if (apply && output !== code) writeFileSync(file, output);
