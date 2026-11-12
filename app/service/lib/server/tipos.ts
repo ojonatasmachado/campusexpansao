@@ -308,6 +308,8 @@ export type EventRow = {
   pede?: string | null;
   valor?: string | null;
   instrucoes?: string | null;
+  series_id?: string | null;
+  series_rule?: string | null;
 };
 
 
@@ -361,6 +363,9 @@ export type EventView = {
   pede: "aviso" | "presenca" | "inscricao";
   valor: string;
   instrucoes: string;
+  /* O10 (0108): encontros criados juntos; null no avulso */
+  seriesId: string | null;
+  seriesRule: "semanal" | "quinzenal" | "mensal" | null;
 };
 
 

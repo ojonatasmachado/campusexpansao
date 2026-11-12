@@ -13,6 +13,8 @@ import { isCivilDate } from "../../lib/date";
 
 import { useTermos } from "../../lib/vocabulario-context";
 import { FormScreen, type FormScreenHandle } from "../form/FormScreen";
+import { mostraCampo } from "../form/tipos";
+import { datasDaSerie, ehRepeticao, feitoDaSerie, type Repeticao } from "../../lib/recorrencia";
 import { friendlyWriteError } from "../erros";
 import { OUTRO_LOCAL, findPersonByName, normalize, openMemberInviteWhatsapp, timelineEventPayload, weekdayShortFromDate } from "../comum";
 import { FField } from "../campos";
@@ -166,33 +168,42 @@ export function ServiceModal({
       const eventTime = value("hora").replace("h", ":");
       if (!isCivilDate(eventDate)) { setSaving(false); setError("Informe uma data válida com dia, mês e ano."); return; }
       if (!/^([01]\d|2[0-3])[h:]([0-5]\d)$/.test(eventTime)) { setSaving(false); setError("Informe o horário de início."); return; }
-      const { data: eventRow, error: eventError } = await supabase.schema("service").from("events").insert({
+      /* O10: repete gera a série inteira de uma vez, cada encontro com sua escala e presença */
+      const regra = ehRepeticao(value("repete")) ? value("repete") as Repeticao : null;
+      if (regra && (!isCivilDate(value("ate")) || value("ate") <= eventDate)) { setSaving(false); setError("Escolha até quando repete: uma data depois do primeiro encontro."); return; }
+      const datas = regra ? datasDaSerie(eventDate, regra, value("ate")) : [eventDate];
+      if (regra && datas.length < 2) { setSaving(false); setError(regra === "mensal" ? "Todo mês precisa de pelo menos um mês até o fim. Escolha uma data mais adiante." : "Escolha uma data de fim que inclua pelo menos mais um encontro."); return; }
+      const seriesId = regra ? crypto.randomUUID() : null;
+      const { data: eventRows, error: eventError } = await supabase.schema("service").from("events").insert(datas.map((data) => ({
         organization_id: church.organizationId,
         church_id: church.id,
         name: value("nome"),
         kind: value("tipo") || "Culto",
-        event_date: eventDate,
-        weekday: weekdayShortFromDate(eventDate),
+        event_date: data,
+        weekday: weekdayShortFromDate(data),
         time: eventTime,
         location: eventLocal.name,
         room_id: eventLocal.roomId,
         ministries: [],
-      }).select("id").single();
-      if (eventError || !eventRow) {
+        ...(seriesId ? { series_id: seriesId, series_rule: regra } : {}),
+      }))).select("id, event_date");
+      if (eventError || !eventRows?.length) {
         result = { error: eventError };
       } else {
-        if (eventLocal.roomId && eventDate) {
-          await supabase.schema("service").from("reservations").insert({
+        if (eventLocal.roomId) {
+          const { error: erroReserva } = await supabase.schema("service").from("reservations").insert(eventRows.map((row) => ({
             organization_id: church.organizationId,
             room_id: eventLocal.roomId,
             title: value("nome"),
             kind: "culto",
-            reserved_date: eventDate,
+            reserved_date: row.event_date,
             start_time: eventTime,
             source_type: "evento",
-            source_id: eventRow.id,
-          });
+            source_id: row.id,
+          })));
+          if (erroReserva) avisar("Já está na agenda, mas o espaço não ficou reservado. Reserve em Configurações → Espaços e Salas.", "warn");
         }
+        if (regra) avisar(feitoDaSerie(datas, regra, ct("{cultos}").toLowerCase()));
         result = { error: null };
       }
     } else if (action.kind === "ministry") {
@@ -557,7 +568,7 @@ export function ServiceModal({
   }
 
   const hasHalf = modal.formFields.some((f) => f.half);
-  const visiveis = modal.formFields.filter((field) => !field.showIf || values[field.showIf.field] === field.showIf.equals);
+  const visiveis = modal.formFields.filter((field) => mostraCampo(field.showIf, values));
   const mudou = Array.from(new Set([...Object.keys(values), ...Object.keys(valoresIniciais)])).some((k) => (values[k] ?? "") !== (valoresIniciais[k] ?? ""));
 
   /* mais de 4 campos: tela de formulário em vez de janela (onda 1) */
@@ -623,7 +634,7 @@ export function ServiceModal({
         <Botao variante="principal" onClick={save} desativado={saving}>{saving ? "Salvando..." : (modal.saveLabel || "Salvar")}</Botao>
       </>}>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "0 16px" }}>
-        {modal.formFields.filter((field) => !field.showIf || values[field.showIf.field] === field.showIf.equals).map((field) => (
+        {modal.formFields.filter((field) => mostraCampo(field.showIf, values)).map((field) => (
           <div
             className="field"
             key={field.k}

@@ -1,6 +1,7 @@
 "use client";
 
 import { plural } from "../../lib/plural";
+import { REPETICOES, TETO_SERIE } from "../../lib/recorrencia";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
@@ -51,7 +52,7 @@ export function Cultos({ events, ministries, church, kidsClasses, kidsSessions, 
   ];
   return (
     <div className="content">
-      <PageHead title={ct("{Cultos} e Agenda")} eyebrow="Operação" help={ct("Seus {cultos} e eventos ficam aqui. Cada um pode virar uma escala, ganhar roteiro e setlist.")} action={<Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: ct("Novo {culto} ou evento"), subtitle: "Agenda da igreja: o que é, quando acontece e quem serve.", saveLabel: "Criar na agenda", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:ct("ex: {Culto} da Manhã, Conferência de Jovens") }, { k:"tipo", label:"Tipo de evento", type:"select", half:true, options:tipoOptions }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"Rua, número, bairro...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"data", label:"Data", type:"date", fullDate:true, req:true, half:true, hint:"Dia, mês e ano do encontro." }, { k:"hora", label:"Horário de início", type:"time", req:true, half:true }], action: { kind: "event" } })}>{ct("+ Novo {culto}")}</Botao>} />
+      <PageHead title={ct("{Cultos} e Agenda")} eyebrow="Operação" help={ct("Seus {cultos} e eventos ficam aqui. Cada um pode virar uma escala, ganhar roteiro e setlist.")} action={<Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: ct("Novo {culto} ou evento"), subtitle: "Agenda da igreja: o que é, quando acontece e quem serve.", saveLabel: "Criar na agenda", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:ct("ex: {Culto} da Manhã, Conferência de Jovens") }, { k:"tipo", label:"Tipo de evento", type:"select", half:true, options:tipoOptions }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"Rua, número, bairro...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"data", label:"Data", type:"date", fullDate:true, req:true, half:true, hint:"Dia, mês e ano do encontro." }, { k:"hora", label:"Horário de início", type:"time", req:true, half:true }, { k:"repete", label:"Repete", type:"select", value:"nao", options: REPETICOES.map((r) => ({ v: r.id, l: r.rotulo })) }, { k:"ate", label:"Repete até", type:"date", fullDate:true, half:true, showIf:{ field:"repete", notEquals:"nao" }, hint:`Cria até ${TETO_SERIE} encontros de uma vez. Dá para repetir mais depois.` }], action: { kind: "event" } })}>{ct("+ Novo {culto}")}</Botao>} />
       <div className="toolbar cultos-tb">
         <Segmentado>
           <Opcao marcada={vista === "semana"} onClick={() => setVista("semana")}>Semana</Opcao>
