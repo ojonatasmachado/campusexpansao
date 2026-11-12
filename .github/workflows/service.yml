@@ -79,7 +79,7 @@ jobs:
         run: npx tsx scripts/check-graficos-contraste.ts
       - name: Contratos das jornadas
         run: |
-          for check in internacional fuso avisos-fuso ativacao civil-date cnpj demo-datas endereco geo-cpf member-navigation panel-access semana cobertura chat-identidade telefone times-recebimento recorrencia; do
+          for check in internacional fuso avisos-fuso ativacao civil-date cnpj demo-datas endereco geo-cpf member-navigation panel-access semana cobertura chat-identidade telefone times-recebimento recorrencia duplicados; do
             npx tsx "scripts/check-service-${check}.ts"
           done
       - name: Migrações num Postgres limpo

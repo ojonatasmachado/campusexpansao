@@ -4137,3 +4137,15 @@ button.imp-step-btn{cursor:pointer;transition:color .14s ease}
 /* O10 · série do encontro na gaveta do evento: rótulo da série e as duas ações */
 .evento-serie { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:10px; }
 .evento-serie-acoes { display:flex; gap:8px; margin-left:auto; }
+
+/* O11: juntar cadastros duplicados (Pessoas) */
+.dup-aviso{margin:0 0 12px}
+.dup-linha{padding-inline:0}
+.dup-comparar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:600px){.dup-comparar{grid-template-columns:1fr}}
+.dup-ficha{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0}
+.dup-fica{font-size:var(--fs-pn-12);color:var(--muted)}
+.dup-ficha.on .dup-fica{color:var(--olive)}
+.dup-nome{font-size:var(--fs-pn-16);font-weight:600;color:var(--white);overflow-wrap:anywhere}
+.dup-dado{font-size:var(--fs-pn-13);color:var(--light);overflow-wrap:anywhere}
+.dup-previa{margin-top:16px;font-size:var(--fs-pn-14);line-height:1.5;color:var(--light)}
