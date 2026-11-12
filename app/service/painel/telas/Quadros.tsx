@@ -121,27 +121,32 @@ export function KbCard({
   onDragStart: () => void;
   onDragEnd: () => void;
 }) {
+  /* I7: o card é um botão (lei 17). Arrastar continua no mouse; no toque, no teclado e no
+     leitor de tela, tocar abre a gaveta, onde "Mover para" troca a coluna. */
   return (
-    <div
+    <Acao
       className={`kb-card${atrasado ? " atrasado" : ""}`}
       draggable
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       onClick={onOpen}
+      aria-describedby={`kb-dica-${card.id}`}
     >
-      <div className="kb-card-top">
+      {/* dentro de botão só cabe conteúdo de frase: spans, com o mesmo visual das classes */}
+      <span className="kb-card-top">
         <span className={`prio-dot prio-${card.priority ?? "media"}`} style={{ background: PRIO_COLOR[card.priority ?? "media"] }} />
         {card.source_type && card.source_type !== "manual" && (
           <span className="kb-origem"><Icon name="cultos" size={11} /> {card.source_type}</span>
         )}
         {parado && !atrasado && <span className="kb-parado">parado</span>}
-      </div>
-      <div className="kb-card-title">{card.title}</div>
-      <div className="kb-card-foot">
+      </span>
+      <span className="kb-card-title">{card.title}</span>
+      <span className="kb-card-foot">
         {card.due && <span className={`kb-prazo${atrasado ? " late" : ""}`}>{formatDateBR(card.due)}</span>}
         <AvatarGrupo tamanho="xs" max={3} pessoas={card.assignees.flatMap((id) => { const p = peopleById.get(id); return p ? [{ id, nome: p.name, foto: p.photoUrl }] : []; })} />
-      </div>
-    </div>
+      </span>
+      <span className="sr-only" id={`kb-dica-${card.id}`}>Abrir para mover ou editar</span>
+    </Acao>
   );
 }
 
@@ -167,7 +172,7 @@ export function CardDrawer({
   perm: { criarCard: boolean; comentar: boolean; editarBoard: boolean; moverQualquer: boolean };
   currentPersonId: string | null;
   onClose: () => void;
-  onMoveParent: (cardId: string, colId: string) => void;
+  onMoveParent: (cardId: string, colId: string) => Promise<boolean>;
   onRefresh: () => void;
 }) {
   const boardMinistry = ministries.find((m) => m.id === board.ministry_id);
@@ -175,6 +180,7 @@ export function CardDrawer({
     ? people.filter((p) => boardMinistry?.people.some((link) => link.personId === p.id))
     : people;
   const [lc, setLc] = useState(initCard);
+  const [movendo, setMovendo] = useState(false);
   const [comments, setComments] = useState<{ id: string; author: string; body: string; created_at: string }[]>([]);
   const [commentText, setCommentText] = useState("");
   const canMove = perm.moverQualquer || (currentPersonId != null && lc.assignees.includes(currentPersonId));
@@ -189,9 +195,12 @@ export function CardDrawer({
       .then(({ data }) => { if (data) setComments(data as typeof comments); });
   }, [initCard.id]);
 
-  const mutate = async (updates: Partial<Pick<CardView, "column_id" | "priority" | "assignees">>) => {
+  const mutate = async (updates: Partial<Pick<CardView, "priority" | "assignees">>) => {
+    /* sem gravar, volta só o que esta mudança tocou (um "Mover para" no meio-tempo fica) */
+    const antes = Object.fromEntries(Object.keys(updates).map((k) => [k, lc[k as keyof typeof updates]])) as typeof updates;
     setLc((prev) => ({ ...prev, ...updates }));
-    await createServiceBrowserClient().schema("service").from("cards").update(updates).eq("id", lc.id);
+    const { error } = await createServiceBrowserClient().schema("service").from("cards").update(updates).eq("id", lc.id);
+    if (error) { setLc((prev) => ({ ...prev, ...antes })); avisar("Não foi possível salvar agora. Tente de novo.", "warn"); return; }
     onRefresh();
   };
 
@@ -225,14 +234,19 @@ export function CardDrawer({
           {lc.description && <p style={{ fontSize: "var(--fs-pn-14)", color: "var(--light)", lineHeight: 1.6, marginBottom: 12 }}>{lc.description}</p>}
 
           <div className="dsec" style={{ marginTop: 8 }}>
-            <div className="dsec-title">Situação</div>
-            <div className="kb-move">
+            <div className="dsec-title" id={`kb-mover-${lc.id}`}>Mover para</div>
+            <div className="kb-move" role="group" aria-labelledby={`kb-mover-${lc.id}`}>
               {columns.map((col) => (
-                <Opcao key={col.id} marcada={lc.column_id === col.id} estilo="seg-chip"
-                  onClick={() => {
+                <Opcao key={col.id} marcada={lc.column_id === col.id} estilo="seg-chip" carregando={movendo}
+                  onClick={async () => {
                     if (col.id === lc.column_id) return;
                     if (!canMove) { avisar("Você só move cards onde é responsável.", "warn"); return; }
-                    mutate({ column_id: col.id }); onMoveParent(lc.id, col.id);
+                    const antes = lc.column_id;
+                    setMovendo(true);
+                    setLc((prev) => ({ ...prev, column_id: col.id }));
+                    const gravou = await onMoveParent(lc.id, col.id);
+                    setMovendo(false);
+                    if (!gravou) setLc((prev) => prev.column_id === col.id ? { ...prev, column_id: antes } : prev);
                   }}>
                   {col.name}
                 </Opcao>
@@ -404,7 +418,7 @@ export function QuadroAberto({
   currentRole: "master" | "pastor" | "lider" | "membro";
   currentPersonId: string | null;
   onBack: () => void;
-  onMoveCard: (cardId: string, colId: string) => void;
+  onMoveCard: (cardId: string, colId: string) => Promise<boolean>;
   onRefresh: () => void;
 }) {
   const perm = kanbanPerm(currentRole);
@@ -475,7 +489,7 @@ export function QuadroAberto({
                   setDrag(null);
                   return;
                 }
-                onMoveCard(drag, col.id);
+                void onMoveCard(drag, col.id);
                 setDrag(null);
               }}>
               <div className="kb-col-head">
@@ -508,7 +522,7 @@ export function QuadroAberto({
           perm={perm}
           currentPersonId={currentPersonId}
           onClose={() => setOpenCard(null)}
-          onMoveParent={(cardId, colId) => { onMoveCard(cardId, colId); setOpenCard((prev) => prev ? { ...prev, column_id: colId } : null); }}
+          onMoveParent={async (cardId, colId) => { const ok = await onMoveCard(cardId, colId); if (ok) setOpenCard((prev) => prev ? { ...prev, column_id: colId } : null); return ok; }}
           onRefresh={onRefresh}
         />
       )}
@@ -557,10 +571,24 @@ export function Quadros({
     ? boards.filter((board) => board.ministry_id && scopeMinistryIds.includes(board.ministry_id))
     : boards;
 
-  const moverCard = async (cardId: string, colId: string) => {
-    setLocalCards((prev) => prev.map((c) => c.id === cardId ? { ...c, column_id: colId } : c));
-    await createServiceBrowserClient().schema("service").from("cards").update({ column_id: colId }).eq("id", cardId);
+  /* I7: sem gravar, o card volta para a coluna de antes e a pessoa fica sabendo */
+  const moverCard = async (cardId: string, colId: string): Promise<boolean> => {
+    let antes: string | undefined;
+    setLocalCards((prev) => prev.map((c) => {
+      if (c.id !== cardId) return c;
+      antes = c.column_id;
+      return { ...c, column_id: colId };
+    }));
+    const { error } = await createServiceBrowserClient().schema("service").from("cards").update({ column_id: colId }).eq("id", cardId);
+    if (error) {
+      /* só desfaz se ninguém moveu de novo enquanto gravava */
+      const voltar = antes;
+      if (voltar) setLocalCards((prev) => prev.map((c) => c.id === cardId && c.column_id === colId ? { ...c, column_id: voltar } : c));
+      avisar("Não foi possível mover agora. Tente de novo.", "warn");
+      return false;
+    }
     router.refresh();
+    return true;
   };
 
   const selected = visibleBoards.find((b) => b.id === boardId);
