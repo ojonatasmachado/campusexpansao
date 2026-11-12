@@ -5,7 +5,6 @@ import type { GeoJSONSource, MapMouseEvent } from "maplibre-gl";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { avisar } from "../../lib/avisar";
 import { Icon } from "../../lib/icons";
-import { plural } from "../../lib/plural";
 import { limparCamadas, type ContextoMapa } from "./contexto";
 import { caixaDaGeometria, temPonto } from "./geo";
 
@@ -17,6 +16,8 @@ import { AvatarGrupo } from "../../ui/Avatar";
 import { Janela } from "../../ui/Janela";
 import { PainelMapa } from "../../ui/PainelMapa";
 import { Selecao } from "../../ui/Selecao";
+import { useTexto } from "../../lib/internacional/contexto";
+import type { Text } from "../../lib/internacional/mensagens";
 
 /* Ferramentas › Traçar rota (G11, mapa/PLANO.md §10, prancha P9). O painel da
    ferramenta ocupa o lugar das camadas, com "Voltar ao mapa". O objetivo vem
@@ -28,13 +29,24 @@ type Objetivo = "visita" | "oracao" | "panfletagem" | "som" | "outro";
 type Parada = { id: string; nome: string; tipo: string; lnglat: [number, number] };
 type Resultado = { trajeto: GeoJSON.LineString; distancia_km: number; duracao_min: number; aproximado: boolean };
 
-const OBJETIVOS: { id: Objetivo; nome: string; dica: string }[] = [
-  { id: "visita", nome: "Visita", dica: "Toque nas pessoas do mapa para incluir. O endereço fica na ficha." },
-  { id: "oracao", nome: "Oração", dica: "Toque no mapa para pôr uma parada. Arraste na lista para mudar a ordem." },
-  { id: "panfletagem", nome: "Panfletagem", dica: "Toque nas ruas e lugares, ou escolha uma área para percorrer." },
-  { id: "som", nome: "Carro de som", dica: "Escolha uma área para o carro cobrir as ruas dela." },
-  { id: "outro", nome: "Outro", dica: "Toque no mapa para pôr uma parada." },
+/* nome em pt-BR: vai na mensagem à equipe e no nome salvo da rota */
+const OBJETIVOS: { id: Objetivo; nome: string }[] = [
+  { id: "visita", nome: "Visita" },
+  { id: "oracao", nome: "Oração" },
+  { id: "panfletagem", nome: "Panfletagem" },
+  { id: "som", nome: "Carro de som" },
+  { id: "outro", nome: "Outro" },
 ];
+/* o que aparece na tela */
+const textosDoObjetivo = (t: Text): Record<Objetivo, { nome: string; dica: string }> => ({
+  visita: { nome: t("Visita"), dica: t("Toque nas pessoas do mapa para incluir. O endereço fica na ficha.") },
+  oracao: { nome: t("Oração"), dica: t("Toque no mapa para pôr uma parada. Arraste na lista para mudar a ordem.") },
+  panfletagem: { nome: t("Panfletagem"), dica: t("Toque nas ruas e lugares, ou escolha uma área para percorrer.") },
+  som: { nome: t("Carro de som"), dica: t("Escolha uma área para o carro cobrir as ruas dela.") },
+  outro: { nome: t("Outro"), dica: t("Toque no mapa para pôr uma parada.") },
+});
+/* o tipo da parada fica gravado em pt-BR; a tela mostra traduzido */
+const rotulosDoTipo = (t: Text): Record<string, string> => ({ Saída: t("Saída"), Pessoa: t("Pessoa"), Grupo: t("Grupo"), Igreja: t("Igreja"), Lugar: t("Lugar"), Rua: t("Rua") });
 const MAX_PARADAS = 25;
 let seq = 0;
 const novoId = () => `p${++seq}`;
@@ -55,6 +67,8 @@ function linkMapas(pts: [number, number][], como: "pe" | "carro") {
 const tempo = (min: number) => (min >= 60 ? `${Math.floor(min / 60)}h${String(min % 60).padStart(2, "0")}` : `${min} min`);
 
 export function Rota({ ctx }: { ctx: ContextoMapa }) {
+  const traduzirUi = useTexto();
+
   const sede = ctx.locais.find((l) => l.tipo === "sede" && temPonto(l));
   const saida = useMemo<Parada | null>(() => (sede ? { id: "saida", nome: sede.nome, tipo: "Saída", lnglat: [sede.longitude as number, sede.latitude as number] } : null), [sede]);
   const [objetivo, setObjetivo] = useState<Objetivo>("oracao");
@@ -81,14 +95,14 @@ export function Rota({ ctx }: { ctx: ContextoMapa }) {
       const r = await fetch("/api/service/mapa/rota", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ org: ctx.org, paradas: lista.map((p) => p.lnglat), como, otimizar }) });
       if (!r.ok) {
         const msg = await r.json().then((x: { error?: string }) => x.error).catch(() => undefined);
-        throw new Error(msg || "Não foi possível traçar a rota agora. Confira a conexão e tente de novo.");
+        throw new Error(msg || traduzirUi("Não foi possível traçar a rota agora. Confira a conexão e tente de novo."));
       }
       const j = await r.json() as Resultado & { ordem: number[] };
       if (n !== pedido.current) return lista;
       setRes(j);
       return j.ordem.map((i) => lista[i]);
     } catch (e) {
-      if (n === pedido.current) { setRes(null); avisar(e instanceof Error && e.message ? e.message : "Não foi possível traçar a rota agora. Tente de novo.", "warn"); }
+      if (n === pedido.current) { setRes(null); avisar(e instanceof Error && e.message ? e.message : traduzirUi("Não foi possível traçar a rota agora. Tente de novo."), "warn"); }
       return lista;
     }
   };
@@ -104,7 +118,7 @@ export function Rota({ ctx }: { ctx: ContextoMapa }) {
     mapa.addLayer({ id: "rt-paradas-n", type: "symbol", source: "rt-paradas", layout: { "text-field": ["get", "n"], "text-font": ["Noto Sans Regular"], "text-size": 13, "text-allow-overlap": true }, paint: { "text-color": cores.papel } });
     const clique = (e: MapMouseEvent) => {
       const s = estado.current;
-      if (s.total >= MAX_PARADAS) { avisar(`Uma rota tem no máximo ${MAX_PARADAS} paradas. Tire uma para pôr outra.`, "warn"); return; }
+      if (s.total >= MAX_PARADAS) { avisar(traduzirUi("Uma rota tem no máximo {max} paradas. Tire uma para pôr outra.", { max: String(MAX_PARADAS) }), "warn"); return; }
       /* visita: encosta na pessoa com nome mais perto do toque */
       if (s.objetivo === "visita") {
         let melhor: { nome: string; ll: [number, number]; d: number } | null = null;
@@ -114,7 +128,7 @@ export function Rota({ ctx }: { ctx: ContextoMapa }) {
           const d = Math.hypot(pt.x - e.point.x, pt.y - e.point.y);
           if (d < 24 && (!melhor || d < melhor.d)) melhor = { nome: p.nome, ll: [p.longitude, p.latitude], d };
         }
-        if (!melhor) { avisar("Na visita, toque em cima de uma pessoa do mapa.", "info"); return; }
+        if (!melhor) { avisar(traduzirUi("Na visita, toque em cima de uma pessoa do mapa."), "info"); return; }
         const m = melhor;
         setParadas((ps) => [...ps, { id: novoId(), nome: m.nome, tipo: "Pessoa", lnglat: m.ll }]);
         return;
@@ -129,7 +143,7 @@ export function Rota({ ctx }: { ctx: ContextoMapa }) {
     mapa.on("click", clique);
     mapa.getCanvas().style.cursor = "crosshair";
     return () => { mapa.off("click", clique); mapa.getCanvas().style.cursor = ""; limparCamadas(mapa, "rt-"); };
-  }, [ctx]);
+  }, [ctx, traduzirUi]);
 
   /* redesenha e recalcula quando muda a lista ou o jeito de ir */
   useEffect(() => {
@@ -176,7 +190,7 @@ export function Rota({ ctx }: { ctx: ContextoMapa }) {
   const [movida, setMovida] = useState<{ id: string; n: number } | null>(null);
   const passo = (id: string, d: -1 | 1) => { moverPasso(id, d); setMovida((m) => ({ id, n: (m?.n ?? 0) + 1 })); };
   useEffect(() => { if (movida) alcas.current.get(movida.id)?.focus(); }, [movida]);
-  const anuncio = movida ? (() => { const i = paradas.findIndex((p) => p.id === movida.id); return i < 0 ? "" : `${paradas[i].nome}: posição ${i + 1} de ${paradas.length}`; })() : "";
+  const anuncio = movida ? (() => { const i = paradas.findIndex((p) => p.id === movida.id); return i < 0 ? "" : traduzirUi("{nome}: posição {posicao} de {total}", { nome: paradas[i].nome, posicao: String(i + 1), total: String(paradas.length) }); })() : "";
 
   const melhorOrdem = async () => {
     setOcupado(true);
@@ -188,6 +202,8 @@ export function Rota({ ctx }: { ctx: ContextoMapa }) {
   };
 
   const obj = OBJETIVOS.find((o) => o.id === objetivo)!;
+  const textosObjetivo = textosDoObjetivo(traduzirUi);
+  const rotulosTipo = rotulosDoTipo(traduzirUi);
   const nomesEquipe = ctx.people.filter((p) => equipe.includes(p.id));
   /* na visita o nome das pessoas não vai na mensagem: a equipe recebe só a ordem e o trajeto */
   const resumo = useMemo(() => `${obj.nome}: ${nome || "rota"}${quando ? `, ${new Date(quando).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}` : ""}. Paradas: ${todas.map((p, i) => `${i + 1}. ${p.tipo === "Pessoa" ? `Visita ${i + (saida ? 0 : 1)}` : p.nome}`).join("; ")}.`, [obj, nome, quando, todas, saida]);
@@ -201,7 +217,7 @@ export function Rota({ ctx }: { ctx: ContextoMapa }) {
       paradas: todas.map(({ nome: n, tipo, lnglat }) => ({ nome: n, tipo, lnglat })), ruas_da_area: !!areaId, como,
       quando: quando ? new Date(quando).toISOString() : null, equipe, trajeto: res?.trajeto ?? null, distancia_km: res?.distancia_km ?? null, duracao_min: res?.duracao_min ?? null,
     });
-    if (error) { setOcupado(false); avisar("Não foi possível salvar a rota. Tente de novo.", "warn"); return; }
+    if (error) { setOcupado(false); avisar(traduzirUi("Não foi possível salvar a rota. Tente de novo."), "warn"); return; }
     if (enviar && equipe.length) {
       const { data: fichas } = await db.rpc("mapa_fichas_de", { p_org: ctx.org, p_people: equipe });
       const texto = `${resumo} Trajeto${todas.length > MAX_LINK ? ` (o link mostra ${MAX_LINK} das ${todas.length} paradas, na ordem)` : ""}: ${linkMapas(todas.map((p) => p.lnglat), como)}`;
@@ -210,47 +226,48 @@ export function Rota({ ctx }: { ctx: ContextoMapa }) {
         const { data } = await db.rpc("start_dm", { p_target_member: f.member_id, p_body: texto });
         if (data) enviados++;
       }
-      avisar(enviados ? `Rota enviada para ${nomesEquipe.map((p) => p.name.split(" ")[0]).join(", ").replace(/, ([^,]*)$/, " e $1")}.` : "Rota salva. A mensagem não foi: confira se você tem ficha de membro.", enviados ? "ok" : "warn");
-    } else avisar("Rota salva.");
+      const primeiros = nomesEquipe.map((p) => p.name.split(" ")[0]);
+      avisar(enviados ? traduzirUi("Rota enviada para {nomes}.", { nomes: primeiros.length <= 1 ? primeiros.join("") : traduzirUi("{inicio} e {fim}", { inicio: primeiros.slice(0, -1).join(", "), fim: primeiros[primeiros.length - 1] }) }) : traduzirUi("Rota salva. A mensagem não foi: confira se você tem ficha de membro."), enviados ? "ok" : "warn");
+    } else avisar(traduzirUi("Rota salva."));
     setOcupado(false);
   };
 
   return (
     <>
-      <div className="mp-dica" role="status">{obj.dica}</div>
-      <PainelMapa rotulo="Traçar rota" titulo="Traçar rota" voltar={{ aoTocar: ctx.fechar }}
+      <div className="mp-dica" role="status">{textosObjetivo[objetivo].dica}</div>
+      <PainelMapa rotulo={traduzirUi("Traçar rota")} titulo={traduzirUi("Traçar rota")} voltar={{ aoTocar: ctx.fechar }}
         busca={(
-          <div className="rt-objetivos" role="group" aria-label="Objetivo">
-            {OBJETIVOS.map((o) => <Opcao key={o.id} estilo="chip-toggle" marcada={objetivo === o.id} onClick={() => escolherObjetivo(o.id)}>{o.nome}</Opcao>)}
+          <div className="rt-objetivos" role="group" aria-label={traduzirUi("Objetivo")}>
+            {OBJETIVOS.map((o) => <Opcao key={o.id} estilo="chip-toggle" marcada={objetivo === o.id} onClick={() => escolherObjetivo(o.id)}>{textosObjetivo[o.id].nome}</Opcao>)}
           </div>
         )}
         rodape={(
           <div className="rt-acoes">
             <div className="rt-equipe">
               {nomesEquipe.length > 0 && <AvatarGrupo pessoas={nomesEquipe.map((p) => ({ id: p.id, nome: p.name }))} max={3} />}
-              <span className="rt-equipe-txt">{nomesEquipe.length ? `Equipe · ${plural(nomesEquipe.length, "pessoa")}` : "Sem equipe ainda"}</span>
-              <Botao compacto onClick={() => setEscolhendo(true)}>Escolher</Botao>
+              <span className="rt-equipe-txt">{nomesEquipe.length ? traduzirUi("Equipe · {count, plural, =1 {# pessoa} other {# pessoas}}", { count: nomesEquipe.length }) : traduzirUi("Sem equipe ainda")}</span>
+              <Botao compacto onClick={() => setEscolhendo(true)}>{traduzirUi("Escolher")}</Botao>
             </div>
-            <Botao variante="principal" desativado={todas.length < 2 || ocupado || !equipe.length} onClick={() => salvar(true)}>Enviar para a equipe</Botao>
+            <Botao variante="principal" desativado={todas.length < 2 || ocupado || !equipe.length} onClick={() => salvar(true)}>{traduzirUi("Enviar para a equipe")}</Botao>
             <span className="rt-acoes-dupla">
-              <a className={`${botaoClasse({ compacto: true })}${todas.length < 2 ? " disabled" : ""}`} href={todas.length >= 2 ? linkMapas(todas.map((p) => p.lnglat), como) : undefined} target="_blank" rel="noreferrer" aria-disabled={todas.length < 2}>Abrir no app de mapas</a>
-              <Botao compacto desativado={todas.length < 2 || ocupado} onClick={() => salvar(false)}>Salvar rota</Botao>
+              <a className={`${botaoClasse({ compacto: true })}${todas.length < 2 ? " disabled" : ""}`} href={todas.length >= 2 ? linkMapas(todas.map((p) => p.lnglat), como) : undefined} target="_blank" rel="noreferrer" aria-disabled={todas.length < 2}>{traduzirUi("Abrir no app de mapas")}</a>
+              <Botao compacto desativado={todas.length < 2 || ocupado} onClick={() => salvar(false)}>{traduzirUi("Salvar rota")}</Botao>
             </span>
           </div>
         )}>
         <div className="rt-cab">
-          <span>Paradas <span className="rt-cab-n">{paradas.length}</span></span>
-          <Botao compacto desativado={todas.length < 3 || ocupado} onClick={melhorOrdem}><Icon name="multiplicar" size={14} stroke={2} />Melhor ordem</Botao>
+          <span>{traduzirUi.rich("Paradas <n>{total}</n>", { total: String(paradas.length), n: (c) => <span className="rt-cab-n">{c}</span> })}</span>
+          <Botao compacto desativado={todas.length < 3 || ocupado} onClick={melhorOrdem}><Icon name="multiplicar" size={14} stroke={2} />{traduzirUi("Melhor ordem")}</Botao>
         </div>
         <span className="sr-only" aria-live="polite">{anuncio}</span>
         <div className="rt-lista">
           {saida && (
             <div className="rt-parada">
               <span className="rt-sede" aria-hidden="true"><Icon name="igrejasilhueta" size={18} stroke={1.9} /></span>
-              <span className="rt-txt"><b>{saida.nome}</b><span>Saída</span></span>
+              <span className="rt-txt"><b>{saida.nome}</b><span>{traduzirUi("Saída")}</span></span>
             </div>
           )}
-          {paradas.length === 0 && <p className="mp-fraco rt-vazio">{objetivo === "visita" ? "Nenhuma pessoa ainda." : "Nenhuma parada ainda."}</p>}
+          {paradas.length === 0 && <p className="mp-fraco rt-vazio">{objetivo === "visita" ? traduzirUi("Nenhuma pessoa ainda.") : traduzirUi("Nenhuma parada ainda.")}</p>}
           {paradas.map((p, i) => (
             <div key={p.id} className={`rt-parada${arrastando === p.id ? " arrastando" : ""}`} draggable
               onDragStart={(e) => { setArrastando(p.id); e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", p.id); }}
@@ -265,45 +282,45 @@ export function Rota({ ctx }: { ctx: ContextoMapa }) {
               }}
               onDragEnd={() => setArrastando(null)}>
               <BotaoIcone ref={(el) => { if (el) alcas.current.set(p.id, el); else alcas.current.delete(p.id); }} className="rt-alca"
-                rotulo={`Mover ${p.nome}, posição ${i + 1} de ${paradas.length}. Toque para subir; setas para cima e para baixo`}
+                rotulo={traduzirUi("Mover {nome}, posição {posicao} de {total}. Toque para subir; setas para cima e para baixo", { nome: p.nome, posicao: String(i + 1), total: String(paradas.length) })}
                 onClick={() => passo(p.id, -1)}
                 onKeyDown={(e) => { if (e.key === "ArrowUp") { e.preventDefault(); passo(p.id, -1); } if (e.key === "ArrowDown") { e.preventDefault(); passo(p.id, 1); } }}>
                 <Icon name="menu" size={16} stroke={2} />
               </BotaoIcone>
               <span className="rt-n" aria-hidden="true">{i + 1}</span>
-              <span className="rt-txt"><b>{p.nome}</b><span>{p.tipo}</span></span>
-              <BotaoIcone className="rt-tirar" rotulo={`Tirar ${p.nome}`} onClick={() => tirar(p.id)}><Icon name="recusou" size={14} stroke={2.2} /></BotaoIcone>
+              <span className="rt-txt"><b>{p.nome}</b><span>{rotulosTipo[p.tipo] ?? p.tipo}</span></span>
+              <BotaoIcone className="rt-tirar" rotulo={traduzirUi("Tirar {nome}", { nome: p.nome })} onClick={() => tirar(p.id)}><Icon name="recusou" size={14} stroke={2.2} /></BotaoIcone>
             </div>
           ))}
         </div>
         <div className="rt-bloco">
           {objetivo !== "visita" && ctx.areas.length > 0 && (
             <div className="rt-linha-campo">
-              <label htmlFor="rt-area">Percorrer a área</label>
-              <Selecao id="rt-area" valor={areaId} aoMudar={percorrer} vazio="Não, só as paradas" opcoes={ctx.areas.map((a) => ({ v: a.id, l: a.nome }))} />
+              <label htmlFor="rt-area">{traduzirUi("Percorrer a área")}</label>
+              <Selecao id="rt-area" valor={areaId} aoMudar={percorrer} vazio={traduzirUi("Não, só as paradas")} opcoes={ctx.areas.map((a) => ({ v: a.id, l: a.nome }))} />
             </div>
           )}
-          <Segmentado role="group" aria-label="Como ir">
-            <Opcao marcada={como === "pe"} onClick={() => setComo("pe")}><Icon name="pessoa" size={15} stroke={2} />A pé</Opcao>
-            <Opcao marcada={como === "carro"} onClick={() => setComo("carro")}><Icon name="transporte" size={15} stroke={2} />Carro</Opcao>
+          <Segmentado role="group" aria-label={traduzirUi("Como ir")}>
+            <Opcao marcada={como === "pe"} onClick={() => setComo("pe")}><Icon name="pessoa" size={15} stroke={2} />{traduzirUi("A pé")}</Opcao>
+            <Opcao marcada={como === "carro"} onClick={() => setComo("carro")}><Icon name="transporte" size={15} stroke={2} />{traduzirUi("Carro")}</Opcao>
           </Segmentado>
           {res && (
             <div className="rt-total">
-              <span className="rt-total-km mp-num">{String(res.distancia_km).replace(".", ",")} km</span>
-              <span>· cerca de {tempo(res.duracao_min)}</span>
-              {res.aproximado && <span className="rt-total-obs">em linha reta</span>}
+              <span className="rt-total-km mp-num">{traduzirUi("{km} km", { km: String(res.distancia_km).replace(".", ",") })}</span>
+              <span>{traduzirUi("· cerca de {tempo}", { tempo: tempo(res.duracao_min) })}</span>
+              {res.aproximado && <span className="rt-total-obs">{traduzirUi("em linha reta")}</span>}
             </div>
           )}
           <div className="rt-campos">
-            <Campo rotulo="Nome" id="rt-nome"><Entrada maxLength={80} placeholder={`ex: ${obj.nome} no Jardim América`} value={nome} onChange={(e) => setNome(e.target.value)} /></Campo>
-            <Campo rotulo="Quando" id="rt-quando"><Entrada type="datetime-local" value={quando} onChange={(e) => setQuando(e.target.value)} /></Campo>
+            <Campo rotulo={traduzirUi("Nome")} id="rt-nome"><Entrada maxLength={80} placeholder={traduzirUi("ex: {objetivo} no Jardim América", { objetivo: textosObjetivo[objetivo].nome })} value={nome} onChange={(e) => setNome(e.target.value)} /></Campo>
+            <Campo rotulo={traduzirUi("Quando")} id="rt-quando"><Entrada type="datetime-local" value={quando} onChange={(e) => setQuando(e.target.value)} /></Campo>
           </div>
         </div>
       </PainelMapa>
 
       {escolhendo && (
-        <Janela titulo="Equipe da rota" texto="Quem recebe a rota por mensagem." aoFechar={() => setEscolhendo(false)} corpoBloco
-          rodape={<Botao variante="principal" onClick={() => setEscolhendo(false)}>Pronto</Botao>}>
+        <Janela titulo={traduzirUi("Equipe da rota")} texto={traduzirUi("Quem recebe a rota por mensagem.")} aoFechar={() => setEscolhendo(false)} corpoBloco
+          rodape={<Botao variante="principal" onClick={() => setEscolhendo(false)}>{traduzirUi("Pronto")}</Botao>}>
           <div className="rt-escolher">
             {ctx.people.map((p) => <Marcar key={p.id} lado="direita" checked={equipe.includes(p.id)} onChange={(e) => setEquipe((q) => (e.target.checked ? [...q, p.id] : q.filter((x) => x !== p.id)))}>{p.name}</Marcar>)}
           </div>

@@ -4,7 +4,6 @@
    Quem foi escalado vê no app e recebe uma notificação da categoria Escala. */
 
 import { useState } from "react";
-import { plural } from "../../lib/plural";
 import { avisar } from "../../lib/avisar";
 import { formatDateBR } from "../../lib/date";
 import { notifyPush } from "../../lib/notify-push";
@@ -16,6 +15,7 @@ import type { EventView, RosterAssignmentView } from "../../ServiceExactApp";
 import { Botao } from "../../ui/Botao";
 import { Janela } from "../../ui/Janela";
 import { Campo, TextoLongo } from "../../ui/Campo";
+import { useTexto } from "../../lib/internacional/contexto";
 export function PublicarEscala({ rascunhos, events, organizationId, onClose, onPublicado }: {
   rascunhos: RosterAssignmentView[];
   events: EventView[];
@@ -23,6 +23,8 @@ export function PublicarEscala({ rascunhos, events, organizationId, onClose, onP
   onClose: () => void;
   onPublicado: () => void;
 }) {
+  const traduzirUi = useTexto();
+
   const { comTermos: ct } = useTermos();
   const [msg, setMsg] = useState("");
   const [salvando, setSalvando] = useState(false);
@@ -63,15 +65,15 @@ export function PublicarEscala({ rascunhos, events, organizationId, onClose, onP
         setFeitos(feitosAgora);
         setSalvando(false);
         setErro(feitosAgora.size
-          ? `${friendlyWriteError(error.message)} ${plural(feitosAgora.size, "escalação já saiu", "escalações já saíram")} e ${plural(rascunhos.length - feitosAgora.size, "continua", "continuam")} em rascunho. Tente de novo para publicar o resto.`
-          : friendlyWriteError(error.message));
+          ? traduzirUi("{erro} {feitas, plural, =1 {# escalação já saiu} other {# escalações já saíram}} e {restam, plural, =1 {# continua} other {# continuam}} em rascunho. Tente de novo para publicar o resto.", { erro: friendlyWriteError(error.message, traduzirUi), feitas: feitosAgora.size, restam: rascunhos.length - feitosAgora.size })
+          : friendlyWriteError(error.message, traduzirUi));
         return;
       }
       lote.forEach((id) => feitosAgora.add(id));
     }
     setFeitos(feitosAgora);
     await avisarEquipe(feitosAgora);
-    avisar(`Escala publicada para ${plural(pessoas.length, "pessoa")}.`);
+    avisar(traduzirUi("Escala publicada para {count, plural, =1 {# pessoa} other {# pessoas}}.", { count: pessoas.length }));
     onPublicado();
   };
 
@@ -80,23 +82,23 @@ export function PublicarEscala({ rascunhos, events, organizationId, onClose, onP
     if (!parcial) { onClose(); return; }
     setSalvando(true);
     const n = await avisarEquipe(feitos);
-    avisar(`Parte da escala publicada (${plural(feitos.size, "escalação", "escalações")}, ${plural(n, "pessoa avisada", "pessoas avisadas")}). O resto continua em rascunho.`, "warn");
+    avisar(traduzirUi("Parte da escala publicada ({escalacoes, plural, =1 {# escalação} other {# escalações}}, {avisadas, plural, =1 {# pessoa avisada} other {# pessoas avisadas}}). O resto continua em rascunho.", { escalacoes: feitos.size, avisadas: n }), "warn");
     onPublicado();
   };
 
   return (
-    <Janela sobretitulo="Publicar" titulo="Publicar e avisar" aoFechar={() => { void fechar(); }} ocupada={salvando} corpoBloco
+    <Janela sobretitulo={traduzirUi("Publicar")} titulo={traduzirUi("Publicar e avisar")} aoFechar={() => { void fechar(); }} ocupada={salvando} corpoBloco
       texto={rascunhos.length
-        ? ct(`${plural(rascunhos.length, "escalação", "escalações")} em rascunho, ${plural(eventosIds.size, "{culto}", "{cultos}")}${datas.length ? ` de ${formatDateBR(datas[0])} a ${formatDateBR(datas[datas.length - 1])}` : ""}. ${plural(pessoas.length, "pessoa recebe", "pessoas recebem")} a escala no app e uma notificação.`)
-        : "Nada em rascunho. A escala que você monta culto a culto já aparece para a equipe."}
+        ? traduzirUi("{escalacoes, plural, =1 {# escalação} other {# escalações}} em rascunho, {eventos, plural, =1 {# {culto}} other {# {cultos}}}{periodo, select, sim { de {inicio} a {fim}} other {}}. {pessoas, plural, =1 {# pessoa recebe} other {# pessoas recebem}} a escala no app e uma notificação.", { escalacoes: rascunhos.length, eventos: eventosIds.size, periodo: datas.length ? "sim" : "nao", inicio: datas.length ? formatDateBR(datas[0]) : "", fim: datas.length ? formatDateBR(datas[datas.length - 1]) : "", pessoas: pessoas.length })
+        : traduzirUi("Nada em rascunho. A escala que você monta culto a culto já aparece para a equipe.")}
       rodape={<>
-        <Botao onClick={() => { void fechar(); }} desativado={salvando}>{parcial ? "Fechar" : rascunhos.length ? "Cancelar" : "Fechar"}</Botao>
-        {rascunhos.length > 0 && <Botao variante="principal" onClick={publicar} desativado={salvando}>{salvando ? "Publicando…" : parcial ? "Tentar de novo" : "Publicar e avisar"}</Botao>}
+        <Botao onClick={() => { void fechar(); }} desativado={salvando}>{parcial ? traduzirUi("Fechar") : rascunhos.length ? traduzirUi("Cancelar") : traduzirUi("Fechar")}</Botao>
+        {rascunhos.length > 0 && <Botao variante="principal" onClick={publicar} desativado={salvando}>{salvando ? traduzirUi("Publicando…") : parcial ? traduzirUi("Tentar de novo") : traduzirUi("Publicar e avisar")}</Botao>}
       </>}>
       {rascunhos.length > 0 ? (
         <>
-          <Campo rotulo="Recado na notificação (opcional)" id="pub-esc-msg">
-            <TextoLongo value={msg} maxLength={160} onChange={(e) => setMsg(e.target.value)} placeholder="Ex.: Confira suas datas até domingo." />
+          <Campo rotulo={traduzirUi("Recado na notificação (opcional)")} id="pub-esc-msg">
+            <TextoLongo value={msg} maxLength={160} onChange={(e) => setMsg(e.target.value)} placeholder={traduzirUi("Ex.: Confira suas datas até domingo.")} />
           </Campo>
           {erro && <div className="fs-error" role="alert">{erro}</div>}
         </>

@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Map as MlMap, GeoJSONSource, MapMouseEvent } from "maplibre-gl";
 import { Icon } from "../../lib/icons";
-import { plural } from "../../lib/plural";
 import { avisar } from "../../lib/avisar";
 import { useTermos } from "../../lib/vocabulario-context";
 import MapaBase from "./MapaBase";
@@ -13,7 +12,7 @@ import {
   carregarAcesso, carregarAreas, carregarMinhasAreas, carregarCidade, carregarLocais, carregarPessoas, carregarRegioes, carregarSemPonto, carregarTotais,
   type Acesso, type Area, type Cidade, type LocalMapa, type PessoaMapa, type Regiao, type Totais,
 } from "./dados";
-import { SITUACAO, milhar, pessoasNaRegiao, tomPresenca, umACada } from "./linguagem";
+import { milhar, pessoasNaRegiao, tomPresenca, umACada } from "./linguagem";
 import { IDS, OPACIDADE, TOCAVEIS, marcarGrupo, montarCamadas, mostrar, opacidade, type ChaveCamada } from "./camadas";
 import { registrarMarcadores, svgMarcador, type Marcador } from "./marcadores";
 import type { ContextoMapa, PessoaLider } from "./contexto";
@@ -22,7 +21,7 @@ import { usePosicaoNoMapa } from "./posicao";
 import { Rota } from "./Rota";
 import { Emergencia } from "./Emergencia";
 import { LinhaDoTempo } from "./LinhaDoTempo";
-import { CATEGORIAS, Pontos, carregarPontos, excluirLugar, ocultarLugar, type Ponto as Lugar } from "./Pontos";
+import { CATEGORIAS, Pontos, carregarPontos, excluirLugar, nomesDasCategorias, ocultarLugar, type Ponto as Lugar } from "./Pontos";
 import { Mesa } from "./Mesa";
 import { LiberarMapa } from "./LiberarMapa";
 
@@ -35,6 +34,8 @@ import { linhaClasse } from "../../ui/Linha";
 import { Balao, LinhaBalao, LotacaoBalao, NotaBalao } from "../../ui/Balao";
 import { BarraFerramentas, type ItemFerramenta } from "../../ui/BarraFerramentas";
 import { EscalaTons, GrupoCamadas, LinhaCamada, MarcaCamada, PainelMapa, TransparenciaCamada } from "../../ui/PainelMapa";
+import { useTexto } from "../../lib/internacional/contexto";
+import type { Text } from "../../lib/internacional/mensagens";
 
 /* Painel › Pessoas › Mapa da igreja (G7, mapa/PLANO.md §10, prancha P1).
    O mapa mostra o que existe; quem decide é a igreja: nenhuma visão pronta,
@@ -53,15 +54,17 @@ type Aberto = Selecao & { onde: [number, number] };
 type Modo = null | "area" | "rota" | "emergencia" | "linha" | "pontos";
 type GrupoLugar = "igreja" | "escolas" | "saude" | "onibus" | "igrejas";
 
-const LUGARES: { id: GrupoLugar; nome: string }[] = [
-  { id: "igreja", nome: "Lugares da igreja" },
-  { id: "escolas", nome: "Escolas, praças e quadras" },
-  { id: "saude", nome: "Assistência e saúde" },
-  { id: "onibus", nome: "Paradas de ônibus" },
-  { id: "igrejas", nome: "Igrejas na região" },
+const lugaresDoMapa = (t: Text): { id: GrupoLugar; nome: string }[] => [
+  { id: "igreja", nome: t("Lugares da igreja") },
+  { id: "escolas", nome: t("Escolas, praças e quadras") },
+  { id: "saude", nome: t("Assistência e saúde") },
+  { id: "onibus", nome: t("Paradas de ônibus") },
+  { id: "igrejas", nome: t("Igrejas na região") },
 ];
 const grupoDoLugar = (categoria: string) => (CATEGORIAS.find((c) => c.id === categoria)?.grupo ?? "igreja") as GrupoLugar;
-const TIPO_AREA: Record<Area["tipo"], string> = { setor: "Setor", regiao: "Região pastoral", alcance: "Atuação" };
+const tiposDeArea = (t: Text): Record<Area["tipo"], string> => ({ setor: t("Setor"), regiao: t("Região pastoral"), alcance: t("Atuação") });
+/* situação vem gravada (membro, novo); na tela, o rótulo */
+const rotulosDaSituacao = (t: Text): Record<string, string> => ({ membro: t("Membro"), novo: t("Novo na igreja") });
 const LARGURA_PAINEL = 360; /* 16 de margem + 344 do painel (biblioteca.css, .pm-painel) */
 const LARGURA_TRILHO = 80;
 /* celular: sem painel ao lado; topo com a busca, embaixo a fileira de ferramentas */
@@ -79,6 +82,8 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
   onAbrirMembro: (memberId: string) => void;
   onMensagem: (memberId: string) => void;
 }) {
+  const traduzirUi = useTexto();
+
   const { comTermos: ct } = useTermos();
   /* a lista chega nova a cada render do painel: só troca quando muda de fato */
   const chavePessoas = pessoasDoPainel.map((p) => `${p.id}:${p.name}`).join("|");
@@ -86,7 +91,7 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
   const people = useMemo(() => pessoasDoPainel, [chavePessoas]);
   const [acesso, setAcesso] = useState<Acesso | null>(null);
   const [minhasAreas, setMinhasAreas] = useState<string[]>([]);
-  const [erro, setErro] = useState("");
+  const [erro, setErro] = useState(false);
   const [pessoas, setPessoas] = useState<PessoaMapa[]>([]);
   const [locais, setLocais] = useState<LocalMapa[]>([]);
   const [lugares, setLugares] = useState<Lugar[]>([]);
@@ -149,7 +154,7 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
         setRegioes(await carregarRegioes(organizationId, n));
       }
     } catch {
-      setErro("Não foi possível carregar o mapa agora. Tente de novo.");
+      setErro(true);
     }
   }, [organizationId]);
   // eslint-disable-next-line react-hooks/set-state-in-effect -- carga do servidor ao abrir
@@ -297,7 +302,7 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
   const vira = (k: ChaveCamada) => () => setCamadas((c) => ({ ...c, [k]: !c[k] }));
   /* minha posição (celular): só no aparelho, nada vai para o servidor */
   const irParaMim = () => {
-    if (!mapa || typeof navigator === "undefined" || !navigator.geolocation) { avisar("Este aparelho não informa a posição.", "warn"); return; }
+    if (!mapa || typeof navigator === "undefined" || !navigator.geolocation) { avisar(traduzirUi("Este aparelho não informa a posição."), "warn"); return; }
     if (procurando) return;
     setProcurando(true);
     navigator.geolocation.getCurrentPosition(
@@ -307,7 +312,7 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
         (mapa.map.getSource("mp-eu") as GeoJSONSource | undefined)?.setData({ type: "FeatureCollection", features: [{ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: onde } }] });
         mapa.map.easeTo({ center: onde, zoom: Math.max(mapa.map.getZoom(), 15) });
       },
-      () => { setProcurando(false); avisar("Não foi possível achar sua posição. Confira se a localização está liberada para o navegador.", "warn"); },
+      () => { setProcurando(false); avisar(traduzirUi("Não foi possível achar sua posição. Confira se a localização está liberada para o navegador."), "warn"); },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
     );
   };
@@ -318,15 +323,15 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
   const termo = busca.trim().toLowerCase();
   const sugestoes = termo.length < 2 ? [] : [
     ...pessoas.flatMap((p, i) => (p.nome?.toLowerCase().includes(termo) ? [{ p, i }] : [])).slice(0, 5).map(({ p, i }) => ({
-      k: `p${p.id}`, t: p.nome as string, s: SITUACAO[p.situacao] ?? "pessoa",
+      k: `p${p.id}`, t: p.nome as string, s: rotulosDaSituacao(traduzirUi)[p.situacao] ?? traduzirUi("pessoa"),
       ir: () => { setCamadas((c) => ({ ...c, pessoas: true })); irPara([p.longitude, p.latitude], 16); setAberto({ tipo: "pessoa", i, p, onde: [p.longitude, p.latitude] }); },
     })),
     ...locais.filter((l) => l.nome.toLowerCase().includes(termo) && temPonto(l)).slice(0, 5).map((l) => ({
-      k: `l${l.id}`, t: l.nome, s: l.tipo === "grupo" ? ct("{grupo}") : l.tipo === "sede" ? "sede" : "congregação",
+      k: `l${l.id}`, t: l.nome, s: l.tipo === "grupo" ? ct("{grupo}") : l.tipo === "sede" ? traduzirUi("sede") : traduzirUi("congregação"),
       ir: () => { const o: [number, number] = [l.longitude as number, l.latitude as number]; irPara(o); setAberto({ tipo: "local", l: l as LocalMapa & Ponto, onde: o }); },
     })),
     ...regioes.filter((r) => r.nome.toLowerCase().includes(termo)).slice(0, 5).map((r) => ({
-      k: `r${r.codigo}`, t: r.nome, s: nivel,
+      k: `r${r.codigo}`, t: r.nome, s: nivel === "bairro" ? traduzirUi("bairro") : traduzirUi("setor"),
       ir: () => { setCamadas((c) => ({ ...c, presenca: true })); enquadrar(r.geojson); const cx = caixaDaGeometria(r.geojson); if (cx) setAberto({ tipo: "regiao", r, onde: [(cx[0][0] + cx[1][0]) / 2, (cx[0][1] + cx[1][1]) / 2] }); },
     })),
   ];
@@ -335,8 +340,8 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
   const contexto: ContextoMapa | null = useMemo(() => (mapa && acesso ? { org: organizationId, mapa: mapa.map, cores: mapa.cores, acesso, cidade, regioes, pessoas, locais, areas, people, igreja: churchName, celular, gestao: podeLiberar, recarregar: carregar, fechar: () => setModo(null) } : null), [mapa, acesso, organizationId, cidade, regioes, pessoas, locais, areas, people, churchName, celular, podeLiberar, carregar]);
 
   /* ── estados vazios e de acesso ── */
-  if (erro) return <div className="mapa-tela"><div className="mp-vazio"><div><p className="mp-texto" role="alert">{erro}</p><Botao compacto onClick={() => { setErro(""); carregar(); }}>Tentar de novo</Botao></div></div></div>;
-  if (acesso && !acesso.pode) return <div className="mapa-tela"><div className="mp-vazio"><div><p className="mp-texto">O mapa da igreja ainda não foi liberado para você. Fale com o pastor.</p></div></div></div>;
+  if (erro) return <div className="mapa-tela"><div className="mp-vazio"><div><p className="mp-texto" role="alert">{traduzirUi("Não foi possível carregar o mapa agora. Tente de novo.")}</p><Botao compacto onClick={() => { setErro(false); carregar(); }}>{traduzirUi("Tentar de novo")}</Botao></div></div></div>;
+  if (acesso && !acesso.pode) return <div className="mapa-tela"><div className="mp-vazio"><div><p className="mp-texto">{traduzirUi("O mapa da igreja ainda não foi liberado para você. Fale com o pastor.")}</p></div></div></div>;
   if (tela === "mesa" && acesso) return <Mesa org={organizationId} acesso={acesso} cidade={cidade} nivel={mesaNivel} regioesIniciais={mesaRegioes} igreja={churchName} onVoltar={() => setTela("mapa")} onAbrirMembro={onAbrirMembro} onMensagem={onMensagem} />;
   if (tela === "liberar") return <LiberarMapa org={organizationId} people={people} areas={areas} onVoltar={() => { setTela("mapa"); carregar(); }} />;
 
@@ -348,9 +353,9 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
     <div className="mp-busca">
       <Icon name="buscar" size={18} />
       <Entrada value={busca} onChange={(e) => setBusca(e.target.value)} onKeyDown={(e) => { if (e.key === "Escape" && busca) { e.preventDefault(); setBusca(""); } }}
-        placeholder="Buscar pessoa, bairro ou lugar" aria-label="Buscar no mapa" autoComplete="off" />
+        placeholder={traduzirUi("Buscar pessoa, bairro ou lugar")} aria-label={traduzirUi("Buscar no mapa")} autoComplete="off" />
       {sugestoes.length > 0 && (
-        <div className="mp-sugestoes" role="listbox" aria-label="Resultados da busca">
+        <div className="mp-sugestoes" role="listbox" aria-label={traduzirUi("Resultados da busca")}>
           {sugestoes.map((s) => (
             <Acao key={s.k} role="option" aria-selected="false" className="mp-sug" onClick={() => { s.ir(); setBusca(""); }}>
               <span>{s.t}</span><span className="mp-fraco">{s.s}</span>
@@ -362,43 +367,43 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
   );
   const rodapeEl = (
     <>
-      <span className="mp-pe-linha"><Icon name="privacidade" size={16} />Nenhum endereço aparece no mapa.</span>
-      {areaDoLider && <span>Você vê só {areaDoLider.nome}.</span>}
-      {acesso?.detalhe === "numeros" && <span>Sua liberação mostra só os números por região, sem pessoas.</span>}
+      <span className="mp-pe-linha"><Icon name="privacidade" size={16} />{traduzirUi("Nenhum endereço aparece no mapa.")}</span>
+      {areaDoLider && <span>{traduzirUi("Você vê só {area}.", { area: areaDoLider.nome })}</span>}
+      {acesso?.detalhe === "numeros" && <span>{traduzirUi("Sua liberação mostra só os números por região, sem pessoas.")}</span>}
       <span className="mp-pe-links">
-        {semCep > 0 && <Botao variante="texto" onClick={() => { setJanela("semcep"); setSemPonto(null); carregarSemPonto(organizationId).then(setSemPonto).catch(() => setSemPonto([])); }}>{plural(semCep, "pessoa")} sem CEP</Botao>}
-        {podeLiberar && <Botao variante="texto" onClick={() => { setAberto(null); setFolhaCamadas(false); setTela("liberar"); }}>Quem vê o mapa</Botao>}
-        <Botao variante="texto" onClick={() => setJanela("entenda")}>Entenda o mapa</Botao>
+        {semCep > 0 && <Botao variante="texto" onClick={() => { setJanela("semcep"); setSemPonto(null); carregarSemPonto(organizationId).then(setSemPonto).catch(() => setSemPonto([])); }}>{traduzirUi("{count, plural, =1 {# pessoa sem CEP} other {# pessoas sem CEP}}", { count: semCep })}</Botao>}
+        {podeLiberar && <Botao variante="texto" onClick={() => { setAberto(null); setFolhaCamadas(false); setTela("liberar"); }}>{traduzirUi("Quem vê o mapa")}</Botao>}
+        <Botao variante="texto" onClick={() => setJanela("entenda")}>{traduzirUi("Entenda o mapa")}</Botao>
       </span>
     </>
   );
   const camadasEl = (
     <>
-      <GrupoCamadas titulo="Igreja">
+      <GrupoCamadas titulo={traduzirUi("Igreja")}>
         {comPessoas && (
-          <LinhaCamada icone={ic("membros")} rotulo="Pessoas da igreja" detalhe={totais ? `${milhar(totais.com_ponto)} no mapa · membros e novos` : undefined} ligada={camadas.pessoas} aoAlternar={vira("pessoas")} />
+          <LinhaCamada icone={ic("membros")} rotulo={traduzirUi("Pessoas da igreja")} detalhe={totais ? traduzirUi("{n} no mapa · membros e novos", { n: milhar(totais.com_ponto) }) : undefined} ligada={camadas.pessoas} aoAlternar={vira("pessoas")} />
         )}
         {comPessoas && (
-          <LinhaCamada icone={ic("concentracao")} rotulo="Concentração da igreja" ligada={camadas.calor} aoAlternar={vira("calor")}>
+          <LinhaCamada icone={ic("concentracao")} rotulo={traduzirUi("Concentração da igreja")} ligada={camadas.calor} aoAlternar={vira("calor")}>
             <TransparenciaCamada valor={transp.calor} aoMudar={(v) => setTransp((t) => ({ ...t, calor: v }))} />
           </LinhaCamada>
         )}
-        <LinhaCamada icone={<MarcaCamada tipo="igreja" />} rotulo="Sede e congregações" ligada={camadas.igrejas} aoAlternar={vira("igrejas")} />
+        <LinhaCamada icone={<MarcaCamada tipo="igreja" />} rotulo={traduzirUi("Sede e congregações")} ligada={camadas.igrejas} aoAlternar={vira("igrejas")} />
         {usaGrupos && <LinhaCamada icone={<MarcaCamada tipo="celula" />} rotulo={ct("{Grupos}")} ligada={camadas.grupos} aoAlternar={vira("grupos")} />}
       </GrupoCamadas>
 
       {comIbge && (
-        <GrupoCamadas titulo="Cidade · IBGE 2022">
-          <LinhaCamada icone={ic("presenca")} rotulo="Presença da igreja" detalhe="pessoas da igreja por morador" ligada={camadas.presenca} aoAlternar={vira("presenca")}>
-            <EscalaTons inicio={`menor · 1 a cada ${milhar(2000)}`} fim="maior · 1 a cada 100" />
-            {cidade?.um_a_cada ? <span className="mp-fraco">Na cidade: {umACada(cidade.um_a_cada, true)}</span> : null}
+        <GrupoCamadas titulo={traduzirUi("Cidade · IBGE 2022")}>
+          <LinhaCamada icone={ic("presenca")} rotulo={traduzirUi("Presença da igreja")} detalhe={traduzirUi("pessoas da igreja por morador")} ligada={camadas.presenca} aoAlternar={vira("presenca")}>
+            <EscalaTons inicio={traduzirUi("menor · 1 a cada {n}", { n: milhar(2000) })} fim={traduzirUi("maior · 1 a cada 100")} />
+            {cidade?.um_a_cada ? <span className="mp-fraco">{traduzirUi("Na cidade: {valor}", { valor: umACada(cidade.um_a_cada, true) })}</span> : null}
             <TransparenciaCamada valor={transp.presenca} aoMudar={(v) => setTransp((t) => ({ ...t, presenca: v }))} />
           </LinhaCamada>
         </GrupoCamadas>
       )}
 
       {areas.length > 0 && (
-        <GrupoCamadas titulo={`Áreas da igreja · ${areas.length}`} recolhivel aberto={grupoAberto.areas} aoAlternar={() => setGrupoAberto((g) => ({ ...g, areas: !g.areas }))}>
+        <GrupoCamadas titulo={traduzirUi("Áreas da igreja · {n}", { n: String(areas.length) })} recolhivel aberto={grupoAberto.areas} aoAlternar={() => setGrupoAberto((g) => ({ ...g, areas: !g.areas }))}>
           {areas.map((a) => (
             <LinhaCamada key={a.id} recuo amostra={a.cor} rotulo={a.nome} ligada={!areasOcultas.includes(a.id)}
               aoAlternar={() => setAreasOcultas((o) => (o.includes(a.id) ? o.filter((x) => x !== a.id) : [...o, a.id]))} />
@@ -406,35 +411,35 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
         </GrupoCamadas>
       )}
 
-      <GrupoCamadas titulo="Lugares da região" recolhivel aberto={grupoAberto.lugares} aoAlternar={() => setGrupoAberto((g) => ({ ...g, lugares: !g.lugares }))}>
-        {LUGARES.filter((g) => contaLugares(g.id) > 0).map((g) => (
+      <GrupoCamadas titulo={traduzirUi("Lugares da região")} recolhivel aberto={grupoAberto.lugares} aoAlternar={() => setGrupoAberto((g) => ({ ...g, lugares: !g.lugares }))}>
+        {lugaresDoMapa(traduzirUi).filter((g) => contaLugares(g.id) > 0).map((g) => (
           <LinhaCamada key={g.id} recuo rotulo={g.nome}
             ligada={lugaresLigados.includes(g.id)} aoAlternar={() => setLugaresLigados((l) => (l.includes(g.id) ? l.filter((x) => x !== g.id) : [...l, g.id]))} />
         ))}
-        {sede && <LinhaCamada recuo rotulo="Raios da sede · 1, 3 e 5 km" ligada={camadas.raios} aoAlternar={vira("raios")} />}
-        {temOcultos && acesso?.pode_editar && <LinhaCamada recuo rotulo="Mostrar os ocultos" detalhe="lugares que alguém ocultou" ligada={mostrarOcultos} aoAlternar={() => setVerOcultos(!mostrarOcultos)} />}
+        {sede && <LinhaCamada recuo rotulo={traduzirUi("Raios da sede · 1, 3 e 5 km")} ligada={camadas.raios} aoAlternar={vira("raios")} />}
+        {temOcultos && acesso?.pode_editar && <LinhaCamada recuo rotulo={traduzirUi("Mostrar os ocultos")} detalhe={traduzirUi("lugares que alguém ocultou")} ligada={mostrarOcultos} aoAlternar={() => setVerOcultos(!mostrarOcultos)} />}
       </GrupoCamadas>
     </>
   );
 
   const ferramentas: ItemFerramenta[] = [
-    ...(acesso?.pode_editar ? [{ id: "area", rotulo: "Criar área", icone: ic("area"), aoTocar: () => { setAreaInicial([]); abrirModo("area"); } }] : []),
-    { id: "rota", rotulo: "Traçar rota", icone: ic("rota"), aoTocar: () => abrirModo("rota") },
-    { id: "linha", rotulo: "Linha do tempo", icone: ic("linhadotempo"), aoTocar: () => abrirModo("linha") },
-    ...(acesso?.pode_editar ? [{ id: "lugar", rotulo: "Marcar lugar", icone: ic("marcarlugar"), aoTocar: () => { setLugarEditar(null); abrirModo("pontos"); } }] : []),
-    ...(acesso?.pode_mesa ? [{ id: "analisar", rotulo: "Analisar", icone: ic("analisar"), aoTocar: () => analisar(aberto?.tipo === "regiao" ? [aberto.r.codigo] : []) }] : []),
-    ...(acesso?.total && acesso.pode_editar ? [{ id: "emergencia", rotulo: "Emergência", icone: ic("emergencia"), alerta: true, aoTocar: () => abrirModo("emergencia") }] : []),
+    ...(acesso?.pode_editar ? [{ id: "area", rotulo: traduzirUi("Criar área"), icone: ic("area"), aoTocar: () => { setAreaInicial([]); abrirModo("area"); } }] : []),
+    { id: "rota", rotulo: traduzirUi("Traçar rota"), icone: ic("rota"), aoTocar: () => abrirModo("rota") },
+    { id: "linha", rotulo: traduzirUi("Linha do tempo"), icone: ic("linhadotempo"), aoTocar: () => abrirModo("linha") },
+    ...(acesso?.pode_editar ? [{ id: "lugar", rotulo: traduzirUi("Marcar lugar"), icone: ic("marcarlugar"), aoTocar: () => { setLugarEditar(null); abrirModo("pontos"); } }] : []),
+    ...(acesso?.pode_mesa ? [{ id: "analisar", rotulo: traduzirUi("Analisar"), icone: ic("analisar"), aoTocar: () => analisar(aberto?.tipo === "regiao" ? [aberto.r.codigo] : []) }] : []),
+    ...(acesso?.total && acesso.pode_editar ? [{ id: "emergencia", rotulo: traduzirUi("Emergência"), icone: ic("emergencia"), alerta: true, aoTocar: () => abrirModo("emergencia") }] : []),
   ];
 
   return (
     <div className="mapa-tela">
-      <MapaBase rotulo="Mapa da igreja" onPronto={pronto} />
+      <MapaBase rotulo={traduzirUi("Mapa da igreja")} onPronto={pronto} />
 
-      {carregando && <div className="mp-vazio"><div><p className="mp-texto" role="status">Carregando o mapa...</p></div></div>}
+      {carregando && <div className="mp-vazio"><div><p className="mp-texto" role="status">{traduzirUi("Carregando o mapa...")}</p></div></div>}
       {semDados && !modo && (
         <div className="mp-vazio"><div>
-          <p className="mp-pergunta">Ainda não há ninguém no mapa</p>
-          <p className="mp-texto">As pessoas aparecem aqui quando têm CEP no cadastro. Peça para atualizarem no Perfil do app, ou preencha na ficha de cada uma.</p>
+          <p className="mp-pergunta">{traduzirUi("Ainda não há ninguém no mapa")}</p>
+          <p className="mp-texto">{traduzirUi("As pessoas aparecem aqui quando têm CEP no cadastro. Peça para atualizarem no Perfil do app, ou preencha na ficha de cada uma.")}</p>
         </div></div>
       )}
 
@@ -444,22 +449,22 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
             /* celular (G16, P2 a P4): busca e Camadas no topo; camadas numa folha que sobe */
             <div className="mp-topo-cel">
               {buscaEl}
-              <BotaoIcone className="mp-ctrl-b mp-topo-camadas" rotulo="Camadas" aria-haspopup="dialog" onClick={() => { setAberto(null); setFolhaCamadas(true); }}>
+              <BotaoIcone className="mp-ctrl-b mp-topo-camadas" rotulo={traduzirUi("Camadas")} aria-haspopup="dialog" onClick={() => { setAberto(null); setFolhaCamadas(true); }}>
                 <Icon name="camadas" size={22} stroke={1.9} />
               </BotaoIcone>
             </div>
           ) : (
             <PainelMapa
-              rotulo="Camadas do mapa"
+              rotulo={traduzirUi("Camadas do mapa")}
               sobretitulo={churchName}
-              titulo="Mapa da igreja"
+              titulo={traduzirUi("Mapa da igreja")}
               recolhido={recolhido}
               aoRecolher={setRecolhido}
               trilho={[
-                { id: "igreja", rotulo: "Igreja", icone: ic("membros") },
-                ...(comIbge ? [{ id: "ibge", rotulo: "Cidade · IBGE 2022", icone: ic("presenca") }] : []),
-                ...(areas.length ? [{ id: "areas", rotulo: "Áreas da igreja", icone: ic("area") }] : []),
-                { id: "lugares", rotulo: "Lugares da região", icone: ic("bandeira") },
+                { id: "igreja", rotulo: traduzirUi("Igreja"), icone: ic("membros") },
+                ...(comIbge ? [{ id: "ibge", rotulo: traduzirUi("Cidade · IBGE 2022"), icone: ic("presenca") }] : []),
+                ...(areas.length ? [{ id: "areas", rotulo: traduzirUi("Áreas da igreja"), icone: ic("area") }] : []),
+                { id: "lugares", rotulo: traduzirUi("Lugares da região"), icone: ic("bandeira") },
               ]}
               busca={buscaEl}
               rodape={rodapeEl}
@@ -468,10 +473,10 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
             </PainelMapa>
           )}
           {celular && folhaCamadas && (
-            <Folha aoFechar={() => setFolhaCamadas(false)} rotulo="Camadas" className="mp-folha-camadas">
+            <Folha aoFechar={() => setFolhaCamadas(false)} rotulo={traduzirUi("Camadas")} className="mp-folha-camadas">
               <div className="mp-folha-cab">
-                <h2 className="pm-titulo">Camadas</h2>
-                <BotaoIcone className="balao-fechar" rotulo="Fechar" onClick={() => setFolhaCamadas(false)}><Icon name="recusou" size={16} stroke={2.2} /></BotaoIcone>
+                <h2 className="pm-titulo">{traduzirUi("Camadas")}</h2>
+                <BotaoIcone className="balao-fechar" rotulo={traduzirUi("Fechar")} onClick={() => setFolhaCamadas(false)}><Icon name="recusou" size={16} stroke={2.2} /></BotaoIcone>
               </div>
               <div className="pm-corpo">{camadasEl}</div>
               <div className="pm-pe">{rodapeEl}</div>
@@ -487,18 +492,18 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
               onLugarMudou={() => { setAberto(null); setVersaoLugares((v) => v + 1); }} />
           )}
 
-          <BarraFerramentas rotulo="Ferramentas do mapa" itens={ferramentas} fileira={celular} compacta={!celular}
+          <BarraFerramentas rotulo={traduzirUi("Ferramentas do mapa")} itens={ferramentas} fileira={celular} compacta={!celular}
             desloc={celular ? 0 : recolhido ? LARGURA_TRILHO : LARGURA_PAINEL} reservaDir={celular ? 0 : RESERVA_AJUDA} />
 
-          <div className="mp-ctrl" role="group" aria-label="Controles do mapa">
-            <BotaoIcone className="mp-ctrl-b mp-ctrl-3d" rotulo="Inclinar em 3D" aria-pressed={tres} onClick={() => setTres((v) => !v)}><span aria-hidden="true">3D</span></BotaoIcone>
+          <div className="mp-ctrl" role="group" aria-label={traduzirUi("Controles do mapa")}>
+            <BotaoIcone className="mp-ctrl-b mp-ctrl-3d" rotulo={traduzirUi("Inclinar em 3D")} aria-pressed={tres} onClick={() => setTres((v) => !v)}><span aria-hidden="true">3D</span></BotaoIcone>
             {celular ? (
               /* no celular aproximar e afastar são com os dedos; no lugar, minha posição */
-              <BotaoIcone className="mp-ctrl-b" rotulo={procurando ? "Procurando sua posição" : "Minha posição"} carregando={procurando} onClick={irParaMim}><Icon name="minhaposicao" size={20} stroke={1.9} /></BotaoIcone>
+              <BotaoIcone className="mp-ctrl-b" rotulo={procurando ? traduzirUi("Procurando sua posição") : traduzirUi("Minha posição")} carregando={procurando} onClick={irParaMim}><Icon name="minhaposicao" size={20} stroke={1.9} /></BotaoIcone>
             ) : (
               <>
-                <BotaoIcone className="mp-ctrl-b" rotulo="Aproximar" onClick={() => mapa?.map.zoomIn()}><Icon name="add" size={20} stroke={2} /></BotaoIcone>
-                <BotaoIcone className="mp-ctrl-b" rotulo="Afastar" onClick={() => mapa?.map.zoomOut()}><Icon name="menos" size={20} stroke={2} /></BotaoIcone>
+                <BotaoIcone className="mp-ctrl-b" rotulo={traduzirUi("Aproximar")} onClick={() => mapa?.map.zoomIn()}><Icon name="add" size={20} stroke={2} /></BotaoIcone>
+                <BotaoIcone className="mp-ctrl-b" rotulo={traduzirUi("Afastar")} onClick={() => mapa?.map.zoomOut()}><Icon name="menos" size={20} stroke={2} /></BotaoIcone>
               </>
             )}
           </div>
@@ -507,12 +512,12 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
 
       {janela === "entenda" && mapa && <EntendaOMapa cores={mapa.cores} usaGrupos={usaGrupos} totais={totais} aoFechar={() => setJanela(null)} />}
       {janela === "semcep" && (
-        <Janela titulo="Pessoas sem CEP" texto="Elas ainda não aparecem no mapa. Abra a ficha e preencha o CEP." aoFechar={() => setJanela(null)} corpoBloco>
-          {!semPonto ? <p className="mp-fraco" role="status">Carregando...</p> : semPonto.length === 0 ? <p className="mp-fraco">Todo mundo já está no mapa.</p> : (
+        <Janela titulo={traduzirUi("Pessoas sem CEP")} texto={traduzirUi("Elas ainda não aparecem no mapa. Abra a ficha e preencha o CEP.")} aoFechar={() => setJanela(null)} corpoBloco>
+          {!semPonto ? <p className="mp-fraco" role="status">{traduzirUi("Carregando...")}</p> : semPonto.length === 0 ? <p className="mp-fraco">{traduzirUi("Todo mundo já está no mapa.")}</p> : (
             <div className="mp-semcep">
               {semPonto.map((x) => (
                 <Acao key={x.id} className={`${linhaClasse({})} click mp-semcep-linha`} onClick={() => { setJanela(null); onAbrirMembro(x.id); }}>
-                  <span>{x.nome}</span><span className="mp-fraco">{x.tem_cep ? "CEP não encontrado" : "sem CEP"}</span>
+                  <span>{x.nome}</span><span className="mp-fraco">{x.tem_cep ? traduzirUi("CEP não encontrado") : traduzirUi("sem CEP")}</span>
                 </Acao>
               ))}
             </div>
@@ -525,7 +530,7 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
       {contexto && modo === "emergencia" && <Emergencia ctx={contexto} nivel={nivel} onMensagem={onMensagem} />}
       {contexto && modo === "linha" && <LinhaDoTempo ctx={contexto} nivel={nivel} />}
       {contexto && modo === "pontos" && <Pontos key={lugarEditar?.id ?? "novo"} ctx={contexto} editar={lugarEditar} />}
-      {!contexto && modo && <div className="mp-vazio"><div><p className="mp-texto" role="status">Carregando o mapa...</p></div></div>}
+      {!contexto && modo && <div className="mp-vazio"><div><p className="mp-texto" role="status">{traduzirUi("Carregando o mapa...")}</p></div></div>}
     </div>
   );
 }
@@ -537,6 +542,8 @@ function BalaoDoPonto({ org, sel, map, folha, pessoas, grupos, usaGrupos, cidade
   onAnalisar: (codigos: string[], nivel?: "area") => void; onCriarArea: (codigos: string[]) => void;
   onEditarLugar: (pt: Lugar) => void; onLugarMudou: () => void;
 }) {
+  const traduzirUi = useTexto();
+
   const { comTermos: ct } = useTermos();
   /* o balão acompanha o ponto quando o mapa se move; só ele redesenha. Com o
      ponto fora da tela fica escondido, mas montado (não puxa o foco de volta) */
@@ -548,11 +555,11 @@ function BalaoDoPonto({ org, sel, map, folha, pessoas, grupos, usaGrupos, cidade
     let perto: { g: LocalMapa; km: number } | null = null;
     for (const g of grupos) { const km = distanciaKm(p, g); if (!perto || km < perto.km) perto = { g, km }; }
     return (
-      <Balao {...comum} sobretitulo={`${SITUACAO[p.situacao] ?? p.situacao}${p.desde ? ` desde ${p.desde}` : ""}`} titulo={p.nome ?? ""}
-        rodape={p.id ? <><Botao onClick={() => onAbrirMembro(p.id!)}>Ver ficha</Botao><Botao onClick={() => onMensagem(p.id!)}>Falar com {primeiroNome(p.nome)}</Botao></> : undefined}>
-        {usaGrupos && <LinhaBalao icone="inicio">{p.grupo ?? ct("Sem {grupo}")}</LinhaBalao>}
-        {usaGrupos && perto && perto.g.id !== p.grupo_id && <LinhaBalao icone="mapapin">{ct("{Grupo} mais perto")}: {perto.g.nome} · {formatarDistancia(perto.km)}</LinhaBalao>}
-        {perto?.g.lider_nome && perto.g.id !== p.grupo_id && <LinhaBalao icone="pessoa">{perto.g.lider_nome} lidera</LinhaBalao>}
+      <Balao {...comum} sobretitulo={p.desde ? traduzirUi("{situacao} desde {ano}", { situacao: rotulosDaSituacao(traduzirUi)[p.situacao] ?? p.situacao, ano: p.desde }) : rotulosDaSituacao(traduzirUi)[p.situacao] ?? p.situacao} titulo={p.nome ?? ""}
+        rodape={p.id ? <><Botao onClick={() => onAbrirMembro(p.id!)}>{traduzirUi("Ver ficha")}</Botao><Botao onClick={() => onMensagem(p.id!)}>{traduzirUi("Falar com {nome}", { nome: primeiroNome(p.nome) })}</Botao></> : undefined}>
+        {usaGrupos && <LinhaBalao icone="inicio">{p.grupo ?? ct(traduzirUi("Sem {grupo}"))}</LinhaBalao>}
+        {usaGrupos && perto && perto.g.id !== p.grupo_id && <LinhaBalao icone="mapapin">{traduzirUi("{Grupo} mais perto: {nome} · {distancia}", { nome: perto.g.nome, distancia: formatarDistancia(perto.km) })}</LinhaBalao>}
+        {perto?.g.lider_nome && perto.g.id !== p.grupo_id && <LinhaBalao icone="pessoa">{traduzirUi("{nome} lidera", { nome: perto.g.lider_nome })}</LinhaBalao>}
       </Balao>
     );
   }
@@ -563,13 +570,13 @@ function BalaoDoPonto({ org, sel, map, folha, pessoas, grupos, usaGrupos, cidade
     const vagas = l.lugares ? Math.max(0, l.lugares - (l.ocupados ?? 0)) : null;
     const onde = [[l.rua, l.numero].filter(Boolean).join(", "), l.bairro].filter(Boolean).join(" · ");
     return (
-      <Balao {...comum} sobretitulo={l.tipo === "sede" ? "Sede" : l.tipo === "congregacao" ? "Congregação" : ct("{Grupo}")} titulo={l.nome}
-        rodape={l.lider_member_id ? <Botao onClick={() => onMensagem(l.lider_member_id!)}>Falar com {primeiroNome(l.lider_nome)}</Botao> : undefined}>
+      <Balao {...comum} sobretitulo={l.tipo === "sede" ? traduzirUi("Sede") : l.tipo === "congregacao" ? traduzirUi("Congregação") : ct("{Grupo}")} titulo={l.nome}
+        rodape={l.lider_member_id ? <Botao onClick={() => onMensagem(l.lider_member_id!)}>{traduzirUi("Falar com {nome}", { nome: primeiroNome(l.lider_nome) })}</Botao> : undefined}>
         {(l.dia || l.hora) && <LinhaBalao icone="agenda">{[l.dia, l.hora].filter(Boolean).join(" · ")}</LinhaBalao>}
         {onde && <LinhaBalao icone="mapapin">{onde}</LinhaBalao>}
-        {l.lider_nome && <LinhaBalao icone="pessoa">{l.lider_nome} lidera</LinhaBalao>}
-        {l.lugares ? <LotacaoBalao ocupados={l.ocupados ?? 0} total={l.lugares} vagas={vagas ? plural(vagas, "vaga") : "lotado"} cheio={!vagas} /> : null}
-        <NotaBalao><b>{milhar(perto)}</b> {perto === 1 ? "pessoa da igreja mora" : "pessoas da igreja moram"} a até 1 km</NotaBalao>
+        {l.lider_nome && <LinhaBalao icone="pessoa">{traduzirUi("{nome} lidera", { nome: l.lider_nome })}</LinhaBalao>}
+        {l.lugares ? <LotacaoBalao ocupados={l.ocupados ?? 0} total={l.lugares} vagas={vagas ? traduzirUi("{count, plural, =1 {# vaga} other {# vagas}}", { count: vagas }) : traduzirUi("lotado")} cheio={!vagas} /> : null}
+        <NotaBalao>{traduzirUi.rich("{count, plural, =1 {<b>{n}</b> pessoa da igreja mora a até 1 km} other {<b>{n}</b> pessoas da igreja moram a até 1 km}}", { count: perto, n: milhar(perto), b: (c) => <b>{c}</b> })}</NotaBalao>
       </Balao>
     );
   }
@@ -578,10 +585,10 @@ function BalaoDoPonto({ org, sel, map, folha, pessoas, grupos, usaGrupos, cidade
     const a = sel.a;
     const dentro = pessoas.filter((p) => dentroDe(p, a.geojson)).length;
     return (
-      <Balao {...comum} sobretitulo={TIPO_AREA[a.tipo]} titulo={a.nome}
-        rodape={acesso?.pode_mesa ? <Botao onClick={() => onAnalisar([a.id], "area")}>Analisar</Botao> : undefined}>
-        <LinhaBalao icone="membros">{plural(dentro, "pessoa da igreja", "pessoas da igreja")} no mapa</LinhaBalao>
-        {gestao && <LinhaBalao icone="pessoa">{a.responsavel ? `${a.responsavel} é responsável` : "Sem responsável ainda"}</LinhaBalao>}
+      <Balao {...comum} sobretitulo={tiposDeArea(traduzirUi)[a.tipo]} titulo={a.nome}
+        rodape={acesso?.pode_mesa ? <Botao onClick={() => onAnalisar([a.id], "area")}>{traduzirUi("Analisar")}</Botao> : undefined}>
+        <LinhaBalao icone="membros">{traduzirUi("{count, plural, =1 {# pessoa da igreja} other {# pessoas da igreja}} no mapa", { count: dentro })}</LinhaBalao>
+        {gestao && <LinhaBalao icone="pessoa">{a.responsavel ? traduzirUi("{nome} é responsável", { nome: a.responsavel }) : traduzirUi("Sem responsável ainda")}</LinhaBalao>}
       </Balao>
     );
   }
@@ -589,43 +596,45 @@ function BalaoDoPonto({ org, sel, map, folha, pessoas, grupos, usaGrupos, cidade
   if (sel.tipo === "lugar") {
     const pt = sel.pt;
     return (
-      <Balao {...comum} sobretitulo={`${CATEGORIAS.find((c) => c.id === pt.categoria)?.nome.replace("Pontos da igreja · ", "")}${pt.oculto ? " · oculto" : ""}`} titulo={pt.nome || "Sem nome"}
+      <Balao {...comum} sobretitulo={pt.oculto ? traduzirUi("{categoria} · oculto", { categoria: nomesDasCategorias(traduzirUi)[pt.categoria] ?? pt.categoria }) : nomesDasCategorias(traduzirUi)[pt.categoria] ?? pt.categoria} titulo={pt.nome || traduzirUi("Sem nome")}
         rodape={acesso?.pode_editar ? (
           <>
-            <Botao onClick={() => onEditarLugar(pt)}>Editar</Botao>
-            <MenuAcoes rotulo="Mais" itens={[
-              { rotulo: pt.oculto ? "Mostrar no mapa" : "Ocultar do mapa", icone: pt.oculto ? "ok" : "recusou", onClick: () => { void ocultarLugar(org, pt, !pt.oculto).then((ok) => ok && onLugarMudou()); } },
-              ...(pt.origem === "manual" ? [{ rotulo: "Excluir", icone: "lixeira", perigo: true, onClick: () => { void excluirLugar(pt).then((ok) => ok && onLugarMudou()); } }] : []),
+            <Botao onClick={() => onEditarLugar(pt)}>{traduzirUi("Editar")}</Botao>
+            <MenuAcoes rotulo={traduzirUi("Mais")} itens={[
+              { rotulo: pt.oculto ? traduzirUi("Mostrar no mapa") : traduzirUi("Ocultar do mapa"), icone: pt.oculto ? "ok" : "recusou", onClick: () => { void ocultarLugar(org, pt, !pt.oculto, traduzirUi).then((ok) => ok && onLugarMudou()); } },
+              ...(pt.origem === "manual" ? [{ rotulo: traduzirUi("Excluir"), icone: "lixeira", perigo: true, onClick: () => { void excluirLugar(pt, traduzirUi).then((ok) => ok && onLugarMudou()); } }] : []),
             ]} />
           </>
         ) : undefined}>
         {pt.endereco && <LinhaBalao icone="mapapin">{pt.endereco}</LinhaBalao>}
         {pt.observacao && <LinhaBalao icone="documento">{pt.observacao}</LinhaBalao>}
-        <LinhaBalao icone={pt.origem === "osm" ? "globo" : "bandeira"}>{pt.origem === "osm" ? "Do OpenStreetMap" : "Marcado pela igreja"}</LinhaBalao>
+        <LinhaBalao icone={pt.origem === "osm" ? "globo" : "bandeira"}>{pt.origem === "osm" ? traduzirUi("Do OpenStreetMap") : traduzirUi("Marcado pela igreja")}</LinhaBalao>
       </Balao>
     );
   }
 
   const r = sel.r;
   return (
-    <Balao {...comum} sobretitulo={`${nivel === "bairro" ? "Bairro" : "Setor"} · IBGE 2022`} titulo={r.nome}
+    <Balao {...comum} sobretitulo={traduzirUi("{nivel, select, bairro {Bairro} other {Setor}} · IBGE 2022", { nivel })} titulo={r.nome}
       rodape={(acesso?.pode_mesa || (acesso?.pode_editar && nivel === "bairro")) ? (
         <>
-          {acesso?.pode_editar && nivel === "bairro" && <Botao onClick={() => onCriarArea([r.codigo])}>Criar área</Botao>}
-          {acesso?.pode_mesa && <Botao onClick={() => onAnalisar([r.codigo])}>Analisar</Botao>}
+          {acesso?.pode_editar && nivel === "bairro" && <Botao onClick={() => onCriarArea([r.codigo])}>{traduzirUi("Criar área")}</Botao>}
+          {acesso?.pode_mesa && <Botao onClick={() => onAnalisar([r.codigo])}>{traduzirUi("Analisar")}</Botao>}
         </>
       ) : undefined}>
       <LinhaBalao icone="presenca">{umACada(r.um_a_cada)}</LinhaBalao>
-      <LinhaBalao icone="moradores"><span className="mp-num">{milhar(r.moradores)}</span> moradores</LinhaBalao>
-      <LinhaBalao icone="membros"><span className="mp-num">{pessoasNaRegiao(r.pessoas)}</span> da igreja</LinhaBalao>
-      {usaGrupos && <LinhaBalao icone="inicio">{r.grupos ? plural(r.grupos, ct("{grupo}"), ct("{grupos}")) : ct("Nenhum {grupo}")}</LinhaBalao>}
-      {cidade?.um_a_cada ? <span className="mp-fraco">Na cidade: {umACada(cidade.um_a_cada, true)}</span> : null}
+      <LinhaBalao icone="moradores">{traduzirUi.rich("<num>{n}</num> moradores", { n: milhar(r.moradores), num: (c) => <span className="mp-num">{c}</span> })}</LinhaBalao>
+      <LinhaBalao icone="membros">{traduzirUi.rich("<num>{n}</num> da igreja", { n: pessoasNaRegiao(r.pessoas), num: (c) => <span className="mp-num">{c}</span> })}</LinhaBalao>
+      {usaGrupos && <LinhaBalao icone="inicio">{r.grupos ? traduzirUi("{count, plural, =1 {# {grupo}} other {# {grupos}}}", { count: r.grupos }) : ct(traduzirUi("Nenhum {grupo}"))}</LinhaBalao>}
+      {cidade?.um_a_cada ? <span className="mp-fraco">{traduzirUi("Na cidade: {valor}", { valor: umACada(cidade.um_a_cada, true) })}</span> : null}
     </Balao>
   );
 }
 
 /* "Entenda o mapa": a legenda fica aqui, pequena, e não no mapa (decisão de 2026-11-05). */
 function EntendaOMapa({ cores, usaGrupos, totais, aoFechar }: { cores: Record<CorMapa, string>; usaGrupos: boolean; totais: Totais | null; aoFechar: () => void }) {
+  const traduzirUi = useTexto();
+
   const { comTermos: ct } = useTermos();
   const marca = (t: Marcador) => {
     const { svg, w, h } = svgMarcador(t, cores);
@@ -633,21 +642,21 @@ function EntendaOMapa({ cores, usaGrupos, totais, aoFechar }: { cores: Record<Co
     // eslint-disable-next-line @next/next/no-img-element -- marcador em SVG gerado aqui, não é foto
     return <img src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`} width={Math.round(w * k)} height={Math.round(h * k)} alt="" />;
   };
-  const itens: { m: React.ReactNode; t: string }[] = [
-    { m: <span className="mp-bola membro" />, t: "Membro" },
-    { m: <span className="mp-bola novo" />, t: "Novo na igreja" },
-    { m: marca("sede"), t: "Sede e congregações" },
-    ...(usaGrupos ? [{ m: marca("celula"), t: ct("{Grupos}") }] : []),
-    { m: marca("lugar-igreja"), t: "Lugar marcado pela igreja" },
-    { m: marca("lugar-regiao"), t: "Lugar da região" },
+  const itens: { k: string; m: React.ReactNode; t: string }[] = [
+    { k: "membro", m: <span className="mp-bola membro" />, t: traduzirUi("Membro") },
+    { k: "novo", m: <span className="mp-bola novo" />, t: traduzirUi("Novo na igreja") },
+    { k: "sede", m: marca("sede"), t: traduzirUi("Sede e congregações") },
+    ...(usaGrupos ? [{ k: "grupos", m: marca("celula"), t: ct("{Grupos}") }] : []),
+    { k: "lugar-igreja", m: marca("lugar-igreja"), t: traduzirUi("Lugar marcado pela igreja") },
+    { k: "lugar-regiao", m: marca("lugar-regiao"), t: traduzirUi("Lugar da região") },
   ];
   return (
-    <Janela titulo="Entenda o mapa" aoFechar={aoFechar} corpoBloco>
+    <Janela titulo={traduzirUi("Entenda o mapa")} aoFechar={aoFechar} corpoBloco>
       <div className="mp-legenda">
-        {itens.map((i) => <div key={i.t} className="mp-legenda-it"><span className="mp-legenda-m" aria-hidden="true">{i.m}</span>{i.t}</div>)}
+        {itens.map((i) => <div key={i.k} className="mp-legenda-it"><span className="mp-legenda-m" aria-hidden="true">{i.m}</span>{i.t}</div>)}
       </div>
-      <p className="mp-texto mp-legenda-txt">Cada pessoa aparece perto do CEP do cadastro, nunca na casa. Só quem aceitou o termo aparece com nome; as outras são só um ponto, e só quando há 3 ou mais perto.</p>
-      {totais && totais.com_ponto > 0 && <p className="mp-fraco">{milhar(totais.com_nome)} de {milhar(totais.com_ponto)} aparecem com nome.</p>}
+      <p className="mp-texto mp-legenda-txt">{traduzirUi("Cada pessoa aparece perto do CEP do cadastro, nunca na casa. Só quem aceitou o termo aparece com nome; as outras são só um ponto, e só quando há 3 ou mais perto.")}</p>
+      {totais && totais.com_ponto > 0 && <p className="mp-fraco">{traduzirUi("{com} de {total} aparecem com nome.", { com: milhar(totais.com_nome), total: milhar(totais.com_ponto) })}</p>}
     </Janela>
   );
 }

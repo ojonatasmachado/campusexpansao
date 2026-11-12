@@ -12,6 +12,8 @@ import { BotaoIcone } from "../../ui/Botao";
 import { Opcao } from "../../ui/Opcao";
 import { Segmentado } from "../../ui/Segmentado";
 import { PainelMapa } from "../../ui/PainelMapa";
+import { useTexto } from "../../lib/internacional/contexto";
+import type { Text } from "../../lib/internacional/mensagens";
 
 /* Ferramentas › Linha do tempo (G11, mapa/PLANO.md §10, prancha P10). Só
    números, sem frase de leitura: quantas pessoas chegaram no período e onde.
@@ -22,10 +24,12 @@ import { PainelMapa } from "../../ui/PainelMapa";
 type Mes = { mes: string; total: number };
 type Cresc = { codigo: string; nome: string; antes: number; novos: number; latitude: number; longitude: number };
 const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
-const rotulo = (iso: string) => { const [a, m] = iso.split("-"); return `${MESES[Number(m) - 1]} ${a}`; };
+const rotulo = (iso: string, t: Text) => { const [a, m] = iso.split("-"); return t("{mes, select, jan {jan} fev {fev} mar {mar} abr {abr} mai {mai} jun {jun} jul {jul} ago {ago} set {set} out {out} nov {nov} other {dez}} {ano}", { mes: MESES[Number(m) - 1], ano: a }); };
 const anoDe = (iso?: string) => (iso ? Number(iso.slice(0, 4)) : 0);
 
 export function LinhaDoTempo({ ctx, nivel }: { ctx: ContextoMapa; nivel: "bairro" | "setor" }) {
+  const traduzirUi = useTexto();
+
   const [serie, setSerie] = useState<Mes[]>([]);
   const [ini, setIni] = useState(0);
   const [fim, setFim] = useState(0);
@@ -109,43 +113,43 @@ export function LinhaDoTempo({ ctx, nivel }: { ctx: ContextoMapa; nivel: "bairro
   }, [serie]);
   const pct = (i: number) => (serie.length > 1 ? (i / (serie.length - 1)) * 100 : 0);
   const marcas = serie.length > 1 ? [0, Math.round(ultimo / 3), Math.round((2 * ultimo) / 3), ultimo] : [];
-  const periodo = `${de ? rotulo(de) : ""} → ${fim === ultimo ? "hoje" : ate ? rotulo(ate) : ""}`;
+  const periodo = `${de ? rotulo(de, traduzirUi) : ""} → ${fim === ultimo ? traduzirUi("hoje") : ate ? rotulo(ate, traduzirUi) : ""}`;
 
   const periodoAno = fim === ultimo && ini === Math.max(0, ultimo - 12);
   const periodoTudo = ini === 0 && fim === ultimo;
   return (
     <>
       <div className="lt-vis">
-        <Segmentado role="group" aria-label="Como ver no mapa">
-          <Opcao marcada={vis === "perto"} onClick={() => setVis("perto")}>De perto</Opcao>
-          <Opcao marcada={vis === "cidade"} onClick={() => setVis("cidade")}>Cidade toda</Opcao>
+        <Segmentado role="group" aria-label={traduzirUi("Como ver no mapa")}>
+          <Opcao marcada={vis === "perto"} onClick={() => setVis("perto")}>{traduzirUi("De perto")}</Opcao>
+          <Opcao marcada={vis === "cidade"} onClick={() => setVis("cidade")}>{traduzirUi("Cidade toda")}</Opcao>
         </Segmentado>
-        <span className="lt-legenda"><span className="lt-bola" aria-hidden="true" />Chegou no período</span>
+        <span className="lt-legenda"><span className="lt-bola" aria-hidden="true" />{traduzirUi("Chegou no período")}</span>
       </div>
 
-      <PainelMapa rotulo="Linha do tempo" sobretitulo={periodo} titulo="Linha do tempo" voltar={{ aoTocar: ctx.fechar }}
+      <PainelMapa rotulo={traduzirUi("Linha do tempo")} sobretitulo={periodo} titulo={traduzirUi("Linha do tempo")} voltar={{ aoTocar: ctx.fechar }}
         busca={(
           <div className="lt-total">
-            <div className="lt-total-linha"><span className="lt-n">+{milhar(chegaram)}</span><span>{chegaram === 1 ? "pessoa chegou" : "pessoas chegaram"}</span></div>
-            <span className="lt-total-mapa">No mapa: <b>{milhar(antes)} → {milhar(depois)}</b></span>
+            <div className="lt-total-linha">{traduzirUi.rich("{count, plural, =1 {<n>+{total}</n><t>pessoa chegou</t>} other {<n>+{total}</n><t>pessoas chegaram</t>}}", { count: chegaram, total: milhar(chegaram), n: (c) => <span className="lt-n">{c}</span>, t: (c) => <span>{c}</span> })}</div>
+            <span className="lt-total-mapa">{traduzirUi.rich("No mapa: <b>{antes} → {depois}</b>", { antes: milhar(antes), depois: milhar(depois), b: (c) => <b>{c}</b> })}</span>
           </div>
         )}
-        rodape={<span>Conta onde a pessoa mora hoje. Quem mudou de bairro aparece no endereço novo.</span>}>
+        rodape={<span>{traduzirUi("Conta onde a pessoa mora hoje. Quem mudou de bairro aparece no endereço novo.")}</span>}>
         <div className="lt-tabela">
-          <div className="lt-tabela-cab"><span>{nivel === "bairro" ? "Bairro" : "Setor"}</span><span>Chegaram</span></div>
-          {bairros.length === 0 && <p className="mp-fraco">Ninguém chegou no período.</p>}
+          <div className="lt-tabela-cab"><span>{nivel === "bairro" ? traduzirUi("Bairro") : traduzirUi("Setor")}</span><span>{traduzirUi("Chegaram")}</span></div>
+          {bairros.length === 0 && <p className="mp-fraco">{traduzirUi("Ninguém chegou no período.")}</p>}
           {bairros.map((b) => (
             <div key={b.codigo} className="lt-bairro">
               <span className="lt-bairro-nome">{b.nome}</span>
               <span className="lt-bairro-barra" aria-hidden="true"><span style={{ width: `${b.novos < 0 ? 4 : (b.novos / maior) * 100}%` }} /></span>
-              <span className={`lt-bairro-n${b.novos < 0 ? " pouco" : ""}`}>{b.novos < 0 ? "menos de 3" : `+${b.novos}`}</span>
+              <span className={`lt-bairro-n${b.novos < 0 ? " pouco" : ""}`}>{b.novos < 0 ? traduzirUi("menos de 3") : `+${b.novos}`}</span>
             </div>
           ))}
         </div>
       </PainelMapa>
 
-      <section className="lt-barra" aria-label="Período">
-        <BotaoIcone className="lt-play" rotulo={tocando ? "Pausar" : "Tocar a linha do tempo"} onClick={tocar}><Icon name={tocando ? "pendente" : "play"} size={20} /></BotaoIcone>
+      <section className="lt-barra" aria-label={traduzirUi("Período")}>
+        <BotaoIcone className="lt-play" rotulo={tocando ? traduzirUi("Pausar") : traduzirUi("Tocar a linha do tempo")} onClick={tocar}><Icon name={tocando ? "pendente" : "play"} size={20} /></BotaoIcone>
         <div className="lt-trilho">
           <div className="lt-curva-caixa">
             <svg viewBox="0 0 1000 64" preserveAspectRatio="none" className="lt-curva" aria-hidden="true">
@@ -153,17 +157,17 @@ export function LinhaDoTempo({ ctx, nivel }: { ctx: ContextoMapa; nivel: "bairro
               <path d={caminho} className="lt-linha" />
             </svg>
             <span className="lt-janela" aria-hidden="true" style={{ left: `${pct(ini)}%`, width: `${pct(fim) - pct(ini)}%` }} />
-            <span className="lt-cursor" aria-hidden="true" style={{ left: `${pct(fim)}%` }}><span>{fim === ultimo ? "hoje" : ate ? rotulo(ate) : ""}</span></span>
+            <span className="lt-cursor" aria-hidden="true" style={{ left: `${pct(fim)}%` }}><span>{fim === ultimo ? traduzirUi("hoje") : ate ? rotulo(ate, traduzirUi) : ""}</span></span>
           </div>
           <div className="lt-faixas">
-            <input type="range" min={0} max={Math.max(0, ultimo)} value={ini} onChange={(e) => setIni(Math.min(Number(e.target.value), fim))} aria-label="Início do período" aria-valuetext={de ? rotulo(de) : ""} />
-            <input type="range" min={0} max={Math.max(0, ultimo)} value={fim} onChange={(e) => setFim(Math.max(Number(e.target.value), ini))} aria-label="Fim do período" aria-valuetext={fim === ultimo ? "hoje" : ate ? rotulo(ate) : ""} />
+            <input type="range" min={0} max={Math.max(0, ultimo)} value={ini} onChange={(e) => setIni(Math.min(Number(e.target.value), fim))} aria-label={traduzirUi("Início do período")} aria-valuetext={de ? rotulo(de, traduzirUi) : ""} />
+            <input type="range" min={0} max={Math.max(0, ultimo)} value={fim} onChange={(e) => setFim(Math.max(Number(e.target.value), ini))} aria-label={traduzirUi("Fim do período")} aria-valuetext={fim === ultimo ? traduzirUi("hoje") : ate ? rotulo(ate, traduzirUi) : ""} />
           </div>
-          <div className="lt-meses" aria-hidden="true">{marcas.map((i, k) => <span key={k}>{i === ultimo ? "hoje" : serie[i] ? rotulo(serie[i].mes) : ""}</span>)}</div>
+          <div className="lt-meses" aria-hidden="true">{marcas.map((i, k) => <span key={k}>{i === ultimo ? traduzirUi("hoje") : serie[i] ? rotulo(serie[i].mes, traduzirUi) : ""}</span>)}</div>
         </div>
-        <div className="lt-periodo" role="group" aria-label="Período pronto">
-          <Opcao marcada={periodoAno} onClick={() => { setTocando(false); setFim(ultimo); setIni(Math.max(0, ultimo - 12)); }}>Último ano</Opcao>
-          <Opcao marcada={periodoTudo} onClick={() => { setTocando(false); setIni(0); setFim(ultimo); }}>Desde o começo</Opcao>
+        <div className="lt-periodo" role="group" aria-label={traduzirUi("Período pronto")}>
+          <Opcao marcada={periodoAno} onClick={() => { setTocando(false); setFim(ultimo); setIni(Math.max(0, ultimo - 12)); }}>{traduzirUi("Último ano")}</Opcao>
+          <Opcao marcada={periodoTudo} onClick={() => { setTocando(false); setIni(0); setFim(ultimo); }}>{traduzirUi("Desde o começo")}</Opcao>
         </div>
       </section>
     </>

@@ -6,7 +6,6 @@
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { avisar } from "../../lib/avisar";
-import { plural } from "../../lib/plural";
 import { useRelogioDaIgreja } from "../../lib/relogio-context";
 import { toISODate, parseISODate } from "../../lib/date";
 import { Icon } from "../../lib/icons";
@@ -20,12 +19,15 @@ import { Botao } from "../../ui/Botao";
 import { Opcao } from "../../ui/Opcao";
 import { Campo } from "../../ui/Campo";
 import { SeletorData } from "../../ui/Data";
+import { useTexto } from "../../lib/internacional/contexto";
 type Qual = "esta" | "proxima" | "outra";
 
 export function BoletimDaSemana({ church, avisos, events, roster, ministries, people, onClose }: {
   church: ChurchView; avisos: MuralAviso[]; events: EventView[]; roster: RosterAssignmentView[];
   ministries: MinistryView[]; people: PersonView[]; onClose: () => void;
 }) {
+  const traduzirUi = useTexto();
+
   const { todayISO } = useRelogioDaIgreja();
   const fid = useId();
   const [hoje] = useState(todayISO);
@@ -50,9 +52,9 @@ export function BoletimDaSemana({ church, avisos, events, roster, ministries, pe
   const copiar = async () => {
     try {
       await navigator.clipboard.writeText(texto);
-      avisar("Texto copiado. É só colar no grupo.");
+      avisar(traduzirUi("Texto copiado. É só colar no grupo."));
     } catch {
-      avisar("Não deu para copiar aqui. Selecione o texto e copie.", "warn");
+      avisar(traduzirUi("Não deu para copiar aqui. Selecione o texto e copie."), "warn");
     }
   };
   const whatsapp = () => window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, "_blank", "noopener");
@@ -70,7 +72,7 @@ export function BoletimDaSemana({ church, avisos, events, roster, ministries, pe
     setGerando(true);
     const blob = await desenharBoletim(corRef.current, { igreja: church.nome, semana, agenda, avisos: doMural });
     setGerando(false);
-    if (!blob) { avisar("Não deu para gerar a imagem neste navegador.", "warn"); return; }
+    if (!blob) { avisar(traduzirUi("Não deu para gerar a imagem neste navegador."), "warn"); return; }
     setChaveImagem(chave);
     setImagem({ url: URL.createObjectURL(blob), blob });
   };
@@ -95,71 +97,71 @@ export function BoletimDaSemana({ church, avisos, events, roster, ministries, pe
 
   return (
     <FormScreen
-      eyebrow="Mural"
-      title="Boletim da semana"
-      subtitle="Agenda e avisos da semana num texto só, pronto para o grupo da igreja. Edite o que quiser antes de mandar."
-      saveLabel="Abrir no WhatsApp"
-      secondary={{ label: "Copiar texto", onClick: () => void copiar(), disabled: !texto.trim() }}
-      missing={texto.trim() ? [] : ["o texto"]}
+      eyebrow={traduzirUi("Mural")}
+      title={traduzirUi("Boletim da semana")}
+      subtitle={traduzirUi("Agenda e avisos da semana num texto só, pronto para o grupo da igreja. Edite o que quiser antes de mandar.")}
+      saveLabel={traduzirUi("Abrir no WhatsApp")}
+      secondary={{ label: traduzirUi("Copiar texto"), onClick: () => void copiar(), disabled: !texto.trim() }}
+      missing={texto.trim() ? [] : [traduzirUi("o texto")]}
       dirty={editado}
       onSave={whatsapp}
       onClose={onClose}
     >
       <div ref={corRef} className="bol">
-        <FormSection title="Semana">
+        <FormSection title={traduzirUi("Semana")}>
           <div className="field">
-            <div className="fs-chips" role="group" aria-label="Qual semana">
-              {([["esta", "Esta semana"], ["proxima", "Próxima semana"], ["outra", "Outra semana"]] as const).map(([k, l]) => (
+            <div className="fs-chips" role="group" aria-label={traduzirUi("Qual semana")}>
+              {([["esta", traduzirUi("Esta semana")], ["proxima", traduzirUi("Próxima semana")], ["outra", traduzirUi("Outra semana")]] as const).map(([k, l]) => (
                 <Opcao key={k} marcada={qual === k} estilo="seg-chip" aria-pressed={qual === k} onClick={() => setQual(k)}>{l}</Opcao>
               ))}
             </div>
             {qual === "outra" && (
               <div style={{ marginTop: 8 }}>
-                <Campo rotulo="Um dia da semana" id={`${fid}-dia`}>
+                <Campo rotulo={traduzirUi("Um dia da semana")} id={`${fid}-dia`}>
                   <SeletorData valor={outroDia} aoMudar={setOutroDia} />
                 </Campo>
               </div>
             )}
-            <div className="field-hint">{`De segunda a domingo: ${rotuloSemana(semana)}.`}</div>
+            <div className="field-hint">{traduzirUi("De segunda a domingo: {semana}.", { semana: rotuloSemana(semana) })}</div>
           </div>
           <div className="field">
-            <div className="field-label" id={`${fid}-inc`}>O que entra</div>
+            <div className="field-label" id={`${fid}-inc`}>{traduzirUi("O que entra")}</div>
             <div className="fs-chips" role="group" aria-labelledby={`${fid}-inc`}>
-              {opcao("agenda", "Agenda", agenda.length)}
-              {opcao("avisos", "Avisos", doMural.length)}
-              {opcao("escala", "Escala", escala.length)}
+              {opcao("agenda", traduzirUi("Agenda"), agenda.length)}
+              {opcao("avisos", traduzirUi("Avisos"), doMural.length)}
+              {opcao("escala", traduzirUi("Escala"), escala.length)}
             </div>
-            <div className="field-hint">Avisos são os publicados para todos nos últimos 7 dias ou em destaque. A escala mostra quem confirmou ou ainda não respondeu.</div>
+            <div className="field-hint">{traduzirUi("Avisos são os publicados para todos nos últimos 7 dias ou em destaque. A escala mostra quem confirmou ou ainda não respondeu.")}</div>
           </div>
         </FormSection>
 
-        <FormSection title="Texto">
-          {vazio && <p className="bol-vazio">{`Nada na agenda nem no Mural para ${rotuloSemana(semana)}. Escreva o texto abaixo ou escolha outra semana.`}</p>}
+        <FormSection title={traduzirUi("Texto")}>
+          {vazio && <p className="bol-vazio">{traduzirUi("Nada na agenda nem no Mural para {semana}. Escreva o texto abaixo ou escolha outra semana.", { semana: rotuloSemana(semana) })}</p>}
           <div className="field">
-            <label className="field-label" htmlFor={`${fid}-txt`}>Mensagem</label>
+            <label className="field-label" htmlFor={`${fid}-txt`}>{traduzirUi("Mensagem")}</label>
             <textarea id={`${fid}-txt`} className="textarea bol-txt" value={texto} onChange={(e) => setTextoEditado(e.target.value)} spellCheck />
-            <div className="field-hint">Entre *asteriscos* o WhatsApp mostra em negrito.</div>
+            <div className="field-hint">{traduzirUi("Entre *asteriscos* o WhatsApp mostra em negrito.")}</div>
             {desatualizado && (
               <div className="bol-refazer">
-                <span>Você editou o texto. As escolhas acima não mudam mais o que está escrito.</span>
-                <Botao compacto onClick={() => setTextoEditado(null)}>Montar de novo</Botao>
+                <span>{traduzirUi("Você editou o texto. As escolhas acima não mudam mais o que está escrito.")}</span>
+                <Botao compacto onClick={() => setTextoEditado(null)}>{traduzirUi("Montar de novo")}</Botao>
               </div>
             )}
           </div>
         </FormSection>
 
-        <FormSection title="Imagem para status e story">
+        <FormSection title={traduzirUi("Imagem para status e story")}>
           <div className="field">
-            <div className="field-hint" style={{ marginTop: 0 }}>Agenda e títulos dos avisos, nas cores da igreja. O texto editado acima não entra na imagem.</div>
+            <div className="field-hint" style={{ marginTop: 0 }}>{traduzirUi("Agenda e títulos dos avisos, nas cores da igreja. O texto editado acima não entra na imagem.")}</div>
             <div className="bol-img-acts">
               <Botao compacto onClick={() => void gerar()} desativado={gerando || vazio}>
-                <Icon name="imagem" size={14} /> {gerando ? "Gerando…" : imagem ? "Gerar de novo" : "Gerar imagem"}
+                <Icon name="imagem" size={14} /> {gerando ? traduzirUi("Gerando…") : imagem ? traduzirUi("Gerar de novo") : traduzirUi("Gerar imagem")}
               </Botao>
-              {imagem && <Botao compacto onClick={() => void compartilhar()}><Icon name="baixar" size={14} /> Salvar imagem</Botao>}
+              {imagem && <Botao compacto onClick={() => void compartilhar()}><Icon name="baixar" size={14} /> {traduzirUi("Salvar imagem")}</Botao>}
             </div>
             {imagem && (
               // eslint-disable-next-line @next/next/no-img-element -- imagem gerada no navegador (blob:), sem otimização do Next
-              <img className="bol-img" src={imagem.url} alt={`Boletim da semana de ${rotuloSemana(semana)}: ${plural(agenda.length, "evento")} e ${plural(doMural.length, "aviso")}.`} />
+              <img className="bol-img" src={imagem.url} alt={traduzirUi("Boletim da semana de {semana}: {eventos, plural, =1 {# evento} other {# eventos}} e {avisos, plural, =1 {# aviso} other {# avisos}}.", { semana: rotuloSemana(semana), eventos: agenda.length, avisos: doMural.length })} />
             )}
           </div>
         </FormSection>

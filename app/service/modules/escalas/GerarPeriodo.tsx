@@ -10,7 +10,6 @@ import { useId, useMemo, useRef, useState } from "react";
 import { FormScreen, FormSection, type FormScreenHandle } from "../../painel/form/FormScreen";
 import { Av } from "../../painel/ui";
 import { Icon } from "../../lib/icons";
-import { plural } from "../../lib/plural";
 import { avisar } from "../../lib/avisar";
 import { useRelogioDaIgreja } from "../../lib/relogio-context";
 import { formatDateBR, joinDot, parseISODate } from "../../lib/date";
@@ -32,6 +31,7 @@ import { Opcao } from "../../ui/Opcao";
 import { Campo, Marcar } from "../../ui/Campo";
 import { SeletorData } from "../../ui/Data";
 import { Vazio } from "../../ui/Estados";
+import { useTexto } from "../../lib/internacional/contexto";
 const DIA_CURTO = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const DIA_LONGO = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 const DURACOES = [1, 3, 6, 12] as const;
@@ -76,6 +76,8 @@ export function GerarPeriodo({
   onClose: () => void;
   onSalvo: (primeiroEventoId: string | null) => void;
 }) {
+  const traduzirUi = useTexto();
+
   const { todayISO } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
   const fid = useId();
@@ -121,10 +123,10 @@ export function GerarPeriodo({
 
   const vagasPorCulto = entrada ? entrada.times.reduce((s, t) => s + t.funcoes.reduce((x, f) => x + f.vagas, 0), 0) : 0;
   const falta = [
-    timesSel.size === 0 && "um time",
-    !valido && (duracao === "datas" ? "um período de até 12 meses" : "a data de início"),
-    valido && entrada && entrada.cultos.length === 0 && ct("pelo menos um {culto}"),
-    valido && entrada && entrada.cultos.length > 0 && vagasPorCulto === 0 && "pelo menos uma vaga",
+    timesSel.size === 0 && traduzirUi("um time"),
+    !valido && (duracao === "datas" ? traduzirUi("um período de até 12 meses") : traduzirUi("a data de início")),
+    valido && entrada && entrada.cultos.length === 0 && traduzirUi("pelo menos um {culto}"),
+    valido && entrada && entrada.cultos.length > 0 && vagasPorCulto === 0 && traduzirUi("pelo menos uma vaga"),
   ].filter(Boolean) as string[];
 
   /* ── passo 2: prévia ───────────────────────────────────────────────────── */
@@ -194,7 +196,7 @@ export function GerarPeriodo({
 
   const salvar = async () => {
     if (!base || !resumo || salvando) return;
-    if (!church?.id) { setErro("Nenhuma igreja encontrada para gravar a escala."); return; }
+    if (!church?.id) { setErro(traduzirUi("Nenhuma igreja encontrada para gravar a escala.")); return; }
     setSalvando(true);
     setErro("");
     const sb = createServiceBrowserClient().schema("service");
@@ -230,40 +232,40 @@ export function GerarPeriodo({
     if (error) {
       await desfazer();
       setSalvando(false);
-      setErro(/rascunho/i.test(error.message) ? "Esta versão do banco ainda não guarda a escala como rascunho. Nada foi gravado." : `${friendlyWriteError(error.message)} Nada foi gravado.`);
+      setErro(/rascunho/i.test(error.message) ? traduzirUi("Esta versão do banco ainda não guarda a escala como rascunho. Nada foi gravado.") : traduzirUi("{erro} Nada foi gravado.", { erro: friendlyWriteError(error.message, traduzirUi) }));
       return;
     }
-    avisar(`Rascunho salvo: ${plural(linhas.length, "escalação", "escalações")} em ${ct(plural(base.cultos.length, "{culto}", "{cultos}"))}. Revise e publique quando quiser.`);
+    avisar(traduzirUi("Rascunho salvo: {escalacoes, plural, =1 {# escalação} other {# escalações}} em {eventos, plural, =1 {# {culto}} other {# {cultos}}}. Revise e publique quando quiser.", { escalacoes: linhas.length, eventos: base.cultos.length }));
     if (telaRef.current) await telaRef.current.fechar();
     onSalvo(base.cultos.find((c) => Object.keys(proposta[c.chave] ?? {}).length)?.eventId ?? idDe.get(base.cultos[0]?.chave ?? "") ?? null);
   };
 
   /* ── telas ─────────────────────────────────────────────────────────────── */
   if (passo === "form") {
-    const periodoTexto = valido ? `De ${formatDateBR(inicio)} a ${formatDateBR(fim)}` : "";
+    const periodoTexto = valido ? traduzirUi("De {inicio} a {fim}", { inicio: formatDateBR(inicio), fim: formatDateBR(fim) }) : "";
     return (
       <FormScreen
         ref={telaRef}
-        eyebrow="Escalas"
-        title="Montar a escala do período"
-        subtitle={ct("Escolha os times, o período e os {cultos}. Você vê a escala inteira antes de salvar, e ninguém é avisado até você publicar.")}
-        saveLabel={montando ? "Montando…" : "Ver prévia"}
+        eyebrow={traduzirUi("Escalas")}
+        title={traduzirUi("Montar a escala do período")}
+        subtitle={ct(traduzirUi("Escolha os times, o período e os {cultos}. Você vê a escala inteira antes de salvar, e ninguém é avisado até você publicar."))}
+        saveLabel={montando ? traduzirUi("Montando…") : traduzirUi("Ver prévia")}
         saving={montando}
         missing={falta}
         dirty
         onSave={verPrevia}
         onClose={onClose}
       >
-        <FormSection title="Times">
+        <FormSection title={traduzirUi("Times")}>
           {comFuncoes.length === 0 ? (
-            <p className="fs-note">Nenhum time com funções ainda. Cadastre as funções em Times para montar a escala.</p>
+            <p className="fs-note">{traduzirUi("Nenhum time com funções ainda. Cadastre as funções em Times para montar a escala.")}</p>
           ) : (
             <div className="per-lista">
               {comFuncoes.map((m) => (
                 <Marcar className="fs-check" key={m.id} checked={timesSel.has(m.id)} onChange={() => setTimesSel((s) => alternar(s, m.id))}>
                   <span className="per-check-txt">
                     <span className="per-check-t">{m.name}</span>
-                    <span className="per-check-s">{m.people.length ? joinDot(plural(m.people.length, "pessoa"), plural(m.positions.length, "função", "funções")) : "Ninguém no time ainda"}</span>
+                    <span className="per-check-s">{m.people.length ? joinDot(traduzirUi("{count, plural, =1 {# pessoa} other {# pessoas}}", { count: m.people.length }), traduzirUi("{count, plural, =1 {# função} other {# funções}}", { count: m.positions.length })) : traduzirUi("Ninguém no time ainda")}</span>
                   </span>
                 </Marcar>
               ))}
@@ -271,32 +273,32 @@ export function GerarPeriodo({
           )}
         </FormSection>
 
-        <FormSection title="Período">
+        <FormSection title={traduzirUi("Período")}>
           <div className="fs-grid">
-            <Campo rotulo="Começa em" obrigatorio id={`${fid}-ini`} className="half">
+            <Campo rotulo={traduzirUi("Começa em")} obrigatorio id={`${fid}-ini`} className="half">
               <SeletorData valor={inicio} aoMudar={setInicio} />
             </Campo>
             {duracao === "datas" && (
-              <Campo rotulo="Termina em" obrigatorio id={`${fid}-fim`} className="half">
+              <Campo rotulo={traduzirUi("Termina em")} obrigatorio id={`${fid}-fim`} className="half">
                 <SeletorData valor={fimManual} min={inicio} max={fimDoPeriodo(inicio || hoje, 12)} aoMudar={setFimManual} />
               </Campo>
             )}
             <div className="field">
-              <div className="field-label" id={`${fid}-dur`}>Duração</div>
+              <div className="field-label" id={`${fid}-dur`}>{traduzirUi("Duração")}</div>
               <div className="fs-chips" role="group" aria-labelledby={`${fid}-dur`}>
                 {DURACOES.map((n) => (
-                  <Opcao key={n} marcada={duracao === n} estilo="seg-chip" aria-pressed={duracao === n} onClick={() => setDuracao(n)}>{plural(n, "mês", "meses")}</Opcao>
+                  <Opcao key={n} marcada={duracao === n} estilo="seg-chip" aria-pressed={duracao === n} onClick={() => setDuracao(n)}>{traduzirUi("{count, plural, =1 {# mês} other {# meses}}", { count: n })}</Opcao>
                 ))}
-                <Opcao marcada={duracao === "datas"} estilo="seg-chip" aria-pressed={duracao === "datas"} onClick={() => { setFimManual(fim); setDuracao("datas"); }}>Escolher o fim</Opcao>
+                <Opcao marcada={duracao === "datas"} estilo="seg-chip" aria-pressed={duracao === "datas"} onClick={() => { setFimManual(fim); setDuracao("datas"); }}>{traduzirUi("Escolher o fim")}</Opcao>
               </div>
-              <div className="field-hint">{valido ? periodoTexto : "O período vai de 1 dia a 12 meses."}</div>
+              <div className="field-hint">{valido ? periodoTexto : traduzirUi("O período vai de 1 dia a 12 meses.")}</div>
             </div>
           </div>
         </FormSection>
 
-        <FormSection title={ct("{Cultos} que entram")}>
+        <FormSection title={ct(traduzirUi("{Cultos} que entram"))}>
           {series.length === 0 && avulsos.length === 0 ? (
-            <p className="fs-note">{ct("Nenhum {culto} na agenda ainda. Crie o {culto} de domingo na Agenda, ou use Escala extra para um evento avulso.")}</p>
+            <p className="fs-note">{ct(traduzirUi("Nenhum {culto} na agenda ainda. Crie o {culto} de domingo na Agenda, ou use Escala extra para um evento avulso."))}</p>
           ) : (
             <div className="per-lista">
               {series.map((s) => {
@@ -306,7 +308,7 @@ export function GerarPeriodo({
                   <Marcar className="fs-check" key={s.chave} checked={seriesSel.has(s.chave)} onChange={() => setSeriesSel((x) => alternar(x, s.chave))}>
                     <span className="per-check-txt">
                       <span className="per-check-t">{s.nome}</span>
-                      <span className="per-check-s">{joinDot(`Toda ${DIA_LONGO[s.diaSemana].toLowerCase()}`, s.hora, valido && plural(n.length, "data", "datas"), criar > 0 && `${criar} ${criar === 1 ? "entra" : "entram"} na agenda`)}</span>
+                      <span className="per-check-s">{joinDot(traduzirUi("Toda {dia}", { dia: DIA_LONGO[s.diaSemana].toLowerCase() }), s.hora, valido && traduzirUi("{count, plural, =1 {# data} other {# datas}}", { count: n.length }), criar > 0 && traduzirUi("{count, plural, =1 {{n} entra} other {{n} entram}} na agenda", { count: criar, n: String(criar) }))}</span>
                     </span>
                   </Marcar>
                 );
@@ -315,7 +317,7 @@ export function GerarPeriodo({
                 <Marcar className="fs-check" key={e.id} checked={!avulsosFora.has(e.id)} onChange={() => setAvulsosFora((x) => alternar(x, e.id))}>
                   <span className="per-check-txt">
                     <span className="per-check-t">{e.name}</span>
-                    <span className="per-check-s">{joinDot(diaCurto(e.eventDate), formatDateBR(e.eventDate), e.time, "uma vez")}</span>
+                    <span className="per-check-s">{joinDot(diaCurto(e.eventDate), formatDateBR(e.eventDate), e.time, traduzirUi("uma vez"))}</span>
                   </span>
                 </Marcar>
               ))}
@@ -324,8 +326,8 @@ export function GerarPeriodo({
         </FormSection>
 
         {entrada && entrada.times.length > 0 && (
-          <FormSection title="Vagas por função">
-            <p className="fs-note" style={{ marginTop: 0 }}>{ct("Quantas pessoas cada função precisa em cada {culto}. Zero deixa a função fora deste período. Não muda o cadastro do time.")}</p>
+          <FormSection title={traduzirUi("Vagas por função")}>
+            <p className="fs-note" style={{ marginTop: 0 }}>{ct(traduzirUi("Quantas pessoas cada função precisa em cada {culto}. Zero deixa a função fora deste período. Não muda o cadastro do time."))}</p>
             {comFuncoes.filter((m) => timesSel.has(m.id)).map((m) => (
               <div className="per-func" key={m.id}>
                 <div className="per-func-time">{m.name}</div>
@@ -333,15 +335,15 @@ export function GerarPeriodo({
                   <div className="per-func-row" key={p.id}>
                     <span className="per-func-nome">{p.name}</span>
                     <div className="stepper">
-                      <Acao aria-label={`Menos uma vaga em ${p.name}`} onClick={() => setVagas((v) => ({ ...v, [p.id]: Math.max(0, (v[p.id] ?? 1) - 1) }))}>−</Acao>
+                      <Acao aria-label={traduzirUi("Menos uma vaga em {funcao}", { funcao: p.name })} onClick={() => setVagas((v) => ({ ...v, [p.id]: Math.max(0, (v[p.id] ?? 1) - 1) }))}>−</Acao>
                       <span aria-live="polite">{vagas[p.id] ?? 1}</span>
-                      <Acao aria-label={`Mais uma vaga em ${p.name}`} onClick={() => setVagas((v) => ({ ...v, [p.id]: Math.min(30, (v[p.id] ?? 1) + 1) }))}>+</Acao>
+                      <Acao aria-label={traduzirUi("Mais uma vaga em {funcao}", { funcao: p.name })} onClick={() => setVagas((v) => ({ ...v, [p.id]: Math.min(30, (v[p.id] ?? 1) + 1) }))}>+</Acao>
                     </div>
                   </div>
                 ))}
               </div>
             ))}
-            {entrada.cultos.length > 0 && <div className="fs-calc ok">{`${ct(plural(entrada.cultos.length, "{culto}", "{cultos}"))} · ${plural(entrada.cultos.reduce((s, c) => s + timesDoCulto(c, entrada.times).reduce((x, t) => x + t.funcoes.reduce((y, f) => y + f.vagas, 0), 0), 0), "vaga")} no período`}</div>}
+            {entrada.cultos.length > 0 && <div className="fs-calc ok">{traduzirUi("{eventos, plural, =1 {# {culto}} other {# {cultos}}} · {vagas, plural, =1 {# vaga} other {# vagas}} no período", { eventos: entrada.cultos.length, vagas: entrada.cultos.reduce((s, c) => s + timesDoCulto(c, entrada.times).reduce((x, t) => x + t.funcoes.reduce((y, f) => y + f.vagas, 0), 0), 0) })}</div>}
           </FormSection>
         )}
       </FormScreen>
@@ -360,9 +362,9 @@ export function GerarPeriodo({
   return (
     <FormScreen
       ref={telaRef}
-      eyebrow={`Prévia · ${formatDateBR(base?.cultos[0]?.data)} a ${formatDateBR(base?.cultos[base.cultos.length - 1]?.data)}`}
-      title="Escala do período"
-      saveLabel="Salvar rascunho"
+      eyebrow={traduzirUi("Prévia · {inicio} a {fim}", { inicio: formatDateBR(base?.cultos[0]?.data), fim: formatDateBR(base?.cultos[base.cultos.length - 1]?.data) })}
+      title={traduzirUi("Escala do período")}
+      saveLabel={traduzirUi("Salvar rascunho")}
       saving={salvando}
       dirty
       error={erro}
@@ -371,29 +373,29 @@ export function GerarPeriodo({
     >
       <div className="per-resumo" role="status">
         <div className="per-num"><b>{base?.cultos.length ?? 0}</b><span>{ct(base?.cultos.length === 1 ? "{culto}" : "{cultos}")}</span></div>
-        <div className="per-num"><b>{r.propostas + r.salvas}</b><span>de {plural(r.vagas, "vaga")} preenchidas</span></div>
-        <div className={`per-num${r.faltam ? " falta" : ""}`}><b>{r.faltam}</b><span>{r.faltam === 1 ? "vaga aberta" : "vagas abertas"}</span></div>
+        <div className="per-num"><b>{r.propostas + r.salvas}</b><span>{traduzirUi("de {vagas, plural, =1 {# vaga} other {# vagas}} preenchidas", { vagas: r.vagas })}</span></div>
+        <div className={`per-num${r.faltam ? " falta" : ""}`}><b>{r.faltam}</b><span>{r.faltam === 1 ? traduzirUi("vaga aberta") : traduzirUi("vagas abertas")}</span></div>
       </div>
       <p className="fs-note">
         {joinDot(
-          r.novos > 0 && ct(`${plural(r.novos, "{culto} novo entra", "{cultos} novos entram")} na agenda`),
-          r.salvas > 0 && `${plural(r.salvas, "escalação", "escalações")} que já existia${r.salvas === 1 ? "" : "m"} ficam como estão`,
-          "Quem marcou que não pode, está de pausa ou de férias não entra.",
+          r.novos > 0 && traduzirUi("{count, plural, =1 {# {culto} novo entra} other {# {cultos} novos entram}} na agenda", { count: r.novos }),
+          r.salvas > 0 && traduzirUi("{count, plural, =1 {# escalação que já existia} other {# escalações que já existiam}} ficam como estão", { count: r.salvas }),
+          traduzirUi("Quem marcou que não pode, está de pausa ou de férias não entra."),
         )}
       </p>
 
       {(semGente.length > 0 || acima.length > 0 || outros > 0 || semPessoas.length > 0) && (
-        <FormSection title="Precisa de atenção">
+        <FormSection title={traduzirUi("Precisa de atenção")}>
           <ul className="per-avisos">
-            {semPessoas.map((a) => <li key={`sp-${a.timeId}`}><Icon name="alerta" size={14} /> {timeNome(a.timeId)} não tem ninguém. Adicione pessoas em Times.</li>)}
-            {semGente.length > 0 && <li><Icon name="alerta" size={14} /> {plural(semGente.reduce((s, a) => s + a.faltam, 0), "vaga")} sem ninguém disponível em {ct(plural(new Set(semGente.map((a) => a.culto)).size, "{culto}", "{cultos}"))}. Toque na vaga para escolher alguém mesmo assim.</li>}
-            {acima.map((a) => <li key={`ac-${a.pessoa}-${a.mes}`}><Icon name="alerta" size={14} /> {nome(a.pessoa)} serve {plural(a.vezes, "vez", "vezes")} em {nomeDoMes(a.mes)}, acima do limite de {cfg.maxPorMes}.</li>)}
-            {outros > 0 && <li><Icon name="alerta" size={14} /> {plural(outros, "escolha manual", "escolhas manuais")} com quem marcou que não pode ou já serve no mesmo {ct("{culto}")}.</li>}
+            {semPessoas.map((a) => <li key={`sp-${a.timeId}`}><Icon name="alerta" size={14} /> {traduzirUi("{time} não tem ninguém. Adicione pessoas em Times.", { time: timeNome(a.timeId) })}</li>)}
+            {semGente.length > 0 && <li><Icon name="alerta" size={14} /> {traduzirUi("{vagas, plural, =1 {# vaga} other {# vagas}} sem ninguém disponível em {eventos, plural, =1 {# {culto}} other {# {cultos}}}. Toque na vaga para escolher alguém mesmo assim.", { vagas: semGente.reduce((s, a) => s + a.faltam, 0), eventos: new Set(semGente.map((a) => a.culto)).size })}</li>}
+            {acima.map((a) => <li key={`ac-${a.pessoa}-${a.mes}`}><Icon name="alerta" size={14} /> {traduzirUi("{nome} serve {vezes, plural, =1 {# vez} other {# vezes}} em {mes}, acima do limite de {limite}.", { nome: nome(a.pessoa), vezes: a.vezes, mes: nomeDoMes(a.mes), limite: String(cfg.maxPorMes) })}</li>)}
+            {outros > 0 && <li><Icon name="alerta" size={14} /> {traduzirUi("{count, plural, =1 {# escolha manual} other {# escolhas manuais}} com quem marcou que não pode ou já serve no mesmo {culto}.", { count: outros })}</li>}
           </ul>
           <div className="fs-chips">
-            <Opcao marcada={soAvisos} estilo="chip-toggle" aria-pressed={soAvisos} onClick={() => { const v = !soAvisos; setSoAvisos(v); if (v) setMesesAbertos(new Set(meses.map(([m]) => m))); }}>{ct("Só {cultos} com aviso")}</Opcao>
+            <Opcao marcada={soAvisos} estilo="chip-toggle" aria-pressed={soAvisos} onClick={() => { const v = !soAvisos; setSoAvisos(v); if (v) setMesesAbertos(new Set(meses.map(([m]) => m))); }}>{traduzirUi("Só {cultos} com aviso")}</Opcao>
             {primeiroComAviso && !soAvisos && (
-              <Acao className="seg-chip" onClick={() => { const mes = primeiroComAviso.data.slice(0, 7); setMesesAbertos((s) => new Set([...s, mes])); window.setTimeout(() => document.getElementById(`per-${primeiroComAviso.chave}`)?.scrollIntoView({ block: "start", behavior: "smooth" }), 30); }}>Ir para o primeiro</Acao>
+              <Acao className="seg-chip" onClick={() => { const mes = primeiroComAviso.data.slice(0, 7); setMesesAbertos((s) => new Set([...s, mes])); window.setTimeout(() => document.getElementById(`per-${primeiroComAviso.chave}`)?.scrollIntoView({ block: "start", behavior: "smooth" }), 30); }}>{traduzirUi("Ir para o primeiro")}</Acao>
             )}
           </div>
         </FormSection>
@@ -408,7 +410,7 @@ export function GerarPeriodo({
           <section className="per-mes" key={mes}>
             <Acao className="per-mes-head" aria-expanded={aberto} onClick={() => alternarMes(mes)}>
               <span className="per-mes-t">{nomeDoMes(mes)}</span>
-              <span className="per-mes-s">{joinDot(ct(plural(cultos.length, "{culto}", "{cultos}")), comAviso > 0 && `${comAviso} com aviso`)}</span>
+              <span className="per-mes-s">{joinDot(traduzirUi("{count, plural, =1 {# {culto}} other {# {cultos}}}", { count: cultos.length }), comAviso > 0 && traduzirUi("{n} com aviso", { n: String(comAviso) }))}</span>
               <Icon name="avancar" size={15} />
             </Acao>
             {aberto && visiveis.map((c) => (
@@ -416,7 +418,7 @@ export function GerarPeriodo({
                 <header className="per-culto-head">
                   <span className="per-culto-dia">{joinDot(diaCurto(c.data), formatDateBR(c.data).slice(0, 5), c.hora)}</span>
                   <span className="per-culto-nome">{c.nome}</span>
-                  {!c.eventId && <span className="per-tag">novo na agenda</span>}
+                  {!c.eventId && <span className="per-tag">{traduzirUi("novo na agenda")}</span>}
                 </header>
                 {timesDoCulto(c, base!.times).map((t) => (
                   <div className="per-time" key={t.id}>
@@ -430,13 +432,13 @@ export function GerarPeriodo({
                         <div className="per-func-row" key={f.id}>
                           <span className="per-func-nome">{f.nome}</span>
                           <div className="per-vagas">
-                            {salvos.map((p) => <span className="per-vaga salva" key={`s-${p}`} title={`${nome(p)}: já estava na escala`}>{nome(p)}</span>)}
+                            {salvos.map((p) => <span className="per-vaga salva" key={`s-${p}`} title={traduzirUi("{nome}: já estava na escala", { nome: nome(p) })}>{nome(p)}</span>)}
                             {propostos.map((p) => {
                               const atencao = marcas.pessoaNoCulto.has(`${p}@${c.chave}`) || marcas.cargaMes.has(`${p}@${c.data.slice(0, 7)}`);
-                              return <Acao className={`per-vaga${atencao ? " atencao" : ""}`} key={p} title={nome(p)} aria-label={`${f.nome}: ${nome(p)}${atencao ? ", precisa de atenção" : ""}. Trocar`} onClick={() => setVaga(v(p))}>{nome(p)}</Acao>;
+                              return <Acao className={`per-vaga${atencao ? " atencao" : ""}`} key={p} title={nome(p)} aria-label={traduzirUi("{funcao}: {nome}{atencao, select, sim {, precisa de atenção} other {}}. Trocar", { funcao: f.nome, nome: nome(p), atencao: atencao ? "sim" : "nao" })} onClick={() => setVaga(v(p))}>{nome(p)}</Acao>;
                             })}
                             {Array.from({ length: abertas }).map((_, i) => (
-                              <Acao className="per-vaga aberta" key={`a-${i}`} aria-label={`${f.nome}: vaga aberta. Escolher alguém`} onClick={() => setVaga(v())}>Vaga aberta</Acao>
+                              <Acao className="per-vaga aberta" key={`a-${i}`} aria-label={traduzirUi("{funcao}: vaga aberta. Escolher alguém", { funcao: f.nome })} onClick={() => setVaga(v())}>{traduzirUi("Vaga aberta")}</Acao>
                             ))}
                           </div>
                         </div>
@@ -450,7 +452,7 @@ export function GerarPeriodo({
         );
       })}
       <p className="fs-note">
-        <Botao variante="discreto" compacto onClick={() => setPasso("form")} desativado={salvando}><Icon name="voltar" size={14} /> Mudar times, período ou vagas</Botao>
+        <Botao variante="discreto" compacto onClick={() => setPasso("form")} desativado={salvando}><Icon name="voltar" size={14} /> {traduzirUi("Mudar times, período ou vagas")}</Botao>
       </p>
 
       {vaga && base && (
@@ -475,7 +477,8 @@ function EscolherNaVaga({ vaga, culto, opcoes, cfg, nomeAtual, onEscolher, onClo
   vaga: Vaga; culto: CultoPlano; opcoes: Candidato[]; cfg: EscalaSettings; nomeAtual?: string;
   onEscolher: (personId: string | null) => void; onClose: () => void;
 }) {
-  const { comTermos: ct } = useTermos();
+  const traduzirUi = useTexto();
+
   const [busca, setBusca] = useState("");
   const sem = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
   const achados = opcoes.filter((c) => !busca.trim() || sem(c.person.name).includes(sem(busca.trim())));
@@ -483,37 +486,37 @@ function EscolherNaVaga({ vaga, culto, opcoes, cfg, nomeAtual, onEscolher, onClo
   const comAviso = achados.filter((c) => c.fit === "busy" || (c.fit === "block" && c.motivo !== "evento"));
   const naoPodem = achados.filter((c) => c.fit === "block" && c.motivo === "evento");
   const motivo = (c: Candidato) =>
-    c.fit === "busy" ? "Marcou que não pode neste horário ou data"
-      : c.motivo === "ferias" ? "De férias"
-        : c.motivo === "teto" ? `Chegou ao limite de ${plural(cfg.maxPorMes, "vez", "vezes")} no mês`
-          : c.motivo === "folga" ? `Em folga: serviu há menos de ${plural(cfg.folgaSemanas + 1, "semana")}`
-            : ct("Já serve neste {culto}");
+    c.fit === "busy" ? traduzirUi("Marcou que não pode neste horário ou data")
+      : c.motivo === "ferias" ? traduzirUi("De férias")
+        : c.motivo === "teto" ? traduzirUi("Chegou ao limite de {count, plural, =1 {# vez} other {# vezes}} no mês", { count: cfg.maxPorMes })
+          : c.motivo === "folga" ? traduzirUi("Em folga: serviu há menos de {count, plural, =1 {# semana} other {# semanas}}", { count: cfg.folgaSemanas + 1 })
+            : traduzirUi("Já serve neste {culto}");
   const linha = (c: Candidato, aviso?: string) => (
     <Acao className={`cand${c.motivo === "evento" ? " is-block" : ""}`} key={c.person.id} aria-disabled={c.motivo === "evento" || undefined} onClick={() => c.motivo !== "evento" && onEscolher(c.person.id)}>
       <Av name={c.person.name} size="md" />
       <div className="cand-main">
         <div className="cand-name">{c.person.name}</div>
-        <div className={`cand-meta${aviso ? " cand-motivo" : ""}`}>{aviso ?? joinDot(`${plural(c.vezes, "vez", "vezes")} no período`, c.ultima ? `antes, em ${formatDateBR(c.ultima)}` : "ainda não serve")}</div>
+        <div className={`cand-meta${aviso ? " cand-motivo" : ""}`}>{aviso ?? joinDot(traduzirUi("{count, plural, =1 {# vez} other {# vezes}} no período", { count: c.vezes }), c.ultima ? traduzirUi("antes, em {data}", { data: formatDateBR(c.ultima) }) : traduzirUi("ainda não serve"))}</div>
       </div>
     </Acao>
   );
   return (
     <Janela larga sobretitulo={joinDot(vaga.funcao, vaga.time)} titulo={culto.nome}
-      texto={`${joinDot(diaCurto(culto.data), formatDateBR(culto.data), culto.hora)}${nomeAtual ? `. Agora: ${nomeAtual}.` : ""}`} aoFechar={onClose} corpoBloco
+      texto={traduzirUi("{quando}{atual, select, sim {. Agora: {nome}.} other {}}", { quando: joinDot(diaCurto(culto.data), formatDateBR(culto.data), culto.hora), atual: nomeAtual ? "sim" : "nao", nome: nomeAtual ?? "" })} aoFechar={onClose} corpoBloco
       cabecalho={
         <div className="cand-tools">
-          <input className="input" type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar pelo nome" aria-label="Buscar pelo nome" />
+          <input className="input" type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder={traduzirUi("Buscar pelo nome")} aria-label={traduzirUi("Buscar pelo nome")} />
         </div>
       }
       rodape={<>
-        {nomeAtual && <Botao onClick={() => onEscolher(null)}>Deixar a vaga aberta</Botao>}
-        <Botao variante="discreto" onClick={onClose}>Cancelar</Botao>
+        {nomeAtual && <Botao onClick={() => onEscolher(null)}>{traduzirUi("Deixar a vaga aberta")}</Botao>}
+        <Botao variante="discreto" onClick={onClose}>{traduzirUi("Cancelar")}</Botao>
       </>}>
       <div className="cand-list">
-          {achados.length === 0 && <Vazio titulo={busca.trim() ? "Ninguém com esse nome neste time." : "Todo mundo do time já está nesta função. Adicione pessoas ao time em Times."} />}
-          {podem.length > 0 && <><div className="cand-grp">Livres, pela ordem do rodízio</div>{podem.map((c) => linha(c))}</>}
-          {comAviso.length > 0 && <><div className="cand-grp">Pode escolher, mas fica com aviso</div>{comAviso.map((c) => linha(c, motivo(c)))}</>}
-          {naoPodem.length > 0 && <><div className="cand-grp">Não podem nesta vaga</div>{naoPodem.map((c) => linha(c, motivo(c)))}</>}
+          {achados.length === 0 && <Vazio titulo={busca.trim() ? traduzirUi("Ninguém com esse nome neste time.") : traduzirUi("Todo mundo do time já está nesta função. Adicione pessoas ao time em Times.")} />}
+          {podem.length > 0 && <><div className="cand-grp">{traduzirUi("Livres, pela ordem do rodízio")}</div>{podem.map((c) => linha(c))}</>}
+          {comAviso.length > 0 && <><div className="cand-grp">{traduzirUi("Pode escolher, mas fica com aviso")}</div>{comAviso.map((c) => linha(c, motivo(c)))}</>}
+          {naoPodem.length > 0 && <><div className="cand-grp">{traduzirUi("Não podem nesta vaga")}</div>{naoPodem.map((c) => linha(c, motivo(c)))}</>}
       </div>
     </Janela>
   );

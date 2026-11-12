@@ -7,7 +7,6 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { plural } from "../../lib/plural";
 import { avisar } from "../../lib/avisar";
 import { notifyPush } from "../../lib/notify-push";
 import { instantesNoFuso, partesNoFuso } from "../../lib/fuso";
@@ -36,7 +35,11 @@ import { Linha } from "../../ui/Linha";
 import { Campo, Entrada, TextoLongo } from "../../ui/Campo";
 import { Selecao } from "../../ui/Selecao";
 import { SeletorData, SeletorHora } from "../../ui/Data";
+import { useTexto } from "../../lib/internacional/contexto";
+import type { Text } from "../../lib/internacional/mensagens";
 function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church: ChurchView; publicos: MuralPublico[]; inicial?: MuralAviso; onClose: () => void; onDone: () => void }) {
+  const traduzirUi = useTexto();
+
   const { fuso, emSilencio, foraDoSilencio, quandoLembra } = useRelogioDaIgreja();
   const emHorarioLocal = (iso: string) => { const p = partesNoFuso(new Date(iso), fuso); return `${p.data}T${p.hora}`; };
   const instanteUnico = (data: string, hora: string) => { const candidatos = instantesNoFuso(data, hora, fuso); return candidatos.length === 1 ? candidatos[0] : null; };
@@ -91,13 +94,13 @@ function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church:
   const whatsapp = canais.includes("whatsapp") && quando === "agora";
 
   const salvar = async (como: "publicado" | "rascunho" | "agendado") => {
-    if (!publicos.some((p) => p.id === publico)) { setErro("Escolha quem recebe esta publicação."); return; }
-    if (!titulo.trim()) { setErro("Dê um título para a publicação."); return; }
+    if (!publicos.some((p) => p.id === publico)) { setErro(traduzirUi("Escolha quem recebe esta publicação.")); return; }
+    if (!titulo.trim()) { setErro(traduzirUi("Dê um título para a publicação.")); return; }
     // eslint-disable-next-line react-hooks/purity -- valida a hora atual no clique de salvar, fora do render
-    if (como === "agendado" && (!agendaEm || agendaEm.getTime() <= Date.now())) { setErro("Escolha um horário futuro e válido no fuso da igreja."); return; }
-    if (canais.includes("app") && lembrete === "data" && !lembreteEm()) { setErro("Confira a data e a hora do lembrete. Esse horário pode não existir ou se repetir na mudança de fuso."); return; }
+    if (como === "agendado" && (!agendaEm || agendaEm.getTime() <= Date.now())) { setErro(traduzirUi("Escolha um horário futuro e válido no fuso da igreja.")); return; }
+    if (canais.includes("app") && lembrete === "data" && !lembreteEm()) { setErro(traduzirUi("Confira a data e a hora do lembrete. Esse horário pode não existir ou se repetir na mudança de fuso.")); return; }
     const fimDestaque = destacar && destaqueAte ? instanteUnico(destaqueAte, "23:59") : null;
-    if (destacar && destaqueAte && !fimDestaque) { setErro("Confira a data de término do destaque."); return; }
+    if (destacar && destaqueAte && !fimDestaque) { setErro(traduzirUi("Confira a data de término do destaque.")); return; }
     /* o WhatsApp abre já com o texto (precisa ser no toque, antes de esperar o banco) */
     if (como === "publicado" && whatsapp) window.open(`https://wa.me/?text=${encodeURIComponent(`${titulo.trim()}\n\n${msg.trim()}`)}`, "_blank", "noopener");
     setSalvando(true);
@@ -134,35 +137,35 @@ function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church:
     if (error && /status|urgent|publish_|remind_hours/i.test(error.message)) {
       if (como !== "publicado" || inicial) {
         setSalvando(false);
-        setErro("Rascunho e agendamento ainda não estão disponíveis nesta versão do banco. Publique agora.");
+        setErro(traduzirUi("Rascunho e agendamento ainda não estão disponíveis nesta versão do banco. Publique agora."));
         return;
       }
       const { remind_hours: _rh, ...semRelativo } = comLembrete as Record<string, unknown>;
       void _rh;
       ({ error } = await gravar({ ...base, kind: tipo, ...semRelativo, ...comDestaque }));
-      if (!error && urgente) avisar("Publicado, mas a marca de urgente ainda não está disponível.", "warn");
+      if (!error && urgente) avisar(traduzirUi("Publicado, mas a marca de urgente ainda não está disponível."), "warn");
     }
     /* antes da migração 0063 as colunas do destaque não existem */
     if (error && destacar && /highlight|image_|video_/i.test(error.message)) {
       setSalvando(false);
-      setErro("O destaque ainda não está disponível nesta versão do banco. Publique sem destacar.");
+      setErro(traduzirUi("O destaque ainda não está disponível nesta versão do banco. Publique sem destacar."));
       return;
     }
     /* antes da migração 0062 as colunas do lembrete não existem: publica sem ele e avisa */
     if (error && quandoLembrar && /remind/i.test(error.message)) {
       ({ error } = await gravar({ ...base, kind: tipo }));
-      if (!error) avisar("Publicado, mas o lembrete ainda não está disponível.", "warn");
+      if (!error) avisar(traduzirUi("Publicado, mas o lembrete ainda não está disponível."), "warn");
     }
     /* antes da migração 0049 a coluna "kind" não existe: publica sem o tipo */
     if (error && /kind/i.test(error.message)) ({ error } = await gravar(base));
     if (error) { setSalvando(false); setErro(friendlyWriteError(error.message)); return; }
     if (como === "publicado") {
       if (canais.includes("app")) notifyPush(church.organizationId, alvo.memberIds, titulo.trim(), msg.trim() || "Nova publicação no Mural.", "mural");
-      avisar("Publicado no Mural.");
+      avisar(traduzirUi("Publicado no Mural."));
     } else if (como === "agendado") {
-      avisar(`Agendado: vai ao ar ${quandoLembra(agendaEm!)}.`);
+      avisar(traduzirUi("Agendado: vai ao ar {quando}.", { quando: quandoLembra(agendaEm!) }));
     } else {
-      avisar("Rascunho salvo. Só a liderança vê.");
+      avisar(traduzirUi("Rascunho salvo. Só a liderança vê."));
     }
     /* fecha antes do refresh (onDone atualiza a lista) */
     if (telaRef.current) await telaRef.current.fechar();
@@ -171,25 +174,26 @@ function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church:
   const retrato = JSON.stringify({ titulo, msg, publico, tipo, canais: [...canais].sort(), urgente, quando, agDia, agHora, lembrete, lembreteData, destacar, destaqueAte, imagem, imagemAlt, video });
   const [retratoInicial] = useState(retrato);
   const falta = [
-    !titulo.trim() && "título",
-    !publicos.some((p) => p.id === publico) && "quem recebe",
-    canais.length === 0 && "por onde enviar",
-    quando === "agendar" && !agDia && "dia da publicação",
-    quando === "agendar" && agDia && !agendaEm && "um horário válido no fuso da igreja",
-    agendaPassou && "um horário que ainda não passou",
-    canais.includes("app") && lembrete === "data" && !lembreteData && "data do lembrete",
-    destacar && !destaqueAte && "até quando destacar",
-    destacar && !!imagem && !imagemAlt.trim() && "o que a imagem mostra",
-    destacar && videoInvalido && "link do vídeo válido",
+    !titulo.trim() && traduzirUi("título"),
+    !publicos.some((p) => p.id === publico) && traduzirUi("quem recebe"),
+    canais.length === 0 && traduzirUi("por onde enviar"),
+    quando === "agendar" && !agDia && traduzirUi("dia da publicação"),
+    quando === "agendar" && agDia && !agendaEm && traduzirUi("um horário válido no fuso da igreja"),
+    agendaPassou && traduzirUi("um horário que ainda não passou"),
+    canais.includes("app") && lembrete === "data" && !lembreteData && traduzirUi("data do lembrete"),
+    destacar && !destaqueAte && traduzirUi("até quando destacar"),
+    destacar && !!imagem && !imagemAlt.trim() && traduzirUi("o que a imagem mostra"),
+    destacar && videoInvalido && traduzirUi("link do vídeo válido"),
   ].filter(Boolean) as string[];
   const lembra = lembreteEm();
+  const rotulosTipo = rotulosDoTipo(traduzirUi);
   return (
     <FormScreen
       ref={telaRef}
-      eyebrow="Mural"
-      title={revisando ? "Revisar publicação" : inicial?.status === "agendado" ? "Publicação agendada" : inicial ? "Rascunho" : "Nova publicação"}
-      saveLabel={revisando ? (quando === "agendar" ? "Agendar" : "Publicar") : "Revisar publicação"}
-      secondary={revisando ? { label: "Voltar à edição", onClick: voltarEdicao } : { label: "Salvar rascunho", onClick: () => void salvar("rascunho"), disabled: !titulo.trim() || !publicos.some((p) => p.id === publico) }}
+      eyebrow={traduzirUi("Mural")}
+      title={revisando ? traduzirUi("Revisar publicação") : inicial?.status === "agendado" ? traduzirUi("Publicação agendada") : inicial ? traduzirUi("Rascunho") : traduzirUi("Nova publicação")}
+      saveLabel={revisando ? (quando === "agendar" ? traduzirUi("Agendar") : traduzirUi("Publicar")) : traduzirUi("Revisar publicação")}
+      secondary={revisando ? { label: traduzirUi("Voltar à edição"), onClick: voltarEdicao } : { label: traduzirUi("Salvar rascunho"), onClick: () => void salvar("rascunho"), disabled: !titulo.trim() || !publicos.some((p) => p.id === publico) }}
       saving={salvando}
       missing={falta}
       dirty={retrato !== retratoInicial}
@@ -198,128 +202,128 @@ function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church:
       onClose={onClose}
     >
       {revisando ? (
-        <div ref={revisaoRef} tabIndex={-1} aria-label="Resumo da publicação">
-          <FormSection title="Confira quem recebe">
-            <p className="mural-revisao-publico"><strong>{alvo?.label}</strong> · {plural(alvo?.memberIds.length ?? 0, "pessoa")}</p>
-            <p>{quando === "agendar" && agendaEm ? `Vai ao ar ${quandoLembra(agendaEm)}.` : "Entra no Mural assim que você publicar."}</p>
-            <p>{canais.includes("app") ? "Notificação pelo app, respeitando preferências e horário de silêncio." : "Sem notificação pelo app."}</p>
-            {whatsapp && <p>O WhatsApp abrirá com o texto para você escolher a conversa.</p>}
-            {quando === "agendar" && canais.includes("whatsapp") && <p>O agendamento não envia pelo WhatsApp.</p>}
-            {lembra && canais.includes("app") && <p>Lembrete: {quandoLembra(foraDoSilencio(lembra))}.</p>}
-            {urgente && <p>Marcada como urgente.</p>}
-            {destacar && destaqueAte && <p>Destaque no Início até {formatDateBR(destaqueAte)}. Substitui o destaque anterior quando entrar no ar.</p>}
+        <div ref={revisaoRef} tabIndex={-1} aria-label={traduzirUi("Resumo da publicação")}>
+          <FormSection title={traduzirUi("Confira quem recebe")}>
+            <p className="mural-revisao-publico">{traduzirUi.rich("<strong>{publico}</strong> · {count, plural, =1 {# pessoa} other {# pessoas}}", { publico: alvo?.label ?? "", count: alvo?.memberIds.length ?? 0, strong: (c) => <strong>{c}</strong> })}</p>
+            <p>{quando === "agendar" && agendaEm ? traduzirUi("Vai ao ar {quando}.", { quando: quandoLembra(agendaEm) }) : traduzirUi("Entra no Mural assim que você publicar.")}</p>
+            <p>{canais.includes("app") ? traduzirUi("Notificação pelo app, respeitando preferências e horário de silêncio.") : traduzirUi("Sem notificação pelo app.")}</p>
+            {whatsapp && <p>{traduzirUi("O WhatsApp abrirá com o texto para você escolher a conversa.")}</p>}
+            {quando === "agendar" && canais.includes("whatsapp") && <p>{traduzirUi("O agendamento não envia pelo WhatsApp.")}</p>}
+            {lembra && canais.includes("app") && <p>{traduzirUi("Lembrete: {quando}.", { quando: quandoLembra(foraDoSilencio(lembra)) })}</p>}
+            {urgente && <p>{traduzirUi("Marcada como urgente.")}</p>}
+            {destacar && destaqueAte && <p>{traduzirUi("Destaque no Início até {data}. Substitui o destaque anterior quando entrar no ar.", { data: formatDateBR(destaqueAte) })}</p>}
           </FormSection>
-          <FormSection title={KIND_LABEL[tipo]}>
+          <FormSection title={rotulosTipo[tipo]}>
             <h3 className="mural-revisao-titulo">{titulo}</h3>
             {msg && <p className="mural-revisao-texto">{msg}</p>}
-            {destacar && imagem && <p>Imagem: {imagemAlt}</p>}
-            {destacar && video && <p className="mural-revisao-texto">Vídeo: {video}</p>}
+            {destacar && imagem && <p>{traduzirUi("Imagem: {descricao}", { descricao: imagemAlt })}</p>}
+            {destacar && video && <p className="mural-revisao-texto">{traduzirUi("Vídeo: {link}", { link: video })}</p>}
           </FormSection>
         </div>
       ) : <>
-      <FormSection title="Publicação">
-        <Campo rotulo="Título" obrigatorio id={`${fid}-tit`}>
-          <Entrada aria-required="true" value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Ex.: Ensaio geral no sábado" />
+      <FormSection title={traduzirUi("Publicação")}>
+        <Campo rotulo={traduzirUi("Título")} obrigatorio id={`${fid}-tit`}>
+          <Entrada aria-required="true" value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder={traduzirUi("Ex.: Ensaio geral no sábado")} />
         </Campo>
-        <Campo rotulo="Mensagem" id={`${fid}-msg`}>
-          <TextoLongo value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="Ex.: Chegada às 15h45, no templo principal." />
+        <Campo rotulo={traduzirUi("Mensagem")} id={`${fid}-msg`}>
+          <TextoLongo value={msg} onChange={(e) => setMsg(e.target.value)} placeholder={traduzirUi("Ex.: Chegada às 15h45, no templo principal.")} />
         </Campo>
       </FormSection>
 
-      <FormSection title="Quem recebe">
-        <Campo rotulo="Para quem" id={`${fid}-pub`}>
-          <Selecao valor={publico} aoMudar={setPublico} vazio="Escolha quem recebe"
-            opcoes={publicos.map((p) => ({ v: p.id, l: `${p.label} · ${plural(p.memberIds.length, "pessoa")}` }))} />
+      <FormSection title={traduzirUi("Quem recebe")}>
+        <Campo rotulo={traduzirUi("Para quem")} id={`${fid}-pub`}>
+          <Selecao valor={publico} aoMudar={setPublico} vazio={traduzirUi("Escolha quem recebe")}
+            opcoes={publicos.map((p) => ({ v: p.id, l: traduzirUi("{publico} · {count, plural, =1 {# pessoa} other {# pessoas}}", { publico: p.label, count: p.memberIds.length }) }))} />
         </Campo>
       </FormSection>
 
       <details className="fs-sec mural-opcoes" open={tipo !== "aviso" || urgente}>
-        <summary className="fs-sec-t">Tipo e urgência</summary>
+        <summary className="fs-sec-t">{traduzirUi("Tipo e urgência")}</summary>
         <div className="field">
-          <div className="field-label" id={`${fid}-tipo`}>Tipo</div>
+          <div className="field-label" id={`${fid}-tipo`}>{traduzirUi("Tipo")}</div>
           <div className="fs-chips" role="group" aria-labelledby={`${fid}-tipo`}>
             {(["aviso", "evento", "acao"] as const).map((k) => (
-              <Opcao key={k} marcada={tipo === k} estilo="seg-chip" aria-pressed={tipo === k} onClick={() => setTipo(k)}>{KIND_LABEL[k]}</Opcao>
+              <Opcao key={k} marcada={tipo === k} estilo="seg-chip" aria-pressed={tipo === k} onClick={() => setTipo(k)}>{rotulosTipo[k]}</Opcao>
             ))}
           </div>
-          {tipo === "evento" && <div className="field-hint">No app, a pessoa responde Vou ou Não vou.</div>}
+          {tipo === "evento" && <div className="field-hint">{traduzirUi("No app, a pessoa responde Vou ou Não vou.")}</div>}
         </div>
         <div className="field">
-          <div className="field-label" id={`${fid}-urg`}>Urgência</div>
+          <div className="field-label" id={`${fid}-urg`}>{traduzirUi("Urgência")}</div>
           <div className="fs-chips" role="group" aria-labelledby={`${fid}-urg`}>
-            <Opcao marcada={!urgente} estilo="seg-chip" aria-pressed={!urgente} onClick={() => setUrgente(false)}>Normal</Opcao>
-            <Opcao marcada={urgente} estilo="seg-chip" aria-pressed={urgente} onClick={() => setUrgente(true)}>Urgente</Opcao>
+            <Opcao marcada={!urgente} estilo="seg-chip" aria-pressed={!urgente} onClick={() => setUrgente(false)}>{traduzirUi("Normal")}</Opcao>
+            <Opcao marcada={urgente} estilo="seg-chip" aria-pressed={urgente} onClick={() => setUrgente(true)}>{traduzirUi("Urgente")}</Opcao>
           </div>
-          {urgente && <div className="field-hint">Aparece marcada como urgente e vem primeiro no Início do app. A notificação segue o horário de sempre.</div>}
+          {urgente && <div className="field-hint">{traduzirUi("Aparece marcada como urgente e vem primeiro no Início do app. A notificação segue o horário de sempre.")}</div>}
         </div>
       </details>
       <details className="fs-sec mural-opcoes" open={canais.includes("whatsapp") || !canais.includes("app") || lembrete !== "nao"}>
-        <summary className="fs-sec-t">Notificações e compartilhamento</summary>
+        <summary className="fs-sec-t">{traduzirUi("Notificações e compartilhamento")}</summary>
         <div className="field">
-          <div className="field-label" id={`${fid}-canal`}>Por onde</div>
+          <div className="field-label" id={`${fid}-canal`}>{traduzirUi("Por onde")}</div>
           <div className="fs-chips" role="group" aria-labelledby={`${fid}-canal`}>
-            {([["app", "App e notificação"], ["whatsapp", "WhatsApp"]] as const).map(([id, l]) => (
+            {([["app", traduzirUi("App e notificação")], ["whatsapp", "WhatsApp"]] as const).map(([id, l]) => (
               <Opcao key={id} marcada={canais.includes(id)} estilo="seg-chip" aria-pressed={canais.includes(id)} onClick={() => toggleCanal(id)}>{l}</Opcao>
             ))}
           </div>
-          {canais.includes("whatsapp") && <div className="field-hint">{quando === "agendar" ? "O WhatsApp só abre quando você publica agora. Para a semana toda, use o Boletim da semana." : "O WhatsApp abre com o texto pronto para você mandar nos grupos da igreja."}</div>}
+          {canais.includes("whatsapp") && <div className="field-hint">{quando === "agendar" ? traduzirUi("O WhatsApp só abre quando você publica agora. Para a semana toda, use o Boletim da semana.") : traduzirUi("O WhatsApp abre com o texto pronto para você mandar nos grupos da igreja.")}</div>}
         </div>
         {canais.includes("app") && (
           <div className="field">
-            <div className="field-label" id={`${fid}-lemb`}>Lembrar quem não viu</div>
+            <div className="field-label" id={`${fid}-lemb`}>{traduzirUi("Lembrar quem não viu")}</div>
             <div className="fs-chips" role="group" aria-labelledby={`${fid}-lemb`}>
-              {([["nao", "Não lembrar"], ["24", "Em 24h"], ["48", "Em 48h"], ["data", "Numa data"]] as const).map(([k, l]) => (
+              {([["nao", traduzirUi("Não lembrar")], ["24", traduzirUi("Em 24h")], ["48", traduzirUi("Em 48h")], ["data", traduzirUi("Numa data")]] as const).map(([k, l]) => (
                 <Opcao key={k} marcada={lembrete === k} estilo="seg-chip" aria-pressed={lembrete === k} onClick={() => { setLembrete(k); setLembreteBase(Date.now()); }}>{l}</Opcao>
               ))}
             </div>
-            {lembrete === "data" && <input className="input" type="datetime-local" style={{ marginTop: 8 }} value={lembreteData} onChange={(e) => setLembreteData(e.target.value)} aria-label="Data e hora do lembrete" />}
-            {lembra && <div className="field-hint">{`Uma notificação ${quandoLembra(foraDoSilencio(lembra))} só para quem ainda não abriu.${emSilencio(lembra) ? " Entre 22h e 7h ninguém recebe aviso, então vai às 7h." : ""}`}</div>}
-            {!lembra && quando === "agendar" && lembrete !== "nao" && lembrete !== "data" && <div className="field-hint">{`Conta a partir da hora em que a publicação entrar no ar.`}</div>}
+            {lembrete === "data" && <input className="input" type="datetime-local" style={{ marginTop: 8 }} value={lembreteData} onChange={(e) => setLembreteData(e.target.value)} aria-label={traduzirUi("Data e hora do lembrete")} />}
+            {lembra && <div className="field-hint">{traduzirUi("Uma notificação {quando} só para quem ainda não abriu.{silencio, select, sim { Entre 22h e 7h ninguém recebe aviso, então vai às 7h.} other {}}", { quando: quandoLembra(foraDoSilencio(lembra)), silencio: emSilencio(lembra) ? "sim" : "nao" })}</div>}
+            {!lembra && quando === "agendar" && lembrete !== "nao" && lembrete !== "data" && <div className="field-hint">{traduzirUi("Conta a partir da hora em que a publicação entrar no ar.")}</div>}
           </div>
         )}
       </details>
       <details className="fs-sec mural-opcoes" open={quando === "agendar"}>
-        <summary className="fs-sec-t">{quando === "agendar" ? "Publicação agendada" : "Agendamento: publicar agora"}</summary>
+        <summary className="fs-sec-t">{quando === "agendar" ? traduzirUi("Publicação agendada") : traduzirUi("Agendamento: publicar agora")}</summary>
         <div className="field">
-          <div className="fs-chips" role="group" aria-label="Quando publicar">
-            <Opcao marcada={quando === "agora"} estilo="seg-chip" aria-pressed={quando === "agora"} onClick={() => setQuando("agora")}>Agora</Opcao>
-            <Opcao marcada={quando === "agendar"} estilo="seg-chip" aria-pressed={quando === "agendar"} onClick={() => setQuando("agendar")}>Agendar</Opcao>
+          <div className="fs-chips" role="group" aria-label={traduzirUi("Quando publicar")}>
+            <Opcao marcada={quando === "agora"} estilo="seg-chip" aria-pressed={quando === "agora"} onClick={() => setQuando("agora")}>{traduzirUi("Agora")}</Opcao>
+            <Opcao marcada={quando === "agendar"} estilo="seg-chip" aria-pressed={quando === "agendar"} onClick={() => setQuando("agendar")}>{traduzirUi("Agendar")}</Opcao>
           </div>
         </div>
         {quando === "agendar" && (
           <>
             <div className="mural-agenda-campos">
-              <Campo rotulo="Dia" obrigatorio id={`${fid}-agd`}><SeletorData valor={agDia} aoMudar={setAgDia} /></Campo>
-              <Campo rotulo="Hora" id={`${fid}-agh`}><SeletorHora valor={agHora} aoMudar={setAgHora} /></Campo>
+              <Campo rotulo={traduzirUi("Dia")} obrigatorio id={`${fid}-agd`}><SeletorData valor={agDia} aoMudar={setAgDia} /></Campo>
+              <Campo rotulo={traduzirUi("Hora")} id={`${fid}-agh`}><SeletorHora valor={agHora} aoMudar={setAgHora} /></Campo>
             </div>
             {agendaEm && !agendaPassou && (
-              <div className="field-hint">{`Vai ao ar ${quandoLembra(agendaEm)}, com alguns minutos de diferença. Até lá, só a liderança vê.${canais.includes("app") && emSilencio(agendaEm) ? " A notificação espera até as 7h, quando acaba o horário de silêncio." : ""}`}</div>
+              <div className="field-hint">{traduzirUi("Vai ao ar {quando}, com alguns minutos de diferença. Até lá, só a liderança vê.{silencio, select, sim { A notificação espera até as 7h, quando acaba o horário de silêncio.} other {}}", { quando: quandoLembra(agendaEm), silencio: canais.includes("app") && emSilencio(agendaEm) ? "sim" : "nao" })}</div>
             )}
-            {quando === "agendar" && agDia && !agendaEm && <p className="field-error">Esse horário não existe ou se repete na mudança de fuso. Escolha outro horário.</p>}
-            {agendaPassou && <p className="field-error">Esse horário já passou. Escolha outro ou publique agora.</p>}
+            {quando === "agendar" && agDia && !agendaEm && <p className="field-error">{traduzirUi("Esse horário não existe ou se repete na mudança de fuso. Escolha outro horário.")}</p>}
+            {agendaPassou && <p className="field-error">{traduzirUi("Esse horário já passou. Escolha outro ou publique agora.")}</p>}
           </>
         )}
       </details>
 
       <details className="fs-sec mural-opcoes" open={destacar}>
-        <summary className="fs-sec-t">Destaque no Início do app</summary>
+        <summary className="fs-sec-t">{traduzirUi("Destaque no Início do app")}</summary>
         <div className="field">
-          <div className="fs-chips" role="group" aria-label="Destaque no Início do app">
-            <Opcao marcada={!destacar} estilo="seg-chip" aria-pressed={!destacar} onClick={() => setDestacar(false)}>Não destacar</Opcao>
-            <Opcao marcada={destacar} estilo="seg-chip" aria-pressed={destacar} onClick={() => setDestacar(true)}>Destacar até…</Opcao>
+          <div className="fs-chips" role="group" aria-label={traduzirUi("Destaque no Início do app")}>
+            <Opcao marcada={!destacar} estilo="seg-chip" aria-pressed={!destacar} onClick={() => setDestacar(false)}>{traduzirUi("Não destacar")}</Opcao>
+            <Opcao marcada={destacar} estilo="seg-chip" aria-pressed={destacar} onClick={() => setDestacar(true)}>{traduzirUi("Destacar até…")}</Opcao>
           </div>
         </div>
         {destacar && (
           <>
-            <Campo rotulo="Até o dia" obrigatorio id={`${fid}-ate`}><SeletorData valor={destaqueAte} aoMudar={setDestaqueAte} /></Campo>
-            <ImageUpload label="Imagem (opcional)" hint="Formato 16:9. Aparece no alto do cartão." url={imagem} aspectRatio={16 / 9}
+            <Campo rotulo={traduzirUi("Até o dia")} obrigatorio id={`${fid}-ate`}><SeletorData valor={destaqueAte} aoMudar={setDestaqueAte} /></Campo>
+            <ImageUpload label={traduzirUi("Imagem (opcional)")} hint={traduzirUi("Formato 16:9. Aparece no alto do cartão.")} url={imagem} aspectRatio={16 / 9}
               onUpload={async (file) => { setImagem(await uploadServiceImage(createServiceBrowserClient(), file, `${church.organizationId}/mural/${Date.now()}.${imageExtension(file)}`)); }}
               onRemove={() => { setImagem(null); setImagemAlt(""); }} />
-            {imagem && <Campo rotulo="O que a imagem mostra" obrigatorio id={`${fid}-alt`}><Entrada aria-required="true" value={imagemAlt} onChange={(e) => setImagemAlt(e.target.value)} placeholder="Para quem usa leitor de tela. Ex.: Jovens no retiro de 2025" /></Campo>}
-            <Campo rotulo="Vídeo (link do YouTube ou do Instagram)" id={`${fid}-vid`} erro={videoInvalido ? "Cole um link do YouTube ou do Instagram." : undefined}>
+            {imagem && <Campo rotulo={traduzirUi("O que a imagem mostra")} obrigatorio id={`${fid}-alt`}><Entrada aria-required="true" value={imagemAlt} onChange={(e) => setImagemAlt(e.target.value)} placeholder={traduzirUi("Para quem usa leitor de tela. Ex.: Jovens no retiro de 2025")} /></Campo>}
+            <Campo rotulo={traduzirUi("Vídeo (link do YouTube ou do Instagram)")} id={`${fid}-vid`} erro={videoInvalido ? traduzirUi("Cole um link do YouTube ou do Instagram.") : undefined}>
               <Entrada value={video} onChange={(e) => setVideo(e.target.value)} placeholder="https://youtube.com/watch?v=..." />
             </Campo>
-            <div className="field-hint">{quando === "agendar" ? "Um destaque por vez: quando esta entrar no ar, substitui o que estiver no Início." : "Um destaque por vez: este substitui o que estiver no Início agora."}</div>
+            <div className="field-hint">{quando === "agendar" ? traduzirUi("Um destaque por vez: quando esta entrar no ar, substitui o que estiver no Início.") : traduzirUi("Um destaque por vez: este substitui o que estiver no Início agora.")}</div>
           </>
         )}
       </details>
@@ -329,17 +333,19 @@ function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church:
 }
 
 function VerQuemLeuButton({ aviso, reads, people }: { aviso: AnnouncementView; reads: AnnouncementReadView[]; people: PersonView[] }) {
+  const traduzirUi = useTexto();
+
   const [open, setOpen] = useState(false);
   const readerIds = new Set(reads.filter((r) => r.announcement_id === aviso.id).map((r) => r.person_id));
   const leram = people.filter((p) => readerIds.has(p.id));
   const naoLeram = people.filter((p) => !readerIds.has(p.id));
   return (
     <>
-      <Botao compacto onClick={() => setOpen(true)}>Ver quem leu</Botao>
+      <Botao compacto onClick={() => setOpen(true)}>{traduzirUi("Ver quem leu")}</Botao>
       {open && (
-        <Janela sobretitulo="Confirmação de leitura" titulo={aviso.title} texto={<>{leram.length} de {people.length} já leram este aviso.</>} aoFechar={() => setOpen(false)}
-          rodape={<Botao variante="principal" onClick={() => setOpen(false)}>Fechar</Botao>}>
-              <div className="dsec-title" style={{ marginBottom: 8 }}>Leram · {leram.length}</div>
+        <Janela sobretitulo={traduzirUi("Confirmação de leitura")} titulo={aviso.title} texto={<>{traduzirUi("{lidos} de {total} já leram este aviso.", { lidos: String(leram.length), total: String(people.length) })}</>} aoFechar={() => setOpen(false)}
+          rodape={<Botao variante="principal" onClick={() => setOpen(false)}>{traduzirUi("Fechar")}</Botao>}>
+              <div className="dsec-title" style={{ marginBottom: 8 }}>{traduzirUi("Leram · {n}", { n: String(leram.length) })}</div>
               {leram.map((p) => (
                 <div className="flag-row" key={p.id} style={{ cursor: "default" }}>
                   <Av name={p.name} size="sm" photoUrl={p.photoUrl} />
@@ -347,12 +353,12 @@ function VerQuemLeuButton({ aviso, reads, people }: { aviso: AnnouncementView; r
                   <span style={{ marginLeft: "auto", color: "var(--olive)" }}><Icon name="ok" size={16} /></span>
                 </div>
               ))}
-              {naoLeram.length > 0 && <div className="dsec-title" style={{ margin: "14px 0 8px" }}>Ainda não leram · {naoLeram.length}</div>}
+              {naoLeram.length > 0 && <div className="dsec-title" style={{ margin: "14px 0 8px" }}>{traduzirUi("Ainda não leram · {n}", { n: String(naoLeram.length) })}</div>}
               {naoLeram.map((p) => (
                 <div className="flag-row is-off" key={p.id} style={{ cursor: "default" }}>
                   <Av name={p.name} size="sm" photoUrl={p.photoUrl} />
                   <div className="flag-main"><div className="flag-nome">{p.name}</div></div>
-                  <span className="cand-fit busy" style={{ marginLeft: "auto" }}>pendente</span>
+                  <span className="cand-fit busy" style={{ marginLeft: "auto" }}>{traduzirUi("pendente")}</span>
                 </div>
               ))}
         </Janela>
@@ -364,7 +370,7 @@ function VerQuemLeuButton({ aviso, reads, people }: { aviso: AnnouncementView; r
 /* Mural (S38): um nome só, "Nova publicação" com público, canais e tipo, e o
    alcance de verdade (quem leu sobre quem devia receber). */
 type MuralPublico = { id: string; label: string; memberIds: string[] };
-const KIND_LABEL: Record<string, string> = { aviso: "Aviso", evento: "Evento", acao: "Pedido de ação" };
+const rotulosDoTipo = (t: Text): Record<string, string> => ({ aviso: t("Aviso"), evento: t("Evento"), acao: t("Pedido de ação") });
 function publicosDoMural({ members, ministries, fellowshipGroups, childGuardians, termo }: {
   termo: Termos["termo"];
   members: MemberView[]; ministries: MinistryView[]; fellowshipGroups: FellowshipGroupView[]; childGuardians: ChildGuardianView[];
@@ -410,6 +416,8 @@ export function Comunicacao({
   roster?: RosterAssignmentView[];
   setModal: (modal: ModalState) => void;
 }) {
+  const traduzirUi = useTexto();
+
   const { dataPublicacao, quandoPublicado, quandoLembra } = useRelogioDaIgreja();
   const { termo } = useTermos();
   const router = useRouter();
@@ -424,10 +432,11 @@ export function Comunicacao({
     const { error } = await createServiceBrowserClient().schema("service").from("announcements").delete().eq("id", a.id);
     setExcluindo(null);
     if (error) { avisar(friendlyWriteError(error.message), "warn"); return; }
-    avisar(a.status === "agendado" ? "Agendamento excluído." : "Rascunho excluído.");
+    avisar(a.status === "agendado" ? traduzirUi("Agendamento excluído.") : traduzirUi("Rascunho excluído."));
     router.refresh();
   };
   const [msgCfgOpen, setMsgCfgOpen] = useState(false);
+  const rotulosTipo = rotulosDoTipo(traduzirUi);
   const publicos = publicosDoMural({ members, ministries, fellowshipGroups, childGuardians, termo });
   const publicoDe = (a: AnnouncementView) => publicos.find((p) => p.label.toLowerCase() === (a.audience ?? "todos").toLowerCase()) ?? publicos[0];
   const acessoMsgCfg: AcessoMsgCfg = { ...ACESSO_MSG_DEFAULT, ...(church?.settings?.acessoMsgCfg ?? {}) };
@@ -437,45 +446,45 @@ export function Comunicacao({
   const lembrar = (a: AnnouncementView, faltam: string[]) => {
     if (!church?.organizationId || faltam.length === 0) return;
     notifyPush(church.organizationId, faltam, a.title, "Tem uma publicação nova no Mural da igreja.", "mural");
-    avisar(`Lembrete enviado a ${plural(faltam.length, "pessoa")}.`);
+    avisar(traduzirUi("Lembrete enviado a {count, plural, =1 {# pessoa} other {# pessoas}}.", { count: faltam.length }));
   };
 
   return (
     <div className="content wide">
       <PageHead
-        title="Mural"
-        eyebrow="Comunicação"
-        help="Publicações para a igreja toda ou para um grupo. Quem recebe vê no app, e você acompanha quem leu."
+        title={traduzirUi("Mural")}
+        eyebrow={traduzirUi("Comunicação")}
+        help={traduzirUi("Publicações para a igreja toda ou para um grupo. Quem recebe vê no app, e você acompanha quem leu.")}
         action={<>
-          {church && <Botao onClick={() => setBoletim(true)}><Icon name="whatsapp" size={14} /> Boletim da semana</Botao>}
-          <Botao variante="principal" onClick={() => setCompose(true)}>+ Nova publicação</Botao>
+          {church && <Botao onClick={() => setBoletim(true)}><Icon name="whatsapp" size={14} /> {traduzirUi("Boletim da semana")}</Botao>}
+          <Botao variante="principal" onClick={() => setCompose(true)}>{traduzirUi("+ Nova publicação")}</Botao>
         </>}
       />
       {pendentes.length > 0 && (
         <section className="mural-pend" aria-labelledby="mural-pend-t">
-          <h2 className="dsec-title" id="mural-pend-t">{`Ainda não publicadas · ${pendentes.length}`}</h2>
+          <h2 className="dsec-title" id="mural-pend-t">{traduzirUi("Ainda não publicadas · {n}", { n: String(pendentes.length) })}</h2>
           <div className="mural-list">
             {pendentes.map((a) => (
               <Cartao como="article" className="mural-item mural-item-pend" key={a.id}>
                 <div className="panel-body">
                   <div className="mural-top">
-                    <Selo tom={tomDaClasse(a.status === "agendado" ? "chip-solid" : "chip-neutral")}>{a.status === "agendado" && a.publish_at ? `Vai ao ar ${quandoLembra(new Date(a.publish_at))}` : "Rascunho"}</Selo>
-                    {a.urgent && <Selo tom="pendente">Urgente</Selo>}
-                    <span className="mural-meta">{joinDot(paraPublico(a.audience), KIND_LABEL[a.kind ?? "aviso"])}</span>
+                    <Selo tom={tomDaClasse(a.status === "agendado" ? "chip-solid" : "chip-neutral")}>{a.status === "agendado" && a.publish_at ? traduzirUi("Vai ao ar {quando}", { quando: quandoLembra(new Date(a.publish_at)) }) : traduzirUi("Rascunho")}</Selo>
+                    {a.urgent && <Selo tom="pendente">{traduzirUi("Urgente")}</Selo>}
+                    <span className="mural-meta">{joinDot(paraPublico(a.audience), rotulosTipo[a.kind ?? "aviso"])}</span>
                   </div>
                   <h3 className="mural-t">{a.title}</h3>
                   {a.body && <p className="mural-txt mural-txt-curto">{a.body}</p>}
                   <div className="mural-acts">
                     {excluindo === a.id ? (
                       <>
-                        <span className="mural-conf">{a.status === "agendado" ? "Excluir o agendamento?" : "Excluir o rascunho?"}</span>
-                        <Botao compacto onClick={() => setExcluindo(null)}>Manter</Botao>
-                        <Botao variante="perigo" compacto onClick={() => void excluir(a)}>Excluir</Botao>
+                        <span className="mural-conf">{a.status === "agendado" ? traduzirUi("Excluir o agendamento?") : traduzirUi("Excluir o rascunho?")}</span>
+                        <Botao compacto onClick={() => setExcluindo(null)}>{traduzirUi("Manter")}</Botao>
+                        <Botao variante="perigo" compacto onClick={() => void excluir(a)}>{traduzirUi("Excluir")}</Botao>
                       </>
                     ) : (
                       <>
-                        <Botao compacto onClick={() => setCompose(a)}>{a.status === "agendado" ? "Editar" : "Continuar"}</Botao>
-                        <Botao variante="discreto" compacto onClick={() => setExcluindo(a.id)}>Excluir</Botao>
+                        <Botao compacto onClick={() => setCompose(a)}>{a.status === "agendado" ? traduzirUi("Editar") : traduzirUi("Continuar")}</Botao>
+                        <Botao variante="discreto" compacto onClick={() => setExcluindo(a.id)}>{traduzirUi("Excluir")}</Botao>
                       </>
                     )}
                   </div>
@@ -483,11 +492,11 @@ export function Comunicacao({
               </Cartao>
             ))}
           </div>
-          <h2 className="dsec-title mural-pub-t">Publicadas</h2>
+          <h2 className="dsec-title mural-pub-t">{traduzirUi("Publicadas")}</h2>
         </section>
       )}
       <div className="mural-list">
-        {noArAgora.length === 0 && <EmptyState title="Nada no Mural ainda" text="O que você publicar aparece aqui e no app de quem você escolher." action={{ label: "Nova publicação", onClick: () => setCompose(true) }} />}
+        {noArAgora.length === 0 && <EmptyState title={traduzirUi("Nada no Mural ainda")} text={traduzirUi("O que você publicar aparece aqui e no app de quem você escolher.")} action={{ label: traduzirUi("Nova publicação"), onClick: () => setCompose(true) }} />}
         {porPublicacao(noArAgora).map((a) => {
           const pub = publicoDe(a);
           const leitores = new Set(announcementReads.filter((r) => r.announcement_id === a.id).map((r) => r.person_id));
@@ -500,20 +509,20 @@ export function Comunicacao({
             <Cartao como="article" className="mural-item" key={a.id}>
               <div className="panel-body">
                 <div className="mural-top">
-                  <Selo>{KIND_LABEL[a.kind ?? "aviso"] ?? "Aviso"}</Selo>
-                  {a.urgent && <Selo tom="pendente">Urgente</Selo>}
-                  {a.highlight_until && a.highlight_until > agoraIso && <Selo>{`Em destaque até ${dataPublicacao(a.highlight_until)}`}</Selo>}
+                  <Selo>{rotulosTipo[a.kind ?? "aviso"] ?? traduzirUi("Aviso")}</Selo>
+                  {a.urgent && <Selo tom="pendente">{traduzirUi("Urgente")}</Selo>}
+                  {a.highlight_until && a.highlight_until > agoraIso && <Selo>{traduzirUi("Em destaque até {data}", { data: dataPublicacao(a.highlight_until) })}</Selo>}
                   <span className="mural-meta">{joinDot(paraPublico(pub.label), quandoPublicado(a.created_at), quandoPublicado(a.created_at) !== dataPublicacao(a.created_at) && dataPublicacao(a.created_at))}</span>
                 </div>
                 <h3 className="mural-t">{a.title}</h3>
                 {a.body && <p className="mural-txt">{a.body}</p>}
                 <div className="mural-reach">
-                  <div className="mural-reach-n">{`Vista por ${leram.length} de ${plural(total, "pessoa")}`}{a.remind_at && !a.reminded_at && faltam.length > 0 ? ` · lembrete ${quandoLembra(new Date(a.remind_at))} para ${plural(faltam.length, "pessoa")}` : a.reminded_at ? ` · lembrete enviado em ${dataPublicacao(a.reminded_at)}` : ""}</div>
+                  <div className="mural-reach-n">{traduzirUi("Vista por {lidos} de {total, plural, =1 {# pessoa} other {# pessoas}}{lembrete, select, pendente { · lembrete {quando} para {faltam, plural, =1 {# pessoa} other {# pessoas}}} enviado { · lembrete enviado em {data}} other {}}", { lidos: String(leram.length), total, lembrete: a.remind_at && !a.reminded_at && faltam.length > 0 ? "pendente" : a.reminded_at ? "enviado" : "nenhum", quando: a.remind_at ? quandoLembra(new Date(a.remind_at)) : "", faltam: faltam.length, data: a.reminded_at ? dataPublicacao(a.reminded_at) : "" })}</div>
                   <div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${pct}%` }} /></div>
-                  {a.kind === "evento" && <div className="mural-reach-n">{plural(resp.filter((r) => r.response === "vou").length, "vai", "vão")} · {resp.filter((r) => r.response === "nao").length} não</div>}
+                  {a.kind === "evento" && <div className="mural-reach-n">{traduzirUi("{vao, plural, =1 {# vai} other {# vão}} · {nao} não", { vao: resp.filter((r) => r.response === "vou").length, nao: String(resp.filter((r) => r.response === "nao").length) })}</div>}
                 </div>
                 <div className="mural-acts">
-                  {faltam.length > 0 && <Botao compacto onClick={() => lembrar(a, faltam)}>Lembrar {plural(faltam.length, "pessoa")}</Botao>}
+                  {faltam.length > 0 && <Botao compacto onClick={() => lembrar(a, faltam)}>{traduzirUi("Lembrar {count, plural, =1 {# pessoa} other {# pessoas}}", { count: faltam.length })}</Botao>}
                   <VerQuemLeuButton aviso={a} reads={announcementReads} people={people.filter((p) => pub.memberIds.some((id) => personDoMembro.get(id) === p.id))} />
                 </div>
               </div>
@@ -524,13 +533,13 @@ export function Comunicacao({
 
       {wallPosts.length > 0 && (
         <Cartao style={{ marginTop: 22 }}>
-          <div className="panel-head"><span className="panel-title"><Icon name="kids" size={14} /> Recados para os pais do Kids</span></div>
+          <div className="panel-head"><span className="panel-title"><Icon name="kids" size={14} /> {traduzirUi("Recados para os pais do Kids")}</span></div>
           <div className="panel-body flush">
             {wallPosts.map((post) => (
               <Linha key={post.id}>
                 <div className="mini-main">
                   <div className="mini-title">{post.body}</div>
-                  <div className="mini-sub">{joinDot(post.author || "Liderança", formatDateBR(post.created_at))}</div>
+                  <div className="mini-sub">{joinDot(post.author || traduzirUi("Liderança"), formatDateBR(post.created_at))}</div>
                 </div>
               </Linha>
             ))}
@@ -540,11 +549,11 @@ export function Comunicacao({
 
       {church && (
         <Cartao style={{ marginTop: 22 }}>
-          <div className="panel-head"><span className="panel-title"><Icon name="whatsapp" size={14} /> Automáticas</span></div>
+          <div className="panel-head"><span className="panel-title"><Icon name="whatsapp" size={14} /> {traduzirUi("Automáticas")}</span></div>
           <div className="panel-body">
             <div className="contato-banner" style={{ margin: 0 }}>
-              <div className="contato-main"><div className="contato-t">Boas-vindas pelo WhatsApp</div><div className="contato-s">O texto que abre pronto quando você envia o acesso a um membro novo.</div></div>
-              <Botao compacto onClick={() => setMsgCfgOpen(true)}>Ajustar</Botao>
+              <div className="contato-main"><div className="contato-t">{traduzirUi("Boas-vindas pelo WhatsApp")}</div><div className="contato-s">{traduzirUi("O texto que abre pronto quando você envia o acesso a um membro novo.")}</div></div>
+              <Botao compacto onClick={() => setMsgCfgOpen(true)}>{traduzirUi("Ajustar")}</Botao>
             </div>
           </div>
         </Cartao>
