@@ -16,6 +16,7 @@ import { Caret } from "../lib/icons";
 import { Acao } from "./Acao";
 import { Opcao } from "./Opcao";
 import { usePopover } from "./popover";
+import { useTexto } from "../lib/internacional/contexto";
 
 /* grupo: título que aparece antes da primeira opção de cada grupo (como o <optgroup>) */
 export type SelecaoOpcao = { v: string; l: string; desativada?: boolean; grupo?: string };
@@ -37,6 +38,7 @@ export type SelecaoProps = {
 };
 
 export function Selecao({ valor, aoMudar, opcoes, vazio, rotulo, id, desativado, className, ...aria }: SelecaoProps) {
+  const traduzirUi = useTexto();
   const [open, setOpen] = useState(false);
   const { caixa, gatilho } = usePopover(open, setOpen);
   const listaId = useId();
@@ -74,12 +76,12 @@ export function Selecao({ valor, aoMudar, opcoes, vazio, rotulo, id, desativado,
   return (
     <div className={`sel-wrap${open ? " aberta" : ""}${className ? ` ${className}` : ""}`} ref={caixa}>
       <Acao ref={gatilho} id={id} className="sel-trigger" desativado={desativado}
-        aria-label={rotulo ? `${rotulo}: ${atual?.l || vazio || "Selecione"}` : undefined}
+        aria-label={rotulo ? `${rotulo}: ${atual?.l || vazio || traduzirUi("Selecione")}` : undefined}
         aria-haspopup="listbox" aria-expanded={open} aria-controls={open ? listaId : undefined}
         aria-describedby={aria["aria-describedby"]} aria-invalid={aria["aria-invalid"]} aria-required={aria["aria-required"]}
         onClick={() => setOpen((o) => !o)}
         onKeyDown={(e) => { if ((e.key === "ArrowDown" || e.key === "ArrowUp") && !open) { e.preventDefault(); setOpen(true); } }}>
-        <span className={atual ? "sel-val" : "sel-ph"}>{atual ? atual.l : (vazio || "Selecione")}</span>
+        <span className={atual ? "sel-val" : "sel-ph"}>{atual ? atual.l : (vazio || traduzirUi("Selecione"))}</span>
         <span className="sel-arrow" aria-hidden="true"><Caret open={open} /></span>
       </Acao>
       {open && (

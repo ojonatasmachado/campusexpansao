@@ -17,10 +17,14 @@ import { Acao } from "./Acao";
 import { BotaoIcone } from "./Botao";
 import { Opcao } from "./Opcao";
 import { usePopover } from "./popover";
+import { useTexto } from "../lib/internacional/contexto";
+import type { Text } from "../lib/internacional/mensagens";
 
-const MESES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-const SEMANA = ["D", "S", "T", "Q", "Q", "S", "S"];
-const SEMANA_LONGA = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
+/* nomes do calendário vêm do catálogo; as iniciais são uma frase só porque letras iguais
+   em pt-BR (S, Q) não são iguais em outros idiomas */
+const meses = (t: Text) => [t("Janeiro"), t("Fevereiro"), t("Março"), t("Abril"), t("Maio"), t("Junho"), t("Julho"), t("Agosto"), t("Setembro"), t("Outubro"), t("Novembro"), t("Dezembro")];
+const semana = (t: Text) => t("D S T Q Q S S").split(" ");
+const semanaLonga = (t: Text) => [t("domingo"), t("segunda"), t("terça"), t("quarta"), t("quinta"), t("sexta"), t("sábado")];
 
 const dois = (n: number) => String(n).padStart(2, "0");
 const iso = (a: number, m: number, d: number) => `${a}-${dois(m + 1)}-${dois(d)}`;
@@ -57,7 +61,9 @@ export type SeletorDataProps = {
   "aria-required"?: boolean;
 };
 
-export function SeletorData({ valor, aoMudar, min, max, marcados, vazio = "dd/mm/aaaa", rotulo, id, desativado, limpavel, className, ...aria }: SeletorDataProps) {
+export function SeletorData({ valor, aoMudar, min, max, marcados, vazio, rotulo, id, desativado, limpavel, className, ...aria }: SeletorDataProps) {
+  const traduzirUi = useTexto();
+  const MESES = meses(traduzirUi);
   const [open, setOpen] = useState(false);
   const { caixa, gatilho } = usePopover(open, setOpen);
   const popId = useId();
@@ -130,26 +136,26 @@ export function SeletorData({ valor, aoMudar, min, max, marcados, vazio = "dd/mm
   return (
     <div className={`dp${open ? " aberta" : ""}${className ? ` ${className}` : ""}`} ref={caixa}>
       <Acao ref={gatilho} id={id} className="dp-trigger" desativado={desativado}
-        aria-label={rotulo ? `${rotulo}: ${dataCurta(valor) || "sem data"}` : undefined}
+        aria-label={rotulo ? `${rotulo}: ${dataCurta(valor) || traduzirUi("sem data")}` : undefined}
         aria-expanded={open} aria-controls={open ? popId : undefined} aria-haspopup="dialog"
         aria-describedby={aria["aria-describedby"]} aria-invalid={aria["aria-invalid"]} aria-required={aria["aria-required"]}
         onClick={alternar}>
-        <span className={valor ? "dp-val" : "dp-ph"}>{dataCurta(valor) || vazio}</span>
+        <span className={valor ? "dp-val" : "dp-ph"}>{dataCurta(valor) || (vazio ?? traduzirUi("dd/mm/aaaa"))}</span>
         <span className="dp-ic" aria-hidden="true">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="16" rx="3" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
         </span>
       </Acao>
       {open && (
-        <div className="dp-pop dp-cal" id={popId} role="dialog" aria-label={rotulo ? `Escolher ${rotulo.toLowerCase()}` : "Escolher data"}>
+        <div className="dp-pop dp-cal" id={popId} role="dialog" aria-label={rotulo ? traduzirUi("Escolher {rotulo}", { rotulo: rotulo.toLowerCase() }) : traduzirUi("Escolher data")}>
           <div className="dp-head">
-            <BotaoIcone rotulo={modo === "anos" ? "Anos anteriores" : "Mês anterior"}
+            <BotaoIcone rotulo={modo === "anos" ? traduzirUi("Anos anteriores") : traduzirUi("Mês anterior")}
               onClick={() => modo === "anos" ? setVista((v) => ({ ...v, a: v.a - 12 })) : mudarMes(-1)}>‹</BotaoIcone>
-            <Acao className="dp-titulo" aria-label={modo === "anos" ? "Voltar aos dias" : `${MESES[vista.m]} de ${vista.a}, escolher ano`}
+            <Acao className="dp-titulo" aria-label={modo === "anos" ? traduzirUi("Voltar aos dias") : traduzirUi("{mes} de {ano}, escolher ano", { mes: MESES[vista.m], ano: String(vista.a) })}
               onClick={() => setModo((m) => (m === "anos" ? "dias" : "anos"))}>
-              <span aria-live="polite">{modo === "anos" ? `${anoIni} a ${anoIni + 11}` : `${MESES[vista.m]} ${vista.a}`}</span>
+              <span aria-live="polite">{modo === "anos" ? traduzirUi("{inicio} a {fim}", { inicio: String(anoIni), fim: String(anoIni + 11) }) : `${MESES[vista.m]} ${vista.a}`}</span>
               <Caret open={modo === "anos"} size={12} />
             </Acao>
-            <BotaoIcone rotulo={modo === "anos" ? "Próximos anos" : "Próximo mês"}
+            <BotaoIcone rotulo={modo === "anos" ? traduzirUi("Próximos anos") : traduzirUi("Próximo mês")}
               onClick={() => modo === "anos" ? setVista((v) => ({ ...v, a: v.a + 12 })) : mudarMes(1)}>›</BotaoIcone>
           </div>
           {modo === "anos" ? (
@@ -161,26 +167,26 @@ export function SeletorData({ valor, aoMudar, min, max, marcados, vazio = "dd/mm
             </div>
           ) : (
             <>
-              <div className="dp-semana" aria-hidden="true">{SEMANA.map((s, i) => <span key={i}>{s}</span>)}</div>
+              <div className="dp-semana" aria-hidden="true">{semana(traduzirUi).map((s, i) => <span key={i}>{s}</span>)}</div>
               <div key={`${vista.a}-${vista.m}`} className={`dp-grid${lado ? ` dp-vem-${lado}` : ""}`} ref={grade} role="grid" onKeyDown={andar}>
                 {Array.from({ length: primeiro }, (_, i) => <span key={`v${i}`} aria-hidden="true" />)}
                 {Array.from({ length: total }, (_, i) => i + 1).map((d) => {
                   const dia = iso(vista.a, vista.m, d);
                   const sel = dia === valor;
                   const cls = [dia === hoje && "hoje", marc.has(dia) && "tem-evento"].filter(Boolean).join(" ") || undefined;
-                  const sem = SEMANA_LONGA[new Date(vista.a, vista.m, d).getDay()];
+                  const sem = semanaLonga(traduzirUi)[new Date(vista.a, vista.m, d).getDay()];
                   return (
                     <Opcao key={d} estilo="dp-day" marcada={sel} className={cls} data-dia={dia} desativado={fora(dia)}
                       tabIndex={dia === foco ? 0 : -1} aria-pressed={sel}
-                      aria-label={`${sem}, ${d} de ${MESES[vista.m]} de ${vista.a}${dia === hoje ? ", hoje" : ""}${marc.has(dia) ? ", com evento" : ""}`}
+                      aria-label={traduzirUi("{semana}, {dia} de {mes} de {ano}{hoje, select, sim {, hoje} other {}}{evento, select, sim {, com evento} other {}}", { semana: sem, dia: String(d), mes: MESES[vista.m], ano: String(vista.a), hoje: dia === hoje ? "sim" : "nao", evento: marc.has(dia) ? "sim" : "nao" })}
                       aria-current={dia === hoje ? "date" : undefined}
                       onClick={() => escolher(dia)} onFocus={() => setFoco(dia)}>{d}</Opcao>
                   );
                 })}
               </div>
               <div className="dp-pe">
-                <Acao className="dp-link" desativado={fora(hoje)} onClick={() => escolher(hoje)}>Hoje</Acao>
-                {limpavel && valor ? <Acao className="dp-link" onClick={() => { aoMudar(""); setOpen(false); gatilho.current?.focus(); }}>Limpar</Acao> : null}
+                <Acao className="dp-link" desativado={fora(hoje)} onClick={() => escolher(hoje)}>{traduzirUi("Hoje")}</Acao>
+                {limpavel && valor ? <Acao className="dp-link" onClick={() => { aoMudar(""); setOpen(false); gatilho.current?.focus(); }}>{traduzirUi("Limpar")}</Acao> : null}
               </div>
             </>
           )}
@@ -206,6 +212,7 @@ export type SeletorHoraProps = {
 };
 
 export function SeletorHora({ valor, aoMudar, passo = 5, vazio = "hh:mm", rotulo, id, desativado, className, ...aria }: SeletorHoraProps) {
+  const traduzirUi = useTexto();
   const [open, setOpen] = useState(false);
   const { caixa, gatilho } = usePopover(open, setOpen);
   const popId = useId();
@@ -225,7 +232,7 @@ export function SeletorHora({ valor, aoMudar, passo = 5, vazio = "hh:mm", rotulo
   return (
     <div className={`dp${open ? " aberta" : ""}${className ? ` ${className}` : ""}`} ref={caixa}>
       <Acao ref={gatilho} id={id} className="dp-trigger" desativado={desativado}
-        aria-label={rotulo ? `${rotulo}: ${valor || "sem horário"}` : undefined}
+        aria-label={rotulo ? `${rotulo}: ${valor || traduzirUi("sem horário")}` : undefined}
         aria-expanded={open} aria-controls={open ? popId : undefined} aria-haspopup="dialog"
         aria-describedby={aria["aria-describedby"]} aria-invalid={aria["aria-invalid"]} aria-required={aria["aria-required"]}
         onClick={() => setOpen((o) => !o)}>
@@ -235,20 +242,20 @@ export function SeletorHora({ valor, aoMudar, passo = 5, vazio = "hh:mm", rotulo
         </span>
       </Acao>
       {open && (
-        <div className="dp-pop tp-pop" id={popId} role="dialog" aria-label={rotulo ? `Escolher ${rotulo.toLowerCase()}` : "Escolher horário"}>
+        <div className="dp-pop tp-pop" id={popId} role="dialog" aria-label={rotulo ? traduzirUi("Escolher {rotulo}", { rotulo: rotulo.toLowerCase() }) : traduzirUi("Escolher horário")}>
           <div className="tp-col">
-            <div className="tp-col-h">Hora</div>
+            <div className="tp-col-h">{traduzirUi("Hora")}</div>
             <div className="tp-scroll">
               {Array.from({ length: 24 }, (_, h) => h).map((h) => (
-                <Opcao key={h} marcada={hh === h} estilo="tp-opt" aria-label={`${h} horas`} onClick={() => set(h, mm ?? 0)}>{dois(h)}</Opcao>
+                <Opcao key={h} marcada={hh === h} estilo="tp-opt" aria-label={traduzirUi("{hora} horas", { hora: String(h) })} onClick={() => set(h, mm ?? 0)}>{dois(h)}</Opcao>
               ))}
             </div>
           </div>
           <div className="tp-col">
-            <div className="tp-col-h">Min</div>
+            <div className="tp-col-h">{traduzirUi("Min")}</div>
             <div className="tp-scroll">
               {minutos.map((m) => (
-                <Opcao key={m} marcada={mm === m} estilo="tp-opt" aria-label={`${m} minutos`}
+                <Opcao key={m} marcada={mm === m} estilo="tp-opt" aria-label={traduzirUi("{minuto} minutos", { minuto: String(m) })}
                   onClick={() => { set(hh ?? 19, m); setOpen(false); gatilho.current?.focus(); }}>{dois(m)}</Opcao>
               ))}
             </div>

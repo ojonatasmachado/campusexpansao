@@ -5,8 +5,6 @@ import type { Map as MlMap, GeoJSONSource } from "maplibre-gl";
 import { createServiceBrowserClient } from "../lib/supabase-browser";
 import { Icon } from "../lib/icons";
 import { joinDot } from "../lib/date";
-import { plural } from "../lib/plural";
-import { useTermos } from "../lib/vocabulario-context";
 import MapaBase from "../modules/mapa/MapaBase";
 import { caixaDosPontos, distanciaKm, formatarDistancia, linkComoChegar, sedeComPonto, temPonto } from "../modules/mapa/geo";
 import { MemberUiContext } from "./comum";
@@ -18,6 +16,8 @@ import { Opcao } from "../ui/Opcao";
 import { Linha, Lista, linhaClasse } from "../ui/Linha";
 import { Carregando } from "../ui/Estados";
 import { Selo } from "../ui/Selo";
+import { useTexto } from "../lib/internacional/contexto";
+
 /* Agenda › Onde (mapa da igreja, etapa 2; G17, prancha P14): mapa cheio até
    as abas, filtros por cima e a folha "Perto de você", que sobe para a lista
    toda (toque ou arraste na alça) e abre o detalhe ao tocar. Sede, congregações e grupos são
@@ -41,8 +41,8 @@ export function enderecoDoLocal(l: Local): string {
 }
 
 export function TabOnde({ member, organizationId, onStartChat }: { member: M | null; organizationId: string; onStartChat?: StartChat }) {
+  const traduzirUi = useTexto();
   const ui = useContext(MemberUiContext);
-  const { comTermos: ct } = useTermos();
   const [locais, setLocais] = useState<Local[] | null>(null);
   const [erro, setErro] = useState(false);
   const [filtro, setFiltro] = useState<Filtro>("tudo");
@@ -128,7 +128,7 @@ export function TabOnde({ member, organizationId, onStartChat }: { member: M | n
     <div className="onde" ref={caixa} style={altura ? { height: altura } : undefined}>
       <MapaBase
         className="onde-mapa"
-        rotulo={ct("Mapa com a sede, as congregações e os {grupos}")}
+        rotulo={traduzirUi("Mapa com a sede, as congregações e os {grupos}")}
         centro={sede ? [sede.longitude, sede.latitude] : undefined}
         zoom={14}
         onPronto={({ map, cores }) => {
@@ -156,14 +156,14 @@ export function TabOnde({ member, organizationId, onStartChat }: { member: M | n
           return () => { mapa.current = null; enquadrou.current = false; setMapaPronto(false); };
         }}
       />
-      <div className="onde-filtros" role="group" aria-label="Mostrar" inert={folhaAberta}>
-        {([["tudo", "Tudo"], ["igrejas", "Igrejas"], ["grupos", ct("{Grupos}")]] as const).map(([v, l]) => (
+      <div className="onde-filtros" role="group" aria-label={traduzirUi("Mostrar")} inert={folhaAberta}>
+        {([["tudo", traduzirUi("Tudo")], ["igrejas", traduzirUi("Igrejas")], ["grupos", traduzirUi("{Grupos}")]] as const).map(([v, l]) => (
           <Opcao key={v} aria-pressed={filtro === v} marcada={filtro === v} estilo="onde-chip" onClick={() => setFiltro(v)}>{l}</Opcao>
         ))}
       </div>
 
-      <section className={`onde-folha${folhaAberta ? " aberta" : ""}`} aria-label={eu ? "Perto de você" : "Lugares da igreja"}>
-        <Acao className="onde-puxar" aria-expanded={folhaAberta} aria-label={folhaAberta ? "Mostrar o mapa" : "Ver a lista toda"}
+      <section className={`onde-folha${folhaAberta ? " aberta" : ""}`} aria-label={eu ? traduzirUi("Perto de você") : traduzirUi("Lugares da igreja")}>
+        <Acao className="onde-puxar" aria-expanded={folhaAberta} aria-label={folhaAberta ? traduzirUi("Mostrar o mapa") : traduzirUi("Ver a lista toda")}
           aria-controls="onde-lista"
           onPointerDown={(e) => { arraste.current = e.clientY; arrastou.current = false; e.currentTarget.setPointerCapture(e.pointerId); }}
           onPointerUp={(e) => { const y0 = arraste.current; arraste.current = null; if (y0 !== null && Math.abs(e.clientY - y0) > 24) { arrastou.current = true; setFolhaAberta(e.clientY < y0); } }}
@@ -171,14 +171,14 @@ export function TabOnde({ member, organizationId, onStartChat }: { member: M | n
           <span className="onde-alca" aria-hidden="true" />
         </Acao>
         <div className="onde-folha-cab">
-          <h2 className="m6-lbl">{eu ? "Perto de você" : "Lugares da igreja"}</h2>
-          {locais && <span className="m6-meta">{plural(ordenados.length, "lugar", "lugares")}</span>}
+          <h2 className="m6-lbl">{eu ? traduzirUi("Perto de você") : traduzirUi("Lugares da igreja")}</h2>
+          {locais && <span className="m6-meta">{traduzirUi("{count, plural, =1 {# lugar} other {# lugares}}", { count: ordenados.length })}</span>}
         </div>
         <div className="onde-folha-lista" id="onde-lista">
-          {!eu && <p className="m6-meta">Coloque seu CEP no Perfil para ver o que fica mais perto.</p>}
-          {erro && <p className="m6-meta" role="alert">Não foi possível carregar agora. Tente de novo.</p>}
+          {!eu && <p className="m6-meta">{traduzirUi("Coloque seu CEP no Perfil para ver o que fica mais perto.")}</p>}
+          {erro && <p className="m6-meta" role="alert">{traduzirUi("Não foi possível carregar agora. Tente de novo.")}</p>}
           {locais === null && !erro && <Carregando forma="lista" />}
-          {locais && ordenados.length === 0 && <p className="m6-meta">{filtro === "grupos" ? ct("A igreja ainda não cadastrou {grupos}.") : "Nada cadastrado ainda."}</p>}
+          {locais && ordenados.length === 0 && <p className="m6-meta">{filtro === "grupos" ? traduzirUi("A igreja ainda não cadastrou {grupos}.") : traduzirUi("Nada cadastrado ainda.")}</p>}
           <Lista>
             {ordenados.map(({ l, km }) => {
               const vagas = vagasDe(l);
@@ -187,17 +187,17 @@ export function TabOnde({ member, organizationId, onStartChat }: { member: M | n
                   <span className={`onde-marca${ehIgreja(l) ? " igreja" : ""}`} aria-hidden="true">{ehIgreja(l) && <Icon name="cruz" size={18} />}</span>
                   <span className="m6-rb">
                     <span className="m6-rt">{l.nome}</span>
-                    <span className="m6-rs">{ehIgreja(l) ? (l.tipo === "sede" ? "Sede" : "Congregação") : joinDot(l.dia, l.hora, l.lider_nome)}</span>
+                    <span className="m6-rs">{ehIgreja(l) ? (l.tipo === "sede" ? traduzirUi("Sede") : traduzirUi("Congregação")) : joinDot(l.dia, l.hora, l.lider_nome)}</span>
                   </span>
                   <span className="onde-lado">
                     {km !== null && <span className="onde-dist">{formatarDistancia(km)}</span>}
-                    {vagas !== null && <Selo tamanho="toque" tom={vagas > 0 ? "ok" : "neutro"}>{vagas > 0 ? plural(vagas, "vaga") : "Lotado"}</Selo>}
+                    {vagas !== null && <Selo tamanho="toque" tom={vagas > 0 ? "ok" : "neutro"}>{vagas > 0 ? traduzirUi("{count, plural, =1 {# vaga} other {# vagas}}", { count: vagas }) : traduzirUi("Lotado")}</Selo>}
                   </span>
                 </Acao>
               );
             })}
           </Lista>
-          {semPonto > 0 && <p className="m6-meta">{plural(semPonto, "lugar ainda sem endereço", "lugares ainda sem endereço")} no mapa.</p>}
+          {semPonto > 0 && <p className="m6-meta">{traduzirUi("{count, plural, =1 {# lugar ainda sem endereço no mapa.} other {# lugares ainda sem endereço no mapa.}}", { count: semPonto })}</p>}
         </div>
       </section>
     </div>
@@ -205,8 +205,8 @@ export function TabOnde({ member, organizationId, onStartChat }: { member: M | n
 }
 
 function SheetLocal({ local: l, member, eu, onStartChat }: { local: Local; member: M | null; eu: { latitude: number; longitude: number } | null; onStartChat?: StartChat }) {
+  const traduzirUi = useTexto();
   const ui = useContext(MemberUiContext);
-  const { comTermos: ct } = useTermos();
   const [enviando, setEnviando] = useState(false);
   const vagas = vagasDe(l);
   const km = eu && temPonto(l) ? distanciaKm(eu, l) : null;
@@ -218,7 +218,7 @@ function SheetLocal({ local: l, member, eu, onStartChat }: { local: Local; membe
     setEnviando(true);
     const id = await onStartChat(member.id, l.lider_member_id, texto);
     setEnviando(false);
-    if (!id) { ui.toast("Não foi possível enviar agora. Tente de novo."); return; }
+    if (!id) { ui.toast(traduzirUi("Não foi possível enviar agora. Tente de novo.")); return; }
     ui.sheet(null);
     ui.toast(aviso);
     ui.go("mensagens", null, { chatId: id });
@@ -227,18 +227,18 @@ function SheetLocal({ local: l, member, eu, onStartChat }: { local: Local; membe
   const endereco = enderecoDoLocal(l);
   return (
     <div>
-      <div className="m6-meta">{l.tipo === "sede" ? "Sede" : l.tipo === "congregacao" ? "Congregação" : joinDot(ct("{Grupo}"), l.bairro)}</div>
+      <div className="m6-meta">{l.tipo === "sede" ? traduzirUi("Sede") : l.tipo === "congregacao" ? traduzirUi("Congregação") : joinDot(traduzirUi("{Grupo}"), l.bairro)}</div>
       <h2 className="m6-sh">{l.nome}</h2>
       <Lista>
-        {(l.dia || l.hora) && <Linha estilo="app"><span className="m6-rb"><span className="m6-rs">Quando</span><span className="m6-rt">{joinDot(l.dia, l.hora)}</span></span></Linha>}
-        {endereco && <Linha estilo="app"><span className="m6-rb"><span className="m6-rs">Onde</span><span className="m6-rt">{endereco}</span>{km !== null && <span className="m6-rs">{formatarDistancia(km)} de você</span>}</span></Linha>}
-        {l.lugares && <Linha estilo="app"><span className="m6-rb"><span className="m6-rs">Lugares</span><span className="m6-rt">{`${l.ocupados ?? 0} de ${l.lugares}`} · {vagas ? plural(vagas, "vaga") : "lotado"}</span></span></Linha>}
-        {l.lider_nome && <Linha estilo="app"><span className="m6-rb"><span className="m6-rs">Quem lidera</span><span className="m6-rt">{l.lider_nome}</span></span></Linha>}
+        {(l.dia || l.hora) && <Linha estilo="app"><span className="m6-rb"><span className="m6-rs">{traduzirUi("Quando")}</span><span className="m6-rt">{joinDot(l.dia, l.hora)}</span></span></Linha>}
+        {endereco && <Linha estilo="app"><span className="m6-rb"><span className="m6-rs">{traduzirUi("Onde")}</span><span className="m6-rt">{endereco}</span>{km !== null && <span className="m6-rs">{traduzirUi("{distancia} de você", { distancia: formatarDistancia(km) })}</span>}</span></Linha>}
+        {l.lugares && <Linha estilo="app"><span className="m6-rb"><span className="m6-rs">{traduzirUi("Lugares")}</span><span className="m6-rt">{traduzirUi("{ocupados} de {lugares}", { ocupados: String(l.ocupados ?? 0), lugares: String(l.lugares) })} · {vagas ? traduzirUi("{count, plural, =1 {# vaga} other {# vagas}}", { count: vagas }) : traduzirUi("lotado")}</span></span></Linha>}
+        {l.lider_nome && <Linha estilo="app"><span className="m6-rb"><span className="m6-rs">{traduzirUi("Quem lidera")}</span><span className="m6-rt">{l.lider_nome}</span></span></Linha>}
       </Lista>
       <div className="m6-btns col">
-        {podeFalar && <Botao tamanho="toque" variante="principal" desativado={enviando} onClick={() => falar("Oi! Vi no app e queria saber mais.", "Mensagem enviada")}><Icon name="conversas" size={20} />Mandar mensagem para {primeiroNome}</Botao>}
-        {podeFalar && l.tipo === "grupo" && (vagas === null || vagas > 0) && <Botao tamanho="toque" desativado={enviando} onClick={() => falar(`Oi! Quero participar: ${l.nome}.`, "Pedido enviado")}>Quero participar</Botao>}
-        {temPonto(l) && <a className={botaoClasse({ tamanho: "toque" })} href={linkComoChegar(l)} target="_blank" rel="noreferrer">Como chegar</a>}
+        {podeFalar && <Botao tamanho="toque" variante="principal" desativado={enviando} onClick={() => falar("Oi! Vi no app e queria saber mais.", traduzirUi("Mensagem enviada"))}><Icon name="conversas" size={20} />{traduzirUi("Mandar mensagem para {nome}", { nome: primeiroNome })}</Botao>}
+        {podeFalar && l.tipo === "grupo" && (vagas === null || vagas > 0) && <Botao tamanho="toque" desativado={enviando} onClick={() => falar(`Oi! Quero participar: ${l.nome}.`, traduzirUi("Pedido enviado"))}>{traduzirUi("Quero participar")}</Botao>}
+        {temPonto(l) && <a className={botaoClasse({ tamanho: "toque" })} href={linkComoChegar(l)} target="_blank" rel="noreferrer">{traduzirUi("Como chegar")}</a>}
       </div>
     </div>
   );

@@ -14,6 +14,7 @@ import { Acao } from "./Acao";
 import { Botao } from "./Botao";
 import { Marcar } from "./Campo";
 import { MOLA, movimentoReduzido } from "./movimento";
+import { useTexto } from "../lib/internacional/contexto";
 
 export type Coluna<T> = {
   id: string;
@@ -41,6 +42,7 @@ export type TabelaProps<T> = {
 };
 
 export function Tabela<T>({ linhas, colunas, chave, aoAbrir, nomeLinha, lote, chaveAnimacao, vazio, rotulo, className }: TabelaProps<T>) {
+  const traduzirUi = useTexto();
   const [marcadas, setMarcadas] = useState<Set<string>>(() => new Set());
   const corpo = useRef<HTMLDivElement>(null);
   const comSelecao = !!lote;
@@ -81,7 +83,7 @@ export function Tabela<T>({ linhas, colunas, chave, aoAbrir, nomeLinha, lote, ch
       <div className="tr head tabela-cab">
         {comSelecao ? (
           <span className="tabela-marca">
-            <Marcar checked={todas} ref={(el) => { if (el) el.indeterminate = n > 0 && !todas; }} onChange={alternarTodas} aria-label={todas ? "Desmarcar todas" : "Marcar todas à vista"} disabled={!linhas.length} />
+            <Marcar checked={todas} ref={(el) => { if (el) el.indeterminate = n > 0 && !todas; }} onChange={alternarTodas} aria-label={todas ? traduzirUi("Desmarcar todas") : traduzirUi("Marcar todas à vista")} disabled={!linhas.length} />
           </span>
         ) : null}
         {cabecalho}
@@ -95,7 +97,7 @@ export function Tabela<T>({ linhas, colunas, chave, aoAbrir, nomeLinha, lote, ch
             <div key={k} className={`tr tabela-linha${on ? " marcada" : ""}${aoAbrir ? " click" : ""}`}>
               {comSelecao ? (
                 <span className="tabela-marca">
-                  <Marcar checked={on} onChange={() => alternar(k)} aria-label={`Selecionar ${nomeLinha(l)}`} />
+                  <Marcar checked={on} onChange={() => alternar(k)} aria-label={traduzirUi("Selecionar {nome}", { nome: nomeLinha(l) })} />
                 </span>
               ) : null}
               {aoAbrir
@@ -109,11 +111,11 @@ export function Tabela<T>({ linhas, colunas, chave, aoAbrir, nomeLinha, lote, ch
       {comSelecao ? <span className="sr-only" role="status">{n ? plural(n, "marcada", "marcadas") : ""}</span> : null}
       {comSelecao ? (
         <div className="tabela-lote-casa">
-          <div className={`tabela-lote${n ? " on" : ""}`} role="region" aria-label="Ações para as marcadas" aria-hidden={!n} inert={!n}>
+          <div className={`tabela-lote${n ? " on" : ""}`} role="region" aria-label={traduzirUi("Ações para as marcadas")} aria-hidden={!n} inert={!n}>
             <span className="tabela-lote-n">{plural(n, "marcada", "marcadas")}</span>
             <div className="tabela-lote-acoes">
               {lote(visiveis, limpar)}
-              <Botao variante="discreto" compacto onClick={limpar}>Limpar</Botao>
+              <Botao variante="discreto" compacto onClick={limpar}>{traduzirUi("Limpar")}</Botao>
             </div>
           </div>
         </div>

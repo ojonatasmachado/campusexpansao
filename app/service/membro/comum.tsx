@@ -11,6 +11,7 @@ import { parseISODate, weekdayFromISO } from "../lib/date";
 import { iniciais } from "../lib/iniciais";
 import { useTermos } from "../lib/vocabulario-context";
 import { requirementLabel } from "../lib/requirements";
+import { sourceText, type Text } from "../lib/internacional/mensagens";
 import type { JourneyActions, MemberContactInput, MemberUi, Ministry, MissingRequirement } from "./tipos";
 
 import { Acao } from "../ui/Acao";
@@ -21,13 +22,14 @@ import { linhaClasse } from "../ui/Linha";
    informado" (page.tsx toMemberView); em campo editável isso vira vazio */
 export const realValue = (v: string | null | undefined) => (v && !/não informado$/.test(v) ? v : "");
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-export const contactErrors = (c: MemberContactInput) => ({
-  cpf: c.cpf?.trim() && !cpfValido(c.cpf) ? "Confira os números do CPF." : "",
-  name: c.name.trim().split(/\s+/).length < 2 ? "Coloque nome e sobrenome." : "",
-  email: !EMAIL_RE.test(c.email.trim()) ? "Coloque um e-mail válido." : "",
-  phone: !telefoneValido(c.phone) ? "Coloque o telefone com DDD. Para outro país, inclua + e o código do país." : "",
-  nasc: c.nasc && (!isCivilDate(c.nasc) || c.nasc > todayISO()) ? "Confira a data do seu aniversário." : "",
-  cep: enderecoNoBrasil(c.country) && !/^\d{5}-?\d{3}$/.test(c.cep.trim()) ? "Coloque o CEP com 8 números." : c.cep.trim().length > 32 ? "Use até 32 caracteres no código postal." : "",
+/* t opcional: sem tradutor, mantém o pt-BR de sempre (consumidores ainda não ligados) */
+export const contactErrors = (c: MemberContactInput, t: Text = sourceText) => ({
+  cpf: c.cpf?.trim() && !cpfValido(c.cpf) ? t("Confira os números do CPF.") : "",
+  name: c.name.trim().split(/\s+/).length < 2 ? t("Coloque nome e sobrenome.") : "",
+  email: !EMAIL_RE.test(c.email.trim()) ? t("Coloque um e-mail válido.") : "",
+  phone: !telefoneValido(c.phone) ? t("Coloque o telefone com DDD. Para outro país, inclua + e o código do país.") : "",
+  nasc: c.nasc && (!isCivilDate(c.nasc) || c.nasc > todayISO()) ? t("Confira a data do seu aniversário.") : "",
+  cep: enderecoNoBrasil(c.country) && !/^\d{5}-?\d{3}$/.test(c.cep.trim()) ? t("Coloque o CEP com 8 números.") : c.cep.trim().length > 32 ? t("Use até 32 caracteres no código postal.") : "",
 });
 export const JourneyContext = createContext<JourneyActions>({ missing: [], serveRequests: [], baptismCandidates: [], names: { courses: [], events: [] } });
 
@@ -41,15 +43,16 @@ export function useFaltas() {
       .map((m) => ct(requirementLabel({ kind: m.req_kind, ref: m.req_ref }, j.names)));
 }
 
-export const RESULTADO_ACAO: Record<string, string> = {
-  faltam_requisitos: "Ainda falta cumprir os pré-requisitos.",
-  inscricoes_fechadas: "As inscrições desta turma estão fechadas.",
-  time_fechado: "Este time não está recebendo pedidos agora.",
-  sem_lider_no_app: "O time ainda não tem um líder disponível no app.",
-  ja_serve: "Você já serve neste time.",
-  sem_ficha: "Sua ficha ainda não está ligada ao app. Fale com a liderança.",
-};
-export const mensagemAcao = (r: string) => RESULTADO_ACAO[r] ?? "Não foi possível agora. Tente de novo.";
+/* r é o código devolvido pelo banco; só o texto mostrado muda de idioma */
+export const resultadoAcao = (t: Text = sourceText): Record<string, string> => ({
+  faltam_requisitos: t("Ainda falta cumprir os pré-requisitos."),
+  inscricoes_fechadas: t("As inscrições desta turma estão fechadas."),
+  time_fechado: t("Este time não está recebendo pedidos agora."),
+  sem_lider_no_app: t("O time ainda não tem um líder disponível no app."),
+  ja_serve: t("Você já serve neste time."),
+  sem_ficha: t("Sua ficha ainda não está ligada ao app. Fale com a liderança."),
+});
+export const mensagemAcao = (r: string, t: Text = sourceText) => resultadoAcao(t)[r] ?? t("Não foi possível agora. Tente de novo.");
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 

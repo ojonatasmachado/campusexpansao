@@ -9,6 +9,9 @@ import { Acao } from "../ui/Acao";
 import { Opcao } from "../ui/Opcao";
 import { Campo, Entrada, TextoLongo } from "../ui/Campo";
 import { Vazio } from "../ui/Estados";
+import { useTexto } from "../lib/internacional/contexto";
+import type { Text } from "../lib/internacional/mensagens";
+
 export let bibleCache: BibleBook[] | null = null;
 export let bibleCachePromise: Promise<BibleBook[]> | null = null;
 export function loadBible(): Promise<BibleBook[]> {
@@ -24,15 +27,15 @@ export function normalizeBusca(s: string) {
   return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 }
 
-export const BIBLE_CORES: { key: string; label: string }[] = [
-  { key: "sand", label: "Areia" },
-  { key: "wheat", label: "Trigo" },
-  { key: "amber", label: "Ambar" },
-  { key: "clay", label: "Barro" },
-  { key: "terra", label: "Terracota" },
-  { key: "rust", label: "Ferrugem" },
-  { key: "cocoa", label: "Cacau" },
-  { key: "olive", label: "Oliva" },
+export const bibleCores = (t: Text): { key: string; label: string }[] => [
+  { key: "sand", label: t("Areia") },
+  { key: "wheat", label: t("Trigo") },
+  { key: "amber", label: t("Ambar") },
+  { key: "clay", label: t("Barro") },
+  { key: "terra", label: t("Terracota") },
+  { key: "rust", label: t("Ferrugem") },
+  { key: "cocoa", label: t("Cacau") },
+  { key: "olive", label: t("Oliva") },
 ];
 
 export function TabBiblia({
@@ -41,6 +44,7 @@ export function TabBiblia({
   bibleMarks: BibleMark[];
   onSaveBibleMark?: (book: string, chapter: number, verse: number, data: { color: string | null; note: string | null }) => void;
 }) {
+  const traduzirUi = useTexto();
   const [bible, setBible] = useState<BibleBook[] | null>(bibleCache);
   const [view, setView] = useState<"livros" | "capitulos" | "leitor" | "marcacoes">("livros");
   const [bookAbbrev, setBookAbbrev] = useState<string | null>(null);
@@ -139,7 +143,7 @@ export function TabBiblia({
   if (!bible) {
     return (
       <>
-        <Vazio tamanho="toque" icone={<Icon name="biblia" size={22} />} titulo="Baixando a Bíblia..." texto="So acontece uma vez. Depois fica salva no seu celular." />
+        <Vazio tamanho="toque" icone={<Icon name="biblia" size={22} />} titulo={traduzirUi("Baixando a Bíblia...")} texto={traduzirUi("So acontece uma vez. Depois fica salva no seu celular.")} />
       </>
     );
   }
@@ -149,32 +153,32 @@ export function TabBiblia({
       {view === "livros" && (
         <>
           <div className="bib-search">
-            <Entrada placeholder="Buscar palavra ou trecho..." value={query} onChange={(e) => setQuery(e.target.value)} />
+            <Entrada placeholder={traduzirUi("Buscar palavra ou trecho...")} value={query} onChange={(e) => setQuery(e.target.value)} />
           </div>
           {debouncedQuery.length >= 3 ? (
             <>
-              <div className="m-section-t">{searchResults.length} {searchResults.length === 1 ? "resultado" : "resultados"}</div>
+              <div className="m-section-t">{traduzirUi("{count, plural, =1 {{n} resultado} other {{n} resultados}}", { count: searchResults.length, n: String(searchResults.length) })}</div>
               {searchResults.map((r) => (
                 <Acao key={`${r.abbrev}${r.chapter}:${r.verse}`} className="bib-result" onClick={() => irPara(r.abbrev, r.chapter)}>
                   <b>{r.name} {r.chapter}:{r.verse}</b>
                   <small>{r.text}</small>
                 </Acao>
               ))}
-              {searchResults.length === 0 && <Vazio tamanho="toque" titulo="Nada encontrado com esse termo." />}
+              {searchResults.length === 0 && <Vazio tamanho="toque" titulo={traduzirUi("Nada encontrado com esse termo.")} />}
             </>
           ) : (
             <>
               <Acao className="bib-marks-cta" onClick={() => setView("marcacoes")}>
                 <span className="bib-marks-cta-ic"><Icon name="estrela" size={16} /></span>
-                <div><b>Minhas marcações</b><small>{bibleMarks.length} {bibleMarks.length === 1 ? "versículo marcado ou anotado" : "versículos marcados ou anotados"}</small></div>
+                <div><b>{traduzirUi("Minhas marcações")}</b><small>{traduzirUi("{count, plural, =1 {{n} versículo marcado ou anotado} other {{n} versículos marcados ou anotados}}", { count: bibleMarks.length, n: String(bibleMarks.length) })}</small></div>
               </Acao>
-              <div className="m-section-t">Antigo Testamento</div>
+              <div className="m-section-t">{traduzirUi("Antigo Testamento")}</div>
               <div className="bib-books">
                 {bible.slice(0, 39).map((b) => (
                   <Acao key={b.abbrev} className="bib-book" onClick={() => { setBookAbbrev(b.abbrev); setView("capitulos"); }}>{b.name}</Acao>
                 ))}
               </div>
-              <div className="m-section-t">Novo Testamento</div>
+              <div className="m-section-t">{traduzirUi("Novo Testamento")}</div>
               <div className="bib-books">
                 {bible.slice(39).map((b) => (
                   <Acao key={b.abbrev} className="bib-book" onClick={() => { setBookAbbrev(b.abbrev); setView("capitulos"); }}>{b.name}</Acao>
@@ -187,7 +191,7 @@ export function TabBiblia({
 
       {view === "capitulos" && book && (
         <>
-          <Botao tamanho="toque" variante="texto" onClick={() => setView("livros")}>← Livros</Botao>
+          <Botao tamanho="toque" variante="texto" onClick={() => setView("livros")}>{traduzirUi("← Livros")}</Botao>
           <div className="m-h1" style={{ fontSize: "var(--fs-app-20)", marginBottom: 14 }}>{book.name}</div>
           <div className="bib-chapters">
             {book.chapters.map((_, i) => (
@@ -199,11 +203,11 @@ export function TabBiblia({
 
       {view === "leitor" && book && chapter && versesAtuais && (
         <>
-          <Botao tamanho="toque" variante="texto" onClick={() => setView("capitulos")}>← Capítulos</Botao>
+          <Botao tamanho="toque" variante="texto" onClick={() => setView("capitulos")}>{traduzirUi("← Capítulos")}</Botao>
           <div className="bib-reader-head">
-            <Acao className="bib-chnav" aria-label="Capítulo anterior" desativado={chapter <= 1} onClick={() => irPara(book.abbrev, chapter - 1)}>‹</Acao>
+            <Acao className="bib-chnav" aria-label={traduzirUi("Capítulo anterior")} desativado={chapter <= 1} onClick={() => irPara(book.abbrev, chapter - 1)}>‹</Acao>
             <div className="m-h1" style={{ fontSize: "var(--fs-app-17)" }}>{book.name} {chapter}</div>
-            <Acao className="bib-chnav" aria-label="Próximo capítulo" desativado={chapter >= book.chapters.length} onClick={() => irPara(book.abbrev, chapter + 1)}>›</Acao>
+            <Acao className="bib-chnav" aria-label={traduzirUi("Próximo capítulo")} desativado={chapter >= book.chapters.length} onClick={() => irPara(book.abbrev, chapter + 1)}>›</Acao>
           </div>
           <div className="bib-verses">
             {versesAtuais.map((text, i) => {
@@ -227,9 +231,9 @@ export function TabBiblia({
 
       {view === "marcacoes" && (
         <>
-          <Botao tamanho="toque" variante="texto" onClick={() => setView("livros")}>← Livros</Botao>
-          <div className="m-h1" style={{ fontSize: "var(--fs-app-20)", marginBottom: 14 }}>Minhas marcações</div>
-          {bibleMarks.length === 0 && <Vazio tamanho="toque" titulo="Toque num versículo na leitura pra marcar ou anotar." />}
+          <Botao tamanho="toque" variante="texto" onClick={() => setView("livros")}>{traduzirUi("← Livros")}</Botao>
+          <div className="m-h1" style={{ fontSize: "var(--fs-app-20)", marginBottom: 14 }}>{traduzirUi("Minhas marcações")}</div>
+          {bibleMarks.length === 0 && <Vazio tamanho="toque" titulo={traduzirUi("Toque num versículo na leitura pra marcar ou anotar.")} />}
           {bibleMarks
             .slice()
             .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
@@ -251,10 +255,10 @@ export function TabBiblia({
             <div className="bib-action-ref">{book.name} {chapter}:{actionVerse}</div>
             <p className="bib-action-text">{versesAtuais?.[actionVerse - 1]}</p>
             <Botao compacto className="bib-copy" onClick={copiarVerso} style={{ marginTop: 10 }}>
-              <Icon name="copiar" size={13} /> {copied ? "Copiado!" : "Copiar versículo"}
+              <Icon name="copiar" size={13} /> {copied ? traduzirUi("Copiado!") : traduzirUi("Copiar versículo")}
             </Botao>
             <div className="bib-swatches">
-              {BIBLE_CORES.map((c) => (
+              {bibleCores(traduzirUi).map((c) => (
                 <Opcao
                   key={c.key}
                   title={c.label}
@@ -263,21 +267,21 @@ export function TabBiblia({
                 />
               ))}
               {marcaAtual?.color && (
-                <BotaoIcone className="bib-swatch-clear" title="Remover cor" rotulo="Remover cor" onClick={() => escolherCor(null)}>✕</BotaoIcone>
+                <BotaoIcone className="bib-swatch-clear" title={traduzirUi("Remover cor")} rotulo={traduzirUi("Remover cor")} onClick={() => escolherCor(null)}>✕</BotaoIcone>
               )}
             </div>
             <div style={{ marginTop: 14 }}>
-              <Campo rotulo="Anotacao">
-                <TextoLongo className="input" rows={3} placeholder="O que esse versículo significa pra você?" value={noteDraft} onChange={(e) => setNoteDraft(e.target.value)} />
+              <Campo rotulo={traduzirUi("Anotacao")}>
+                <TextoLongo className="input" rows={3} placeholder={traduzirUi("O que esse versículo significa pra você?")} value={noteDraft} onChange={(e) => setNoteDraft(e.target.value)} />
               </Campo>
             </div>
             <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
               {(marcaAtual?.color || marcaAtual?.note) && (
-                <Botao compacto onClick={removerMarcacao}>Remover marcação</Botao>
+                <Botao compacto onClick={removerMarcacao}>{traduzirUi("Remover marcação")}</Botao>
               )}
               <div style={{ flex: 1 }} />
-              <Botao compacto onClick={() => setActionVerse(null)}>Fechar</Botao>
-              <Botao variante="principal" compacto onClick={salvarNota}>Salvar</Botao>
+              <Botao compacto onClick={() => setActionVerse(null)}>{traduzirUi("Fechar")}</Botao>
+              <Botao variante="principal" compacto onClick={salvarNota}>{traduzirUi("Salvar")}</Botao>
             </div>
           </div>
         </div>

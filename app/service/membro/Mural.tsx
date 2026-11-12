@@ -9,6 +9,8 @@ import type { Announcement, P } from "./tipos";
 
 import { Botao } from "../ui/Botao";
 import { Cartao } from "../ui/Cartao";
+import { useTexto } from "../lib/internacional/contexto";
+
 export function MuralV6({ announcements, unreadIds, person, onReadAnnouncement, responses = [], onRespond, initialId }: {
   initialId?: string | null;
   announcements: Announcement[]; unreadIds: Set<string>; person: P;
@@ -16,6 +18,7 @@ export function MuralV6({ announcements, unreadIds, person, onReadAnnouncement, 
   responses?: { announcement_id: string; response: "vou" | "nao" }[];
   onRespond?: (announcementId: string, response: "vou" | "nao" | null) => Promise<boolean>;
 }) {
+  const traduzirUi = useTexto();
   const { quandoPublicado } = useRelogioDaIgreja();
   /* Abertura da lista não significa que todas as publicações foram vistas. */
   const [novas] = useState(() => new Set(unreadIds));
@@ -43,22 +46,22 @@ export function MuralV6({ announcements, unreadIds, person, onReadAnnouncement, 
     article?.focus({ preventScroll: true });
   }, [initialId]);
   if (announcements.length === 0) {
-    return <div className="m6-sec0"><Cartao estilo="app"><div className="m6-ct">Nada no Mural ainda</div><div className="m6-meta">As publicações da igreja aparecem aqui.</div></Cartao></div>;
+    return <div className="m6-sec0"><Cartao estilo="app"><div className="m6-ct">{traduzirUi("Nada no Mural ainda")}</div><div className="m6-meta">{traduzirUi("As publicações da igreja aparecem aqui.")}</div></Cartao></div>;
   }
   return (
     <div className="m6-sec0" ref={root}>
-      {onlyTarget && target && <div className="m6-pad"><Botao tamanho="toque" variante="texto" onClick={() => setOnlyTarget(false)}>Ver todas as publicações</Botao></div>}
+      {onlyTarget && target && <div className="m6-pad"><Botao tamanho="toque" variante="texto" onClick={() => setOnlyTarget(false)}>{traduzirUi("Ver todas as publicações")}</Botao></div>}
       {visible.map((a) => (
         <Cartao estilo="app" como="article" key={a.id} data-announcement={a.id} tabIndex={-1} aria-label={a.title}>
-          {novas.has(a.id) && <span className="m6-new">Nova</span>}
-          {a.urgent && <M6St k="warn" ic="alerta">Urgente</M6St>}
+          {novas.has(a.id) && <span className="m6-new">{traduzirUi("Nova")}</span>}
+          {a.urgent && <M6St k="warn" ic="alerta">{traduzirUi("Urgente")}</M6St>}
           <div className="m6-ct">{a.title}</div>
           {a.body && <p className="m6-txt">{a.body}</p>}
           <div className="m6-meta">{joinDot(quandoPublicado(a.created_at), paraPublico(a.audience))}</div>
           {a.kind === "evento" && onRespond && <RespostaEvento id={a.id} inicial={responses.find((r) => r.announcement_id === a.id)?.response ?? null} onRespond={onRespond} />}
         </Cartao>
       ))}
-      <p className="m6-help">A igreja recebe um registro quando a publicação aparece na sua tela. Isso não confirma presença nem substitui sua resposta.</p>
+      <p className="m6-help">{traduzirUi("A igreja recebe um registro quando a publicação aparece na sua tela. Isso não confirma presença nem substitui sua resposta.")}</p>
     </div>
   );
 }

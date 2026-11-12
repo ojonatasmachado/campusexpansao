@@ -2,10 +2,10 @@
 id: N2
 titulo: Concluir integração de idiomas e moeda nas telas
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-11-12
+branch: historia/N2-integracao-internacional
 depende: [N1]
 tamanho: G
 ---
@@ -15,6 +15,19 @@ Continuidade explícita da entrega parcial N1, autorizada pelo usuário em 25/10
 
 ## Arquivos (trilho)
 - `docs/service-v7/historias/N2-integracao-internacional.md`
+- `scripts/internacional/preparar-jsx.ts` (lê também este trilho)
+- `app/service/lib/internacional/mensagens/` (catálogos)
+- `app/service/ui/` (fatia 1)
+- `app/service/membro/Agenda.tsx` (fatia 1)
+- `app/service/membro/Biblia.tsx` (fatia 1)
+- `app/service/membro/comum.tsx` (fatia 1)
+- `app/service/membro/Cursos.tsx` (fatia 1)
+- `app/service/membro/Disponibilidade.tsx` (fatia 1)
+- `app/service/membro/Kids.tsx` (fatia 1)
+- `app/service/membro/Mural.tsx` (fatia 1)
+- `app/service/membro/Onboarding.tsx` (fatia 1)
+- `app/service/membro/Onde.tsx` (fatia 1)
+- `app/service/membro/Visitantes.tsx` (fatia 1)
 
 Definir na reserva, conferindo especialmente I10: ui/, painel/comum.tsx, modules/inicio/Saude.tsx, modules/financeiro/ e modules/relatorios/. Não trabalhar simultaneamente no branch de outra frente.
 
@@ -29,3 +42,5 @@ Definir na reserva, conferindo especialmente I10: ui/, painel/comum.tsx, modules
 Handoff detalhado: docs/service-v7/INTERNACIONALIZACAO.md, seção “Mensagem para o Claude” e atualizações seguintes. A base inclui 518 mensagens por idioma, extrator, preparador conservador, infraestrutura ICU/pseudo, preferência protegida, moeda/trava e adaptadores com tradutor opcional. Não refazer a base. Consumidores de tela ainda precisam passar useTexto() aos adaptadores; não traduzir status e cabeçalhos persistidos. A reserva N1 termina com a entrega parcial, sem fingir que estes critérios já foram cumpridos.
 
 F1 continua outra história, ainda não iniciada; esbarra no Financeiro da I10. O4/O5 têm verificações de bastidor possíveis em banco local, desde que a reserva não sobreponha seus arquivos. O6 exige famílias reais para concluir Kids, além da prova de volume financeiro.
+
+Fatia 1 (12/11, PR próprio, rollout ainda desligado): tradutor em `ui/` e nas telas do membro do trilho (Agenda, Biblia, comum, Cursos, Disponibilidade, Kids, Mural, Onboarding, Onde, Visitantes). Catálogos de 527 para 924 chaves, nenhuma vazia; plurais com `=1` (no ICU o zero cai em `one` no pt-BR; o `plural()` antigo punha o zero no plural). Prova de pt-BR idêntico: texto de 11 telas (5 do membro, 6 do painel) igual ao do main, exceto os contadores animados do `Contagem` (quadro no meio da animação). Ficou de fora, para fatias seguintes: Inicio, Conversas, Caminhada, MobileApp e ServiceExactApp (reservados por M3, M7 e O8), formatação de datas compartilhada (`dataLonga`, `MESES`), `requirementLabel`, `PERIODOS_AUSENCIA`, e mensagens enviadas a outra pessoa (chat, push), que seguem no idioma de quem envia.
