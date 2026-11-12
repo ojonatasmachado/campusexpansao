@@ -90,6 +90,8 @@ export type PersonView = {
   meta?: { recusasSeguidas?: number; diasIndisponivel?: number; birthday?: string; neighborhood?: string };
   createdAt?: string;
   photoUrl?: string | null;
+  /* login no app (O11: quem tem login fica por padrão ao juntar) */
+  userId?: string | null;
 };
 
 export type MemberView = {

@@ -14,6 +14,7 @@ import { Av, Chip, EmptyState, PageHead } from "../../painel/ui";
 import { JRN_STEPS } from "../../painel/caminhada";
 import { useTermos } from "../../lib/vocabulario-context";
 import { ImportarMembros } from "./ImportarMembros";
+import { DuplicadosAviso } from "./Duplicados";
 import type { ChurchView, DrawerState, MemberView, MinistryView, ModalState, PersonView } from "../../ServiceExactApp";
 
 import { Botao } from "../../ui/Botao";
@@ -99,7 +100,7 @@ async function copiarTelefones(linhas: { member?: MemberView; person?: PersonVie
    a coluna "Serve em". As tabelas do banco continuam separadas; aqui é só a
    tela. */
 type PessoaLinha = { key: string; name: string; sub: string; member?: MemberView; person?: PersonView; mins: MinistryView[]; leader: boolean; novo: boolean; photoUrl?: string | null };
-export function Membros({ members, people = [], ministries, church, setDrawer, setModal, soTimes = null, filtroInicial, onLimparFiltro }: { members: MemberView[]; people?: PersonView[]; ministries: MinistryView[]; church?: ChurchView; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void; soTimes?: string[] | null; filtroInicial?: "em-grupos" | "membros"; onLimparFiltro?: () => void }) {
+export function Membros({ members, people = [], ministries, church, setDrawer, setModal, soTimes = null, filtroInicial, onLimparFiltro, podeJuntar = false }: { members: MemberView[]; people?: PersonView[]; ministries: MinistryView[]; church?: ChurchView; setDrawer: (drawer: DrawerState) => void; setModal: (modal: ModalState) => void; soTimes?: string[] | null; filtroInicial?: "em-grupos" | "membros"; onLimparFiltro?: () => void; /* O11: secretaria (can_secretaria) */ podeJuntar?: boolean }) {
   const { comTermos: ct } = useTermos();
   const [q, setQ] = useState("");
   const [filtro, setFiltro] = useState<"todos" | "membros" | "voluntarios" | "lideres" | "novos" | "em-grupos">(filtroInicial ?? "todos");
@@ -151,6 +152,7 @@ export function Membros({ members, people = [], ministries, church, setDrawer, s
         </Segmentado>
       </div>
       {filtroInicial && <div className="panel-head" role="status"><span className="panel-meta">Filtro: {filtro === "em-grupos" ? `membros em ${ct("{grupos}")}` : "membros registrados"}</span><Botao variante="texto" onClick={() => { setFiltro("todos"); onLimparFiltro?.(); }}>Limpar filtro</Botao></div>}
+      {podeJuntar && !soTimes && church ? <DuplicadosAviso linhas={linhas} organizationId={church.organizationId} onJuntou={() => router.refresh()} /> : null}
       <p className="jrn-legenda"><b>{ct("{Caminhada}")}</b>, uma barra por etapa, na ordem: {JRN_STEPS.map((s) => ct(s.label)).join(" · ")}.</p>
       <Tabela
         rotulo="Pessoas"
