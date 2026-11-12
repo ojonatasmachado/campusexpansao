@@ -2,7 +2,7 @@
 id: Q19
 titulo: Levar o portão de qualidade para o main
 tipo: infra
-status: reservada
+status: feita
 quem: claude
 desde: 2026-11-11
 branch: historia/Q19-portao-de-qualidade
@@ -26,3 +26,4 @@ O ciclo "implementar, validar com saída real, corrigir, validar de novo" (skill
 - O skill manda fechar história nas Notas do arquivo da história (REGRAS-DE-TRABALHO §4) e subir o servidor com `npm run dev:local`.
 
 ## Notas
+- 12/11 (claude): `bash scripts/validar.sh` no main: 27 PASSOU, "RESULTADO: TUDO PASSOU" (tsc, leis 12 e 17, contraste dos temas e gráficos, 16 contratos lidos do workflow, pacote de produção, critérios da captura, build com env do CI). Testado também: arquivo alterado com erro (e com espaço no nome) reprova no lint; servidor em :3000 sem o Supabase local é recusado; `PORTA=3001` com `npm run dev:local` passa `/service/login` e `/service`. Revisor: 10 achados, todos corrigidos (redirect não passa mais, servidor de produção é recusado, lista vazia de contratos falha, sem `.env.local` no diretório). Fora: "Migrações num Postgres limpo" continua só no CI.

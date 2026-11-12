@@ -488,3 +488,9 @@ git add -A && git commit -m "descrição da mudança" && git push
 ```
 
 A Vercel faz o deploy automaticamente após o push.
+
+## Processo de qualidade (portão de etapa)
+
+- Toda etapa ou item segue o skill `portao-de-etapa`: implementar, validar, corrigir, validar de novo e só então avançar.
+- A validação é a saída real de `bash scripts/validar.sh` (com `npm run dev:local` ligado para as rotas) mais o subagente `revisor`. Relatório sem a saída do script não vale.
+- Avança sozinho entre itens quando tudo passa; no fim da etapa para. Dúvida de produto ou marca, mudança nesta constituição, dependência nova e passo manual sempre param e perguntam.

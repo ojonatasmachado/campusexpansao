@@ -16,3 +16,5 @@ Como trabalhar:
 5. Se um item travar, registre o motivo em Bloqueios no PROGRESSO.md e siga para o próximo.
 6. Nas etapas 2 a 5, ao fim, rode a captura descrita em `docs/service-v7/CAPTURA.md` numa pasta nova com a data do dia, compare com `prints/service-2026-10-05` e preencha a tabela de captura em PROGRESSO.md: critérios "pronto quando" que passaram e que não passaram.
 7. Termine com um resumo curto e pare. A próxima etapa começa só com uma nova chamada.
+
+Qualidade (vale para todas as etapas): siga o skill `portao-de-etapa`. Antes de marcar um item como concluído, rode `bash scripts/validar.sh` com as rotas do item e o subagente `revisor`, corrija e valide de novo (máximo 3 voltas). Cole a saída real no PROGRESSO.md (história: nas Notas do arquivo da história); resumo sem a saída não vale.
