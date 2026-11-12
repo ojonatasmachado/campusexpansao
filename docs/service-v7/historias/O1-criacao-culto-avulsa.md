@@ -2,10 +2,10 @@
 id: O1
 titulo: Verificar criação de culto avulsa no estilo do assistente
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-11-12
+branch: historia/O1-criacao-culto-avulsa
 depende: []
 tamanho: M
 ---
