@@ -2,10 +2,10 @@
 id: M4
 titulo: Percorrer primeiro acesso e convite de ponta a ponta
 tipo: verificacao
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-11-12
+branch: historia/M4-primeiro-acesso-convite
 depende: []
 tamanho: M
 ---
