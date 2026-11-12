@@ -24,6 +24,9 @@ import { Linha } from "../../ui/Linha";
 import { Segmentado } from "../../ui/Segmentado";
 import { Campo, Entrada, TextoLongo, Marcar } from "../../ui/Campo";
 import { Selecao } from "../../ui/Selecao";
+import { useTexto } from "../../lib/internacional/contexto";
+import type { Text } from "../../lib/internacional/mensagens";
+
 export function EventDrawer({
   event,
   ministries,
@@ -49,6 +52,8 @@ export function EventDrawer({
   setShareEventId: (id: string) => void;
   initialTab?: "panorama" | "crono" | "posicoes" | "membro";
 }) {
+  const traduzirUi = useTexto();
+
   const { comTermos: ct } = useTermos();
   const router = useRouter();
   const [tab, setTab] = useState<"panorama" | "crono" | "posicoes" | "membro">(initialTab ?? "panorama");
@@ -80,16 +85,16 @@ export function EventDrawer({
   return (
     <DrawerShell onClose={onClose} wide>
       <div className="drawer-head">
-        <BotaoIcone className="drawer-close" rotulo="Fechar" onClick={onClose}>✕</BotaoIcone>
+        <BotaoIcone className="drawer-close" rotulo={traduzirUi("Fechar")} onClick={onClose}>✕</BotaoIcone>
         <div className="ph-eyebrow" style={{ marginBottom: 8 }}>{joinDot(event.weekday, formatDateBR(event.eventDate))}</div>
         <div className="profile-name">{event.name}</div>
         <div className="profile-role">{joinDot(event.time, event.location, event.kind)}</div>
         <AcoesDoEncontro event={event} onSaved={() => router.refresh()} />
         <Segmentado rolavel esconderEsfumadoNoFim contraste="reforcado" style={{ marginTop: 14 }}>
-          <Opcao marcada={tab === "panorama"} onClick={() => setTab("panorama")}>Panorama</Opcao>
-          <Opcao marcada={tab === "crono"} onClick={() => setTab("crono")}>Cronograma</Opcao>
-          <Opcao marcada={tab === "posicoes"} onClick={() => setTab("posicoes")}>Posições</Opcao>
-          <Opcao marcada={tab === "membro"} onClick={() => setTab("membro")}>Para o membro</Opcao>
+          <Opcao marcada={tab === "panorama"} onClick={() => setTab("panorama")}>{traduzirUi("Panorama")}</Opcao>
+          <Opcao marcada={tab === "crono"} onClick={() => setTab("crono")}>{traduzirUi("Cronograma")}</Opcao>
+          <Opcao marcada={tab === "posicoes"} onClick={() => setTab("posicoes")}>{traduzirUi("Posições")}</Opcao>
+          <Opcao marcada={tab === "membro"} onClick={() => setTab("membro")}>{traduzirUi("Para o membro")}</Opcao>
         </Segmentado>
       </div>
       <div className="drawer-body drawer-body-event">
@@ -105,18 +110,18 @@ export function EventDrawer({
           <EventoParaMembro event={event} rsvps={rsvps} people={people} onSaved={() => router.refresh()} />
         ) : tab === "crono" ? (
           <>
-            <DrawerSection title={ct("Roteiro do {culto} · etapa por etapa")}>
+            <DrawerSection title={ct(traduzirUi("Roteiro do {culto} · etapa por etapa"))}>
               <CronogramaEditor event={event} ministries={eventMinistries} onRefresh={() => router.refresh()} />
             </DrawerSection>
-            <DrawerSection title="Setlist">
-              {event.setlist.length ? event.setlist.map((song) => <Linha key={song.id}><div className="mini-main"><div className="mini-title">{song.title}</div>{song.song_key ? <div className="mini-sub">Tom: {song.song_key}</div> : null}</div></Linha>) : <p className="mini-sub">Nenhuma música cadastrada.</p>}
+            <DrawerSection title={traduzirUi("Setlist")}>
+              {event.setlist.length ? event.setlist.map((song) => <Linha key={song.id}><div className="mini-main"><div className="mini-title">{song.title}</div>{song.song_key ? <div className="mini-sub">{traduzirUi("Tom: {tom}", { tom: song.song_key })}</div> : null}</div></Linha>) : <p className="mini-sub">{traduzirUi("Nenhuma música cadastrada.")}</p>}
             </DrawerSection>
           </>
         ) : (
           <>
             {eventMinistries.map((ministry) => (
               <DrawerSection title={ministry.name} key={ministry.id} id={`evento-time-${ministry.id}`}>
-                {(ministry.positions.length ? ministry.positions : [{ id: `${ministry.id}-geral`, ministry_id: ministry.id, name: "Equipe", need_count: 1, sort_order: 0 }]).map((position) => {
+                {(ministry.positions.length ? ministry.positions : [{ id: `${ministry.id}-geral`, ministry_id: ministry.id, name: traduzirUi("Equipe"), need_count: 1, sort_order: 0 }]).map((position) => {
                   const assignments = eventRoster.filter((assignment) => assignment.position_id === position.id);
                   const valid = assignments.filter((assignment) => assignment.status !== "no").length;
                   const missing = Math.max(0, Math.max(1, position.need_count) - valid);
@@ -132,13 +137,13 @@ export function EventDrawer({
                           return (
                             <Acao key={assignment.id} className="slot" style={{ margin: 0, width: "auto" }} onClick={() => person && setDrawer({ kind: "person", id: person.id })}>
                               <Av name={person?.name ?? "Voluntário"} size="xs" photoUrl={person?.photoUrl} />
-                              <span className="slot-name" style={{ maxWidth: 120 }}>{person?.name.split(" ")[0] ?? "Pessoa"}</span>
+                              <span className="slot-name" style={{ maxWidth: 120 }}>{person?.name.split(" ")[0] ?? traduzirUi("Pessoa")}</span>
                               <span className={`slot-st ${assignment.status}`} />
                             </Acao>
                           );
                         })}
                         {Array.from({ length: missing }).map((_, index) => (
-                          <Acao key={`${position.id}-missing-${index}`} className="slot-empty" style={{ width: "auto", padding: "7px 14px" }} onClick={() => { onClose(); setRoute("escalas"); }}>+ vaga</Acao>
+                          <Acao key={`${position.id}-missing-${index}`} className="slot-empty" style={{ width: "auto", padding: "7px 14px" }} onClick={() => { onClose(); setRoute("escalas"); }}>{traduzirUi("+ vaga")}</Acao>
                         ))}
                       </div>
                     </div>
@@ -149,8 +154,8 @@ export function EventDrawer({
           </>
         )}
         <div style={{ display: "flex", gap: 10, marginTop: 24 }}>
-          <Botao variante="principal" style={{ flex: 1, justifyContent: "center" }} onClick={() => { onClose(); setRoute("escalas"); }}>Editar escala</Botao>
-          <Botao style={{ flex: 1, justifyContent: "center" }} onClick={() => setShareEventId(event.id)}><Icon name="comunicacao" size={15} /> Setup da celebração</Botao>
+          <Botao variante="principal" style={{ flex: 1, justifyContent: "center" }} onClick={() => { onClose(); setRoute("escalas"); }}>{traduzirUi("Editar escala")}</Botao>
+          <Botao style={{ flex: 1, justifyContent: "center" }} onClick={() => setShareEventId(event.id)}><Icon name="comunicacao" size={15} /> {traduzirUi("Setup da celebração")}</Botao>
         </div>
       </div>
     </DrawerShell>
@@ -160,12 +165,14 @@ export function EventDrawer({
 /* v7 4.5: o que o evento pede a quem vê no app (só aviso, confirmar presença
    ou inscrição), valor e instruções. O app não recebe pagamento: mostra o
    valor e as instruções escritas aqui. */
-export const PEDE_OPCOES: { v: "aviso" | "presenca" | "inscricao"; t: string; s: string }[] = [
-  { v: "aviso", t: "Só aviso", s: "Aparece na agenda, sem pedir nada" },
-  { v: "presenca", t: "Confirmar presença", s: "A pessoa toca em \"Vou\"" },
-  { v: "inscricao", t: "Inscrição", s: "A pessoa se inscreve pelo app" },
+export const pedeOpcoes = (tr: Text): { v: "aviso" | "presenca" | "inscricao"; t: string; s: string }[] => [
+  { v: "aviso", t: tr("Só aviso"), s: tr("Aparece na agenda, sem pedir nada") },
+  { v: "presenca", t: tr("Confirmar presença"), s: tr("A pessoa toca em \"Vou\"") },
+  { v: "inscricao", t: tr("Inscrição"), s: tr("A pessoa se inscreve pelo app") },
 ];
 export function EventoParaMembro({ event, rsvps, people, onSaved }: { event: EventView; rsvps: EventRsvpView[]; people: PersonView[]; onSaved: () => void }) {
+  const traduzirUi = useTexto();
+
   const [pede, setPede] = useState<"aviso" | "presenca" | "inscricao">(event.pede ?? "aviso");
   const [valor, setValor] = useState(event.valor ?? "");
   const [instrucoes, setInstrucoes] = useState(event.instrucoes ?? "");
@@ -176,34 +183,34 @@ export function EventoParaMembro({ event, rsvps, people, onSaved }: { event: Eve
     const { error } = await createServiceBrowserClient().schema("service").from("events")
       .update({ pede, valor: valor.trim() || null, instrucoes: instrucoes.trim() || null }).eq("id", event.id);
     setSalvando(false);
-    if (error) { avisar(friendlyWriteError(error.message), "warn"); return; }
-    avisar("Salvo", "ok");
+    if (error) { avisar(friendlyWriteError(error.message, traduzirUi), "warn"); return; }
+    avisar(traduzirUi("Salvo"), "ok");
     onSaved();
   };
   const nomes = rsvps.map((r) => people.find((p) => p.id === r.person_id)?.name).filter(Boolean) as string[];
   return (
     <>
-      <DrawerSection title="O que este evento pede">
+      <DrawerSection title={traduzirUi("O que este evento pede")}>
         <div style={{ display: "grid", gap: 8 }}>
-          {PEDE_OPCOES.map((o) => (
+          {pedeOpcoes(traduzirUi).map((o) => (
             <Marcar key={o.v} tipo="radio" className={`pede-opt${pede === o.v ? " on" : ""}`} name={`pede-${event.id}`} checked={pede === o.v} onChange={() => setPede(o.v)}>
               <b style={{ fontSize: "var(--fs-pn-14)" }}>{o.t}</b><br /><span className="mini-sub">{o.s}</span>
             </Marcar>
           ))}
         </div>
       </DrawerSection>
-      <DrawerSection title="Valor e instruções">
-        <Campo rotulo="Valor (opcional)"><Entrada value={valor} onChange={(e) => setValor(e.target.value)} placeholder="ex: R$ 50 por pessoa" /></Campo>
-        <Campo rotulo="Instruções para quem vai"><TextoLongo rows={4} value={instrucoes} onChange={(e) => setInstrucoes(e.target.value)} placeholder="Chave PIX, prazo, com quem falar..." /></Campo>
-        <p className="mini-sub">O app mostra o valor e estas instruções. O pagamento não passa pelo app.</p>
+      <DrawerSection title={traduzirUi("Valor e instruções")}>
+        <Campo rotulo={traduzirUi("Valor (opcional)")}><Entrada value={valor} onChange={(e) => setValor(e.target.value)} placeholder={traduzirUi("ex: R$ 50 por pessoa")} /></Campo>
+        <Campo rotulo={traduzirUi("Instruções para quem vai")}><TextoLongo rows={4} value={instrucoes} onChange={(e) => setInstrucoes(e.target.value)} placeholder={traduzirUi("Chave PIX, prazo, com quem falar...")} /></Campo>
+        <p className="mini-sub">{traduzirUi("O app mostra o valor e estas instruções. O pagamento não passa pelo app.")}</p>
       </DrawerSection>
       {pede !== "aviso" && (
-        <DrawerSection title={pede === "inscricao" ? "Inscritos" : "Confirmaram presença"}>
-          {nomes.length ? nomes.map((n) => <Linha key={n}><div className="mini-main"><div className="mini-title">{n}</div></div></Linha>) : <p className="mini-sub">Ninguém ainda.</p>}
+        <DrawerSection title={pede === "inscricao" ? traduzirUi("Inscritos") : traduzirUi("Confirmaram presença")}>
+          {nomes.length ? nomes.map((n) => <Linha key={n}><div className="mini-main"><div className="mini-title">{n}</div></div></Linha>) : <p className="mini-sub">{traduzirUi("Ninguém ainda.")}</p>}
         </DrawerSection>
       )}
       <div style={{ display: "flex", marginTop: 16 }}>
-        <Botao variante="principal" desativado={!mudou || salvando} onClick={salvar}>{salvando ? "Salvando..." : "Salvar"}</Botao>
+        <Botao variante="principal" desativado={!mudou || salvando} onClick={salvar}>{salvando ? traduzirUi("Salvando...") : traduzirUi("Salvar")}</Botao>
       </div>
     </>
   );
@@ -223,6 +230,8 @@ export function fmtDuracaoMin(min: number): string {
 }
 
 export function CronogramaEditor({ event, ministries, onRefresh }: { event: EventView; ministries: MinistryView[]; onRefresh: () => void }) {
+  const traduzirUi = useTexto();
+
   const { comTermos: ct } = useTermos();
   const [steps, setSteps] = useState<CronoStep[]>(event.schedule);
   const [horaInicio, setHoraInicio] = useState(event.time);
@@ -232,7 +241,7 @@ export function CronogramaEditor({ event, ministries, onRefresh }: { event: Even
     if (!ministryId) return null;
     return ministries.find((m) => m.id === ministryId)?.people.find((p) => p.isLeader) ?? null;
   };
-  const leaderName = (ministryId: string | null) => leaderOf(ministryId)?.personName ?? "a definir";
+  const leaderName = (ministryId: string | null) => leaderOf(ministryId)?.personName ?? traduzirUi("a definir");
 
   const recalc = (list: CronoStep[], anchor: string) => {
     let acc = parseHoraMin(anchor);
@@ -306,12 +315,12 @@ export function CronogramaEditor({ event, ministries, onRefresh }: { event: Even
     <div className="crono">
       <div className="crono-anchor">
         <div className="crono-anchor-f">
-          <label>{ct("Início do {culto}")}</label>
+          <label>{ct(traduzirUi("Início do {culto}"))}</label>
           <TimePicker value={horaInicio} onChange={setHora} />
         </div>
-        <div className="crono-anchor-note">As etapas seguem em sequência somando as durações. Você só informa quanto dura cada uma. Término previsto: <b>{fimCulto}</b>.</div>
+        <div className="crono-anchor-note">{traduzirUi.rich("As etapas seguem em sequência somando as durações. Você só informa quanto dura cada uma. Término previsto: <b>{fim}</b>.", { fim: fimCulto, b: (c) => <b>{c}</b> })}</div>
       </div>
-      {steps.length === 0 && <div className="crono-empty">{ct("Sem cronograma ainda. Monte o roteiro do {culto}, etapa por etapa, a duração e o time responsável. O horário é calculado sozinho.")}</div>}
+      {steps.length === 0 && <div className="crono-empty">{ct(traduzirUi("Sem cronograma ainda. Monte o roteiro do {culto}, etapa por etapa, a duração e o time responsável. O horário é calculado sozinho."))}</div>}
       <div className="crono-list">
         {steps.map((s, i) => (
           <div className="crono-step" key={s.id}>
@@ -322,38 +331,38 @@ export function CronogramaEditor({ event, ministries, onRefresh }: { event: Even
             </div>
             <div className="crono-body">
               <div className="crono-row1">
-                <input className="crono-item-in" placeholder={ct("Etapa do {culto} (ex: Momento de louvor)")} value={s.item} onChange={(e) => patch(s.id, { item: e.target.value })} onBlur={(e) => commitField(s.id, { item: e.target.value })} />
+                <input className="crono-item-in" placeholder={ct(traduzirUi("Etapa do {culto} (ex: Momento de louvor)"))} value={s.item} onChange={(e) => patch(s.id, { item: e.target.value })} onBlur={(e) => commitField(s.id, { item: e.target.value })} />
                 <div className="crono-actions">
-                  <Acao className="crono-mini" title="Subir" onClick={() => moveStep(i, -1)} desativado={i === 0}>↑</Acao>
-                  <Acao className="crono-mini" title="Descer" onClick={() => moveStep(i, 1)} desativado={i === steps.length - 1}>↓</Acao>
-                  <BotaoIcone className="crono-mini danger" title="Remover" rotulo="Remover" onClick={() => removeStep(s.id)}>✕</BotaoIcone>
+                  <Acao className="crono-mini" title={traduzirUi("Subir")} onClick={() => moveStep(i, -1)} desativado={i === 0}>↑</Acao>
+                  <Acao className="crono-mini" title={traduzirUi("Descer")} onClick={() => moveStep(i, 1)} desativado={i === steps.length - 1}>↓</Acao>
+                  <BotaoIcone className="crono-mini danger" title={traduzirUi("Remover")} rotulo={traduzirUi("Remover")} onClick={() => removeStep(s.id)}>✕</BotaoIcone>
                 </div>
               </div>
               <div className="crono-fields">
                 <div className="crono-f crono-f-dur">
-                  <label>Duração</label>
-                  <div className="crono-dur"><input type="number" min={0} step={5} value={s.duration_min ?? 0} onChange={(e) => setDuracao(s.id, +e.target.value)} /><span>min</span></div>
+                  <label>{traduzirUi("Duração")}</label>
+                  <div className="crono-dur"><input type="number" min={0} step={5} value={s.duration_min ?? 0} onChange={(e) => setDuracao(s.id, +e.target.value)} /><span>{traduzirUi("min")}</span></div>
                 </div>
                 <div className="crono-f">
-                  <label>Time (opcional)</label>
-                  <Selecao rotulo="Time (opcional)" valor={s.ministry_id ?? ""} aoMudar={(v) => setMinistryId(s.id, v)} vazio="Sem time" opcoes={ministries.map((m) => ({ v: m.id, l: m.name }))} />
+                  <label>{traduzirUi("Time (opcional)")}</label>
+                  <Selecao rotulo={traduzirUi("Time (opcional)")} valor={s.ministry_id ?? ""} aoMudar={(v) => setMinistryId(s.id, v)} vazio={traduzirUi("Sem time")} opcoes={ministries.map((m) => ({ v: m.id, l: m.name }))} />
                 </div>
                 {s.ministry_id && (
                   <div className="crono-f crono-f-full">
-                    <label>Responsável (líder do time)</label>
+                    <label>{traduzirUi("Responsável (líder do time)")}</label>
                     <div className="crono-resp-ro">{leaderName(s.ministry_id)}</div>
                   </div>
                 )}
               </div>
-              <input className="crono-obs" placeholder="Observação (opcional)" value={s.notes ?? ""} onChange={(e) => patch(s.id, { notes: e.target.value })} onBlur={(e) => commitField(s.id, { notes: e.target.value })} />
+              <input className="crono-obs" placeholder={traduzirUi("Observação (opcional)")} value={s.notes ?? ""} onChange={(e) => patch(s.id, { notes: e.target.value })} onBlur={(e) => commitField(s.id, { notes: e.target.value })} />
             </div>
           </div>
         ))}
       </div>
-      <Botao compacto className="crono-add" onClick={addStep}>+ Adicionar etapa</Botao>
+      <Botao compacto className="crono-add" onClick={addStep}>{traduzirUi("+ Adicionar etapa")}</Botao>
       {steps.length > 0 && (
         <div className="crono-totais">
-          <div className="crono-tot-geral"><span>{ct("Duração total do {culto}")}</span><b>{fmtDuracaoMin(totalGeral)}</b></div>
+          <div className="crono-tot-geral"><span>{ct(traduzirUi("Duração total do {culto}"))}</span><b>{fmtDuracaoMin(totalGeral)}</b></div>
         </div>
       )}
     </div>

@@ -24,6 +24,9 @@ import { Selo, tomDaClasse } from "../../ui/Selo";
 import { Segmentado } from "../../ui/Segmentado";
 import { Vazio } from "../../ui/Estados";
 import { Progresso } from "../../ui/Graficos";
+import { useTexto } from "../../lib/internacional/contexto";
+import type { Text } from "../../lib/internacional/mensagens";
+
 export function Decisoes({
   decisions,
   members,
@@ -37,6 +40,8 @@ export function Decisoes({
   setDrawer: (drawer: DrawerState) => void;
   setModal: (modal: ModalState) => void;
 }) {
+  const traduzirUi = useTexto();
+
   const { comTermos: ct } = useTermos();
   const [q, setQ] = useState("");
   const [f, setF] = useState<"todas" | "novo" | "acompanhando" | "encaminhado">("todas");
@@ -52,45 +57,45 @@ export function Decisoes({
   return (
     <div className="content wide">
       <PageHead
-        title="Decisões por Jesus"
-        eyebrow={ct("{Caminhada}")}
-        help={ct("Todo mundo que decidiu por Jesus ou se reconciliou num {culto}. A decisão inicia a {caminhada} da pessoa até o batismo.")}
-        action={<Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: "Nova decisão", subtitle: ct("Registre quem decidiu, o {culto} e quem fará o acompanhamento."), saveLabel: "Registrar decisão", formFields: [{ k:"nome", label:"Nome", type:"text", req:true, ph:"Quem decidiu" }, { k:"tel", label:"Telefone", type:"text", half:true, ph:"(11) 9..." }, { k:"culto", label:ct("{Culto}"), type:"text", half:true, ph:ct("ex: {Culto} da Manhã") }, { k:"responsavel", label:"Responsável pelo acompanhamento", type:"text", ph:"Quem vai acompanhar" }], action: { kind: "decision" } })}>+ Registrar decisão</Botao>}
+        title={traduzirUi("Decisões por Jesus")}
+        eyebrow={ct(traduzirUi("{Caminhada}"))}
+        help={ct(traduzirUi("Todo mundo que decidiu por Jesus ou se reconciliou num {culto}. A decisão inicia a {caminhada} da pessoa até o batismo."))}
+        action={<Botao variante="principal" onClick={() => setModal({ eyebrow: traduzirUi("Criar"), title: traduzirUi("Nova decisão"), subtitle: ct(traduzirUi("Registre quem decidiu, o {culto} e quem fará o acompanhamento.")), saveLabel: traduzirUi("Registrar decisão"), formFields: [{ k:"nome", label:traduzirUi("Nome"), type:"text", req:true, ph:traduzirUi("Quem decidiu") }, { k:"tel", label:traduzirUi("Telefone"), type:"text", half:true, ph:"(11) 9..." }, { k:"culto", label:ct(traduzirUi("{Culto}")), type:"text", half:true, ph:ct(traduzirUi("ex: {Culto} da Manhã")) }, { k:"responsavel", label:traduzirUi("Responsável pelo acompanhamento"), type:"text", ph:traduzirUi("Quem vai acompanhar") }], action: { kind: "decision" } })}>{traduzirUi("+ Registrar decisão")}</Botao>}
       />
       <div className="kpi-row">
-        <Indicador icone="visitante" rotulo="Decisões no mês" valor={decisions.length} rodape={ct("registradas na {caminhada}")} ajuda="Quantas decisões por Jesus ou reconciliações foram registradas neste mês." />
-        <Indicador icone="config" rotulo="A contatar" valor={newDecisions.length} rodape="aguardando primeiro contato" tom="pendente" ajuda="Decisões novas que ainda não tiveram o primeiro contato da equipe de acompanhamento." />
-        <Indicador icone="pessoa" rotulo="Em acompanhamento" valor={following.length} rodape="discipulado em andamento" ajuda="Quem já foi contatado e está no meio do discipulado inicial." />
-        <Indicador icone="relatorios" rotulo="Encaminhados" valor={forwarded.length} rodape="já viraram membros" ajuda="Decisões que já completaram o caminho e viraram membros da igreja." />
+        <Indicador icone="visitante" rotulo={traduzirUi("Decisões no mês")} valor={decisions.length} rodape={traduzirUi("registradas na {caminhada}")} ajuda={traduzirUi("Quantas decisões por Jesus ou reconciliações foram registradas neste mês.")} />
+        <Indicador icone="config" rotulo={traduzirUi("A contatar")} valor={newDecisions.length} rodape={traduzirUi("aguardando primeiro contato")} tom="pendente" ajuda={traduzirUi("Decisões novas que ainda não tiveram o primeiro contato da equipe de acompanhamento.")} />
+        <Indicador icone="pessoa" rotulo={traduzirUi("Em acompanhamento")} valor={following.length} rodape={traduzirUi("discipulado em andamento")} ajuda={traduzirUi("Quem já foi contatado e está no meio do discipulado inicial.")} />
+        <Indicador icone="relatorios" rotulo={traduzirUi("Encaminhados")} valor={forwarded.length} rodape={traduzirUi("já viraram membros")} ajuda={traduzirUi("Decisões que já completaram o caminho e viraram membros da igreja.")} />
       </div>
       <div className="toolbar">
         <div className="tb-search">
           <span className="si"><Icon name="buscar" size={13} /></span>
-          <input placeholder="Buscar por nome..." value={q} onChange={(e) => setQ(e.target.value)} />
+          <input placeholder={traduzirUi("Buscar por nome...")} value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         <Segmentado>
-          <Opcao marcada={f === "todas"} onClick={() => setF("todas")}>Todas</Opcao>
-          <Opcao marcada={f === "novo"} onClick={() => setF("novo")}>A contatar</Opcao>
-          <Opcao marcada={f === "acompanhando"} onClick={() => setF("acompanhando")}>Acompanhando</Opcao>
-          <Opcao marcada={f === "encaminhado"} onClick={() => setF("encaminhado")}>Encaminhados</Opcao>
+          <Opcao marcada={f === "todas"} onClick={() => setF("todas")}>{traduzirUi("Todas")}</Opcao>
+          <Opcao marcada={f === "novo"} onClick={() => setF("novo")}>{traduzirUi("A contatar")}</Opcao>
+          <Opcao marcada={f === "acompanhando"} onClick={() => setF("acompanhando")}>{traduzirUi("Acompanhando")}</Opcao>
+          <Opcao marcada={f === "encaminhado"} onClick={() => setF("encaminhado")}>{traduzirUi("Encaminhados")}</Opcao>
         </Segmentado>
         <div className="tb-spacer" />
-        <span className="panel-meta">{visible.length} de {decisions.length} decisões</span>
+        <span className="panel-meta">{traduzirUi("{n} de {total} decisões", { n: String(visible.length), total: String(decisions.length) })}</span>
       </div>
       <div className="tbl">
-        <Linha estilo="tabela" className="head" style={{ gridTemplateColumns: "1.5fr 1fr 1fr 130px" }}><span>Pessoa</span><span>{ct("Quando & {culto}")}</span><span>Responsável</span><span>Situação</span></Linha>
+        <Linha estilo="tabela" className="head" style={{ gridTemplateColumns: "1.5fr 1fr 1fr 130px" }}><span>{traduzirUi("Pessoa")}</span><span>{ct(traduzirUi("Quando & {culto}"))}</span><span>{traduzirUi("Responsável")}</span><span>{traduzirUi("Situação")}</span></Linha>
         {visible.map((decision) => {
           const responsible = decision.responsible_id ? personById.get(decision.responsible_id) : null;
           return (
             <Acao className={`${linhaClasse({ estilo: "tabela" })} click`} key={decision.id} style={{ gridTemplateColumns: "1.5fr 1fr 1fr 130px" }} onClick={() => setDrawer({ kind: "decision", id: decision.id })}>
-              <div className="cell-person"><Av name={decision.name} size="md" /><div><div className="cell-name">{decision.name} <Selo tom="ok" style={{ marginLeft: 6, transform: "scale(0.92)" }}>{decision.kind === "reconciliacao" ? "Reconciliação" : "Decisão"}</Selo></div><div className="cell-sub">{decision.phone}</div></div></div>
-              <div><div style={{ fontSize: "var(--fs-pn-13)", color: "var(--light)" }}>{formatDateBR(decision.happened_on)}</div><div className="cell-sub">{decision.service_name || ct("{Culto} não informado")}</div></div>
-              <div className="cell-person">{responsible ? <Av name={responsible.name} size="sm" photoUrl={responsible.photoUrl} /> : null}<div className="cell-sub" style={{ marginTop: 0 }}>{responsible?.name ?? "a definir"}</div></div>
+              <div className="cell-person"><Av name={decision.name} size="md" /><div><div className="cell-name">{decision.name} <Selo tom="ok" style={{ marginLeft: 6, transform: "scale(0.92)" }}>{decision.kind === "reconciliacao" ? traduzirUi("Reconciliação") : traduzirUi("Decisão")}</Selo></div><div className="cell-sub">{decision.phone}</div></div></div>
+              <div><div style={{ fontSize: "var(--fs-pn-13)", color: "var(--light)" }}>{formatDateBR(decision.happened_on)}</div><div className="cell-sub">{decision.service_name || ct(traduzirUi("{Culto} não informado"))}</div></div>
+              <div className="cell-person">{responsible ? <Av name={responsible.name} size="sm" photoUrl={responsible.photoUrl} /> : null}<div className="cell-sub" style={{ marginTop: 0 }}>{responsible?.name ?? traduzirUi("a definir")}</div></div>
               <div><Chip status={decision.status === "novo" ? "wait" : decision.status === "encaminhado" ? "ok" : "ativo"} /></div>
             </Acao>
           );
         })}
-        {visible.length === 0 ? <EmptyState title="Nenhuma decisão por aqui" text={ct("Quem decidir por Jesus ou se reconciliar num {culto} aparece nesta lista.")} /> : null}
+        {visible.length === 0 ? <EmptyState title={traduzirUi("Nenhuma decisão por aqui")} text={ct(traduzirUi("Quem decidir por Jesus ou se reconciliar num {culto} aparece nesta lista."))} /> : null}
       </div>
     </div>
   );
@@ -113,22 +118,24 @@ export function Batismos({
   setDrawer: (drawer: DrawerState) => void;
   setModal: (modal: ModalState) => void;
 }) {
+  const traduzirUi = useTexto();
+
   const { comTermos: ct } = useTermos();
   const upcoming = baptismClasses.filter((c) => c.status !== "concluida");
   const concluded = baptismClasses.filter((c) => c.status === "concluida");
-  const localOptions = [...rooms.map((room) => ({ v: room.name, l: `${room.name}${room.capacity ? ` · ${room.capacity} lug.` : ""}` })), { v: OUTRO_LOCAL, l: "Outro espaço (rio, praia, sítio...)" }];
+  const localOptions = [...rooms.map((room) => ({ v: room.name, l: room.capacity ? traduzirUi("{sala} · {capacidade} lug.", { sala: room.name, capacidade: String(room.capacity) }) : room.name })), { v: OUTRO_LOCAL, l: traduzirUi("Outro espaço (rio, praia, sítio...)") }];
   return (
     <div className="content wide">
-      <PageHead title="Batismos" eyebrow={ct("{Caminhada}")} help={ct("Turmas de batismo: quem vai ser batizado, quando e onde. Fecha um passo importante na {caminhada} da pessoa.")} action={<Botao variante="principal" onClick={() => setModal({ eyebrow: "Criar", title: "Nova turma de batismo", subtitle: "Crie a turma, defina data, local e quem vai oficiar.", saveLabel: "Criar turma", formFields: [{ k:"label", label:"Nome da turma", type:"text", req:true, ph:"ex: Batismo de Julho 2025" }, { k:"data", label:"Data do batismo", type:"date", half:true }, { k:"local", label:"Local", type:"select", req:true, half:true, ph:"Selecione um espaço cadastrado", options: localOptions }, { k:"endereco", label:"Endereço do espaço", type:"text", half:true, ph:"ex: Rio Tietê, Praia de Santos...", showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"pastor", label:"Pastor responsável", type:"text", ph:"Quem vai oficiar" }], action: { kind: "baptismClass" } })}>+ Nova turma</Botao>} />
+      <PageHead title={traduzirUi("Batismos")} eyebrow={ct(traduzirUi("{Caminhada}"))} help={ct(traduzirUi("Turmas de batismo: quem vai ser batizado, quando e onde. Fecha um passo importante na {caminhada} da pessoa."))} action={<Botao variante="principal" onClick={() => setModal({ eyebrow: traduzirUi("Criar"), title: traduzirUi("Nova turma de batismo"), subtitle: traduzirUi("Crie a turma, defina data, local e quem vai oficiar."), saveLabel: traduzirUi("Criar turma"), formFields: [{ k:"label", label:traduzirUi("Nome da turma"), type:"text", req:true, ph:traduzirUi("ex: Batismo de Julho 2025") }, { k:"data", label:traduzirUi("Data do batismo"), type:"date", half:true }, { k:"local", label:traduzirUi("Local"), type:"select", req:true, half:true, ph:traduzirUi("Selecione um espaço cadastrado"), options: localOptions }, { k:"endereco", label:traduzirUi("Endereço do espaço"), type:"text", half:true, ph:traduzirUi("ex: Rio Tietê, Praia de Santos..."), showIf:{field:"local",equals:OUTRO_LOCAL} }, { k:"pastor", label:traduzirUi("Pastor responsável"), type:"text", ph:traduzirUi("Quem vai oficiar") }], action: { kind: "baptismClass" } })}>{traduzirUi("+ Nova turma")}</Botao>} />
       <div className="kpi-row">
-        <Indicador icone="identidade" rotulo="Turmas abertas" valor={baptismClasses.filter((c) => c.open_enrollment).length} rodape="com inscrições disponíveis" ajuda="Turmas de batismo que ainda estão aceitando novas inscrições." />
-        <Indicador icone="pessoa" rotulo="Candidatos" valor={baptismCandidates.length} rodape="em preparação" ajuda="Quem está inscrito numa turma, fazendo o curso pré-batismo." />
-        <Indicador icone="cultos" rotulo="Próximas turmas" valor={upcoming.length} rodape={formatDateBR(upcoming[0]?.baptism_date) || "sem data agendada"} ajuda="Turmas com data de batismo marcada pra frente." />
-        <Indicador icone="relatorios" rotulo="Concluídos" valor={concluded.length} rodape="histórico da igreja" ajuda="Turmas de batismo já realizadas, guardadas no histórico." />
+        <Indicador icone="identidade" rotulo={traduzirUi("Turmas abertas")} valor={baptismClasses.filter((c) => c.open_enrollment).length} rodape={traduzirUi("com inscrições disponíveis")} ajuda={traduzirUi("Turmas de batismo que ainda estão aceitando novas inscrições.")} />
+        <Indicador icone="pessoa" rotulo={traduzirUi("Candidatos")} valor={baptismCandidates.length} rodape={traduzirUi("em preparação")} ajuda={traduzirUi("Quem está inscrito numa turma, fazendo o curso pré-batismo.")} />
+        <Indicador icone="cultos" rotulo={traduzirUi("Próximas turmas")} valor={upcoming.length} rodape={formatDateBR(upcoming[0]?.baptism_date) || traduzirUi("sem data agendada")} ajuda={traduzirUi("Turmas com data de batismo marcada pra frente.")} />
+        <Indicador icone="relatorios" rotulo={traduzirUi("Concluídos")} valor={concluded.length} rodape={traduzirUi("histórico da igreja")} ajuda={traduzirUi("Turmas de batismo já realizadas, guardadas no histórico.")} />
       </div>
       <div className="section-divide">
         <span className="num">{upcoming.length}</span>
-        <span className="label">PRÓXIMAS TURMAS</span>
+        <span className="label">{traduzirUi("PRÓXIMAS TURMAS")}</span>
         <div className="line" />
       </div>
       {upcoming.length > 0 ? (
@@ -140,7 +147,7 @@ export function Batismos({
               <Acao className="bat-card" key={cls.id} onClick={() => setDrawer({ kind: "baptismClass", id: cls.id })}>
                 <div className="bat-card-top">
                   <div>
-                    <div className="bat-date">{formatDateBR(cls.baptism_date) || "Sem data"}</div>
+                    <div className="bat-date">{formatDateBR(cls.baptism_date) || traduzirUi("Sem data")}</div>
                     <div className="bat-turma">{cls.label}</div>
                   </div>
                   <div className="bat-mark"><Icon name="batismos" size={20} /></div>
@@ -148,24 +155,24 @@ export function Batismos({
                 <div className="bat-meta">{joinDot(cls.location, cls.pastor)}</div>
                 <div className="bat-foot">
                   <Selo tom={tomDaClasse(st?.cls ?? "chip-wait")}>{st?.label ?? cls.status}</Selo>
-                  <span className="panel-meta">{count} candidato{count !== 1 ? "s" : ""}</span>
+                  <span className="panel-meta">{traduzirUi("{count, plural, =1 {{n} candidato} other {{n} candidatos}}", { count, n: String(count) })}</span>
                 </div>
               </Acao>
             );
           })}
         </div>
       ) : (
-        <Vazio titulo="Nenhuma turma em andamento." />
+        <Vazio titulo={traduzirUi("Nenhuma turma em andamento.")} />
       )}
       {concluded.length > 0 && (
         <>
           <div className="section-divide" style={{ marginTop: 32 }}>
             <span className="num">{concluded.length}</span>
-            <span className="label">HISTÓRICO</span>
+            <span className="label">{traduzirUi("HISTÓRICO")}</span>
             <div className="line" />
           </div>
           <div className="tbl">
-            <Linha estilo="tabela" className="head" style={{ gridTemplateColumns: "2fr 1fr 1fr 100px" }}><span>Turma</span><span>Data</span><span>Local</span><span>Candidatos</span></Linha>
+            <Linha estilo="tabela" className="head" style={{ gridTemplateColumns: "2fr 1fr 1fr 100px" }}><span>{traduzirUi("Turma")}</span><span>{traduzirUi("Data")}</span><span>{traduzirUi("Local")}</span><span>{traduzirUi("Candidatos")}</span></Linha>
             {concluded.map((cls) => {
               const count = baptismCandidates.filter((c) => c.class_id === cls.id).length;
               return (
@@ -173,7 +180,7 @@ export function Batismos({
                   <div className="cell-name">{cls.label}</div>
                   <div style={{ fontSize: "var(--fs-pn-13)", color: "var(--light)" }}>{formatDateBR(cls.baptism_date) || "-"}</div>
                   <div className="cell-sub">{cls.location ?? "-"}</div>
-                  <div><Selo>{count} pessoas</Selo></div>
+                  <div><Selo>{traduzirUi("{n} pessoas", { n: String(count) })}</Selo></div>
                 </Acao>
               );
             })}
@@ -188,11 +195,11 @@ export function normCat(s: string) {
   return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 }
 
-export const CURSO_FILTROS = [
-  { v: "todos", l: "Todos" },
-  { v: "trilha", l: "Trilhas" },
-  { v: "conteudo", l: "Conteúdo" },
-  { v: "presencial", l: "Presenciais" },
+export const cursoFiltros = (t: Text) => [
+  { v: "todos", l: t("Todos") },
+  { v: "trilha", l: t("Trilhas") },
+  { v: "conteudo", l: t("Conteúdo") },
+  { v: "presencial", l: t("Presenciais") },
 ] as const;
 
 export function CursosTrilhas({
@@ -206,11 +213,13 @@ export function CursosTrilhas({
   members: MemberView[];
   church?: ChurchView;
 }) {
+  const traduzirUi = useTexto();
+
   const { comTermos: ct } = useTermos();
   const [editingId, setEditingId] = useState<string | "new" | null>(null);
   const [viewingId, setViewingId] = useState<string | null>(null);
   const [view, setView] = useState<"galeria" | "org">("galeria");
-  const [filtro, setFiltro] = useState<(typeof CURSO_FILTROS)[number]["v"]>("todos");
+  const [filtro, setFiltro] = useState<ReturnType<typeof cursoFiltros>[number]["v"]>("todos");
   const [novoGrupo, setNovoGrupo] = useState<string | null>(null);
 
   if (editingId !== null && church) {
@@ -233,29 +242,27 @@ export function CursosTrilhas({
   return (
     <div className="content wide">
       <PageHead
-        title="Cursos e Trilhas"
-        eyebrow={ct("{Caminhada}")}
-        help={ct("As trilhas formam a pessoa da decisão à liderança. Cada aula concluída entra na {caminhada} da pessoa.")}
+        title={traduzirUi("Cursos e Trilhas")}
+        eyebrow={ct(traduzirUi("{Caminhada}"))}
+        help={ct(traduzirUi("As trilhas formam a pessoa da decisão à liderança. Cada aula concluída entra na {caminhada} da pessoa."))}
         action={
-          <Botao variante="principal" onClick={() => setEditingId("new")}>
-            + Nova trilha
-          </Botao>
+          <Botao variante="principal" onClick={() => setEditingId("new")}>{traduzirUi("+ Nova trilha")}</Botao>
         }
       />
 
       <div className="kpi-row">
-        <Indicador icone="cursos" rotulo="Cursos ativos" valor={courses.length} rodape="trilhas, conteúdo e presenciais" />
-        <Indicador icone="membros" rotulo="Matrículas" valor={totMatric} rodape="pessoas cursando agora" />
-        <Indicador icone="ok" rotulo="Conclusões" valor={totConcl} rodape={totMatric ? `${Math.round((totConcl / totMatric) * 100)}% de conclusão` : "sem matrículas ainda"} />
-        <Indicador icone="times" rotulo="Em formação de líderes" valor={emFormacao} rodape="na trilha de liderança" />
+        <Indicador icone="cursos" rotulo={traduzirUi("Cursos ativos")} valor={courses.length} rodape={traduzirUi("trilhas, conteúdo e presenciais")} />
+        <Indicador icone="membros" rotulo={traduzirUi("Matrículas")} valor={totMatric} rodape={traduzirUi("pessoas cursando agora")} />
+        <Indicador icone="ok" rotulo={traduzirUi("Conclusões")} valor={totConcl} rodape={totMatric ? traduzirUi("{pct}% de conclusão", { pct: String(Math.round((totConcl / totMatric) * 100)) }) : traduzirUi("sem matrículas ainda")} />
+        <Indicador icone="times" rotulo={traduzirUi("Em formação de líderes")} valor={emFormacao} rodape={traduzirUi("na trilha de liderança")} />
       </div>
 
       {/* uma fileira só: os tipos de curso e, no fim, organizar */}
       <div className="seg-check cursos-filtros">
-        {CURSO_FILTROS.map((f) => (
+        {cursoFiltros(traduzirUi).map((f) => (
           <Opcao key={f.v} marcada={view === "galeria" && filtro === f.v} estilo="seg-chip" onClick={() => { setView("galeria"); setFiltro(f.v); }}>{f.l}</Opcao>
         ))}
-        <Opcao marcada={view === "org"} estilo="seg-chip" onClick={() => setView("org")}><Icon name="config" size={13} /> Organizar</Opcao>
+        <Opcao marcada={view === "org"} estilo="seg-chip" onClick={() => setView("org")}><Icon name="config" size={13} /> {traduzirUi("Organizar")}</Opcao>
       </div>
 
       {view === "galeria" ? (
@@ -272,18 +279,18 @@ export function CursosTrilhas({
               >
                 <div className="team-card-top">
                   <div className="team-mark"><Icon name="relatorios" size={20} /></div>
-                  <Selo tom="ok">{course.level || course.category || "trilha"}</Selo>
+                  <Selo tom="ok">{course.level || course.category || traduzirUi("trilha")}</Selo>
                 </div>
                 <div className="team-name">{course.name}</div>
-                <div className="team-lead">Matrículas: <em>{courseEnrollments.length}</em></div>
+                <div className="team-lead">{traduzirUi.rich("Matrículas: <em>{n}</em>", { n: String(courseEnrollments.length), em: (c) => <em>{c}</em> })}</div>
                 <p style={{ color: "var(--muted)", fontSize: "var(--fs-pn-13)", lineHeight: 1.55, marginTop: 12 }}>
-                  {course.description || "Acompanhamento de progresso e conclusão na linha do tempo do membro."}
+                  {course.description || traduzirUi("Acompanhamento de progresso e conclusão na linha do tempo do membro.")}
                 </p>
-                <Progresso pct={pct} rotulo={`Conclusão de ${course.name}`} style={{ marginTop: 14 }} />
+                <Progresso pct={pct} rotulo={traduzirUi("Conclusão de {curso}", { curso: course.name })} style={{ marginTop: 14 }} />
               </Acao>
             );
           })}
-          {cursos.length === 0 && <EmptyState title="Nenhum curso ainda" text="Os cursos e trilhas da igreja aparecem aqui, com aulas e presença." action={{ label: "Criar curso", onClick: () => setEditingId("new") }} />}
+          {cursos.length === 0 && <EmptyState title={traduzirUi("Nenhum curso ainda")} text={traduzirUi("Os cursos e trilhas da igreja aparecem aqui, com aulas e presença.")} action={{ label: traduzirUi("Criar curso"), onClick: () => setEditingId("new") }} />}
         </div>
       ) : (
         <CursoBuilder
@@ -331,6 +338,8 @@ export function CursoBuilderColuna({
   onOpenEditor: (id: string | "new") => void;
   onOpenDrawer: (id: string) => void;
 }) {
+  const traduzirUi = useTexto();
+
   const { comTermos: ct } = useTermos();
   const access = useServiceAccess();
   return (
@@ -358,13 +367,13 @@ export function CursoBuilderColuna({
               <div className="cb-card-name">{c.name}</div>
               {requirementsFor(access.requirements, "course", c.id).length > 0 && (
                 <div className="cb-req">
-                  exige: {requirementsFor(access.requirements, "course", c.id).map((r) => ct(requirementLabel(r, access).replace(/^[^:]+: /, ""))).join(", ")}
+                  {traduzirUi("exige: {lista}", { lista: requirementsFor(access.requirements, "course", c.id).map((r) => ct(requirementLabel(r, access).replace(/^[^:]+: /, ""))).join(", ") })}
                 </div>
               )}
             </div>
           </Acao>
         ))}
-        {id && <Botao compacto onClick={() => onOpenEditor("new")}>+ curso neste grupo</Botao>}
+        {id && <Botao compacto onClick={() => onOpenEditor("new")}>{traduzirUi("+ curso neste grupo")}</Botao>}
       </div>
     </div>
   );
@@ -380,6 +389,8 @@ export function CursoBuilder({
   novoGrupo: string | null;
   setNovoGrupo: (v: string | null) => void;
 }) {
+  const traduzirUi = useTexto();
+
   const router = useRouter();
   const [drag, setDrag] = useState<string | null>(null);
   const [nomeGrupo, setNomeGrupo] = useState("");
@@ -426,7 +437,7 @@ export function CursoBuilder({
       ))}
       <CursoBuilderColuna
         id={null}
-        nome="Sem grupo"
+        nome={traduzirUi("Sem grupo")}
         lista={semGrupo}
         allCourses={courses}
         drag={drag}
@@ -440,19 +451,19 @@ export function CursoBuilder({
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <input
               className="input"
-              placeholder="Nome do grupo"
+              placeholder={traduzirUi("Nome do grupo")}
               value={nomeGrupo}
               onChange={(e) => setNomeGrupo(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && criarGrupo()}
               autoFocus
             />
             <div style={{ display: "flex", gap: 6 }}>
-              <Botao variante="principal" compacto onClick={criarGrupo}>Criar</Botao>
-              <Botao compacto onClick={() => { setNovoGrupo(null); setNomeGrupo(""); }}>Cancelar</Botao>
+              <Botao variante="principal" compacto onClick={criarGrupo}>{traduzirUi("Criar")}</Botao>
+              <Botao compacto onClick={() => { setNovoGrupo(null); setNomeGrupo(""); }}>{traduzirUi("Cancelar")}</Botao>
             </div>
           </div>
         ) : (
-          <Botao compacto onClick={() => setNovoGrupo("")}>+ Novo grupo</Botao>
+          <Botao compacto onClick={() => setNovoGrupo("")}>{traduzirUi("+ Novo grupo")}</Botao>
         )}
       </div>
     </div>
