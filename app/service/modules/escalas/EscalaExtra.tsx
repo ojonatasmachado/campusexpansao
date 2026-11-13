@@ -8,6 +8,7 @@ import { useId, useRef, useState } from "react";
 import { FormScreen, FormSection, type FormScreenHandle } from "../../painel/form/FormScreen";
 import { useRelogioDaIgreja } from "../../lib/relogio-context";
 import { joinDot, parseISODate } from "../../lib/date";
+import { listaResumida } from "../../lib/lista";
 import { avisar } from "../../lib/avisar";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { friendlyWriteError } from "../../painel/erros";
@@ -106,7 +107,7 @@ export function EscalaExtra({ ministries, church, onClose, onCriado }: {
               <Marcar className="fs-check" key={m.id} checked={times.has(m.id)} onChange={() => setTimes((atual) => { const n = new Set(atual); if (n.has(m.id)) n.delete(m.id); else n.add(m.id); return n; })}>
                 <span className="per-check-txt">
                   <span className="per-check-t">{m.name}</span>
-                  <span className="per-check-s">{joinDot(traduzirUi("{count, plural, =1 {# vaga} other {# vagas}}", { count: m.positions.reduce((s, p) => s + Math.max(1, p.need_count), 0) }), m.positions.map((p) => p.name).join(", "))}</span>
+                  <span className="per-check-s">{joinDot(traduzirUi("{count, plural, =1 {# vaga} other {# vagas}}", { count: m.positions.reduce((s, p) => s + Math.max(1, p.need_count), 0) }), listaResumida(m.positions.map((p) => p.name), traduzirUi))}</span>
                 </span>
               </Marcar>
             ))}

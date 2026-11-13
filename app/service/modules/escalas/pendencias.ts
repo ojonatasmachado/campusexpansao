@@ -30,6 +30,15 @@ export function pendenciasDeCobertura<T extends Evento>(
       const faltas = coberturaPorTime(evento, vagas, times, escopo)
         .filter((t) => t.preenchidas < t.total);
       if (!faltas.length) return [];
+      const LIMITE_TIMES = 2;
+      const resumo = faltas.length <= LIMITE_TIMES
+        ? faltas.map((t) => `${plural(t.total - t.preenchidas, "vaga")} em ${t.time}`).join(" · ")
+        : (() => {
+            const totalFaltam = faltas.reduce((soma, t) => soma + (t.total - t.preenchidas), 0);
+            const nomes = faltas.slice(0, LIMITE_TIMES).map((t) => t.time).join(", ");
+            const extras = faltas.length - LIMITE_TIMES;
+            return `${plural(totalFaltam, "vaga")} em ${nomes} e mais ${plural(extras, "time")}`;
+          })();
       return [{
         id: `cobertura-${evento.id}`,
         modulo: "escalas",
@@ -38,7 +47,7 @@ export function pendenciasDeCobertura<T extends Evento>(
         prazo: evento.eventDate + "T" + (evento.time || "23:59"),
         conteudo: {
           evento,
-          resumo: faltas.map((t) => `${plural(t.total - t.preenchidas, "vaga")} em ${t.time}`).join(" · "),
+          resumo,
         },
       }];
     });

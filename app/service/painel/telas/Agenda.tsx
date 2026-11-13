@@ -7,6 +7,7 @@ import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { Icon } from "../../lib/icons";
 import { useRelogioDaIgreja } from "../../lib/relogio-context";
 import { formatDateBR, joinDot, parseISODate, toISODate } from "../../lib/date";
+import { listaResumida } from "../../lib/lista";
 import { KidsQRModal } from "../../KidsCheckin";
 
 import { useTermos } from "../../lib/vocabulario-context";
@@ -82,7 +83,7 @@ export function Cultos({ events, ministries, church, kidsClasses, kidsSessions, 
           <Cartao key={event.id} style={{ position: "relative" }}>
             <Acao className={`${cartaoClasse({})} click`} style={{ width: "100%", textAlign: "left", background: "none", border: "none", padding: 0 }} onClick={() => setDrawer({ kind: "event", id: event.id })}>
               <div className="panel-head"><span className="panel-title"><Icon name="cultos" size={14} /> {event.name}</span><span className="panel-meta">{event.time}</span></div>
-              <div className="panel-body"><p className="mini-sub">{joinDot(event.weekday, formatDateBR(event.eventDate), event.location)}</p><div className="divider" style={{ margin: "14px 0" }} />{event.schedule.slice(0, 4).map((item) => <Linha key={item.id} style={{ paddingInline: 0 }}><div className="mini-main"><div className="mini-title">{item.item}</div><div className="mini-sub">{item.time ?? traduzirUi("sem horário")} · {item.category ?? traduzirUi("roteiro")}</div></div></Linha>)}<div className="mini-sub">{event.ministries.map((id) => ministries.find((ministry) => ministry.id === id)?.name).filter(Boolean).join(" · ")}</div></div>
+              <div className="panel-body"><p className="mini-sub">{joinDot(event.weekday, formatDateBR(event.eventDate), event.location)}</p><div className="divider" style={{ margin: "14px 0" }} />{event.schedule.slice(0, 4).map((item) => <Linha key={item.id} style={{ paddingInline: 0 }}><div className="mini-main"><div className="mini-title">{item.item}</div><div className="mini-sub">{item.time ?? traduzirUi("sem horário")} · {item.category ?? traduzirUi("roteiro")}</div></div></Linha>)}<div className="mini-sub">{listaResumida(event.ministries.map((id) => ministries.find((ministry) => ministry.id === id)?.name).filter((nome): nome is string => Boolean(nome)), traduzirUi)}</div></div>
             </Acao>
             <div style={{ padding: "0 22px 16px", display: "flex", gap: 8 }}>
               <Botao compacto onClick={(e) => { e.stopPropagation(); setCheckinEventId(event.id); }}>
