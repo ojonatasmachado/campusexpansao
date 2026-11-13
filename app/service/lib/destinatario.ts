@@ -5,6 +5,7 @@
 
 import { useEffect, useState } from "react";
 import { createServiceBrowserClient } from "./supabase-browser";
+import { sourceText, type Text } from "./internacional/mensagens";
 
 export type Destinatario = { member_id: string; name: string; via: "lider" | "intercessao" | "gestao"; ministry: string | null };
 export type PedidoKind = "troca" | "oracao";
@@ -31,11 +32,11 @@ export function useDestinatario(kind: PedidoKind, ministryId?: string | null): D
 }
 
 /* "Lucas, que lidera Louvor" / "Marta, da liderança da igreja" */
-export function papelDoDestinatario(d: Destinatario): string {
+export function papelDoDestinatario(d: Destinatario, t: Text = sourceText): string {
   const nome = d.name.split(" ")[0];
-  if (d.via === "lider") return d.ministry ? `${nome}, que lidera ${d.ministry}` : `${nome}, que lidera o seu time`;
-  if (d.via === "intercessao") return `${nome}, da intercessão`;
-  return `${nome}, da liderança da igreja`;
+  if (d.via === "lider") return d.ministry ? t("{nome}, que lidera {time}", { nome, time: d.ministry }) : t("{nome}, que lidera o seu time", { nome });
+  if (d.via === "intercessao") return t("{nome}, da intercessão", { nome });
+  return t("{nome}, da liderança da igreja", { nome });
 }
 
 /* quem também faz a função e está livre no horário (service.swap_candidates) */

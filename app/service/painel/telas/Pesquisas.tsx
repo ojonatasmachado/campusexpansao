@@ -5,9 +5,8 @@ import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { formatDateBR } from "../../lib/date";
 import type { TipoPergunta as TipoPerguntaPesquisa } from "../../lib/pesquisas";
 
-import { useTermos } from "../../lib/vocabulario-context";
 import { FormScreen, FormSection } from "../form/FormScreen";
-import { PAPEIS_V2, REACOES_PESQUISA } from "../comum";
+import { PAPEIS_V2, REACOES_PESQUISA, textoPapelV2 } from "../comum";
 import type { MinistryView, PesquisaAdminRow, PesquisaDraft, PesquisaPerguntaDraft } from "../tipos";
 
 import { Botao } from "../../ui/Botao";
@@ -322,7 +321,6 @@ export function PesquisaEditor({ draft: initial, ministries, saving, saveError, 
 }) {
   const traduzirUi = useTexto();
 
-  const { comTermos: ct } = useTermos();
   const [d, setD] = useState<PesquisaDraft>(initial);
   const isNew = initial.id.startsWith("nova-");
   const fid = useId();
@@ -375,7 +373,7 @@ export function PesquisaEditor({ draft: initial, ministries, saving, saveError, 
         {d.segmentacaoModo === "papel" && (
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {PAPEIS_V2.map((pp) => (
-              <Opcao key={pp.id} marcada={d.segmentacaoValores.includes(pp.id)} estilo="seg-chip" onClick={() => toggleValor(pp.id)}>{ct(pp.nome)}</Opcao>
+              <Opcao key={pp.id} marcada={d.segmentacaoValores.includes(pp.id)} estilo="seg-chip" onClick={() => toggleValor(pp.id)}>{textoPapelV2(pp.nome, traduzirUi)}</Opcao>
             ))}
           </div>
         )}

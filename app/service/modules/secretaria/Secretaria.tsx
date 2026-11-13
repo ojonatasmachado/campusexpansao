@@ -15,7 +15,7 @@ import { EmptyState, PageHead } from "../../painel/ui";
 import type { ChildGuardianView, ChurchView, MemberView, PersonView } from "../../ServiceExactApp";
 import { Carteirinha, type Marca } from "./Carteirinha";
 import { FolhaDeImpressao, imprimir } from "../../painel/imprimir";
-import { LANCA_A_MAO, LIVROS, REGISTRO_COLS, anoDe, anos, colunas, folhaLivro, linhasCsv, livroDe, numeroFmt, registrosDemo, textoBusca, type Livro, type Registro } from "./livros";
+import { LANCA_A_MAO, LIVROS, REGISTRO_COLS, anoDe, anos, colunas, folhaLivro, linhasCsv, livroDe, livroNaTela, numeroFmt, rotuloDoRol, registrosDemo, textoBusca, type Livro, type Registro } from "./livros";
 import { RegistroForm, type CriancaKids } from "./RegistroForm";
 
 import { Botao } from "../../ui/Botao";
@@ -120,7 +120,7 @@ export function Secretaria({ church, churches, members, people, kidsChildren, ch
       />
       <div className="toolbar">
         <Abas rotulo={traduzirUi("Livro")} ativa={livro} aoMudar={(v) => trocarLivro(v as typeof livro)}
-          abas={LIVROS.map((l) => ({ id: l.id, rotulo: l.rotulo, contador: regs ? contagem(l.id) : undefined }))} />
+          abas={LIVROS.map((l) => ({ id: l.id, rotulo: livroNaTela(l.id, traduzirUi).rotulo, contador: regs ? contagem(l.id) : undefined }))} />
       </div>
       <div className="toolbar sec-filtros">
         <div className="tb-search"><span className="si"><Icon name="buscar" size={13} /></span><input aria-label={traduzirUi("Buscar no livro")} placeholder={traduzirUi("Buscar nome, nº ou oficiante")} value={q} onChange={(e) => { setQ(e.target.value); setMostrar(PAGINA); }} /></div>
@@ -137,7 +137,7 @@ export function Secretaria({ church, churches, members, people, kidsChildren, ch
 
       {regs && !erro ? (
         doLivro.length === 0 ? (
-          <EmptyState title={traduzirUi("Nenhum registro em {livro}", { livro: def.rotulo })} text={def.vazio} action={LANCA_A_MAO.includes(livro) ? { label: livro === "casamento" ? traduzirUi("Registrar casamento") : traduzirUi("Registrar apresentação"), onClick: () => setEditando("novo") } : undefined} />
+          <EmptyState title={traduzirUi("Nenhum registro em {livro}", { livro: livroNaTela(livro, traduzirUi).rotulo })} text={livroNaTela(livro, traduzirUi).vazio} action={LANCA_A_MAO.includes(livro) ? { label: livro === "casamento" ? traduzirUi("Registrar casamento") : traduzirUi("Registrar apresentação"), onClick: () => setEditando("novo") } : undefined} />
         ) : (
           <div className="tbl sec-tbl">
             <Linha estilo="tabela" className={`head sec-tr sec-tr-${livro}`}>
@@ -222,8 +222,8 @@ function LinhaRegistro({ r, onAbrir }: { r: Registro; onAbrir: () => void }) {
       {r.livro === "apresentacao" ? <><Celula t={traduzirUi("Pais")} v={r.dados.pais} /><Celula t={traduzirUi("Oficiante")} v={r.oficiante} /></> : null}
       {r.livro === "rol" ? (
         <>
-          <Celula t={traduzirUi("Entrada")} v={joinDot(formatDateBR(r.data), r.dados.forma)} />
-          <div>{r.saida ? <Selo>{traduzirUi("Saiu em {data}{temMotivo, select, sim { · {motivo}} other {}}", { data: formatDateBR(r.saida), temMotivo: r.saida_motivo ? "sim" : "nao", motivo: r.saida_motivo ?? "" })}</Selo> : <Selo tom="ok">{traduzirUi("Ativo")}</Selo>}</div>
+          <Celula t={traduzirUi("Entrada")} v={joinDot(formatDateBR(r.data), r.dados.forma ? rotuloDoRol(r.dados.forma, traduzirUi) : r.dados.forma)} />
+          <div>{r.saida ? <Selo>{traduzirUi("Saiu em {data}{temMotivo, select, sim { · {motivo}} other {}}", { data: formatDateBR(r.saida), temMotivo: r.saida_motivo ? "sim" : "nao", motivo: r.saida_motivo ? rotuloDoRol(r.saida_motivo, traduzirUi) : "" })}</Selo> : <Selo tom="ok">{traduzirUi("Ativo")}</Selo>}</div>
         </>
       ) : null}
     </Acao>

@@ -1,4 +1,5 @@
 import { FUSO_PADRAO, partesNoFuso } from "./fuso";
+import { sourceText, type Text } from "./internacional/mensagens";
 
 /* Formatação de data pro padrão brasileiro (DD/MM/AAAA), usado em toda
    exibição de data no Service. As datas continuam guardadas/editadas em
@@ -72,9 +73,9 @@ export function joinDot(...parts: Array<string | null | undefined | false>): str
 
 /** "Bom dia" / "Boa tarde" / "Boa noite" pela hora da igreja (igual no
  *  servidor e no navegador, sem diferença na hidratação). */
-export function saudacao(fuso = FUSO_PADRAO, instante = new Date()): string {
+export function saudacao(fuso = FUSO_PADRAO, instante = new Date(), t: Text = sourceText): string {
   const h = Number(partesNoFuso(instante, fuso).hora.slice(0, 2));
-  return h >= 5 && h < 12 ? "Bom dia" : h >= 12 && h < 18 ? "Boa tarde" : "Boa noite";
+  return h >= 5 && h < 12 ? t("Bom dia") : h >= 12 && h < 18 ? t("Boa tarde") : t("Boa noite");
 }
 
 /** Hora de agora no fuso informado, "HH:MM" (igual no servidor e no navegador). */

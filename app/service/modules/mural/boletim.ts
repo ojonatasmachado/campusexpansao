@@ -3,6 +3,9 @@
    sem banco: o painel passa o que já carregou. Semana de segunda a domingo. */
 
 import { parseISODate, toISODate } from "../../lib/date";
+import { sourceText, type Text } from "../../lib/internacional/mensagens";
+import { formatCivilDate } from "../../lib/internacional/formatar";
+import type { Locale } from "../../lib/internacional/contrato";
 import { noAr, urgentesPrimeiro, type MuralAviso } from "./estado";
 import type { EventView, MinistryView, PersonView, RosterAssignmentView } from "../../ServiceExactApp";
 
@@ -19,10 +22,15 @@ export function semanaDe(iso: string): Semana {
   return { inicio: toISODate(seg), fim: toISODate(dom) };
 }
 
-/** "19 a 25 de outubro", "27 de outubro a 2 de novembro", "29 de dezembro de 2025 a 4 de janeiro de 2026" */
-export function rotuloSemana({ inicio, fim }: Semana): string {
+/** "19 a 25 de outubro", "27 de outubro a 2 de novembro", "29 de dezembro de 2025 a 4 de janeiro de 2026".
+ *  O texto do WhatsApp e a arte usam sempre o pt-BR; na tela, fora do pt-BR, as datas saem do Intl. */
+export function rotuloSemana({ inicio, fim }: Semana, t: Text = sourceText, locale: Locale = "pt-BR"): string {
   const a = parseISODate(inicio)!;
   const b = parseISODate(fim)!;
+  if (locale !== "pt-BR") {
+    const opcoes: Intl.DateTimeFormatOptions = { year: a.getFullYear() !== b.getFullYear() ? "numeric" : undefined, month: "long", day: "numeric" };
+    return t("{inicio} a {fim}", { inicio: formatCivilDate(toISODate(a), locale, opcoes), fim: formatCivilDate(toISODate(b), locale, opcoes) });
+  }
   if (a.getFullYear() !== b.getFullYear()) return `${a.getDate()} de ${MESES[a.getMonth()]} de ${a.getFullYear()} a ${b.getDate()} de ${MESES[b.getMonth()]} de ${b.getFullYear()}`;
   if (a.getMonth() !== b.getMonth()) return `${a.getDate()} de ${MESES[a.getMonth()]} a ${b.getDate()} de ${MESES[b.getMonth()]}`;
   return `${a.getDate()} a ${b.getDate()} de ${MESES[b.getMonth()]}`;

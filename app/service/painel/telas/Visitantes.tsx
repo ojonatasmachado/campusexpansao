@@ -9,7 +9,7 @@ import { formatDateBR, joinDot, parseISODate } from "../../lib/date";
 import AutocadastroPainel from "../../modules/visitantes/AutocadastroPainel";
 import { HelpDot } from "../../HelpSystem";
 import { Av, EmptyState, MenuMais, PageHead } from "../ui";
-import { VISITOR_STAGES, semContato48h, visitantePeloLink } from "../comum";
+import { VISITOR_STAGES, nomeEtapaVisitante, semContato48h, visitantePeloLink } from "../comum";
 import { Indicador } from "../../ui/Indicador";
 import type { ChurchView, ContatoCfg, DrawerState, ModalState, PersonView, VisitorNoteView, VisitorView } from "../tipos";
 
@@ -199,13 +199,13 @@ export function Visitantes({
         <div className="pipe">
           {VISITOR_STAGES.map((stage) => {
             const items = lista.filter((visitor) => visitor.stage === stage.id);
-            return <div className={`pipe-col${items.length ? "" : " vazia"}`} key={stage.id}><div className="pipe-head"><span className="pipe-dot" style={{ background: stage.color }} /><span className="pipe-name">{stage.name}</span><span className="pipe-num">{items.length}</span></div><div className="pipe-body">{items.map((visitor) => <VisitanteCard key={visitor.id} visitor={visitor} notes={visitorNotes} onOpen={() => setDrawer({ kind: "visitor", id: visitor.id })} />)}{items.length === 0 ? <Vazio titulo={traduzirUi("vazio")} /> : null}</div></div>;
+            return <div className={`pipe-col${items.length ? "" : " vazia"}`} key={stage.id}><div className="pipe-head"><span className="pipe-dot" style={{ background: stage.color }} /><span className="pipe-name">{nomeEtapaVisitante(stage.name, traduzirUi)}</span><span className="pipe-num">{items.length}</span></div><div className="pipe-body">{items.map((visitor) => <VisitanteCard key={visitor.id} visitor={visitor} notes={visitorNotes} onOpen={() => setDrawer({ kind: "visitor", id: visitor.id })} />)}{items.length === 0 ? <Vazio titulo={traduzirUi("vazio")} /> : null}</div></div>;
           })}
         </div>
       ) : (
         <div className="tbl">
           <Linha estilo="tabela" className="head" style={{ gridTemplateColumns: "1.4fr 1fr 1fr 1fr 120px" }}><span>{traduzirUi("Visitante")}</span><span>{traduzirUi("Etapa")}</span><span>{traduzirUi("Como chegou")}</span><span>{traduzirUi("Próximo passo")}</span><span>{traduzirUi("Visitou")}</span></Linha>
-          {lista.map((visitor) => { const stage = VISITOR_STAGES.find((s) => s.id === visitor.stage); return <Acao className={`${linhaClasse({ estilo: "tabela" })} click`} key={visitor.id} style={{ gridTemplateColumns: "1.4fr 1fr 1fr 1fr 120px" }} onClick={() => setDrawer({ kind: "visitor", id: visitor.id })}><div className="cell-person"><Av name={visitor.name} size="md" /><div><div className="cell-name">{visitor.name}</div><div className="cell-sub">{visitor.phone}</div></div></div><div><Selo style={{ color: stage?.color, borderColor: "var(--border-2)" }}>{stage?.name ?? visitor.stage}</Selo></div><div className="cell-sub">{visitor.origin || traduzirUi("Visitante")}</div><div><span className={`vcard-due ${visitor.due_status || "ok"}`}>{visitor.due || traduzirUi("sem prazo")}</span></div><div className="mini-right">{formatDateBR(visitor.visited_on) || traduzirUi("sem data")}</div></Acao>; })}
+          {lista.map((visitor) => { const stage = VISITOR_STAGES.find((s) => s.id === visitor.stage); return <Acao className={`${linhaClasse({ estilo: "tabela" })} click`} key={visitor.id} style={{ gridTemplateColumns: "1.4fr 1fr 1fr 1fr 120px" }} onClick={() => setDrawer({ kind: "visitor", id: visitor.id })}><div className="cell-person"><Av name={visitor.name} size="md" /><div><div className="cell-name">{visitor.name}</div><div className="cell-sub">{visitor.phone}</div></div></div><div><Selo style={{ color: stage?.color, borderColor: "var(--border-2)" }}>{(stage ? nomeEtapaVisitante(stage.name, traduzirUi) : visitor.stage)}</Selo></div><div className="cell-sub">{visitor.origin || traduzirUi("Visitante")}</div><div><span className={`vcard-due ${visitor.due_status || "ok"}`}>{visitor.due || traduzirUi("sem prazo")}</span></div><div className="mini-right">{formatDateBR(visitor.visited_on) || traduzirUi("sem data")}</div></Acao>; })}
         </div>
       )}
     </div>

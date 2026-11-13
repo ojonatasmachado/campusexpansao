@@ -10,6 +10,9 @@
      dia e o mês, nunca o ano. */
 import { parseISODate, toISODate } from "../../lib/date";
 import { telefoneParaWhatsapp } from "../../lib/telefone";
+import { sourceText, type Text } from "../../lib/internacional/mensagens";
+import { formatCivilDate } from "../../lib/internacional/formatar";
+import type { Locale } from "../../lib/internacional/contrato";
 
 export type Aniversariante = {
   /** id da ficha: membro (congregação) ou voluntário sem ficha de membro */
@@ -149,14 +152,15 @@ export function linkWhatsapp(telefone: string, texto: string): string | null {
 
 const DIAS = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
 
-/** "Hoje", "Amanhã", "Sábado, 24/10". */
-export function quandoE(p: Pick<Proximo, "dia" | "emDias">): string {
-  if (p.emDias === 0) return "Hoje";
-  if (p.emDias === 1) return "Amanhã";
+/** "Hoje", "Amanhã", "Sábado, 24/10". Fora do pt-BR, dia da semana e data saem do Intl. */
+export function quandoE(p: Pick<Proximo, "dia" | "emDias">, t: Text = sourceText, locale: Locale = "pt-BR"): string {
+  if (p.emDias === 0) return t("Hoje");
+  if (p.emDias === 1) return t("Amanhã");
   const d = parseISODate(p.dia);
   if (!d) return "";
   const dm = `${p.dia.slice(8, 10)}/${p.dia.slice(5, 7)}`;
-  const nome = DIAS[d.getDay()];
+  const nome = locale === "pt-BR" ? DIAS[d.getDay()] : formatCivilDate(toISODate(d), locale, { year: undefined, weekday: "long", day: "2-digit", month: "2-digit" });
+  if (locale !== "pt-BR") return `${nome[0].toUpperCase()}${nome.slice(1)}`;
   return `${nome[0].toUpperCase()}${nome.slice(1)}, ${dm}`;
 }
 

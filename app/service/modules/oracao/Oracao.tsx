@@ -93,7 +93,7 @@ export function SheetPedidoOracao({ organizationId, memberId, dest, muralOn, onS
       if (id) { limparRascunho(); setFeito({ publico, chatId: id }); } else setErro(traduzirUi("Não foi possível enviar agora. Tente de novo."));
       return;
     }
-    const r = await pedirOracao(organizationId, { body, audience: "mural", anonymous: anonimo, category: categoria ?? "outro" });
+    const r = await pedirOracao(organizationId, { body, audience: "mural", anonymous: anonimo, category: categoria ?? "outro" }, traduzirUi);
     setEnviando(false);
     if (r.id) { limparRascunho(); setFeito({ publico, chatId: null }); } else setErro(r.erro ?? traduzirUi("Não foi possível enviar agora. Tente de novo."));
   };
@@ -107,7 +107,7 @@ export function SheetPedidoOracao({ organizationId, memberId, dest, muralOn, onS
       <div className="or-campo" id={`${fid}-cat`}>{traduzirUi("Sobre o quê")}</div>
       <div className="or-chips" role="group" aria-labelledby={`${fid}-cat`}>
         {CATEGORIAS.map((c) => (
-          <Opcao key={c.id} marcada={categoria === c.id} estilo="or-chip" aria-pressed={categoria === c.id} onClick={() => setCategoria(categoria === c.id ? null : c.id)}>{c.rotulo}</Opcao>
+          <Opcao key={c.id} marcada={categoria === c.id} estilo="or-chip" aria-pressed={categoria === c.id} onClick={() => setCategoria(categoria === c.id ? null : c.id)}>{rotuloCategoria(c.id, traduzirUi)}</Opcao>
         ))}
       </div>
 
@@ -116,7 +116,7 @@ export function SheetPedidoOracao({ organizationId, memberId, dest, muralOn, onS
           <div className="or-campo" id={`${fid}-pub`}>{traduzirUi("Quem vê")}</div>
           <Lista plano role="radiogroup" aria-labelledby={`${fid}-pub`}>
             {([
-              ["intercessao", traduzirUi("Só a intercessão"), traduzirUi("Vai para {destino}, numa conversa.", { destino: papelDoDestinatario(dest as Destinatario) })],
+              ["intercessao", traduzirUi("Só a intercessão"), traduzirUi("Vai para {destino}, numa conversa.", { destino: papelDoDestinatario(dest as Destinatario, traduzirUi) })],
               ["mural", traduzirUi("Mural de oração"), traduzirUi("A igreja vê e pode orar com você.")],
             ] as const).map(([v, t, s]) => (
               <Opcao key={v} role="radio" aria-checked={publico === v} marcada={publico === v} estilo="m6-row" className="or-opt" onClick={() => setPublico(v)}>
@@ -128,7 +128,7 @@ export function SheetPedidoOracao({ organizationId, memberId, dest, muralOn, onS
         </>
       )}
       {!podeIntercessao && <div className="m6-meta or-nota">{traduzirUi("Seu pedido vai para o mural de oração da igreja.")}</div>}
-      {podeIntercessao && !muralOn && <div className="m6-meta or-nota">{traduzirUi("Vai para {destino}. Só essa pessoa lê.", { destino: papelDoDestinatario(dest as Destinatario) })}</div>}
+      {podeIntercessao && !muralOn && <div className="m6-meta or-nota">{traduzirUi("Vai para {destino}. Só essa pessoa lê.", { destino: papelDoDestinatario(dest as Destinatario, traduzirUi) })}</div>}
 
       {publico === "mural" && (
         <Lista plano>
@@ -255,7 +255,7 @@ export function MuralOracao({ organizationId, onPedir, sheet, toast }: {
           return (
             <Cartao estilo="app" como="article" className="or-card" key={p.id}>
               <div className="or-top">
-                <span className="or-cat">{rotuloCategoria(p.category)}</span>
+                <span className="or-cat">{rotuloCategoria(p.category, traduzirUi)}</span>
                 <span className="or-quando">{quandoPublicado(p.created_at)}</span>
               </div>
               <div className="or-quem">{p.is_mine ? (p.anonymous ? traduzirUi("Você, sem seu nome no mural") : traduzirUi("Você")) : p.author ?? traduzirUi("Pedido sem nome")}</div>

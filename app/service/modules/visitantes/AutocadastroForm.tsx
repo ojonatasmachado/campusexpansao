@@ -3,7 +3,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import AuthShell from "../../AuthShell";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
-import { COMO_CONHECEU, digitosTelefone, mascaraTelefone } from "./autocadastro";
+import { digitosTelefone, mascaraTelefone, opcoesComoConheceu } from "./autocadastro";
 
 import { Botao } from "../../ui/Botao";
 import { Opcao } from "../../ui/Opcao";
@@ -204,7 +204,7 @@ export default function AutocadastroForm({
           <span className="login-label">
             {traduzirUi.rich("Como conheceu a igreja? <opt>opcional</opt>", { opt: (c) => <span className="vis-opt">{c}</span> })}
           </span>
-          <Selecao rotulo={traduzirUi("Como conheceu a igreja")} valor={como} aoMudar={setComo} vazio={traduzirUi("Escolha uma opção")} opcoes={COMO_CONHECEU} />
+          <Selecao rotulo={traduzirUi("Como conheceu a igreja")} valor={como} aoMudar={setComo} vazio={traduzirUi("Escolha uma opção")} opcoes={opcoesComoConheceu(traduzirUi)} />
         </div>
 
         <label className="login-field">

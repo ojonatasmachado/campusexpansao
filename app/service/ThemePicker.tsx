@@ -2,7 +2,7 @@
 
 import { AccentField } from "./AccentField";
 import type { CSSProperties } from "react";
-import { ACCENT_PRESETS, DEFAULT_ACCENT, NEUTRAL_FAMILIES, accentReport, adaptAccent, familyById, themeCss, themeVars, type BrandCfg, type NeutralFamily, type ThemeMode } from "./lib/theme";
+import { ACCENT_PRESETS, DEFAULT_ACCENT, NEUTRAL_FAMILIES, accentReport, adaptAccent, familyById, nomeDaCor, textoDaFamilia, themeCss, themeVars, type BrandCfg, type NeutralFamily, type ThemeMode } from "./lib/theme";
 import { bestOnColor } from "./lib/color";
 import { Icon } from "./lib/icons";
 import ChurchLockup from "./ChurchLockup";
@@ -49,7 +49,7 @@ export default function ThemePicker({
               onClick={() => onChange({ accent: p.hex })}
             >
               <span aria-hidden="true" style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", background: p.hex, marginRight: 6, verticalAlign: "-1px" }} />
-              {p.label}
+              {nomeDaCor(p.label, traduzirUi)}
             </Opcao>
           ))}
         </div>
@@ -95,6 +95,7 @@ export default function ThemePicker({
 }
 
 function FamilyRow({ title, mode, selected, accent, onSelect }: { title: string; mode: ThemeMode; selected: string; accent: string; onSelect: (id: string) => void }) {
+  const traduzirUi = useTexto();
   return (
     <div style={{ marginTop: 14 }}>
       <div className="field-label">{title}</div>
@@ -102,8 +103,8 @@ function FamilyRow({ title, mode, selected, accent, onSelect }: { title: string;
         {NEUTRAL_FAMILIES.filter((f) => f.mode === mode).map((f) => (
           <Opcao key={f.id} marcada={selected === f.id} estilo="opt" onClick={() => onSelect(f.id)} style={{ padding: 10 }}>
             <FamilyPreview family={f} accent={accent} />
-            <div className="opt-t" style={{ marginTop: 8 }}>{f.label}</div>
-            <div className="opt-s">{f.hint}</div>
+            <div className="opt-t" style={{ marginTop: 8 }}>{textoDaFamilia(f, traduzirUi).label}</div>
+            <div className="opt-s">{textoDaFamilia(f, traduzirUi).hint}</div>
           </Opcao>
         ))}
       </div>

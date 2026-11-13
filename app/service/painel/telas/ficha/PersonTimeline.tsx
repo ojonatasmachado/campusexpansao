@@ -1,7 +1,7 @@
 "use client";
 
 import { useTermos } from "../../../lib/vocabulario-context";
-import { JRN_STEPS } from "../../caminhada";
+import { JRN_STEPS, rotuloEtapaJornada } from "../../caminhada";
 import { porData, tipoDoFato } from "../../../lib/historico";
 import { tituloDoFato } from "../../../lib/titulo-historico";
 import type { MemberView, TimelineEventView } from "../../tipos";
@@ -26,7 +26,7 @@ export function PersonTimeline({ member, events, compact }: { member: MemberView
         const step = JRN_STEPS.find((s) => s.kind === event.event_type);
         return { id: event.id, estado: "feito", titulo: tituloDoFato(event.title, ct), detalhe: event.body || undefined, icone: step?.icon ?? tipoDoFato(event.event_type).icone, quando: event.when_label ?? new Date(event.created_at).toLocaleDateString("pt-BR") };
       }),
-      ...stepsWithoutEvent.map((step): Etapa => ({ id: step.kind, estado: "feito", titulo: ct(step.label), icone: step.icon })),
+      ...stepsWithoutEvent.map((step): Etapa => ({ id: step.kind, estado: "feito", titulo: ct(rotuloEtapaJornada(step.label, traduzirUi)), icone: step.icon })),
     ]} />
   );
 }

@@ -1,3 +1,5 @@
+import { sourceText, type Text } from "../../lib/internacional/mensagens";
+
 /* Projeção mínima do participante (0105). Nunca substituir pela ficha completa. */
 export type ParticipanteConversa = {
   chat_id: string;
@@ -15,6 +17,7 @@ export function identidadeConversa(
   participantes: ParticipanteConversa[],
   eu: string | null | undefined,
   times: { id: string; name: string }[] = [],
+  t: Text = sourceText,
 ): { nome: string; fotoUrl: string | null } {
   if (conversa.kind === "dm") {
     const outros = eu ? participantes.filter((p) => p.chat_id === conversa.id && p.member_id !== eu) : [];
@@ -22,12 +25,12 @@ export function identidadeConversa(
     const nome = outro?.name?.trim();
     return nome
       ? { nome, fotoUrl: outro?.photo_url || null }
-      : { nome: "Pessoa indisponível", fotoUrl: null };
+      : { nome: t("Pessoa indisponível"), fotoUrl: null };
   }
   return {
     nome: conversa.name?.trim()
-      || times.find((t) => t.id === conversa.ministry_id)?.name
-      || (conversa.kind === "time" ? "Time indisponível" : "Grupo sem nome"),
+      || times.find((time) => time.id === conversa.ministry_id)?.name
+      || (conversa.kind === "time" ? t("Time indisponível") : t("Grupo sem nome")),
     fotoUrl: null,
   };
 }

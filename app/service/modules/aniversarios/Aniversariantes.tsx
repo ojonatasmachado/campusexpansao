@@ -24,7 +24,7 @@ import { Cartao } from "../../ui/Cartao";
 import { Linha } from "../../ui/Linha";
 import { Campo, TextoLongo } from "../../ui/Campo";
 import { Selecao } from "../../ui/Selecao";
-import { useTexto } from "../../lib/internacional/contexto";
+import { useServiceLocale, useTexto } from "../../lib/internacional/contexto";
 import type { Text } from "../../lib/internacional/mensagens";
 type Abrir = (p: Aniversariante) => void;
 type Nomeado = { id: string; name: string };
@@ -78,6 +78,7 @@ export function AniversariantesDaSemana({ base, escopo, comIdade, onAbrir, onVer
   onVerMes: () => void;
 }) {
   const traduzirUi = useTexto();
+  const locale = useServiceLocale();
   const { todayISO } = useRelogioDaIgreja();
   const [parabens, setParabens] = useState<Proximo | null>(null);
   const lista = daSemana(noEscopo(base, escopo), todayISO(), comIdade);
@@ -94,8 +95,8 @@ export function AniversariantesDaSemana({ base, escopo, comIdade, onAbrir, onVer
           <div className="cuidado-item" key={`${p.tipo}-${p.id}`}>
             {podeAbrirPessoa(p) ? <Acao className="cuidado-nome" onClick={() => onAbrir(p)}>
               <span className="mini-title">{p.nome}</span>
-              <span className={`mini-sub${p.emDias === 0 ? " aniv-hoje" : ""}`}>{joinDot(quandoE(p), p.idade ? traduzirUi("faz {idade} anos", { idade: String(p.idade) }) : null)}</span>
-            </Acao> : <div className="cuidado-nome"><div className="mini-title">{p.nome}</div><div className={`mini-sub${p.emDias === 0 ? " aniv-hoje" : ""}`}>{joinDot(quandoE(p), p.idade ? traduzirUi("faz {idade} anos", { idade: String(p.idade) }) : null)}</div></div>}
+              <span className={`mini-sub${p.emDias === 0 ? " aniv-hoje" : ""}`}>{joinDot(quandoE(p, traduzirUi, locale), p.idade ? traduzirUi("faz {idade} anos", { idade: String(p.idade) }) : null)}</span>
+            </Acao> : <div className="cuidado-nome"><div className="mini-title">{p.nome}</div><div className={`mini-sub${p.emDias === 0 ? " aniv-hoje" : ""}`}>{joinDot(quandoE(p, traduzirUi, locale), p.idade ? traduzirUi("faz {idade} anos", { idade: String(p.idade) }) : null)}</div></div>}
             <div className="cuidado-acoes"><BotaoParabens p={p} onClick={() => setParabens(p)} /></div>
           </div>
         ))}

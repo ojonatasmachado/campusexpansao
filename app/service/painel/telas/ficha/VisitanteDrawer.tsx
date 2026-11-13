@@ -8,7 +8,7 @@ import { formatDateBR } from "../../../lib/date";
 import { useTermos } from "../../../lib/vocabulario-context";
 import AutocadastroDados from "../../../modules/visitantes/AutocadastroDados";
 import { Av } from "../../ui";
-import { VISITOR_STAGES } from "../../comum";
+import { VISITOR_STAGES, nomeEtapaVisitante } from "../../comum";
 import { DrawerSection, DrawerShell } from "../../campos";
 import type { ChurchView, ModalState, PersonView, VisitorNoteView, VisitorView } from "../../tipos";
 import { Botao, BotaoIcone } from "../../../ui/Botao";
@@ -78,7 +78,7 @@ export function VisitanteDrawer({
             <div className="profile-name">{initVisitor.name}</div>
             <div className="profile-role">{traduzirUi("{origem} · primeira visita {data}", { origem: initVisitor.origin || traduzirUi("Visitante"), data: formatDateBR(initVisitor.visited_on) || traduzirUi("sem data") })}</div>
             <div style={{ marginTop: 10 }}>
-              <Selo style={{ color: VISITOR_STAGES[stageIdx]?.color }}>{VISITOR_STAGES[stageIdx]?.name ?? currentStage}</Selo>
+              <Selo style={{ color: VISITOR_STAGES[stageIdx]?.color }}>{VISITOR_STAGES[stageIdx] ? nomeEtapaVisitante(VISITOR_STAGES[stageIdx].name, traduzirUi) : currentStage}</Selo>
             </div>
           </div>
         </div>
@@ -98,12 +98,12 @@ export function VisitanteDrawer({
             {VISITOR_STAGES.map((s, i) => (
               <div key={s.id} style={{ flex: 1, textAlign: "center" }}>
                 <div style={{ height: 5, borderRadius: 3, background: i <= stageIdx ? s.color : "var(--ink)" }} />
-                <div style={{ fontSize: "var(--fs-pn-12)", color: i <= stageIdx ? "var(--light)" : "var(--muted)", marginTop: 7 }}>{s.name}</div>
+                <div style={{ fontSize: "var(--fs-pn-12)", color: i <= stageIdx ? "var(--light)" : "var(--muted)", marginTop: 7 }}>{nomeEtapaVisitante(s.name, traduzirUi)}</div>
               </div>
             ))}
           </div>
           {stageIdx < VISITOR_STAGES.length - 1
-            ? <Botao variante="principal" compacto style={{ marginTop: 16, width: "100%", justifyContent: "center" }} onClick={avancar} desativado={saving}>{traduzirUi("Mover para {etapa}", { etapa: VISITOR_STAGES[stageIdx + 1]?.name ?? "" })}</Botao>
+            ? <Botao variante="principal" compacto style={{ marginTop: 16, width: "100%", justifyContent: "center" }} onClick={avancar} desativado={saving}>{traduzirUi("Mover para {etapa}", { etapa: VISITOR_STAGES[stageIdx + 1] ? nomeEtapaVisitante(VISITOR_STAGES[stageIdx + 1].name, traduzirUi) : "" })}</Botao>
             : (
               <div className="vmember-cta">
                 <div className="vmember-t"><Icon name="ok" size={13} /> {traduzirUi("Chegou a membro")}</div>

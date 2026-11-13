@@ -1,5 +1,6 @@
 import { FUSO_PADRAO, instantesNoFuso, partesNoFuso } from "./fuso";
 import { somaDias } from "./date";
+import { sourceText, type Text } from "./internacional/mensagens";
 
 /** Silêncio das 22h às 7h no fuso da igreja da pessoa. */
 export function emSilencio(d: Date = new Date(), fuso = FUSO_PADRAO): boolean {
@@ -24,11 +25,11 @@ export function foraDoSilencio(d: Date, fuso = FUSO_PADRAO): Date {
   throw new Error("Não foi possível calcular o próximo horário de envio.");
 }
 
-export function quandoLembra(d: Date, agora: Date = new Date(), fuso = FUSO_PADRAO): string {
+export function quandoLembra(d: Date, agora: Date = new Date(), fuso = FUSO_PADRAO, t: Text = sourceText): string {
   const local = partesNoFuso(d, fuso);
   const hoje = partesNoFuso(agora, fuso).data;
   const amanha = somaDias(hoje, 1);
   const hora = `${Number(local.hora.slice(0, 2))}:${local.hora.slice(3)}`;
   const [, m, dd] = local.data.split("-");
-  return local.data === hoje ? `hoje às ${hora}` : local.data === amanha ? `amanhã às ${hora}` : `em ${dd}/${m} às ${hora}`;
+  return local.data === hoje ? t("hoje às {hora}", { hora }) : local.data === amanha ? t("amanhã às {hora}", { hora }) : t("em {data} às {hora}", { data: `${dd}/${m}`, hora });
 }

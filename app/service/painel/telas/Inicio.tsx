@@ -17,7 +17,7 @@ import { type Ausente } from "../../modules/cuidado/cuidado";
 import type { CriancaAusente } from "../../modules/cuidado/Cuidado";
 import { usePedidosConta } from "../../modules/entrada/usePedidosConta";
 import { NovosCadastros } from "../../modules/entrada/NovosCadastros";
-import { numerosDaBase, type DadosSaude } from "../../modules/inicio/saude";
+import { numerosDaBase, rotuloNumero, type DadosSaude } from "../../modules/inicio/saude";
 import { linhaDoSetup, type SetupEstado } from "../../modules/configuracao/setup";
 import { termosDaRota } from "../../modules/registry";
 import { REACOES_PESQUISA, ROUTES, semContato48h, visitantePeloLink } from "../comum";
@@ -29,7 +29,7 @@ import { Cartao } from "../../ui/Cartao";
 import { Linha, linhaClasse } from "../../ui/Linha";
 import { Gaveta } from "../../ui/Janela";
 import { ListaDeCuidado } from "../../modules/cuidado/Cuidado";
-import { useTexto } from "../../lib/internacional/contexto";
+import { useServiceLocale, useTexto } from "../../lib/internacional/contexto";
 import { sourceText, type Text } from "../../lib/internacional/mensagens";
 export function GlobalSearch({
   people,
@@ -304,6 +304,7 @@ export function Painel({
   igrejaNova?: boolean;
 }) {
   const traduzirUi = useTexto();
+  const locale = useServiceLocale();
 
   const { aindaVaiAcontecer, saudacao, todayISO, fuso } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
@@ -337,8 +338,8 @@ export function Painel({
     <div className="content wide painel-inicio">
       <div className="ph">
         <div>
-          <h1 className="ph-title">{traduzirUi("{saudacao}, {nome}", { saudacao: saudacao(), nome: userName?.split(" ")[0] ?? traduzirUi("liderança") })} <HelpDot text={ct(traduzirUi("Seu resumo da semana: próximos {cultos}, vagas em aberto na escala e o que precisa da sua atenção agora."))} /></h1>
-          <p className="ph-sub">{semanaDe(todayISO())}.</p>
+          <h1 className="ph-title">{traduzirUi("{saudacao}, {nome}", { saudacao: saudacao(traduzirUi), nome: userName?.split(" ")[0] ?? traduzirUi("liderança") })} <HelpDot text={ct(traduzirUi("Seu resumo da semana: próximos {cultos}, vagas em aberto na escala e o que precisa da sua atenção agora."))} /></h1>
+          <p className="ph-sub">{semanaDe(todayISO(), traduzirUi, locale)}.</p>
         </div>
         {/* v7 I1: ações do topo removidas (Lei 15). A fila já contém a ação principal. */}
       </div>
@@ -434,7 +435,7 @@ export function Painel({
         return (
           <div className="kpi-row">
             {base.map((n) => (
-              <Indicador key={n.id} estilo="cartao" icone={n.id === "membros" ? "membros" : n.id === "servindo" ? "escalas" : "grupos"} valor={n.valor} rotulo={ct(n.rotulo)} aoAbrir={() => abrirDiretorio(n.id === "servindo" ? "pessoas" : "membros", n.id === "servindo" ? "servindo" : n.id === "grupos" ? "em-grupos" : "membros")} rotuloAcao={traduzirUi("{rotulo}: {valor}. Ver a lista", { rotulo: ct(n.rotulo), valor: String(n.valor) })} />
+              <Indicador key={n.id} estilo="cartao" icone={n.id === "membros" ? "membros" : n.id === "servindo" ? "escalas" : "grupos"} valor={n.valor} rotulo={ct(rotuloNumero(n.rotulo, traduzirUi))} aoAbrir={() => abrirDiretorio(n.id === "servindo" ? "pessoas" : "membros", n.id === "servindo" ? "servindo" : n.id === "grupos" ? "em-grupos" : "membros")} rotuloAcao={traduzirUi("{rotulo}: {valor}. Ver a lista", { rotulo: ct(rotuloNumero(n.rotulo, traduzirUi)), valor: String(n.valor) })} />
             ))}
           </div>
         );

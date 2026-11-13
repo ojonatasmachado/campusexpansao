@@ -3,6 +3,7 @@
    que o formam, para abrir. Contas no cliente, com os dados que o painel já
    carregou. Sem percentual sobre pessoas (lei 10): só contagens. */
 import { somaDias, todayISO } from "../../lib/date";
+import { sourceText, type Text } from "../../lib/internacional/mensagens";
 
 export type Periodo = { ini: string; fim: string };
 export type Preset = "30" | "90" | "365" | "datas";
@@ -87,10 +88,21 @@ export function etapasDaCaminhada(membros: Membro[], etapas: { label: string }[]
   });
 }
 
+/** Rótulo do número na tela. O CSV de Relatórios segue com o rótulo pt-BR. */
+export function rotuloNumero(rotulo: string, t: Text = sourceText): string {
+  const rotulos: Record<string, string> = {
+    "Membros registrados": t("Membros registrados"), "Servindo em times": t("Servindo em times"), "Em {grupos}": t("Em {grupos}"),
+    Visitantes: t("Visitantes"), Integrados: t("Integrados"), "Decisões": t("Decisões"), Batismos: t("Batismos"),
+    "Em cursos": t("Em cursos"), "Concluíram curso": t("Concluíram curso"),
+  };
+  return Object.hasOwn(rotulos, rotulo) ? rotulos[rotulo] : rotulo;
+}
+
 /** "+3 em relação aos 30 dias anteriores" / "igual aos 30 dias anteriores" */
-export function comparacao(atual: number, anterior: number | undefined, dias: number): string | null {
+export function comparacao(atual: number, anterior: number | undefined, dias: number, t: Text = sourceText): string | null {
   if (anterior === undefined) return null;
   const d = atual - anterior;
-  const base = dias === 1 ? "ao dia anterior" : `aos ${dias} dias anteriores`;
-  return d === 0 ? `igual ${base}` : `${d > 0 ? "+" : ""}${d} em relação ${base}`;
+  const diferenca = `${d > 0 ? "+" : ""}${d}`;
+  if (dias === 1) return d === 0 ? t("igual ao dia anterior") : t("{diferenca} em relação ao dia anterior", { diferenca });
+  return d === 0 ? t("igual aos {dias} dias anteriores", { dias: String(dias) }) : t("{diferenca} em relação aos {dias} dias anteriores", { diferenca, dias: String(dias) });
 }

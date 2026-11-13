@@ -1,6 +1,7 @@
 /* Estado e contas da configuração guiada (v7 4.12). Guardado em
    service.churches.settings.setup = { fase, feitas, pulou, concluido }. */
 import { plural } from "../../lib/plural";
+import { sourceText, type Text } from "../../lib/internacional/mensagens";
 import type { RascunhoEncontro } from "./ativacao";
 
 export type SetupEstado = { fase: 1 | 2 | 3; feitas: number[]; pulou?: boolean; concluido?: boolean; primeiroEventoId?: string; rascunho?: RascunhoEncontro };
@@ -17,6 +18,16 @@ export const FASES = [
   { n: 2, t: "Primeiro encontro", s: "Nome, data, horário e local", min: 3 },
   { n: 3, t: "Pessoas", s: "Acesso ao app e próximos responsáveis", min: 3 },
 ] as const;
+
+/** Nome e descrição da fase na tela. */
+export function textoDaFase(texto: string, t: Text = sourceText): string {
+  const textos: Record<string, string> = {
+    "Sua igreja": t("Sua igreja"), "Dados, logo e cor": t("Dados, logo e cor"),
+    "Primeiro encontro": t("Primeiro encontro"), "Nome, data, horário e local": t("Nome, data, horário e local"),
+    Pessoas: t("Pessoas"), "Acesso ao app e próximos responsáveis": t("Acesso ao app e próximos responsáveis"),
+  };
+  return Object.hasOwn(textos, texto) ? textos[texto] : texto;
+}
 
 export function minutosQueFaltam(e: SetupEstado): number {
   return FASES.filter((f) => !e.feitas.includes(f.n)).reduce((s, f) => s + f.min, 0);

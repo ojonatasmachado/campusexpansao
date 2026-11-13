@@ -8,7 +8,6 @@ import { createServiceBrowserClient } from "./lib/supabase-browser";
 import { AulaCheckinModal } from "./AulaCheckin";
 import { useServiceAccess } from "./AccessContext";
 import { requirementsFor, requirementLabel } from "./lib/requirements";
-import { useTermos } from "./lib/vocabulario-context";
 
 import { Botao, BotaoIcone } from "./ui/Botao";
 import { Janela, Gaveta } from "./ui/Janela";
@@ -147,7 +146,6 @@ export default function CursoDrawer({
 }) {
   const traduzirUi = useTexto();
 
-  const { comTermos: ct } = useTermos();
   const access = useServiceAccess();
   const requisitos = requirementsFor(access.requirements, "course", course.id);
   const router = useRouter();
@@ -225,7 +223,7 @@ export default function CursoDrawer({
             <div className="dsec">
               <div className="dsec-title">{traduzirUi("Pré-requisitos")}</div>
               <div className="seg-check">
-                {requisitos.map((r) => <span key={`${r.kind}-${r.ref}`} className="seg-chip on">{ct(requirementLabel(r, access))}</span>)}
+                {requisitos.map((r) => <span key={`${r.kind}-${r.ref}`} className="seg-chip on">{requirementLabel(r, access, traduzirUi)}</span>)}
               </div>
             </div>
           )}

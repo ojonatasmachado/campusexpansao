@@ -1,6 +1,7 @@
 /* Contrato de people.availability: chaves semanais legadas e ausências por data.
    Compartilhado pela Agenda e pelas regras de escala. Datas são dias civis. */
 import { isCivilDate, parseISODate, somaDias } from "../../lib/date";
+import { sourceText, type Text } from "../../lib/internacional/mensagens";
 
 export type PeriodoAusencia = "dia" | "manha" | "tarde" | "noite";
 export type Ausencia = { chave: string; data: string; periodo: PeriodoAusencia; timeId: string | null };
@@ -8,6 +9,11 @@ export const PERIODOS_AUSENCIA = [
   { v: "dia", l: "Dia inteiro" }, { v: "manha", l: "Manhã" },
   { v: "tarde", l: "Tarde" }, { v: "noite", l: "Noite" },
 ] as const;
+
+/** Opções de período na tela; o valor gravado não muda. */
+export function periodosAusencia(t: Text = sourceText): { v: PeriodoAusencia; l: string }[] {
+  return [{ v: "dia", l: t("Dia inteiro") }, { v: "manha", l: t("Manhã") }, { v: "tarde", l: t("Tarde") }, { v: "noite", l: t("Noite") }];
+}
 
 export function periodoDaHora(hora: string | null | undefined): Exclude<PeriodoAusencia, "dia"> | null {
   const partes = hora?.match(/^(\d{1,2})[:h]([0-5]\d)(?::[0-5]\d)?$/);

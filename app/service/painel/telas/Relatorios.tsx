@@ -15,9 +15,9 @@ import { cargaDaSemana } from "../../modules/escalas/Escalas";
 import { ROUTES } from "../comum";
 import { Indicador } from "../../ui/Indicador";
 import type { BoardView, ChatView, ChurchView, DecisionView, DrawerState, EnrollmentView, EventAttendanceView, EventView, FellowshipGroupView, MemberView, MinistryView, PersonView, RosterAssignmentView, TimelineEventView, VisitorView } from "../tipos";
-import { numerosDaBase, numerosDoPeriodo, etapasDaCaminhada, periodoDe, anteriorDe, comparacao, type DadosSaude, type ItemPessoa, type Periodo, type Preset } from "../../modules/inicio/saude";
+import { numerosDaBase, numerosDoPeriodo, etapasDaCaminhada, periodoDe, anteriorDe, comparacao, rotuloNumero, type DadosSaude, type ItemPessoa, type Periodo, type Preset } from "../../modules/inicio/saude";
 import { SeletorData } from "../../ui/Data";
-import { JRN_STEPS } from "../caminhada";
+import { JRN_STEPS, rotuloEtapaJornada } from "../caminhada";
 
 import { Botao } from "../../ui/Botao";
 import { Opcao } from "../../ui/Opcao";
@@ -25,7 +25,7 @@ import { Cartao } from "../../ui/Cartao";
 import { Segmentado } from "../../ui/Segmentado";
 import { Vazio } from "../../ui/Estados";
 import { Barras, Distribuicao } from "../../ui/Graficos";
-import { useTexto } from "../../lib/internacional/contexto";
+import { useServiceLocale, useTexto } from "../../lib/internacional/contexto";
 
 export function Relatorios({
   people,
@@ -63,6 +63,7 @@ export function Relatorios({
   enrollments?: EnrollmentView[];
 }) {
   const traduzirUi = useTexto();
+  const locale = useServiceLocale();
 
   const { aindaVaiAcontecer, todayISO, fuso } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
@@ -134,6 +135,8 @@ export function Relatorios({
   const mesesSerie = [3, 2, 1, 0].map((k) => new Date(agora.getFullYear(), agora.getMonth() - k + 1, 1));
   const series = mesesSerie.map((fim) => members.filter((m) => m.createdAt && partesNoFuso(new Date(m.createdAt), fuso).data < toISODate(fim)).length);
   const serieLabels = mesesSerie.map((fim) => MES_CURTO[new Date(fim.getFullYear(), fim.getMonth() - 1, 1).getMonth()]);
+  /* na tela, o mês no idioma de quem vê; o CSV segue com serieLabels */
+  const serieRotulos = locale === "pt-BR" ? serieLabels : mesesSerie.map((fim) => new Intl.DateTimeFormat(locale, { month: "short" }).format(new Date(fim.getFullYear(), fim.getMonth() - 1, 1)));
   const maxMinistry = Math.max(...ministries.map((m) => m.people.length), 1);
   const gcCounts = fellowshipGroups.map((g) => ({ group: g, n: members.filter((m) => m.groupId === g.id).length }));
   const maxGc = Math.max(...gcCounts.map((x) => x.n), 1);
@@ -214,9 +217,9 @@ export function Relatorios({
       <div className="section-divide"><span className="num">01</span><span className="label">{traduzirUi("Números de base")}</span><HelpDot text={ct(traduzirUi("Quantas pessoas estão registradas, servindo em times e em {grupos} hoje. Cada número abre a lista."))} /><span className="line" /></div>
       <div className="kpi-row">
         {baseNums.map((n) => (
-          <Indicador key={n.id} estilo="cartao" icone={n.id === "membros" ? "membros" : n.id === "servindo" ? "escalas" : "grupos"} valor={n.valor} rotulo={ct(n.rotulo)}
+          <Indicador key={n.id} estilo="cartao" icone={n.id === "membros" ? "membros" : n.id === "servindo" ? "escalas" : "grupos"} valor={n.valor} rotulo={ct(rotuloNumero(n.rotulo, traduzirUi))}
             aoAbrir={n.itens.length ? () => abrirListaBase(n.itens[0]) : undefined}
-            rotuloAcao={traduzirUi("{rotulo}: {valor}. Ver a lista", { rotulo: ct(n.rotulo), valor: String(n.valor) })} />
+            rotuloAcao={traduzirUi("{rotulo}: {valor}. Ver a lista", { rotulo: ct(rotuloNumero(n.rotulo, traduzirUi)), valor: String(n.valor) })} />
         ))}
       </div>
       <div className="saude-head">
@@ -242,19 +245,19 @@ export function Relatorios({
           <div className="saude-grp">{traduzirUi("De {ini} a {fim}", { ini: formatDateBR(saudePeriodo.ini), fim: formatDateBR(saudePeriodo.fim) })}<span className="saude-grp-s">{traduzirUi(" · comparado a {ini} a {fim}", { ini: formatDateBR(saudeAnt.ini), fim: formatDateBR(saudeAnt.fim) })}</span></div>
           <div className="kpi-row">
             {numerosDoPeriodo(dadosSaude, saudePeriodo).map((n) => {
-              const cmp = comparacao(n.valor, n.anterior, saudeDias);
+              const cmp = comparacao(n.valor, n.anterior, saudeDias, traduzirUi);
               const mudou = n.anterior !== undefined && n.anterior !== n.valor;
               return (
-                <Indicador key={n.id} estilo="numero" valor={n.valor} rotulo={ct(n.rotulo)}
+                <Indicador key={n.id} estilo="numero" valor={n.valor} rotulo={ct(rotuloNumero(n.rotulo, traduzirUi))}
                   rodape={cmp && mudou ? cmp : undefined}
                   aoAbrir={n.itens.length ? () => abrirListaBase(n.itens[0]) : undefined}
-                  rotuloAcao={cmp ? traduzirUi("{rotulo}: {valor}, {comparacao}. Ver a lista", { rotulo: ct(n.rotulo), valor: String(n.valor), comparacao: cmp }) : traduzirUi("{rotulo}: {valor}. Ver a lista", { rotulo: ct(n.rotulo), valor: String(n.valor) })} />
+                  rotuloAcao={cmp ? traduzirUi("{rotulo}: {valor}, {comparacao}. Ver a lista", { rotulo: ct(rotuloNumero(n.rotulo, traduzirUi)), valor: String(n.valor), comparacao: cmp }) : traduzirUi("{rotulo}: {valor}. Ver a lista", { rotulo: ct(rotuloNumero(n.rotulo, traduzirUi)), valor: String(n.valor) })} />
               );
             })}
           </div>
           <div className="saude-grp">{ct(traduzirUi("Etapas da {caminhada}"))}<span className="saude-grp-s">{traduzirUi(" · membros que já fizeram cada uma")}</span></div>
           <div className="kpi-row">
-            {etapasDaCaminhada(members, JRN_STEPS.map((s) => ({ label: ct(s.label) }))).map((n) => (
+            {etapasDaCaminhada(members, JRN_STEPS.map((s) => ({ label: ct(rotuloEtapaJornada(s.label, traduzirUi)) }))).map((n) => (
               <Indicador key={n.id} estilo="numero" valor={n.valor} rotulo={n.rotulo}
                 aoAbrir={n.itens.length ? () => abrirListaBase(n.itens[0]) : undefined}
                 rotuloAcao={traduzirUi("{rotulo}: {valor}. Ver a lista", { rotulo: n.rotulo, valor: String(n.valor) })} />
@@ -263,7 +266,7 @@ export function Relatorios({
         </>
       )}
       <div className="dash-3col">
-        <Cartao><div className="panel-head"><span className="panel-title"><Icon name="relatorios" size={13} /> {traduzirUi("Crescimento de membros")}</span><span className="panel-meta">{traduzirUi("últimos meses")}</span></div><div className="panel-body"><div style={{ fontSize: "var(--fs-pn-32)", fontWeight: 700 }}>{members.length}<span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", fontWeight: 500, marginLeft: 8 }}>{traduzirUi("membros no total")}</span></div><div style={{ marginTop: 14 }}><Barras rotulo={traduzirUi("Membros novos por mês")} serie={series} rotulos={serieLabels} /></div></div></Cartao>
+        <Cartao><div className="panel-head"><span className="panel-title"><Icon name="relatorios" size={13} /> {traduzirUi("Crescimento de membros")}</span><span className="panel-meta">{traduzirUi("últimos meses")}</span></div><div className="panel-body"><div style={{ fontSize: "var(--fs-pn-32)", fontWeight: 700 }}>{members.length}<span style={{ fontSize: "var(--fs-pn-13)", color: "var(--muted)", fontWeight: 500, marginLeft: 8 }}>{traduzirUi("membros no total")}</span></div><div style={{ marginTop: 14 }}><Barras rotulo={traduzirUi("Membros novos por mês")} serie={series} rotulos={serieRotulos} /></div></div></Cartao>
         <Cartao><div className="panel-head"><span className="panel-title"><Icon name="visitante" size={13} /> {traduzirUi("Funil de visitantes")}</span><Botao variante="texto" onClick={() => setRoute("visitantes")}>{traduzirUi("Abrir")}</Botao></div><div className="panel-body flush"><Distribuicao funil max={funnelMax} itens={FUNNEL_STAGES.map((s, i) => ({ id: s.id, rotulo: ROTULO_FUNIL[s.id] ?? s.label, valor: funnelCounts[i] }))} /></div></Cartao>
       </div>
       <div className="section-divide" style={{ marginTop: 28 }}><span className="num">02</span><span className="label">{traduzirUi("Situação da escala na semana")}</span><HelpDot text={traduzirUi("Pausas, recusas e quantidade de escalas registradas na semana. Esses registros não medem bem-estar nem dedicação da pessoa.")} /><span className="line" /></div>

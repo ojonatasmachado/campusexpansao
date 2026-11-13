@@ -163,7 +163,7 @@ function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church:
       if (canais.includes("app")) notifyPush(church.organizationId, alvo.memberIds, titulo.trim(), msg.trim() || "Nova publicação no Mural.", "mural");
       avisar(traduzirUi("Publicado no Mural."));
     } else if (como === "agendado") {
-      avisar(traduzirUi("Agendado: vai ao ar {quando}.", { quando: quandoLembra(agendaEm!) }));
+      avisar(traduzirUi("Agendado: vai ao ar {quando}.", { quando: quandoLembra(agendaEm!, undefined, traduzirUi) }));
     } else {
       avisar(traduzirUi("Rascunho salvo. Só a liderança vê."));
     }
@@ -205,11 +205,11 @@ function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church:
         <div ref={revisaoRef} tabIndex={-1} aria-label={traduzirUi("Resumo da publicação")}>
           <FormSection title={traduzirUi("Confira quem recebe")}>
             <p className="mural-revisao-publico">{traduzirUi.rich("<strong>{publico}</strong> · {count, plural, =1 {# pessoa} other {# pessoas}}", { publico: alvo?.label ?? "", count: alvo?.memberIds.length ?? 0, strong: (c) => <strong>{c}</strong> })}</p>
-            <p>{quando === "agendar" && agendaEm ? traduzirUi("Vai ao ar {quando}.", { quando: quandoLembra(agendaEm) }) : traduzirUi("Entra no Mural assim que você publicar.")}</p>
+            <p>{quando === "agendar" && agendaEm ? traduzirUi("Vai ao ar {quando}.", { quando: quandoLembra(agendaEm, undefined, traduzirUi) }) : traduzirUi("Entra no Mural assim que você publicar.")}</p>
             <p>{canais.includes("app") ? traduzirUi("Notificação pelo app, respeitando preferências e horário de silêncio.") : traduzirUi("Sem notificação pelo app.")}</p>
             {whatsapp && <p>{traduzirUi("O WhatsApp abrirá com o texto para você escolher a conversa.")}</p>}
             {quando === "agendar" && canais.includes("whatsapp") && <p>{traduzirUi("O agendamento não envia pelo WhatsApp.")}</p>}
-            {lembra && canais.includes("app") && <p>{traduzirUi("Lembrete: {quando}.", { quando: quandoLembra(foraDoSilencio(lembra)) })}</p>}
+            {lembra && canais.includes("app") && <p>{traduzirUi("Lembrete: {quando}.", { quando: quandoLembra(foraDoSilencio(lembra), undefined, traduzirUi) })}</p>}
             {urgente && <p>{traduzirUi("Marcada como urgente.")}</p>}
             {destacar && destaqueAte && <p>{traduzirUi("Destaque no Início até {data}. Substitui o destaque anterior quando entrar no ar.", { data: formatDateBR(destaqueAte) })}</p>}
           </FormSection>
@@ -277,7 +277,7 @@ function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church:
               ))}
             </div>
             {lembrete === "data" && <input className="input" type="datetime-local" style={{ marginTop: 8 }} value={lembreteData} onChange={(e) => setLembreteData(e.target.value)} aria-label={traduzirUi("Data e hora do lembrete")} />}
-            {lembra && <div className="field-hint">{traduzirUi("Uma notificação {quando} só para quem ainda não abriu.{silencio, select, sim { Entre 22h e 7h ninguém recebe aviso, então vai às 7h.} other {}}", { quando: quandoLembra(foraDoSilencio(lembra)), silencio: emSilencio(lembra) ? "sim" : "nao" })}</div>}
+            {lembra && <div className="field-hint">{traduzirUi("Uma notificação {quando} só para quem ainda não abriu.{silencio, select, sim { Entre 22h e 7h ninguém recebe aviso, então vai às 7h.} other {}}", { quando: quandoLembra(foraDoSilencio(lembra), undefined, traduzirUi), silencio: emSilencio(lembra) ? "sim" : "nao" })}</div>}
             {!lembra && quando === "agendar" && lembrete !== "nao" && lembrete !== "data" && <div className="field-hint">{traduzirUi("Conta a partir da hora em que a publicação entrar no ar.")}</div>}
           </div>
         )}
@@ -297,7 +297,7 @@ function ComposerModal({ church, publicos, inicial, onClose, onDone }: { church:
               <Campo rotulo={traduzirUi("Hora")} id={`${fid}-agh`}><SeletorHora valor={agHora} aoMudar={setAgHora} /></Campo>
             </div>
             {agendaEm && !agendaPassou && (
-              <div className="field-hint">{traduzirUi("Vai ao ar {quando}, com alguns minutos de diferença. Até lá, só a liderança vê.{silencio, select, sim { A notificação espera até as 7h, quando acaba o horário de silêncio.} other {}}", { quando: quandoLembra(agendaEm), silencio: canais.includes("app") && emSilencio(agendaEm) ? "sim" : "nao" })}</div>
+              <div className="field-hint">{traduzirUi("Vai ao ar {quando}, com alguns minutos de diferença. Até lá, só a liderança vê.{silencio, select, sim { A notificação espera até as 7h, quando acaba o horário de silêncio.} other {}}", { quando: quandoLembra(agendaEm, undefined, traduzirUi), silencio: canais.includes("app") && emSilencio(agendaEm) ? "sim" : "nao" })}</div>
             )}
             {quando === "agendar" && agDia && !agendaEm && <p className="field-error">{traduzirUi("Esse horário não existe ou se repete na mudança de fuso. Escolha outro horário.")}</p>}
             {agendaPassou && <p className="field-error">{traduzirUi("Esse horário já passou. Escolha outro ou publique agora.")}</p>}
@@ -468,7 +468,7 @@ export function Comunicacao({
               <Cartao como="article" className="mural-item mural-item-pend" key={a.id}>
                 <div className="panel-body">
                   <div className="mural-top">
-                    <Selo tom={tomDaClasse(a.status === "agendado" ? "chip-solid" : "chip-neutral")}>{a.status === "agendado" && a.publish_at ? traduzirUi("Vai ao ar {quando}", { quando: quandoLembra(new Date(a.publish_at)) }) : traduzirUi("Rascunho")}</Selo>
+                    <Selo tom={tomDaClasse(a.status === "agendado" ? "chip-solid" : "chip-neutral")}>{a.status === "agendado" && a.publish_at ? traduzirUi("Vai ao ar {quando}", { quando: quandoLembra(new Date(a.publish_at), undefined, traduzirUi) }) : traduzirUi("Rascunho")}</Selo>
                     {a.urgent && <Selo tom="pendente">{traduzirUi("Urgente")}</Selo>}
                     <span className="mural-meta">{joinDot(paraPublico(a.audience), rotulosTipo[a.kind ?? "aviso"])}</span>
                   </div>
@@ -517,7 +517,7 @@ export function Comunicacao({
                 <h3 className="mural-t">{a.title}</h3>
                 {a.body && <p className="mural-txt">{a.body}</p>}
                 <div className="mural-reach">
-                  <div className="mural-reach-n">{traduzirUi("Vista por {lidos} de {total, plural, =1 {# pessoa} other {# pessoas}}{lembrete, select, pendente { · lembrete {quando} para {faltam, plural, =1 {# pessoa} other {# pessoas}}} enviado { · lembrete enviado em {data}} other {}}", { lidos: String(leram.length), total, lembrete: a.remind_at && !a.reminded_at && faltam.length > 0 ? "pendente" : a.reminded_at ? "enviado" : "nenhum", quando: a.remind_at ? quandoLembra(new Date(a.remind_at)) : "", faltam: faltam.length, data: a.reminded_at ? dataPublicacao(a.reminded_at) : "" })}</div>
+                  <div className="mural-reach-n">{traduzirUi("Vista por {lidos} de {total, plural, =1 {# pessoa} other {# pessoas}}{lembrete, select, pendente { · lembrete {quando} para {faltam, plural, =1 {# pessoa} other {# pessoas}}} enviado { · lembrete enviado em {data}} other {}}", { lidos: String(leram.length), total, lembrete: a.remind_at && !a.reminded_at && faltam.length > 0 ? "pendente" : a.reminded_at ? "enviado" : "nenhum", quando: a.remind_at ? quandoLembra(new Date(a.remind_at), undefined, traduzirUi) : "", faltam: faltam.length, data: a.reminded_at ? dataPublicacao(a.reminded_at) : "" })}</div>
                   <div className="dist-bar"><div className="dist-bar-fill" style={{ width: `${pct}%` }} /></div>
                   {a.kind === "evento" && <div className="mural-reach-n">{traduzirUi("{vao, plural, =1 {# vai} other {# vão}} · {nao} não", { vao: resp.filter((r) => r.response === "vou").length, nao: String(resp.filter((r) => r.response === "nao").length) })}</div>}
                 </div>

@@ -11,7 +11,7 @@ import { useTermos } from "../../lib/vocabulario-context";
 import { Av } from "../ui";
 import { DrawerSection, DrawerShell } from "../campos";
 import { PersonTimeline } from "./FichaPessoa";
-import { BAT_ST_MAP } from "../comum";
+import { BAT_ST_MAP, rotuloTurmaBatismo } from "../comum";
 import type { BaptismCandidateView, BaptismClassView, ChurchView, DecisionView, MemberView, PersonView, TimelineEventView } from "../tipos";
 
 import { Botao, botaoClasse, BotaoIcone } from "../../ui/Botao";
@@ -221,7 +221,7 @@ export function BatismoDrawer({
           <div>
             <div className="profile-name">{classData.label}</div>
             <div className="profile-role">{joinDot(formatDateBR(classData.baptism_date), classData.location)}</div>
-            <div style={{ marginTop: 10 }}><Selo tom={tomDaClasse(st?.cls ?? "chip-wait")}>{st?.label ?? classData.status}</Selo></div>
+            <div style={{ marginTop: 10 }}><Selo tom={tomDaClasse(st?.cls ?? "chip-wait")}>{st ? rotuloTurmaBatismo(st.label, traduzirUi) : classData.status}</Selo></div>
           </div>
         </div>
       </div>

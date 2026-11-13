@@ -1,4 +1,5 @@
 import { contrastRatio, deriveAccentVars, isValidHex, mix, normalizeHex, withAlpha } from "./color";
+import { sourceText, type Text } from "./internacional/mensagens";
 
 /* Tema da igreja no Service. A igreja escolhe no admin (Configurações →
    Personalização) uma família de neutros pro modo escuro, outra pro claro,
@@ -60,6 +61,21 @@ export const NEUTRAL_FAMILIES: NeutralFamily[] = [
 
 export const DEFAULT_FAMILY: Record<ThemeMode, string> = { dark: "tinta", light: "papel" };
 
+/** Nome e descrição da família na tela. "Papel" leva select para não colidir com "Papel" (função da pessoa). */
+export function textoDaFamilia(f: Pick<NeutralFamily, "id" | "label" | "hint">, t: Text = sourceText): { label: string; hint: string } {
+  const textos: Record<string, { label: string; hint: string }> = {
+    tinta: { label: t("Tinta"), hint: t("Preto esverdeado, o padrão CE.X") },
+    carvao: { label: t("Carvão"), hint: t("Preto e cinza escuro puros") },
+    noite: { label: t("{familia, select, noite {Noite} other {Noite}}", { familia: "noite" }), hint: t("Grafite frio, azulado") },
+    cafe: { label: t("Café"), hint: t("Marrom escuro, quente") },
+    papel: { label: t("{familia, select, papel {Papel} other {Papel}}", { familia: "papel" }), hint: t("Creme quente, o padrão CE.X") },
+    branco: { label: t("Branco"), hint: t("Branco e cinza claro puros") },
+    gelo: { label: t("Gelo"), hint: t("Branco frio, azulado") },
+    areia: { label: t("Areia"), hint: t("Off-white quente, neutro") },
+  };
+  return Object.hasOwn(textos, f.id) ? textos[f.id] : { label: f.label, hint: f.hint };
+}
+
 /* cores de identidade comuns em igrejas, pra começar rápido (a igreja pode
    usar qualquer cor: estas só aceleram a escolha) */
 export const ACCENT_PRESETS = [
@@ -76,6 +92,15 @@ export const ACCENT_PRESETS = [
   { hex: "#D14D8A", label: "Rosa" },
   { hex: "#6F523A", label: "Marrom" },
 ];
+
+/** Nome da cor pronta na tela; o hex gravado não muda. */
+export function nomeDaCor(label: string, t: Text = sourceText): string {
+  const nomes: Record<string, string> = {
+    "Oliva CE.X": t("Oliva CE.X"), Azul: t("Azul"), "Azul marinho": t("Azul marinho"), "Verde-água": t("Verde-água"), Verde: t("Verde"), Dourado: t("Dourado"),
+    Laranja: t("Laranja"), Vermelho: t("Vermelho"), Vinho: t("Vinho"), Roxo: t("Roxo"), Rosa: t("Rosa"), Marrom: t("Marrom"),
+  };
+  return Object.hasOwn(nomes, label) ? nomes[label] : label;
+}
 
 /* Réguas mínimas, medidas na paleta CE.X original (tinta/papel) pra que
    qualquer família nova fique no mesmo nível de leitura. */

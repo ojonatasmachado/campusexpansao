@@ -1,6 +1,6 @@
 "use client";
 
-import { JOURNEY_REQ_STEPS, requirementLabel, type Requirement } from "./lib/requirements";
+import { JOURNEY_REQ_STEPS, requirementLabel, rotuloEtapaRequisito, type Requirement } from "./lib/requirements";
 import { useTermos } from "./lib/vocabulario-context";
 
 import { Opcao } from "./ui/Opcao";
@@ -43,7 +43,7 @@ export default function RequisitosEditor({
         <div className="seg-check">
           {JOURNEY_REQ_STEPS.map((s) => (
             <Opcao key={s.ref} marcada={has("journey", s.ref)} estilo="seg-chip" onClick={() => toggle("journey", s.ref)}>
-              {s.ref === "integracao" && groupsLabel ? groupsLabel : ct(s.label)}
+              {s.ref === "integracao" && groupsLabel ? groupsLabel : rotuloEtapaRequisito(s.label, traduzirUi)}
             </Opcao>
           ))}
         </div>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTermos } from "../../../lib/vocabulario-context";
-import { JRN_STEPS } from "../../caminhada";
+import { JRN_STEPS, rotuloEtapaJornada } from "../../caminhada";
 import { avisar } from "../../../lib/avisar";
 import { JORNADA_KIND_INDEX, writeJourneyStep } from "../../comum";
 import type { ChurchView, JourneyStepKind, MemberView, TimelineEventView } from "../../tipos";
@@ -64,7 +64,7 @@ export function JornadaEditModal({
         return (
           <Linha estilo="config" key={step.kind} style={{ alignItems: "flex-start" }}>
             <div className="cfg-row-main">
-              <div className="cfg-row-t">{ct(step.label)}</div>
+              <div className="cfg-row-t">{ct(rotuloEtapaJornada(step.label, traduzirUi))}</div>
               {jaConcluido ? (
                 <div className="cfg-row-s">{event?.when_label ? traduzirUi("Concluído em {data}", { data: event.when_label }) : traduzirUi("Concluído")}</div>
               ) : rows[step.kind].done ? (

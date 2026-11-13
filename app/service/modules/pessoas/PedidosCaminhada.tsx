@@ -4,7 +4,7 @@ import { useState } from "react";
 import { avisar } from "../../lib/avisar";
 import { formatDateBR } from "../../lib/date";
 import { useTermos } from "../../lib/vocabulario-context";
-import { JRN_STEPS } from "../../painel/caminhada";
+import { JRN_STEPS, rotuloEtapaJornada } from "../../painel/caminhada";
 import type { JourneyChangeRequestView, MemberView } from "../../painel/tipos";
 import { Botao, BotaoIcone } from "../../ui/Botao";
 import { Vazio } from "../../ui/Estados";
@@ -46,7 +46,7 @@ export function PedidosCaminhada({ pedidos, members, onApproveJourney, onRejectJ
         {pedidos.length === 0 && <Vazio titulo={traduzirUi("Nenhum pedido pendente")} />}
         {pedidos.map((pedido) => {
           const member = members.find((m) => m.id === pedido.memberId);
-          const etapa = ct(JRN_STEPS.find((s) => s.kind === pedido.step)?.label ?? pedido.step);
+          const etapa = ct(rotuloEtapaJornada(JRN_STEPS.find((s) => s.kind === pedido.step)?.label ?? pedido.step, traduzirUi));
           return (
             <Linha estilo="config" key={pedido.id}>
               <div className="mini-main">

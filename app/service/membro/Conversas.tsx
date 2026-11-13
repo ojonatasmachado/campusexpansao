@@ -224,7 +224,7 @@ export function TabConversas({
       )
     : [];
 
-  const identidade = (c: Chat) => identidadeConversa(c, chatMembers, member?.id, ministries);
+  const identidade = (c: Chat) => identidadeConversa(c, chatMembers, member?.id, ministries, traduzirUi);
   const nomeDa = (c: Chat) => identidade(c).nome;
   const fotoDa = (c: Chat) => identidade(c).fotoUrl;
   const ultimaDe = (id: string) => {

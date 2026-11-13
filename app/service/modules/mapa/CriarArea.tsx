@@ -83,7 +83,7 @@ export function CriarArea({ ctx, bairrosIniciais, nivel }: { ctx: ContextoMapa; 
       <PainelMapa rotulo={traduzirUi("Nova área")} sobretitulo={traduzirUi("Nova área")} titulo={traduzirUi("Dentro da área agora")} voltar={{ aoTocar: ctx.fechar }}
         busca={(
           <div className="ca-numeros">
-            <div className="ca-num"><span>{traduzirUi("Pessoas da igreja")}</span><b className="mp-num">{previa ? pessoasNaRegiao(previa.pessoas) : 0}</b></div>
+            <div className="ca-num"><span>{traduzirUi("Pessoas da igreja")}</span><b className="mp-num">{previa ? pessoasNaRegiao(previa.pessoas, traduzirUi) : 0}</b></div>
             <div className="ca-num"><span>{traduzirUi("Moradores")}</span><b className="mp-num">{previa ? milhar(previa.moradores) : 0}</b></div>
             <div className="ca-num"><span>{traduzirUi("Presença da igreja")}</span><b className="ca-num-txt">{traduzirUi.rich("1 a cada <num>{presenca}</num>", { presenca, num: (c) => <span className="mp-num">{c}</span> })}</b></div>
             <div className="ca-num"><span>{ct("{Grupos}")}</span><b className="mp-num">{previa ? previa.grupos : 0}</b></div>

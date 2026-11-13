@@ -396,7 +396,7 @@ export function MapaIgreja({ organizationId, churchName, people: pessoasDoPainel
         <GrupoCamadas titulo={traduzirUi("Cidade · IBGE 2022")}>
           <LinhaCamada icone={ic("presenca")} rotulo={traduzirUi("Presença da igreja")} detalhe={traduzirUi("pessoas da igreja por morador")} ligada={camadas.presenca} aoAlternar={vira("presenca")}>
             <EscalaTons inicio={traduzirUi("menor · 1 a cada {n}", { n: milhar(2000) })} fim={traduzirUi("maior · 1 a cada 100")} />
-            {cidade?.um_a_cada ? <span className="mp-fraco">{traduzirUi("Na cidade: {valor}", { valor: umACada(cidade.um_a_cada, true) })}</span> : null}
+            {cidade?.um_a_cada ? <span className="mp-fraco">{traduzirUi("Na cidade: {valor}", { valor: umACada(cidade.um_a_cada, true, traduzirUi) })}</span> : null}
             <TransparenciaCamada valor={transp.presenca} aoMudar={(v) => setTransp((t) => ({ ...t, presenca: v }))} />
           </LinhaCamada>
         </GrupoCamadas>
@@ -622,11 +622,11 @@ function BalaoDoPonto({ org, sel, map, folha, pessoas, grupos, usaGrupos, cidade
           {acesso?.pode_mesa && <Botao onClick={() => onAnalisar([r.codigo])}>{traduzirUi("Analisar")}</Botao>}
         </>
       ) : undefined}>
-      <LinhaBalao icone="presenca">{umACada(r.um_a_cada)}</LinhaBalao>
+      <LinhaBalao icone="presenca">{umACada(r.um_a_cada, false, traduzirUi)}</LinhaBalao>
       <LinhaBalao icone="moradores">{traduzirUi.rich("<num>{n}</num> moradores", { n: milhar(r.moradores), num: (c) => <span className="mp-num">{c}</span> })}</LinhaBalao>
-      <LinhaBalao icone="membros">{traduzirUi.rich("<num>{n}</num> da igreja", { n: pessoasNaRegiao(r.pessoas), num: (c) => <span className="mp-num">{c}</span> })}</LinhaBalao>
+      <LinhaBalao icone="membros">{traduzirUi.rich("<num>{n}</num> da igreja", { n: pessoasNaRegiao(r.pessoas, traduzirUi), num: (c) => <span className="mp-num">{c}</span> })}</LinhaBalao>
       {usaGrupos && <LinhaBalao icone="inicio">{r.grupos ? traduzirUi("{count, plural, =1 {# {grupo}} other {# {grupos}}}", { count: r.grupos }) : ct(traduzirUi("Nenhum {grupo}"))}</LinhaBalao>}
-      {cidade?.um_a_cada ? <span className="mp-fraco">{traduzirUi("Na cidade: {valor}", { valor: umACada(cidade.um_a_cada, true) })}</span> : null}
+      {cidade?.um_a_cada ? <span className="mp-fraco">{traduzirUi("Na cidade: {valor}", { valor: umACada(cidade.um_a_cada, true, traduzirUi) })}</span> : null}
     </Balao>
   );
 }

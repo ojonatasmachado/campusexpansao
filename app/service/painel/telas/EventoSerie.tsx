@@ -8,7 +8,7 @@ import { avisar } from "../../lib/avisar";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { formatDateBR, isCivilDate, somaDias, todayISO } from "../../lib/date";
 import { useTermos } from "../../lib/vocabulario-context";
-import { datasDaSerie, diasEntre, feitoDaSerie, mesesEntre, REPETICOES, resumoDaSerie, somaMeses, TETO_SERIE, type Repeticao } from "../../lib/recorrencia";
+import { datasDaSerie, diasEntre, feitoDaSerie, mesesEntre, REPETICOES, resumoDaSerie, rotuloRepeticao, somaMeses, TETO_SERIE, type Repeticao } from "../../lib/recorrencia";
 import { friendlyWriteError } from "../erros";
 import { weekdayShortFromDate } from "../comum";
 import { TimePicker } from "../campos";
@@ -178,7 +178,7 @@ function RepetirEncontro({ event, aoFechar, onSaved }: { event: EventView; aoFec
       if (erroReserva) avisar(traduzirUi("Já estão na agenda, mas o espaço não ficou reservado. Reserve em Configurações → Espaços e Salas."), "warn");
     }
     setSalvando(false);
-    avisar(feitoDaSerie(novas, regra, ct("{cultos}").toLowerCase()));
+    avisar(feitoDaSerie(novas, regra, ct("{cultos}").toLowerCase(), traduzirUi));
     onSaved();
     aoFechar();
   };
@@ -189,11 +189,11 @@ function RepetirEncontro({ event, aoFechar, onSaved }: { event: EventView; aoFec
       <Campo rotulo={traduzirUi("Repete")} grupo>
         <div className="kb-move" role="radiogroup" aria-label={traduzirUi("Repete")}>
           {REPETICOES.filter((r) => r.id !== "nao").map((r) => (
-            <Opcao key={r.id} role="radio" aria-checked={regra === r.id} marcada={regra === r.id} estilo="seg-chip" onClick={() => setRegra(r.id as Repeticao)}>{r.rotulo}</Opcao>
+            <Opcao key={r.id} role="radio" aria-checked={regra === r.id} marcada={regra === r.id} estilo="seg-chip" onClick={() => setRegra(r.id as Repeticao)}>{rotuloRepeticao(r.id, traduzirUi)}</Opcao>
           ))}
         </div>
       </Campo>
-      <Campo rotulo={traduzirUi("Até")} ajuda={novas.length ? resumoDaSerie(novas, regra, ct("{cultos}").toLowerCase()) : traduzirUi("Escolha uma data depois deste encontro. Até {teto} de uma vez.", { teto: String(TETO_SERIE) })}>
+      <Campo rotulo={traduzirUi("Até")} ajuda={novas.length ? resumoDaSerie(novas, regra, ct("{cultos}").toLowerCase(), traduzirUi) : traduzirUi("Escolha uma data depois deste encontro. Até {teto} de uma vez.", { teto: String(TETO_SERIE) })}>
         <SeletorData valor={ate} aoMudar={setAte} min={somaDias(event.eventDate, 1)} />
       </Campo>
       {erro ? <p className="fs-error" role="alert">{erro}</p> : null}

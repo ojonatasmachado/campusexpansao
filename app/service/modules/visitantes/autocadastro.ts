@@ -3,6 +3,7 @@
    RPC service.visitante_autocadastro (migração 0070). Mudou uma chave aqui,
    muda lá também. */
 import { termoDe, type Vocabulario } from "../../lib/vocabulario";
+import { sourceText, type Text } from "../../lib/internacional/mensagens";
 
 /** O que mora em service.churches.settings.autocadastro. */
 export type AutocadastroCfg = { ativo: boolean; responsavelId?: string | null };
@@ -45,8 +46,19 @@ export function interessesDe(v?: Vocabulario | null) {
   ];
 }
 
-export function rotuloComoConheceu(v: string | null | undefined): string | null {
-  return COMO_CONHECEU.find((o) => o.v === v)?.l ?? null;
+/** Opções de "Como conheceu" na tela; o valor gravado não muda. */
+export function opcoesComoConheceu(t: Text = sourceText): { v: (typeof COMO_CONHECEU)[number]["v"]; l: string }[] {
+  return [
+    { v: "instagram", l: t("Instagram ou internet") },
+    { v: "amigo", l: t("Um amigo ou parente") },
+    { v: "passando", l: t("Passando pela rua") },
+    { v: "evento", l: t("Num evento da igreja") },
+    { v: "outro", l: t("Outro jeito") },
+  ];
+}
+
+export function rotuloComoConheceu(v: string | null | undefined, t: Text = sourceText): string | null {
+  return opcoesComoConheceu(t).find((o) => o.v === v)?.l ?? null;
 }
 
 export function rotulosInteresses(keys: string[] | null | undefined, vocab?: Vocabulario | null): string[] {

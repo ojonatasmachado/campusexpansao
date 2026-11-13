@@ -185,7 +185,7 @@ export function Conversas({
   const chat = visibleChats.find((item) => item.id === selected) ?? visibleChats[0] ?? null;
   const selectedMessages = chat ? messages.filter((message) => message.chat_id === chat.id) : [];
   const chatCount = (chatId: string) => chatMembers.filter((member) => member.chat_id === chatId).length;
-  const identidade = (item: ChatView) => identidadeConversa(item, chatMembers, currentMember?.id, ministries);
+  const identidade = (item: ChatView) => identidadeConversa(item, chatMembers, currentMember?.id, ministries, traduzirUi);
   const chatName = (item: ChatView) => identidade(item).nome;
   const perspectiveText = scopeMinistryIds
     ? traduzirUi("Canal do {time}, grupos e mensagens diretas da sua equipe. Conversas são privadas: só os envolvidos veem.", { time: ministries.find((m) => m.id === scopeMinistryIds[0])?.name ?? traduzirUi("seu time") })

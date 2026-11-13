@@ -11,7 +11,7 @@ import { formatarTelefone, mesmoTelefone } from "../../lib/telefone";
 import { formatDateBR } from "../../lib/date";
 import { Icon } from "../../lib/icons";
 import { Av, Chip, EmptyState, PageHead } from "../../painel/ui";
-import { JRN_STEPS } from "../../painel/caminhada";
+import { JRN_STEPS, rotuloEtapaJornada } from "../../painel/caminhada";
 import { useTermos } from "../../lib/vocabulario-context";
 import { ImportarMembros } from "./ImportarMembros";
 import { DuplicadosAviso } from "./Duplicados";
@@ -39,13 +39,13 @@ function JrnPips({ journey, comTexto = false }: { journey: number[]; comTexto?: 
   const traduzirUi = useTexto();
   const { comTermos: ct } = useTermos();
   const feitas = JRN_STEPS.filter((_, i) => !!journey[i]);
-  const resumo = feitas.length ? traduzirUi("{feitas} de {total}: {etapas}", { feitas: String(feitas.length), total: String(JRN_STEPS.length), etapas: feitas.map((s) => ct(s.label)).join(", ") }) : traduzirUi("nenhuma etapa ainda");
+  const resumo = feitas.length ? traduzirUi("{feitas} de {total}: {etapas}", { feitas: String(feitas.length), total: String(JRN_STEPS.length), etapas: feitas.map((s) => ct(rotuloEtapaJornada(s.label, traduzirUi))).join(", ") }) : traduzirUi("nenhuma etapa ainda");
   return (
     <div className="jrn-cell" title={traduzirUi("{Caminhada}, {resumo}", { resumo })}>
       <div className="jrn-mini" aria-hidden="true">
         {journey.slice(0, 5).map((v, i) => <span key={i} className={`jrn-pip ${v ? "on" : ""}`} />)}
       </div>
-      {comTexto ? <span className="jrn-txt">{feitas.length ? traduzirUi("{feitas} de {total} · {etapa}", { feitas: String(feitas.length), total: String(JRN_STEPS.length), etapa: ct(feitas[feitas.length - 1].label) }) : traduzirUi("Nenhuma etapa")}</span> : null}
+      {comTexto ? <span className="jrn-txt">{feitas.length ? traduzirUi("{feitas} de {total} · {etapa}", { feitas: String(feitas.length), total: String(JRN_STEPS.length), etapa: ct(rotuloEtapaJornada(feitas[feitas.length - 1].label, traduzirUi)) }) : traduzirUi("Nenhuma etapa")}</span> : null}
     </div>
   );
 }
@@ -156,7 +156,7 @@ export function Membros({ members, people = [], ministries, church, setDrawer, s
       </div>
       {filtroInicial && <div className="panel-head" role="status"><span className="panel-meta">{filtro === "em-grupos" ? traduzirUi("Filtro: membros em {grupos}") : traduzirUi("Filtro: membros registrados")}</span><Botao variante="texto" onClick={() => { setFiltro("todos"); onLimparFiltro?.(); }}>{traduzirUi("Limpar filtro")}</Botao></div>}
       {podeJuntar && !soTimes && church ? <DuplicadosAviso linhas={linhas} organizationId={church.organizationId} onJuntou={() => router.refresh()} /> : null}
-      <p className="jrn-legenda">{traduzirUi.rich("<b>{Caminhada}</b>, uma barra por etapa, na ordem: {etapas}.", { etapas: JRN_STEPS.map((s) => ct(s.label)).join(" · "), b: (c) => <b>{c}</b> })}</p>
+      <p className="jrn-legenda">{traduzirUi.rich("<b>{Caminhada}</b>, uma barra por etapa, na ordem: {etapas}.", { etapas: JRN_STEPS.map((s) => ct(rotuloEtapaJornada(s.label, traduzirUi))).join(" · "), b: (c) => <b>{c}</b> })}</p>
       <Tabela
         rotulo={traduzirUi("Pessoas")}
         linhas={visible}
