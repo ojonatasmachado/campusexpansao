@@ -2,10 +2,10 @@
 id: Q11
 titulo: Fechar fluxo de produção, PR e commits
 tipo: infra
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-11-13
+branch: historia/Q11-fluxo-producao-pr
 depende: []
 tamanho: P
 ---
@@ -16,6 +16,13 @@ Fonte: levantamento de 22/10 (checkout local e git log).
 
 ## Arquivos (trilho)
 - `docs/service-v7/historias/Q11-fluxo-producao-pr.md`
+- `AGENTS.md` (seção "Processo de qualidade / portão de etapa")
+- `.gitignore`
+- `eslint.config.mjs`
+- `.claude/commands/service-v7.md`
+- `.claude/skills/portao-de-etapa/**` (novo)
+- `scripts/validar.sh` (novo)
+- `scripts/hook-parar.sh` (novo)
 
 ## Pronto quando
 - service-v7 atualizada com origin/main ou rebaseada.
