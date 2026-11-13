@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // pacotes de ajuste do Service (fora do git)
     "ajustes_service_*/**",
+    // skills, comandos e worktrees do Claude Code (não são código do app)
+    ".claude/**",
   ]),
 ]);
 

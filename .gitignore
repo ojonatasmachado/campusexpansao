@@ -46,3 +46,14 @@ supabase/.temp/
 *.tsbuildinfo
 next-env.d.ts
 scripts/e2-fotos.mjs
+
+# marca do portão de qualidade (scripts/hook-parar.sh), estado local, nunca versionar
+.claude/.ultima-validacao
+
+# material de concorrente e projetos pessoais soltos no checkout, fora do git de propósito (Q11)
+/journey-mapper/
+/ponte_rea_full/
+/meu-blog-ghost/
+
+# config de editor pessoal
+/.vscode/
