@@ -19,9 +19,10 @@ import { useServiceAccess } from "../../AccessContext";
 import type { ChurchView } from "../../ServiceExactApp";
 import { ACESSO_FIN_LANCAR } from "./manifest";
 import { db, useFinanceiro, type Categoria, type Conta, type Fundo, type Lancamento } from "./dados";
-import { brl, centavosCsv, FORMA_ROTULO, mesNome, mesTexto, somaMes } from "./dinheiro";
+import { brl, centavosCsv, FORMA_ROTULO, mesNome, mesTexto, somaMes, type Periodo } from "./dinheiro";
 import { ContaForm, LancamentoForm, OfertaForm, TransferenciaForm } from "./Formularios";
 import { APagar, CampanhaForm, ContaFixaForm, FechamentoMes, Planejamento } from "./Fase2";
+import { OrcamentoForm, OrcamentoPainel, type LinhaOrcamento } from "./Fase3";
 import type { Campanha, ContaFixa } from "./dados";
 
 import { Botao, BotaoIcone } from "../../ui/Botao";
@@ -44,7 +45,8 @@ type Tela =
   | { k: "oferta" }
   | { k: "conta"; edit?: Conta }
   | { k: "fixa"; edit?: ContaFixa }
-  | { k: "campanha"; edit?: Campanha };
+  | { k: "campanha"; edit?: Campanha }
+  | { k: "orcamento"; linha: LinhaOrcamento; periodo: { inicio: string; fim: string } };
 
 type FiltroTipo = "todos" | "entrada" | "despesa" | "transferencia";
 
@@ -57,7 +59,13 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
   const org = church?.organizationId;
   const [mes, setMes] = useState(todayISO().slice(0, 7));
   const fin = useFinanceiro(org, mes, podeLancar);
-  const [aba, setAba] = useState<"movimento" | "planejamento" | "fechamento" | "cadastros">("movimento");
+  const [aba, setAba] = useState<"movimento" | "planejamento" | "orcamento" | "fechamento" | "cadastros">("movimento");
+  /* período do orçamento mora aqui, não dentro do OrcamentoPainel: o carregando geral (linha
+     abaixo) troca todo o retorno do componente e desmontaria um estado interno, voltando
+     sempre para "mês atual" depois de salvar ou excluir um orçamento. */
+  const [orcTipo, setOrcTipo] = useState<Periodo>("mes");
+  const [orcRef, setOrcRef] = useState(() => todayISO().slice(0, 7));
+  const [orcVersao, setOrcVersao] = useState(0);
   const podeReabrir = currentRole === "master" || currentRole === "pastor";
   const [tela, setTela] = useState<Tela>(null);
   const [tipo, setTipo] = useState<FiltroTipo>("todos");
@@ -148,6 +156,7 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
           abas={[
             { id: "movimento", rotulo: "Movimento" },
             { id: "planejamento", rotulo: "Contas fixas e campanhas" },
+            { id: "orcamento", rotulo: "Orçamento" },
             { id: "fechamento", rotulo: "Fechamento" },
             { id: "cadastros", rotulo: "Contas e categorias" },
           ]} />
@@ -253,6 +262,10 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
         </>
       ) : aba === "planejamento" ? (
         <Planejamento fin={fin} podeLancar={podeLancar} onFixa={(c) => setTela({ k: "fixa", edit: c ?? undefined })} onCampanha={(c) => setTela({ k: "campanha", edit: c ?? undefined })} />
+      ) : aba === "orcamento" ? (
+        <OrcamentoPainel org={org} categorias={fin.categorias} podeLancar={podeLancar} versao={orcVersao}
+          tipo={orcTipo} aoMudarTipo={setOrcTipo} refMes={orcRef} aoMudarRefMes={setOrcRef}
+          onEditar={(linha, periodo) => setTela({ k: "orcamento", linha, periodo })} />
       ) : aba === "fechamento" ? (
         <FechamentoMes fin={fin} mes={mes} org={org} igreja={church?.nome ?? ""} podeLancar={podeLancar} podeReabrir={podeReabrir} />
       ) : (
@@ -268,6 +281,10 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
       {tela?.k === "conta" ? <ContaForm {...base} edit={tela.edit} /> : null}
       {tela?.k === "fixa" ? <ContaFixaForm {...base} edit={tela.edit} cad={cad} /> : null}
       {tela?.k === "campanha" ? <CampanhaForm {...base} edit={tela.edit} cad={cad} /> : null}
+      {tela?.k === "orcamento" ? (
+        <OrcamentoForm {...base} onDone={() => { setTela(null); setOrcVersao((v) => v + 1); }}
+          linha={tela.linha} periodo={tela.periodo} categoriaNome={catPor.get(tela.linha.category_id)?.name ?? ""} />
+      ) : null}
     </div>
   );
 }
