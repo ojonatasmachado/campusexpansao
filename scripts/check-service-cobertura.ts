@@ -7,13 +7,18 @@ const fuso = "America/Sao_Paulo";
 const times = [
   { id: "louvor", name: "Louvor", positions: [{ id: "voz", need_count: 2 }] },
   { id: "recepcao", name: "Recepção", positions: [{ id: "porta", need_count: 1 }] },
+  { id: "som", name: "Som", positions: [{ id: "mesa", need_count: 1 }] },
 ];
-const evento = (id: string, eventDate: string, time = "19:00", ministries: string[] = []) => ({ id, eventDate, time, ministries });
+/* "som" só entra no culto que testa 3+ times incompletos (tres-faltas); os
+   demais ficam restritos a louvor+recepção, senão o time novo "vazaria" pros
+   cultos antigos (ministries vazio = "todo time cobre este culto"). */
+const evento = (id: string, eventDate: string, time = "19:00", ministries: string[] = ["louvor", "recepcao"]) => ({ id, eventDate, time, ministries });
 const eventos = [
   evento("fora", "2026-11-23"), evento("ultimo", "2026-11-22"),
   evento("passou", "2026-11-08"), evento("ja-comecou", "2026-11-09", "08:00"),
   evento("primeiro", "2026-11-11"), evento("completo", "2026-11-12"),
   evento("sem-hora", "2026-11-09", ""), evento("so-louvor", "2026-11-13", "19:00", ["louvor"]),
+  evento("tres-faltas", "2026-11-14", "19:00", ["louvor", "recepcao", "som"]),
 ];
 const vagas = [
   { event_id: "primeiro", position_id: "voz", status: "wait" },
@@ -22,9 +27,11 @@ const vagas = [
 ];
 const medir = (escopo?: string[] | null) => pendenciasDeCobertura(eventos, vagas, times, escopo, fuso, agora);
 const filas = medir();
-assert.deepEqual(filas.map((p) => p.conteudo.evento.id), ["sem-hora", "primeiro", "so-louvor", "ultimo"]);
+assert.deepEqual(filas.map((p) => p.conteudo.evento.id), ["sem-hora", "primeiro", "so-louvor", "tres-faltas", "ultimo"]);
 assert.equal(filas.find((p) => p.conteudo.evento.id === "primeiro")?.conteudo.resumo, "1 vaga em Louvor · 1 vaga em Recepção");
 assert.equal(filas.find((p) => p.conteudo.evento.id === "so-louvor")?.conteudo.resumo, "2 vagas em Louvor");
+// Q23: 3+ times incompletos agrega, não concatena um por um (virava parede de texto).
+assert.equal(filas.find((p) => p.conteudo.evento.id === "tres-faltas")?.conteudo.resumo, "4 vagas em Louvor, Recepção e mais 1 time");
 assert(medir(["recepcao"]).every((p) => !p.conteudo.resumo.includes("Louvor")));
 assert(!medir(["recepcao"]).some((p) => p.conteudo.evento.id === "so-louvor"));
 assert.deepEqual(medir([]), []);

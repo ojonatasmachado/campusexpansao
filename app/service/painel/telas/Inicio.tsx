@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Icon } from "../../lib/icons";
 import { useRelogioDaIgreja } from "../../lib/relogio-context";
 import { formatDateBR } from "../../lib/date";
+import { listaResumida } from "../../lib/lista";
 import type { EnqueteElegivelView } from "../../lib/enquetes";
 import type { PesquisaElegivelView } from "../../lib/pesquisas";
 import { textoBuscavel, TERMOS } from "../../lib/vocabulario";
@@ -127,7 +128,7 @@ export function GlobalSearch({
             type: traduzirUi("Função"),
             icon: "escalas",
             name,
-            sub: times.map((m) => m.name.split(" ")[0]).join(", "),
+            sub: listaResumida(times.map((m) => m.name.trim().split(" ")[0]), traduzirUi),
             action: () => {
               setRoute("times");
               setDrawer({ kind: "ministry", id: times[0].id });

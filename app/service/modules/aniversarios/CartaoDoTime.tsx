@@ -11,6 +11,7 @@
    Só times: o app do membro não recebe quem lidera cada grupo; o líder de
    grupo vê os aniversariantes do grupo no painel. */
 import { formatarTelefone } from "../../lib/telefone";
+import { listaResumida } from "../../lib/lista";
 import { MENSAGEM_PADRAO, comData, daSemana, linkWhatsapp, mensagemPara, primeiroNome } from "./aniversarios";
 
 import { Botao } from "../../ui/Botao";
@@ -43,10 +44,7 @@ export function aniversariosHojeNoMeuTime({ personId, membros, pessoas, times, h
 /* botão (não link): a casca mede card_acted pelo clique em botão do cartão (lei 11) */
 const abrir = (url: string) => window.open(url, "_blank", "noopener");
 
-const nomes = (l: AniversarioNoTime[], traduzirUi: Text) => {
-  const n = l.map((p) => primeiroNome(p.nome));
-  return n.length <= 2 ? (n.length === 2 ? traduzirUi("{a} e {b}", { a: n[0], b: n[1] }) : n.join("")) : traduzirUi("{nomes} e mais {n}", { nomes: n.slice(0, 2).join(", "), n: String(n.length - 2) });
-};
+const nomes = (l: AniversarioNoTime[], traduzirUi: Text) => listaResumida(l.map((p) => primeiroNome(p.nome)), traduzirUi);
 
 export function CartaoAniversario({ pessoas, destaque, onAgoraNao }: { pessoas: AniversarioNoTime[]; destaque: boolean; onAgoraNao: () => void }) {
   const traduzirUi = useTexto();

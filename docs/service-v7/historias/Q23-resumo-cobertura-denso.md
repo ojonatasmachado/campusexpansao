@@ -51,19 +51,53 @@ const resumo = extras > 0
   : `${plural(totalFaltam, "vaga")} em ${nomes}`;
 ```
 
-Com 1 ou 2 times incompletos, o texto fica igual ao de antes (sem o "e mais"), só muda o caso
-de 3+ times, que era o caso quebrado.
+Com 1 ou 2 times incompletos, o texto fica idêntico ao de antes (mesmo formato por time,
+`join(" · ")`); só o caso de 3+ times, que era o quebrado, passa a agregar.
+
+## Varredura do mesmo padrão
+O usuário suspeitou (e pediu explicitamente) que a mesma causa ("concatenação sem limite de
+uma lista que pode crescer") apareça em outras telas densas. Busquei todo `.map(...).join(" · "
+)`/`.join(", ")` em `app/service` e revisei cada ocorrência. A maioria é segura (lista
+estruturalmente pequena pela regra de negócio, ou já tem corte antes do join, ou é texto de
+exportação/CSV/log interno, não tela densa). Três eram o mesmo bug real:
+
+- `app/service/painel/telas/Agenda.tsx` (painel › Agenda, grade da semana): `mini-sub` do
+  cartão de evento listava todos os ministérios escalados, sem limite.
+- `app/service/painel/telas/Inicio.tsx` (painel › busca global): o subtítulo de um resultado de
+  "Função" listava todos os times com aquela função, sem limite (o `.slice(0,6)` existente só
+  limitava o nº de funções, não o nº de times por função).
+- `app/service/modules/escalas/EscalaExtra.tsx` (criar escala extra, lista "Times que servem"):
+  a linha secundária de cada time listava todas as suas posições, sem limite.
+
+Também achei que o projeto **já tinha** o padrão certo em `CartaoDoTime.tsx` (cartão de
+aniversário): "A e B" até 2 nomes, "A, B e mais N" a partir de 3, com chaves de tradução já
+existentes (`pt-BR.json`: `m1dc81ff`, `modiem`). Extraí esse padrão para um helper compartilhado
+(`app/service/lib/lista.ts`, `listaResumida`), apliquei nos três pontos acima e no próprio
+`CartaoDoTime.tsx` (removendo a duplicação), seguindo a lei de módulos centrais / "não copie o
+mesmo bloco em dois arquivos". `pendencias.ts` não usa esse helper porque não passa por
+`traduzirUi` hoje (função pura de dados, chamada fora de componente; i18n do Service está
+desligado em produção, então o texto solto em pt-BR já era o comportamento existente ali).
 
 ## Arquivos (trilho)
 - `docs/service-v7/historias/Q23-resumo-cobertura-denso.md`
 - `app/service/modules/escalas/pendencias.ts`
+- `app/service/lib/lista.ts` (novo)
+- `app/service/modules/aniversarios/CartaoDoTime.tsx`
+- `app/service/painel/telas/Agenda.tsx`
+- `app/service/painel/telas/Inicio.tsx`
+- `app/service/modules/escalas/EscalaExtra.tsx`
+- `scripts/check-service-cobertura.ts`
 
 ## Pronto quando
-- `resumo` nunca concatena mais de 2 nomes de time crus; acima disso, agrega em "e mais N times".
+- `resumo` de cobertura nunca concatena mais de 2 nomes de time crus; acima disso, agrega em
+  "e mais N times".
+- Os três outros pontos achados na varredura (Agenda, busca do Início, EscalaExtra) usam o
+  mesmo corte.
 - `scripts/validar.sh` completo: TUDO PASSOU.
 
 ## Notas
 2026-11-13 (claude): feita. Causa raiz encontrada por leitura de código a partir do print
-enviado pelo usuário (números batem: 8 times, 29 vagas no total, igual ao print). Fix aplicado
-só em `pendencias.ts`; `Inicio.tsx` e a gaveta de cobertura não precisaram mudar porque só
-consomem o campo `resumo` já pronto.
+enviado pelo usuário (números batem: 8 times, 29 vagas no total, igual ao print). Varredura
+pedida pelo usuário ("tem vários outros") feita por busca de padrão + triagem de cada
+ocorrência; achados reais corrigidos com o mesmo helper, achados seguros ficaram documentados
+acima sem mudança de código.
