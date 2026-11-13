@@ -192,11 +192,14 @@ export function Coachmark({ steps, go, onDone, startAt = 0, onStepChange }: { st
   );
 }
 
-/* ── HELP FAB · botão flutuante de ajuda, sempre por perto ────────── */
+/* ── HELP FAB · botão de ajuda, sempre por perto ──────────────────── */
 
-/* lugar: "flutuante" (computador, canto de baixo) ou "barra" (celular, na barra
-   do topo, para não cobrir o conteúdo; v7 2.11). O CSS mostra um ou outro. */
-export function HelpFab({ onTour, onSetup, lugar = "flutuante" }: { onTour: () => void; onSetup?: () => void; lugar?: "flutuante" | "barra" }) {
+/* lugar "barra": na barra do topo, para não cobrir conteúdo (v7 2.11, celular;
+   Q25, também no computador). "flutuante" (canto de baixo) existe no componente
+   mas o CSS não mostra mais em nenhuma largura: cobria conteúdo real em telas
+   com lista longa (Q24). Mantido só para não travar um uso futuro que precise
+   dele de novo com código já pronto. */
+export function HelpFab({ onTour, onSetup, lugar = "barra" }: { onTour: () => void; onSetup?: () => void; lugar?: "flutuante" | "barra" }) {
   const traduzirUi = useTexto();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -215,7 +218,7 @@ export function HelpFab({ onTour, onSetup, lugar = "flutuante" }: { onTour: () =
           {onSetup && <Acao onClick={() => { setOpen(false); onSetup(); }}><Icon name="identidade" size={14} className="ic" /> {traduzirUi("Ver o que falta configurar")}</Acao>}
         </div>
       ) : null}
-      <Acao className="help-fab" data-tour={lugar === "barra" ? undefined : "ajuda-fab"} title={traduzirUi("Ajuda")} aria-label={traduzirUi("Ajuda")} aria-expanded={open} onClick={() => setOpen((o) => !o)}>?</Acao>
+      <Acao className="help-fab" data-tour={lugar === "barra" ? "ajuda-fab" : undefined} title={traduzirUi("Ajuda")} aria-label={traduzirUi("Ajuda")} aria-expanded={open} onClick={() => setOpen((o) => !o)}>?</Acao>
     </div>
   );
 }

@@ -75,12 +75,6 @@
 .btn-ghost:focus-visible { outline: 2px solid var(--white); outline-offset: 2px; }
 .btn-ghost:disabled, .btn-ghost[aria-disabled="true"] { background: transparent; color: var(--muted); opacity: 1; }
 
-/* O botão flutuante ocupa a faixa inferior direita. A reserva pertence à coluna
-   do painel, para que o menu lateral acompanhe a altura da página. */
-@media (min-width: 741px) {
-  .main.help-fab-reserve .content { padding-bottom: calc(96px + var(--safe-bottom, 0px)); }
-}
-
 .btn-danger, .m6-btn.danger { background: var(--danger-dim); color: var(--danger); border-color: transparent; }
 
 .m6-link, .panel-link { font-weight: 700; color: var(--olive); }
