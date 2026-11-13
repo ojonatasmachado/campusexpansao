@@ -2,7 +2,7 @@
 id: Q20
 titulo: Teclado e ARIA corretos na busca de pessoa do financeiro
 tipo: codigo
-status: reservada
+status: feita
 quem: claude
 desde: 2026-11-13
 branch: historia/Q20-busca-pessoa-acessivel
@@ -31,3 +31,11 @@ Fonte: `app/service/modules/financeiro/Formularios.tsx:44` (revisão Q9, 13/11).
 - Teste pela tela: digitar parte de um nome, descer com Seta, confirmar com Enter, conferir que o campo fecha com a pessoa certa; Esc fecha sem escolher.
 
 ## Notas
+2026-11-13 (claude): feita. `CampoPessoa` ganhou navegação por teclado sem tirar o foco do campo de texto: Setas movem um destaque entre os até 8 resultados (`aria-activedescendant` + `aria-selected`/realce visual via `Opcao`), Enter escolhe o destacado, Esc fecha a lista mantendo o texto digitado. Usado nos 3 campos do arquivo (Contribuinte, Contou, Conferiu), inclusive o par `excluir` cruzado entre Contou/Conferiu.
+
+Revisado pelo subagente `revisor`; achou 3 problemas reais, corrigidos antes do commit:
+1. O teclado reagia mesmo com a lista fora da tela (ela só aparece com busca digitada), então Enter num campo recém-focado e vazio escolhia a primeira pessoa às cegas, e Esc era engolido em vez de fechar a tela por cima (`FormScreen` ignora `Escape` com `defaultPrevented`). Corrigido com uma flag `visivel` (aberto + texto + lista não vazia) usada no guard do teclado, no `aria-expanded` e no `aria-activedescendant`.
+2. As Setas partiam do índice cru em vez do já limitado ao tamanho da lista; se a lista encolhesse sem digitação (o campo pareado mudando `excluir`), sobravam toques "mortos" até o destaque voltar a se mover. Corrigido.
+3. Depois de Esc, Seta para baixo não reabria a lista (só digitar). Corrigido: reabre se já há texto digitado.
+
+Teste: `scripts/validar.sh` completo (build incluso) duas vezes (antes e depois das correções): TUDO PASSOU. Não verificado em aparelho real nem leitor de tela (fora do que esta sessão consegue fazer); o contrato ARIA (`role=combobox`/`listbox`/`option`, `aria-activedescendant`, `aria-selected`) segue o mesmo padrão já usado e testado em `Selecao`/`usePopover`.
