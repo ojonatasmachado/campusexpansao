@@ -69,3 +69,34 @@ export function limitesDoMes(mes: string): { de: string; ate: string } {
   const ultimo = new Date(Date.UTC(a, m, 0)).getUTCDate();
   return { de: `${mes}-01`, ate: `${mes}-${String(ultimo).padStart(2, "0")}` };
 }
+
+/* ── orçamento (fase 3): período livre, mês/semestre/ano, a partir de um mês de referência ── */
+export type Periodo = "mes" | "semestre" | "ano";
+export const PERIODOS: { id: Periodo; rotulo: string; meses: number }[] = [
+  { id: "mes", rotulo: "Mês", meses: 1 },
+  { id: "semestre", rotulo: "Semestre", meses: 6 },
+  { id: "ano", rotulo: "Ano", meses: 12 },
+];
+
+/** "2026-10" + tipo → limites ISO do mês, semestre (jan-jun/jul-dez) ou ano que contém esse mês */
+export function limitesDoPeriodo(tipo: Periodo, mes: string): { de: string; ate: string } {
+  if (tipo === "mes") return limitesDoMes(mes);
+  const [a, m] = mes.split("-").map(Number);
+  if (tipo === "semestre") {
+    const inicioMes = m <= 6 ? 1 : 7;
+    return { de: `${a}-${String(inicioMes).padStart(2, "0")}-01`, ate: limitesDoMes(`${a}-${String(inicioMes + 5).padStart(2, "0")}`).ate };
+  }
+  return { de: `${a}-01-01`, ate: `${a}-12-31` };
+}
+
+/** texto do período pra exibir: "Outubro de 2026" · "1º semestre de 2026" · "2026" */
+export function periodoTexto(tipo: Periodo, mes: string): string {
+  if (tipo === "mes") return mesTexto(mes);
+  const [a, m] = mes.split("-").map(Number);
+  return tipo === "semestre" ? `${m <= 6 ? "1º" : "2º"} semestre de ${a}` : String(a);
+}
+
+/** anda n períodos (mês, semestre ou ano) a partir do mês de referência */
+export function somaPeriodo(tipo: Periodo, mes: string, n: number): string {
+  return somaMes(mes, n * (PERIODOS.find((p) => p.id === tipo)?.meses ?? 1));
+}
