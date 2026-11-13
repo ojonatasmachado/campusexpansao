@@ -2,10 +2,10 @@
 id: A4
 titulo: Reproduzir e corrigir o ponto branco
 tipo: verificacao
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-11-13
+branch: historia/A4-ponto-branco
 depende: []
 tamanho: M
 ---
@@ -16,6 +16,7 @@ Fonte: STATUS F18; QUALIDADE-E-INTERNACIONAL.md :99.
 
 ## Arquivos (trilho)
 - `docs/service-v7/historias/A4-ponto-branco.md`
+- `app/service/membro/Kids.tsx`
 
 ## Pronto quando
 - Estado exato que causa o ponto branco identificado e reproduzido, ou fechado como não reproduzível com evidência.
