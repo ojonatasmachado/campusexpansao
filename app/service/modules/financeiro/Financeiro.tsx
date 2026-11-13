@@ -23,6 +23,7 @@ import { brl, centavosCsv, FORMA_ROTULO, mesNome, mesTexto, somaMes, type Period
 import { ContaForm, LancamentoForm, OfertaForm, TransferenciaForm } from "./Formularios";
 import { APagar, CampanhaForm, ContaFixaForm, FechamentoMes, Planejamento } from "./Fase2";
 import { OrcamentoForm, OrcamentoPainel, type LinhaOrcamento } from "./Fase3";
+import { ImportarExtrato } from "./Fase4";
 import type { Campanha, ContaFixa } from "./dados";
 
 import { Botao, BotaoIcone } from "../../ui/Botao";
@@ -42,6 +43,7 @@ type Tela =
   | null
   | { k: "entrada" | "despesa"; edit?: Lancamento }
   | { k: "transferencia"; edit?: Lancamento }
+  | { k: "importar" }
   | { k: "oferta" }
   | { k: "conta"; edit?: Conta }
   | { k: "fixa"; edit?: ContaFixa }
@@ -147,6 +149,7 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
               { rotulo: "Lançar despesa", onClick: () => setTela({ k: "despesa" }) },
               { rotulo: "Contar oferta", onClick: () => setTela({ k: "oferta" }) },
               { rotulo: "Transferir entre contas", onClick: () => setTela({ k: "transferencia" }) },
+              { rotulo: "Importar extrato", onClick: () => setTela({ k: "importar" }) },
             ]} />
           </div>
         ) : undefined} />
@@ -281,6 +284,7 @@ export default function Financeiro({ church, currentRole }: { church: ChurchView
       {tela?.k === "conta" ? <ContaForm {...base} edit={tela.edit} /> : null}
       {tela?.k === "fixa" ? <ContaFixaForm {...base} edit={tela.edit} cad={cad} /> : null}
       {tela?.k === "campanha" ? <CampanhaForm {...base} edit={tela.edit} cad={cad} /> : null}
+      {tela?.k === "importar" ? <ImportarExtrato {...base} contas={fin.contas} categorias={fin.categorias} fundos={fin.fundos} /> : null}
       {tela?.k === "orcamento" ? (
         <OrcamentoForm {...base} onDone={() => { setTela(null); setOrcVersao((v) => v + 1); }}
           linha={tela.linha} periodo={tela.periodo} categoriaNome={catPor.get(tela.linha.category_id)?.name ?? ""} />
