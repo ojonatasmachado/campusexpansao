@@ -5,6 +5,7 @@
    (mais de 4 campos). Valor sempre em centavos inteiros (./dinheiro.ts). */
 
 import { useId, useMemo, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
 import { FormScreen, FormSection, type FormScreenHandle } from "../../painel/form/FormScreen";
 import { friendlyWriteError } from "../../painel/erros";
 import { avisar } from "../../lib/avisar";
@@ -18,7 +19,6 @@ import { abrirComprovante, BUCKET_FIN, db, type Campanha, type Categoria, type C
 import { brl, centavosTexto, digitadoParaCentavos, FORMAS, type Forma } from "./dinheiro";
 
 import { Botao } from "../../ui/Botao";
-import { Acao } from "../../ui/Acao";
 import { Opcao } from "../../ui/Opcao";
 import { Campo, Entrada, Marcar } from "../../ui/Campo";
 import { Selecao } from "../../ui/Selecao";
@@ -48,8 +48,24 @@ function CampoPessoa({ id, label, pessoas, value, onChange, req = false, hint, e
   const atual = pessoas.find((p) => p.id === value) ?? null;
   const [q, setQ] = useState("");
   const [aberto, setAberto] = useState(false);
+  const [ativo, setAtivo] = useState(0);
   const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
   const lista = pessoas.filter((p) => p.id !== excluir && (!q || norm(p.name).includes(norm(q)))).slice(0, 8);
+  const ativoClamp = lista.length ? Math.min(ativo, lista.length - 1) : 0;
+  /* Só existe lista na tela com busca digitada (ver o `q.trim()` do render); sem isso o
+     teclado agiria sobre uma pessoa que a pessoa não está vendo (Enter escolheria às
+     cegas, Esc comeria o Esc que fecharia a tela por cima). */
+  const visivel = aberto && !!q.trim() && lista.length > 0;
+  const escolher = (p: PessoaFin) => { onChange(p.id); setAberto(false); setQ(""); setAtivo(0); };
+  /* Setas movem o destaque sem tirar o foco do campo (padrão combobox, o foco real
+     fica sempre no texto); Enter escolhe o destacado, Esc fecha mantendo o que foi digitado. */
+  const navegar = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (!visivel) { if (e.key === "ArrowDown" && q.trim()) { e.preventDefault(); setAberto(true); } return; }
+    if (e.key === "ArrowDown") { e.preventDefault(); setAtivo(Math.min(lista.length - 1, ativoClamp + 1)); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); setAtivo(Math.max(0, ativoClamp - 1)); }
+    else if (e.key === "Enter") { e.preventDefault(); escolher(lista[ativoClamp]); }
+    else if (e.key === "Escape") { e.preventDefault(); setAberto(false); }
+  };
   return (
     <div className={`field${half ? " half" : ""}`}>
       <label className={`field-label${req ? " req" : ""}`} htmlFor={id}>{label}</label>
@@ -60,13 +76,15 @@ function CampoPessoa({ id, label, pessoas, value, onChange, req = false, hint, e
         </div>
       ) : (
         <div className="sel-wrap">
-          <input id={id} className="input" role="combobox" aria-expanded={aberto && lista.length > 0} aria-controls={`${id}-l`} aria-autocomplete="list" autoComplete="off"
-            placeholder="Buscar pelo nome" value={q} onChange={(e) => { setQ(e.target.value); setAberto(true); }} onFocus={() => setAberto(true)}
-            onBlur={() => window.setTimeout(() => setAberto(false), 150)} />
+          <input id={id} className="input" role="combobox" aria-expanded={visivel} aria-controls={`${id}-l`} aria-autocomplete="list"
+            aria-activedescendant={visivel ? `${id}-o${ativoClamp}` : undefined} autoComplete="off"
+            placeholder="Buscar pelo nome" value={q} onChange={(e) => { setQ(e.target.value); setAberto(true); setAtivo(0); }} onFocus={() => setAberto(true)}
+            onKeyDown={navegar} onBlur={() => window.setTimeout(() => setAberto(false), 150)} />
           {aberto && q.trim() && (
             <div className="sel-pop" id={`${id}-l`} role="listbox">
-              {lista.map((p) => (
-                <Acao key={p.id} role="option" aria-selected={false} className="sel-opt" onMouseDown={(e) => e.preventDefault()} onClick={() => { onChange(p.id); setAberto(false); setQ(""); }}>{p.name}</Acao>
+              {lista.map((p, i) => (
+                <Opcao key={p.id} id={`${id}-o${i}`} role="option" aria-selected={i === ativoClamp} estilo="sel-opt" marcada={i === ativoClamp}
+                  onMouseDown={(e) => e.preventDefault()} onMouseEnter={() => setAtivo(i)} onClick={() => escolher(p)}>{p.name}</Opcao>
               ))}
               {lista.length === 0 && <div className="sel-opt fin-sem">Ninguém com esse nome no cadastro.</div>}
             </div>
