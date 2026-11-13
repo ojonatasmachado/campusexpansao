@@ -13,10 +13,10 @@ import { ImageUpload } from "../../ImageUpload";
 import { Icon } from "../../lib/icons";
 import { useRelogioDaIgreja } from "../../lib/relogio-context";
 import { formatDateBR, somaDias } from "../../lib/date";
-import { ACCENT_PRESETS, themeCss, type BrandCfg } from "../../lib/theme";
+import { ACCENT_PRESETS, nomeDaCor, themeCss, type BrandCfg } from "../../lib/theme";
 import { useTermos } from "../../lib/vocabulario-context";
 import { encontroUtil, planejarEncontros, type EncontroPreparado, type RascunhoEncontro } from "./ativacao";
-import { FASES, MODELOS_TIMES, type ModeloTime, type SetupEstado } from "./setup";
+import { FASES, MODELOS_TIMES, textoDaFase, type ModeloTime, type SetupEstado } from "./setup";
 
 import { Botao, botaoClasse } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
@@ -108,7 +108,8 @@ export function Assistente({
     const e1 = await onSalvarDados(dados);
     const e2 = !e1 && cor && cor !== brand.accent ? await onCor(cor) : null;
     if (e1 || e2) { setErro(e1 ?? e2 ?? ""); return; }
-    const corNome = ACCENT_PRESETS.find((p) => p.hex.toLowerCase() === (cor || "").toLowerCase())?.label;
+    const corPronta = ACCENT_PRESETS.find((p) => p.hex.toLowerCase() === (cor || "").toLowerCase())?.label;
+    const corNome = corPronta ? nomeDaCor(corPronta, traduzirUi) : undefined;
     await avancar(1, traduzirUi("Pronto: {nome}{temCidade, select, sim {, em {cidade}{temEstado, select, sim {/{estado}} other {}}} other {}}{temCor, select, sim {, com a cor {cor}} other {}}.", { nome: dados.nome.trim(), temCidade: dados.cidade ? "sim" : "nao", cidade: dados.cidade, temEstado: dados.estado ? "sim" : "nao", estado: dados.estado, temCor: corNome ? "sim" : "nao", cor: corNome ?? "" }));
   };
 
@@ -176,7 +177,7 @@ export function Assistente({
             <li key={f.n} className={`${fase === f.n ? "on" : ""}${feita ? " feita" : ""}`}>
               <Acao desativado={ocupado || (!!editando && f.n !== 2)} onClick={() => { setErro(""); setFase(f.n as 1 | 2 | 3); }} aria-current={fase === f.n ? "step" : undefined}>
                 <span className="setup-n">{feita ? <Icon name="ok" size={14} /> : f.n}</span>
-                <span className="setup-ft"><b>{ct(f.t)}</b><span>{feita ? traduzirUi("feita") : traduzirUi("cerca de {count, plural, =1 {# minuto} other {# minutos}}", { count: f.min })}</span></span>
+                <span className="setup-ft"><b>{ct(textoDaFase(f.t, traduzirUi))}</b><span>{feita ? traduzirUi("feita") : traduzirUi("cerca de {count, plural, =1 {# minuto} other {# minutos}}", { count: f.min })}</span></span>
               </Acao>
             </li>
           );
@@ -184,8 +185,8 @@ export function Assistente({
       </ol>
 
       <div className="cfg-card service-setup-body">
-        <div className="cfg-card-t">{traduzirUi("Fase {fase} · {nome}", { fase: String(fase), nome: ct(faseInfo.t) })}</div>
-        <div className="cfg-card-s">{traduzirUi("{descricao}. Cerca de {count, plural, =1 {# minuto} other {# minutos}}.", { descricao: ct(faseInfo.s), count: faseInfo.min })}</div>
+        <div className="cfg-card-t">{traduzirUi("Fase {fase} · {nome}", { fase: String(fase), nome: ct(textoDaFase(faseInfo.t, traduzirUi)) })}</div>
+        <div className="cfg-card-s">{traduzirUi("{descricao}. Cerca de {count, plural, =1 {# minuto} other {# minutos}}.", { descricao: ct(textoDaFase(faseInfo.s, traduzirUi)), count: faseInfo.min })}</div>
 
         {fase === 1 && (
           <div className="setup-body">
@@ -208,7 +209,7 @@ export function Assistente({
               <label className="field-label">{traduzirUi("Cor da igreja")}</label>
               <div className="setup-cores" role="radiogroup" aria-label={traduzirUi("Cor da igreja")}>
                 {ACCENT_PRESETS.map((p) => (
-                  <Opcao key={p.hex} role="radio" aria-checked={cor.toLowerCase() === p.hex.toLowerCase()} aria-label={p.label}
+                  <Opcao key={p.hex} role="radio" aria-checked={cor.toLowerCase() === p.hex.toLowerCase()} aria-label={nomeDaCor(p.label, traduzirUi)}
                     marcada={cor.toLowerCase() === p.hex.toLowerCase()} estilo="setup-cor" style={{ background: p.hex }} onClick={() => setCor(p.hex)} />
                 ))}
               </div>

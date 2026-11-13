@@ -4,6 +4,7 @@ import { telefoneParaWhatsapp } from "../lib/telefone";
 import { createServiceBrowserClient } from "../lib/supabase-browser";
 import { ICON_PATHS, DEFAULT_ICON, Icon } from "../lib/icons";
 import { parseISODate } from "../lib/date";
+import { sourceText, type Text } from "../lib/internacional/mensagens";
 import { ACESSO_MSG_DEFAULT } from "../modules/pessoas/acesso-msg";
 import { modulosLigados } from "../modules/registry";
 import { ORIGEM_AUTOCADASTRO } from "../modules/visitantes/autocadastro";
@@ -120,6 +121,12 @@ export const VISITOR_STAGES = [
   { id: "membro", name: "Membro", color: "var(--wheat)" },
 ] as const;
 
+/** Nome da etapa do visitante na tela; o id gravado e a nota do histórico seguem em pt-BR. */
+export function nomeEtapaVisitante(nome: string, t: Text = sourceText): string {
+  const nomes: Record<string, string> = { Novo: t("Novo"), Contato: t("Contato"), Integrando: t("Integrando"), Membro: t("Membro") };
+  return Object.hasOwn(nomes, nome) ? nomes[nome] : nome;
+}
+
 /* Mural : módulo em modules/mural/ (4.1) */
 
 /* datas de produção vêm em YYYY-MM-DD (coluna `date` do Postgres) ou DD/MM/YYYY
@@ -139,6 +146,12 @@ export const BAT_ST_MAP: Record<string, { label: string; cls: string }> = {
   agendada: { label: "Agendada", cls: "chip-ok" },
   concluida: { label: "Concluída", cls: "chip-neutral" },
 };
+
+/** Situação da turma de batismo na tela. */
+export function rotuloTurmaBatismo(label: string, t: Text = sourceText): string {
+  const rotulos: Record<string, string> = { "Inscrições abertas": t("Inscrições abertas"), "Em preparação": t("Em preparação"), Agendada: t("Agendada"), "Concluída": t("Concluída") };
+  return Object.hasOwn(rotulos, label) ? rotulos[label] : label;
+}
 
 /* ── Papéis & permissões · 4 níveis (Master, Pastor, Líder, Voluntário) ── */
 /* nomes e grupos iguais aos do menu (S51); os ids são os códigos gravados
@@ -176,6 +189,18 @@ export const PAPEIS_V2 = [
   { id: "voluntario", nome: "{Voluntario}", desc: "Quem serve num time. Usa o app; vê no painel só o que você ligar aqui", ic: "pessoa" },
   { id: "membro", nome: "Membro", desc: "App: {caminhada}, cursos e o que for liberado", ic: "pessoa" },
 ] as const;
+
+/** Nome e descrição do papel na tela, com o vocabulário da igreja quando o tradutor o traz. */
+export function textoPapelV2(texto: string, t: Text = sourceText): string {
+  const textos: Record<string, string> = {
+    "Pastor Master": t("Pastor Master"), "Controle total da rede": t("Controle total da rede"),
+    Pastor: t("Pastor"), "Sua congregação inteira": t("Sua congregação inteira"),
+    "Líder": t("Líder"), "Seu time e grupo": t("Seu time e grupo"),
+    "{Voluntario}": t("{Voluntario}"), "Quem serve num time. Usa o app; vê no painel só o que você ligar aqui": t("Quem serve num time. Usa o app; vê no painel só o que você ligar aqui"),
+    Membro: t("Membro"), "App: {caminhada}, cursos e o que for liberado": t("App: {caminhada}, cursos e o que for liberado"),
+  };
+  return Object.hasOwn(textos, texto) ? textos[texto] : texto;
+}
 
 export function matrizV2Padrao(): MatrizV2 {
   const allTrue = () => Object.fromEntries(ACOES_V2.map((a) => [a.id, true]));

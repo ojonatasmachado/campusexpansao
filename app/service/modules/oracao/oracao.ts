@@ -5,6 +5,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
+import { sourceText, type Text } from "../../lib/internacional/mensagens";
 
 export type Categoria = "saude" | "familia" | "trabalho" | "espiritual" | "gratidao" | "outro";
 export type Publico = "intercessao" | "mural";
@@ -18,7 +19,11 @@ export const CATEGORIAS: { id: Categoria; rotulo: string }[] = [
   { id: "gratidao", rotulo: "Gratidão" },
   { id: "outro", rotulo: "Outro" },
 ];
-export const rotuloCategoria = (c: string) => CATEGORIAS.find((x) => x.id === c)?.rotulo ?? "Outro";
+/** Rótulo da categoria na tela; o id gravado não muda. */
+export function rotuloCategoria(c: string, t: Text = sourceText): string {
+  const rotulos: Record<string, string> = { saude: t("Saúde"), familia: t("Família"), trabalho: t("Trabalho"), espiritual: t("Vida com Deus"), gratidao: t("Gratidão"), outro: t("Outro") };
+  return Object.hasOwn(rotulos, c) ? rotulos[c] : t("Outro");
+}
 
 /* como o membro vê (service.prayer_wall) */
 export type PedidoMural = {
@@ -138,7 +143,7 @@ export function usePedidosPainel(org?: string | null) {
 
 // ── escrita ──────────────────────────────────────────────────────────────────
 /* devolve o id do pedido, ou a mensagem para a pessoa */
-export async function pedirOracao(org: string | null | undefined, p: { body: string; audience: Publico; anonymous: boolean; category: Categoria }): Promise<{ id?: string; erro?: string }> {
+export async function pedirOracao(org: string | null | undefined, p: { body: string; audience: Publico; anonymous: boolean; category: Categoria }, t: Text = sourceText): Promise<{ id?: string; erro?: string }> {
   if (ehDemo(org)) {
     const id = `pr-${Date.now()}`;
     linhasDemo().unshift({ id, church_id: "ch-1", member_id: EU, author: "Ana Lima", body: p.body.trim(), category: p.category, audience: p.audience, anonymous: p.anonymous,
@@ -148,8 +153,8 @@ export async function pedirOracao(org: string | null | undefined, p: { body: str
   }
   const { data, error } = await sb().rpc("prayer_create", { p_org: org, p_body: p.body, p_audience: p.audience, p_anonymous: p.anonymous, p_category: p.category });
   if (error) {
-    if (/limite_diario/.test(error.message)) return { erro: "Você já fez muitos pedidos hoje. Amanhã dá para pedir de novo." };
-    return { erro: "Não foi possível enviar agora. Tente de novo." };
+    if (/limite_diario/.test(error.message)) return { erro: t("Você já fez muitos pedidos hoje. Amanhã dá para pedir de novo.") };
+    return { erro: t("Não foi possível enviar agora. Tente de novo.") };
   }
   return { id: data as string };
 }

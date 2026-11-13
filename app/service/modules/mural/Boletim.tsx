@@ -19,7 +19,7 @@ import { Botao } from "../../ui/Botao";
 import { Opcao } from "../../ui/Opcao";
 import { Campo } from "../../ui/Campo";
 import { SeletorData } from "../../ui/Data";
-import { useTexto } from "../../lib/internacional/contexto";
+import { useServiceLocale, useTexto } from "../../lib/internacional/contexto";
 type Qual = "esta" | "proxima" | "outra";
 
 export function BoletimDaSemana({ church, avisos, events, roster, ministries, people, onClose }: {
@@ -27,6 +27,7 @@ export function BoletimDaSemana({ church, avisos, events, roster, ministries, pe
   ministries: MinistryView[]; people: PersonView[]; onClose: () => void;
 }) {
   const traduzirUi = useTexto();
+  const locale = useServiceLocale();
 
   const { todayISO } = useRelogioDaIgreja();
   const fid = useId();
@@ -122,7 +123,7 @@ export function BoletimDaSemana({ church, avisos, events, roster, ministries, pe
                 </Campo>
               </div>
             )}
-            <div className="field-hint">{traduzirUi("De segunda a domingo: {semana}.", { semana: rotuloSemana(semana) })}</div>
+            <div className="field-hint">{traduzirUi("De segunda a domingo: {semana}.", { semana: rotuloSemana(semana, traduzirUi, locale) })}</div>
           </div>
           <div className="field">
             <div className="field-label" id={`${fid}-inc`}>{traduzirUi("O que entra")}</div>
@@ -136,7 +137,7 @@ export function BoletimDaSemana({ church, avisos, events, roster, ministries, pe
         </FormSection>
 
         <FormSection title={traduzirUi("Texto")}>
-          {vazio && <p className="bol-vazio">{traduzirUi("Nada na agenda nem no Mural para {semana}. Escreva o texto abaixo ou escolha outra semana.", { semana: rotuloSemana(semana) })}</p>}
+          {vazio && <p className="bol-vazio">{traduzirUi("Nada na agenda nem no Mural para {semana}. Escreva o texto abaixo ou escolha outra semana.", { semana: rotuloSemana(semana, traduzirUi, locale) })}</p>}
           <div className="field">
             <label className="field-label" htmlFor={`${fid}-txt`}>{traduzirUi("Mensagem")}</label>
             <textarea id={`${fid}-txt`} className="textarea bol-txt" value={texto} onChange={(e) => setTextoEditado(e.target.value)} spellCheck />
@@ -161,7 +162,7 @@ export function BoletimDaSemana({ church, avisos, events, roster, ministries, pe
             </div>
             {imagem && (
               // eslint-disable-next-line @next/next/no-img-element -- imagem gerada no navegador (blob:), sem otimização do Next
-              <img className="bol-img" src={imagem.url} alt={traduzirUi("Boletim da semana de {semana}: {eventos, plural, =1 {# evento} other {# eventos}} e {avisos, plural, =1 {# aviso} other {# avisos}}.", { semana: rotuloSemana(semana), eventos: agenda.length, avisos: doMural.length })} />
+              <img className="bol-img" src={imagem.url} alt={traduzirUi("Boletim da semana de {semana}: {eventos, plural, =1 {# evento} other {# eventos}} e {avisos, plural, =1 {# aviso} other {# avisos}}.", { semana: rotuloSemana(semana, traduzirUi, locale), eventos: agenda.length, avisos: doMural.length })} />
             )}
           </div>
         </FormSection>

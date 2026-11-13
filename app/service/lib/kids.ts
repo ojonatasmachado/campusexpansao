@@ -1,4 +1,5 @@
 import { parseISODate } from "./date";
+import { sourceText, type Text } from "./internacional/mensagens";
 /* Idade e turma da criança são sempre calculadas a partir do nascimento,
    nunca escolhidas na mão : fonte única pra admin, professor e responsável
    não divergirem. */
@@ -27,7 +28,7 @@ export function suggestKidsClassId(
 
 /* Mesmo texto em qualquer formulário que peça essa autorização (admin,
    professor, responsável) : um tom feliz, não uma linha seca de checkbox. */
-export function imageAuthorizationCopy(childName?: string): string {
-  const nome = childName?.trim() || "essa criança";
-  return `Adoramos guardar esses momentos! Autorizo que fotos e vídeos de ${nome} apareçam no mural e nas redes sociais da igreja.`;
+export function imageAuthorizationCopy(childName?: string, t: Text = sourceText): string {
+  const nome = childName?.trim() || t("essa criança");
+  return t("Adoramos guardar esses momentos! Autorizo que fotos e vídeos de {nome} apareçam no mural e nas redes sociais da igreja.", { nome });
 }

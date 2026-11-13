@@ -449,7 +449,7 @@ export function EntityDrawer({
                   <div className="tinfo-block">
                     <div className="tinfo-label"><Icon name="cursos" size={13} /> {traduzirUi("Pré-requisitos")}</div>
                     {requisitosTime.map((r) => (
-                      <div className="tinfo-li" key={`${r.kind}-${r.ref}`}>{ct(requirementLabel(r, access))}</div>
+                      <div className="tinfo-li" key={`${r.kind}-${r.ref}`}>{requirementLabel(r, access, traduzirUi)}</div>
                     ))}
                   </div>
                 )}

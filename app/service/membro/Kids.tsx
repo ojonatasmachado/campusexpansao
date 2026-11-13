@@ -236,7 +236,7 @@ export function TabKids({
           <input className="input" placeholder={traduzirUi("Contato de emergência: telefone")} aria-label={traduzirUi("Contato de emergência: telefone")} value={form.emergenciaTel} onChange={(e) => setForm((f) => ({ ...f, emergenciaTel: e.target.value }))} style={{ marginBottom: 12 }} />
 
           <div style={{ marginBottom: 12, fontSize: "var(--fs-app-13)", lineHeight: 1.4 }}>
-            <Marcar checked={form.autorizaImagem} onChange={(e) => setForm((f) => ({ ...f, autorizaImagem: e.target.checked }))}>{imageAuthorizationCopy(form.nome)}</Marcar>
+            <Marcar checked={form.autorizaImagem} onChange={(e) => setForm((f) => ({ ...f, autorizaImagem: e.target.checked }))}>{imageAuthorizationCopy(form.nome, traduzirUi)}</Marcar>
           </div>
           {fichaError && <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginBottom: 8 }}>{fichaError}</div>}
           <Botao tamanho="toque" variante="principal" largo style={{ width: "100%" }} onClick={criarFicha}>{traduzirUi("Salvar e fazer check-in")}</Botao>
@@ -415,7 +415,7 @@ export function TabKidsArea({
       <input className="input" placeholder={traduzirUi("Contato de emergência: nome")} aria-label={traduzirUi("Contato de emergência: nome")} value={form.emergenciaNome} onChange={(e) => setForm((f) => ({ ...f, emergenciaNome: e.target.value }))} style={{ marginBottom: 8 }} />
       <input className="input" placeholder={traduzirUi("Contato de emergência: telefone")} aria-label={traduzirUi("Contato de emergência: telefone")} value={form.emergenciaTel} onChange={(e) => setForm((f) => ({ ...f, emergenciaTel: e.target.value }))} style={{ marginBottom: 12 }} />
       <div style={{ marginBottom: 12, fontSize: "var(--fs-app-13)", lineHeight: 1.4 }}>
-        <Marcar checked={form.autorizaImagem} onChange={(e) => setForm((f) => ({ ...f, autorizaImagem: e.target.checked }))}>{imageAuthorizationCopy(form.nome)}</Marcar>
+        <Marcar checked={form.autorizaImagem} onChange={(e) => setForm((f) => ({ ...f, autorizaImagem: e.target.checked }))}>{imageAuthorizationCopy(form.nome, traduzirUi)}</Marcar>
       </div>
       {ficarError && <div style={{ fontSize: "var(--fs-app-13)", color: "var(--danger)", marginBottom: 8 }}>{ficarError}</div>}
       <div className="m6-fixo m6-fixo-mcard"><Botao tamanho="toque" variante="principal" largo style={{ width: "100%" }} onClick={salvarFilho}>{traduzirUi("Salvar")}</Botao></div>

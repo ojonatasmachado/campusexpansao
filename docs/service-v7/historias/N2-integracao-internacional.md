@@ -117,6 +117,29 @@ Continuidade explícita da entrega parcial N1, autorizada pelo usuário em 25/10
 - `app/service/PhotoPicker.tsx` (fatia 5)
 - `app/service/ChurchLockup.tsx` (fatia 5)
 - `app/service/loading.tsx` (fatia 5)
+- `app/service/lib/contexto-dia.ts` (fatia 6)
+- `app/service/lib/date.ts` (fatia 6)
+- `app/service/lib/destinatario.ts` (fatia 6)
+- `app/service/lib/kids.ts` (fatia 6)
+- `app/service/lib/recorrencia.ts` (fatia 6)
+- `app/service/lib/relogio.ts` (fatia 6)
+- `app/service/lib/requirements.ts` (fatia 6)
+- `app/service/lib/silencio.ts` (fatia 6)
+- `app/service/lib/theme.ts` (fatia 6)
+- `app/service/modules/aniversarios/aniversarios.ts` (fatia 6)
+- `app/service/modules/configuracao/setup.ts` (fatia 6)
+- `app/service/modules/contribuir/pix.ts` (fatia 6)
+- `app/service/modules/conversas/identidade.ts` (fatia 6)
+- `app/service/modules/escalas/disponibilidade.ts` (fatia 6)
+- `app/service/modules/escalas/rodizio.ts` (fatia 6)
+- `app/service/modules/inicio/saude.ts` (fatia 6)
+- `app/service/modules/mapa/linguagem.ts` (fatia 6)
+- `app/service/modules/mural/boletim.ts` (fatia 6)
+- `app/service/modules/oracao/oracao.ts` (fatia 6)
+- `app/service/modules/secretaria/livros.ts` (fatia 6)
+- `app/service/modules/visitantes/autocadastro.ts` (fatia 6)
+- `app/service/painel/caminhada.ts` (fatia 6)
+- `app/service/painel/comum.tsx` (fatia 6)
 
 Definir na reserva, conferindo especialmente I10: ui/, painel/comum.tsx, modules/inicio/Saude.tsx, modules/financeiro/ e modules/relatorios/. Não trabalhar simultaneamente no branch de outra frente.
 
@@ -143,3 +166,5 @@ Fatia 4a (12/11, PR próprio, rollout desligado): tradutor em `modules/mural` (M
 Fatia 4b (12/11, PR próprio, rollout desligado): tradutor em 24 arquivos de `modules/` (pessoas, configuracao/Assistente e FusoField, secretaria, contribuir, entrada, aniversarios, cuidado, visitantes/Autocadastro e Convidar, grupos/GrupoEditModal, inicio/Saude, relatorios/MetricasInternas). Catálogos de 2647 para 3259 chaves, nenhuma vazia. Prova: texto de 10 telas igual ao do main, exceto os contadores animados do Início (Aniversariantes e Secretaria fora da comparação, por estarem em grupo recolhido do menu); 150 frases conferidas em 0, 1, 2 e 1284. Revisor: "Saída" compartilhada entre a rota e o rol saía "Start" em inglês (agora "Departure"), uma frase do Kids em inglês reescrita. Ficam em pt-BR: mensagens de WhatsApp (acesso, parabéns, convite, autocadastro), carteirinha e folha impressa, cabeçalhos e valores da importação, e textos de arquivos fora da fatia (`setup.ts`, `livros.ts`, `saude.ts`, Pix). A página pública `/[slug]/visita` não tem `ServiceLocaleProvider`: fica em pt-BR até ganhar um. Plurais errados do pt-BR antigo mantidos para não mudar o pt-BR: "# encontro preparados", "# time preparados" (Assistente), "1 pessoas" (Pessoas).
 
 Fatia 5 (12/11, PR próprio, rollout desligado): tradutor em membro/Conversas, modules/oracao/Oracao, painel/telas/Quadros e 18 componentes de `app/service/` (ServiceExactApp, PublicPageEditor, CursoEditor, CursoDrawer, CheckIn, AulaCheckin, KidsCheckin, EventoShare, ThemePicker, AccentField, HelpSystem, IdentidadeFields, ImageCropper, ImageUpload, PhotoPicker, RequisitosEditor, TopUserMenu, loading). Catálogos de 3259 para 3751 chaves, nenhuma vazia. Prova: texto de 8 telas igual ao do main, exceto os contadores animados do Início (Quadros, Oração, check-ins e editores fora da comparação). `loading.tsx` virou client para usar o tradutor (fica sob o provider de `app/service/layout.tsx`). Ficam em pt-BR: conteúdo da página pública, arte e WhatsApp do EventoShare, colunas padrão do Quadro (gravadas), alt do ChurchLockup (componente sem hook), e textos de `lib/theme.ts`, `oracao.ts`, `papelDoDestinatario` (por isso "Vai para {destino}" sai misto em en/es). Para decidir na revisão das traduções: "Concluído" do check-in reaproveita "Completed"; "1 cliques"/"1 visualizações" mantidos no pt-BR. Limpeza menor para depois: `ct(traduzirUi(...))` redundante no CheckIn.
+
+Fatia 6 (12/11, PR próprio, rollout desligado): textos de bibliotecas `.ts` (lib/date, recorrencia, requirements, theme, destinatario, kids, silencio, relogio, contexto-dia; painel/comum e painel/caminhada; .ts de aniversarios, setup, pix, conversas/identidade, disponibilidade, rodizio, inicio/saude, mapa/linguagem, mural/boletim, oracao, secretaria/livros, autocadastro) ganharam `t: Text = sourceText` no fim da assinatura e, nas datas, o locale; 44 chamadores já integrados passam o tradutor. Constantes e ids gravados não mudaram. Catálogos de 3751 para 3871 chaves. Prova: 5.466 comparações com o código antigo (datas de 2024 a 2027, 24 horas da saudação, plurais, séries), 0 diferenças; texto de 20 telas igual ao do main (só dados vivos e um painel do IBGE que carregou tarde na base). Revisor: "Noite" (família do tema) colidia com o período "Noite" (Evening); separada por select, como "Papel". Continuam em pt-BR: chamadores em MobileApp, membro/Inicio e financeiro; datas curtas dd/mm em `silencio.ts` e `recorrencia.ts` (em en-US podem ser lidas como mm/dd); números pré-formatados do mapa ("5.200"); `Config.tsx` (`PAPEIS_V2`), `OracaoPainel.tsx`, `ausenciaPorExtenso`, `MESES` de aniversarios.ts, `interessesDe`, `linhaDoSetup`, `linhaDoMembro`, `quandoPublicado`, `quandoMensagem`, placeholders do Pix.

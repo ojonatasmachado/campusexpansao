@@ -5,7 +5,7 @@ import { avisar } from "../lib/avisar";
 import { useRelogioDaIgreja } from "../lib/relogio-context";
 import { useServiceLocale, useTexto } from "../lib/internacional/contexto";
 import type { Text } from "../lib/internacional/mensagens";
-import { ausenciaPorExtenso, ausenciasFuturas, chavesAusencia, PERIODOS_AUSENCIA, type PeriodoAusencia } from "../modules/escalas/disponibilidade";
+import { ausenciaPorExtenso, ausenciasFuturas, chavesAusencia, periodosAusencia, type PeriodoAusencia } from "../modules/escalas/disponibilidade";
 import { Botao } from "../ui/Botao";
 import { Campo } from "../ui/Campo";
 import { SeletorData } from "../ui/Data";
@@ -172,7 +172,7 @@ function SheetAusencia({ hoje, times, locale, alterar, lerAtual, onAvisar, onFal
         <Campo rotulo={traduzirUi("Data")}><SeletorData valor={de} aoMudar={(v) => { setDe(v); setErroDatas(""); }} min={hoje} rotulo={traduzirUi("Data")} desativado={salvando} /></Campo>
         <Campo rotulo={traduzirUi("Até (opcional)")} erro={erroDatas}><SeletorData valor={ate} aoMudar={(v) => { setAte(v); setErroDatas(""); }} min={de || hoje} rotulo={traduzirUi("Até")} limpavel desativado={salvando} /></Campo>
       </div>
-      <Campo rotulo={traduzirUi("Período")}><Selecao valor={periodo} aoMudar={(v) => setPeriodo(v as PeriodoAusencia)} opcoes={PERIODOS_AUSENCIA} rotulo={traduzirUi("Período")} desativado={salvando} /></Campo>
+      <Campo rotulo={traduzirUi("Período")}><Selecao valor={periodo} aoMudar={(v) => setPeriodo(v as PeriodoAusencia)} opcoes={periodosAusencia(traduzirUi)} rotulo={traduzirUi("Período")} desativado={salvando} /></Campo>
       {times.length > 1 ? <Campo rotulo={traduzirUi("Time")}><Selecao valor={timeId} aoMudar={setTimeId} rotulo={traduzirUi("Time")} desativado={salvando}
         opcoes={[{ v: "", l: traduzirUi("Todos os times") }, ...times.map((t) => ({ v: t.id, l: t.name }))]} /></Campo> : null}
       {erro ? <p className="field-error" role="alert">{erro}</p> : null}

@@ -74,7 +74,7 @@ export function Contribuir({ cfg }: { cfg: ContribuirCfg }) {
 
           <div className="contrib-chave">
             <div className="m6-rb">
-              <div className="m6-meta">{rotuloDoTipo(cfg.tipo)}</div>
+              <div className="m6-meta">{rotuloDoTipo(cfg.tipo, traduzirUi)}</div>
               <div className="contrib-chave-v">{legivel}</div>
             </div>
             <Botao tamanho="toque" compacto onClick={() => copiarEAvisar("chave")} aria-label={traduzirUi("Copiar chave Pix {chave}", { chave: legivel })}>

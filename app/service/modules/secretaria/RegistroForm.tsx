@@ -10,7 +10,7 @@ import { formatDateBR } from "../../lib/date";
 import { createServiceBrowserClient } from "../../lib/supabase-browser";
 import { FormScreen, FormSection, type FormScreenHandle } from "../../painel/form/FormScreen";
 import type { ChildGuardianView, ChurchView, MemberView, PersonView } from "../../ServiceExactApp";
-import { FORMAS_ENTRADA, MOTIVOS_SAIDA, REGISTRO_COLS, livroDe, numeroFmt, type Livro, type Registro } from "./livros";
+import { FORMAS_ENTRADA, MOTIVOS_SAIDA, REGISTRO_COLS, livroNaTela, numeroFmt, rotuloDoRol, type Livro, type Registro } from "./livros";
 
 import { Botao } from "../../ui/Botao";
 import { Campo, Entrada, TextoLongo, Marcar } from "../../ui/Campo";
@@ -63,7 +63,6 @@ export function RegistroForm({ livro, registro, church, demo, members, people, k
   const [error, setError] = useState("");
   const [apagar, setApagar] = useState(false);
 
-  const def = livroDe(livro);
   const novo = !r;
   const retrato = JSON.stringify({ data, oficiante, local, livroFisico, folha, obs, noivo, noiva, testemunhas, childId, crianca, nascimento, pais, forma, saiu, saida, motivo });
   const [retratoInicial] = useState(retrato);
@@ -129,7 +128,7 @@ export function RegistroForm({ livro, registro, church, demo, members, people, k
     }
     onSalvo(salvoReg);
     setSaving(false);
-    avisar(!novo ? traduzirUi("Registro atualizado") : salvoReg.numero ? traduzirUi("Registro nº {numero} criado em {livro}", { numero: numeroFmt(salvoReg.numero), livro: def.rotulo }) : traduzirUi("Registro criado em {livro}", { livro: def.rotulo }));
+    avisar(!novo ? traduzirUi("Registro atualizado") : salvoReg.numero ? traduzirUi("Registro nº {numero} criado em {livro}", { numero: numeroFmt(salvoReg.numero), livro: livroNaTela(livro, traduzirUi).rotulo }) : traduzirUi("Registro criado em {livro}", { livro: livroNaTela(livro, traduzirUi).rotulo }));
     if (telaRef.current) await telaRef.current.fechar(); else onClose();
   };
 
@@ -147,7 +146,7 @@ export function RegistroForm({ livro, registro, church, demo, members, people, k
   };
 
   const titulo = novo ? (livro === "casamento" ? traduzirUi("Registrar casamento") : traduzirUi("Registrar apresentação")) : nomeDoRegistro || r.nome;
-  const eyebrow = novo ? def.rotulo : traduzirUi("{livro} · nº {numero}", { livro: def.rotulo, numero: numeroFmt(r.numero) });
+  const eyebrow = novo ? livroNaTela(livro, traduzirUi).rotulo : traduzirUi("{livro} · nº {numero}", { livro: livroNaTela(livro, traduzirUi).rotulo, numero: numeroFmt(r.numero) });
   const listaPessoas = `${fid}-pessoas`;
   const listaMembros = `${fid}-membros`;
 
@@ -195,7 +194,7 @@ export function RegistroForm({ livro, registro, church, demo, members, people, k
         <FormSection title={traduzirUi("Entrada")}>
           <div className="fs-grid">
             <Campo rotulo={traduzirUi("Data de entrada")} obrigatorio className="half"><SeletorData id={`${fid}-data`} valor={data} aoMudar={setData} /></Campo>
-            <Campo rotulo={traduzirUi("Como entrou")} className="half"><Selecao id={`${fid}-forma`} valor={forma} aoMudar={setForma} vazio={traduzirUi("Não informado")} opcoes={FORMAS_ENTRADA.map((f) => ({ v: f, l: f }))} /></Campo>
+            <Campo rotulo={traduzirUi("Como entrou")} className="half"><Selecao id={`${fid}-forma`} valor={forma} aoMudar={setForma} vazio={traduzirUi("Não informado")} opcoes={FORMAS_ENTRADA.map((f) => ({ v: f, l: rotuloDoRol(f, traduzirUi) }))} /></Campo>
           </div>
         </FormSection>
       ) : (
@@ -226,7 +225,7 @@ export function RegistroForm({ livro, registro, church, demo, members, people, k
           {saiu ? (
             <div className="fs-grid">
               <Campo rotulo={traduzirUi("Data de saída")} obrigatorio className="half"><SeletorData id={`${fid}-saida`} valor={saida} aoMudar={setSaida} /></Campo>
-              <Campo rotulo={traduzirUi("Motivo")} obrigatorio className="half"><Selecao id={`${fid}-motivo`} valor={motivo} aoMudar={setMotivo} vazio={traduzirUi("Escolha")} opcoes={[...new Set([...MOTIVOS_SAIDA, ...(motivo ? [motivo] : [])])].map((m) => ({ v: m, l: m }))} /></Campo>
+              <Campo rotulo={traduzirUi("Motivo")} obrigatorio className="half"><Selecao id={`${fid}-motivo`} valor={motivo} aoMudar={setMotivo} vazio={traduzirUi("Escolha")} opcoes={[...new Set([...MOTIVOS_SAIDA, ...(motivo ? [motivo] : [])])].map((m) => ({ v: m, l: rotuloDoRol(m, traduzirUi) }))} /></Campo>
             </div>
           ) : <div className="field-hint">{traduzirUi("A ficha continua no app. Marcar a saída só muda o rol e a carteirinha deixa de valer.")}</div>}
         </FormSection>

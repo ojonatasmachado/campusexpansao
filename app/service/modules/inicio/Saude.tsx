@@ -8,7 +8,7 @@ import { useRelogioDaIgreja } from "../../lib/relogio-context";
 import { useEffect, useState } from "react";
 import { formatDateBR } from "../../lib/date";
 import { useTermos } from "../../lib/vocabulario-context";
-import { anteriorDe, comparacao, etapasDaCaminhada, numerosDaBase, numerosDoPeriodo, periodoDe, type DadosSaude, type ItemPessoa, type Numero, type Periodo, type Preset } from "./saude";
+import { anteriorDe, comparacao, etapasDaCaminhada, numerosDaBase, numerosDoPeriodo, periodoDe, rotuloNumero, type DadosSaude, type ItemPessoa, type Numero, type Periodo, type Preset } from "./saude";
 
 import { Botao } from "../../ui/Botao";
 import { Acao } from "../../ui/Acao";
@@ -62,13 +62,13 @@ export function SaudeDaIgreja({ dados, etapas, onAbrir, podeAbrirPessoa = () => 
   const grade = (nums: Numero[]) => (
     <div className="saude-grid">
       {nums.map((n) => {
-        const cmp = comparacao(n.valor, n.anterior, dias);
+        const cmp = comparacao(n.valor, n.anterior, dias, traduzirUi);
         /* "igual aos 30 dias anteriores" em todo bloco parado só fazia barulho:
            a comparação aparece na tela quando o número mudou (o leitor de tela ouve sempre) */
         const mudou = n.anterior !== undefined && n.anterior !== n.valor;
         return (
-          <Indicador key={n.id} estilo="numero" valor={n.valor} rotulo={ct(n.rotulo)} rodape={cmp && mudou ? cmp : undefined}
-            aoAbrir={n.itens.length ? () => setLista(n) : undefined} rotuloAcao={traduzirUi("{rotulo}: {valor}{temComparacao, select, sim {, {comparacao}} other {}}. Ver a lista", { rotulo: ct(n.rotulo), valor: String(n.valor), temComparacao: cmp ? "sim" : "nao", comparacao: cmp || "" })} />
+          <Indicador key={n.id} estilo="numero" valor={n.valor} rotulo={ct(rotuloNumero(n.rotulo, traduzirUi))} rodape={cmp && mudou ? cmp : undefined}
+            aoAbrir={n.itens.length ? () => setLista(n) : undefined} rotuloAcao={traduzirUi("{rotulo}: {valor}{temComparacao, select, sim {, {comparacao}} other {}}. Ver a lista", { rotulo: ct(rotuloNumero(n.rotulo, traduzirUi)), valor: String(n.valor), temComparacao: cmp ? "sim" : "nao", comparacao: cmp || "" })} />
         );
       })}
     </div>

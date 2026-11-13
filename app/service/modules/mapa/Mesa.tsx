@@ -8,7 +8,7 @@ import { Icon } from "../../lib/icons";
 import { useTermos } from "../../lib/vocabulario-context";
 import MapaBase from "./MapaBase";
 import { carregarRegioes, type Acesso, type Cidade, type Regiao } from "./dados";
-import { SITUACAO, frenteCidade, milhar, pessoasNaRegiao, tomPresenca } from "./linguagem";
+import { SITUACAO, frenteCidade, milhar, pessoasNaRegiao, situacaoNaTela, tomPresenca } from "./linguagem";
 import { caixaDaGeometria, dentroDe } from "./geo";
 import { CATEGORIAS, carregarPontos, type Ponto } from "./Pontos";
 import { baixarCsv } from "./csv";
@@ -145,9 +145,9 @@ export function Mesa({ org, acesso, cidade, nivel: nivelInicial, regioesIniciais
                       <td className="n mp-num">{milhar(r.moradores)}</td>
                       <td className="n mp-num">{String(r.area_km2).replace(".", ",")}</td>
                       <td className="n mp-num">{milhar(r.moradores / Number(r.area_km2))}</td>
-                      <td className="n mp-num">{pessoasNaRegiao(r.pessoas)}</td>
+                      <td className="n mp-num">{pessoasNaRegiao(r.pessoas, traduzirUi)}</td>
                       <td className="n mp-num">{r.um_a_cada ? milhar(r.um_a_cada) : "-"}</td>
-                      <td>{frenteCidade(r.vezes) || "-"}</td>
+                      <td>{frenteCidade(r.vezes, traduzirUi) || "-"}</td>
                       <td className="n mp-num">{r.grupos}</td>
                     </tr>
                   ))}
@@ -183,7 +183,7 @@ export function Mesa({ org, acesso, cidade, nivel: nivelInicial, regioesIniciais
                       {lista.map((p) => (
                         <tr key={p.id}>
                           <td><Marcar aria-label={traduzirUi("Selecionar {nome}", { nome: p.nome })} checked={marcadas.includes(p.id)} onChange={(e) => setMarcadas((m) => (e.target.checked ? [...m, p.id] : m.filter((x) => x !== p.id)))} /></td>
-                          <td><b>{p.nome}</b></td><td>{p.regiao}</td><td>{SITUACAO[p.situacao] ?? p.situacao}</td><td>{p.grupo ?? <span className="mp-fraco">{traduzirUi("nenhum")}</span>}</td>
+                          <td><b>{p.nome}</b></td><td>{p.regiao}</td><td>{situacaoNaTela(p.situacao, traduzirUi)}</td><td>{p.grupo ?? <span className="mp-fraco">{traduzirUi("nenhum")}</span>}</td>
                           <td>{p.ministerios.length ? p.ministerios.join(", ") : <span className="mp-fraco">{traduzirUi("nenhum")}</span>}</td>
                           <td className="n mp-num">{p.km_sede != null ? traduzirUi("{km} km", { km: String(p.km_sede).replace(".", ",") }) : "-"}</td>
                         </tr>

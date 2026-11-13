@@ -3,6 +3,8 @@
    de sempre, sem tabela nova). O app não registra transação nem valor: só
    abre a porta para o Pix no banco da pessoa (lei 10). */
 
+import { sourceText, type Text } from "../../lib/internacional/mensagens";
+
 export type TipoChave = "cpf" | "cnpj" | "telefone" | "email" | "aleatoria";
 
 export type ContribuirCfg = {
@@ -45,16 +47,16 @@ export function normalizarChave(tipo: TipoChave, chave: string): string {
 }
 
 /** O que está errado na chave, ou null. */
-export function erroDaChave(tipo: TipoChave, chave: string): string | null {
-  if (!chave.trim()) return "a chave Pix";
+export function erroDaChave(tipo: TipoChave, chave: string, t: Text = sourceText): string | null {
+  if (!chave.trim()) return t("a chave Pix");
   const n = normalizarChave(tipo, chave);
-  if (tipo === "cpf" && n.length !== 11) return "um CPF com 11 números";
-  if (tipo === "cnpj" && n.length !== 14) return "um CNPJ com 14 números";
-  if (tipo === "telefone" && !/^\+55\d{10,11}$/.test(n)) return "um celular com DDD";
-  if (tipo === "email" && !/^[\x21-\x7e]+@[\x21-\x7e]+\.[\x21-\x7e]+$/.test(n)) return "um e-mail válido";
+  if (tipo === "cpf" && n.length !== 11) return t("um CPF com 11 números");
+  if (tipo === "cnpj" && n.length !== 14) return t("um CNPJ com 14 números");
+  if (tipo === "telefone" && !/^\+55\d{10,11}$/.test(n)) return t("um celular com DDD");
+  if (tipo === "email" && !/^[\x21-\x7e]+@[\x21-\x7e]+\.[\x21-\x7e]+$/.test(n)) return t("um e-mail válido");
   /* o campo da conta no código Pix tem 99 caracteres: sobram 77 para a chave */
-  if (n.length > 77) return "uma chave com até 77 caracteres";
-  if (tipo === "aleatoria" && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(n)) return "a chave aleatória completa (36 caracteres)";
+  if (n.length > 77) return t("uma chave com até 77 caracteres");
+  if (tipo === "aleatoria" && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(n)) return t("a chave aleatória completa (36 caracteres)");
   return null;
 }
 
@@ -71,7 +73,15 @@ export function chaveLegivel(tipo: TipoChave, chave: string): string {
   return n;
 }
 
-export const rotuloDoTipo = (tipo: TipoChave) => TIPOS_CHAVE.find((t) => t.v === tipo)?.l ?? "Chave";
+/** Nome do tipo de chave na tela; o tipo gravado não muda. */
+export function rotuloDoTipo(tipo: TipoChave, t: Text = sourceText): string {
+  if (tipo === "cnpj") return t("CNPJ");
+  if (tipo === "cpf") return t("CPF");
+  if (tipo === "telefone") return t("Celular");
+  if (tipo === "email") return t("E-mail");
+  if (tipo === "aleatoria") return t("Chave aleatória");
+  return t("Chave");
+}
 
 /** Cadastro completo, com os campos que faltarem preenchidos pelo padrão; null
     quando falta chave ou favorecido (lei 6: sem isso a entrada não aparece no app). */

@@ -2,7 +2,7 @@
  * civis (AAAA-MM-DD) e o horário fica no próprio evento. Testado em
  * scripts/check-service-recorrencia.ts. */
 import { isCivilDate, parseISODate, somaDias, toISODate } from "./date";
-import { plural } from "./plural";
+import { sourceText, type Text } from "./internacional/mensagens";
 
 export type Repeticao = "semanal" | "quinzenal" | "mensal";
 export const REPETICOES: { id: Repeticao | "nao"; rotulo: string }[] = [
@@ -11,6 +11,13 @@ export const REPETICOES: { id: Repeticao | "nao"; rotulo: string }[] = [
   { id: "quinzenal", rotulo: "A cada 15 dias" },
   { id: "mensal", rotulo: "Todo mês" },
 ];
+/** Rótulo da repetição na tela; o id gravado não muda. */
+export function rotuloRepeticao(id: Repeticao | "nao", t: Text = sourceText): string {
+  if (id === "semanal") return t("Toda semana");
+  if (id === "quinzenal") return t("A cada 15 dias");
+  if (id === "mensal") return t("Todo mês");
+  return t("Não se repete");
+}
 /** Teto de encontros criados de uma vez (o mesmo do assistente). */
 export const TETO_SERIE = 60;
 
@@ -53,22 +60,23 @@ export function mesesEntre(a: string, b: string): number {
   return (ba - aa) * 12 + (bm - am);
 }
 
-function corpoDaSerie(datas: string[], regra: Repeticao, termoEncontros: string): string {
-  const rotulo = REPETICOES.find((r) => r.id === regra)?.rotulo.toLowerCase() ?? "";
+function corpoDaSerie(datas: string[], regra: Repeticao, termoEncontros: string, t: Text): string {
+  const rotulo = rotuloRepeticao(regra, t).toLowerCase();
   const [a, m, d] = datas[datas.length - 1].split("-");
   const fim = `${d}/${m}${a !== datas[0].slice(0, 4) ? `/${a}` : ""}`;
-  const teto = datas.length >= TETO_SERIE ? ` (o máximo de uma vez é ${TETO_SERIE})` : "";
   const singular = termoEncontros.replace(/ões$/, "ão").replace(/s$/, "");
-  return `${plural(datas.length, singular, termoEncontros)}, ${rotulo}, até ${fim}${teto}`;
+  return t("{count, plural, =1 {# {singular}} other {# {termo}}}, {repeticao}, até {fim}{teto, select, sim { (o máximo de uma vez é {maximo})} other {}}", {
+    count: datas.length, singular, termo: termoEncontros, repeticao: rotulo, fim, teto: datas.length >= TETO_SERIE ? "sim" : "nao", maximo: String(TETO_SERIE),
+  });
 }
 
 /** Antes de salvar: "Vai criar 9 encontros, toda semana, até 14/01." */
-export function resumoDaSerie(datas: string[], regra: Repeticao, termoEncontros = "encontros"): string {
-  return datas.length ? `Vai criar ${corpoDaSerie(datas, regra, termoEncontros)}.` : "";
+export function resumoDaSerie(datas: string[], regra: Repeticao, termoEncontros = "encontros", t: Text = sourceText): string {
+  return datas.length ? t("Vai criar {serie}.", { serie: corpoDaSerie(datas, regra, termoEncontros, t) }) : "";
 }
 
 /** Depois de salvar, sem verbo para não errar a concordância do termo da igreja
  * ("reuniões"): "Na agenda: 9 encontros, toda semana, até 14/01." */
-export function feitoDaSerie(datas: string[], regra: Repeticao, termoEncontros = "encontros"): string {
-  return datas.length ? `Na agenda: ${corpoDaSerie(datas, regra, termoEncontros)}.` : "";
+export function feitoDaSerie(datas: string[], regra: Repeticao, termoEncontros = "encontros", t: Text = sourceText): string {
+  return datas.length ? t("Na agenda: {serie}.", { serie: corpoDaSerie(datas, regra, termoEncontros, t) }) : "";
 }

@@ -16,7 +16,7 @@ export default function AutocadastroDados({
   const traduzirUi = useTexto();
   const { vocab } = useTermos();
   const interesses = rotulosInteresses(visitor.interests, vocab);
-  const conheceu = rotuloComoConheceu(visitor.heard_from);
+  const conheceu = rotuloComoConheceu(visitor.heard_from, traduzirUi);
   const consent = visitor.consent_at ? new Date(visitor.consent_at).toLocaleDateString("pt-BR") : null;
   return (
     <>

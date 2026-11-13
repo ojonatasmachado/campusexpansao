@@ -2,6 +2,7 @@
    dados de demonstração (/service/demo, ?dados=pior gera 1.000 registros).
    Nada aqui desenha tela. */
 import { formatDateBR } from "../../lib/date";
+import { sourceText, type Text } from "../../lib/internacional/mensagens";
 
 export type Livro = "batismo" | "casamento" | "apresentacao" | "rol";
 
@@ -46,11 +47,28 @@ export const LIVROS: { id: Livro; rotulo: string; singular: string; plural: stri
 
 export const livroDe = (id: Livro) => LIVROS.find((l) => l.id === id)!;
 
+/** Nome e texto de vazio do livro na tela. Título impresso e nome do CSV seguem com LIVROS. */
+export function livroNaTela(id: Livro, t: Text = sourceText): { rotulo: string; vazio: string } {
+  if (id === "batismo") return { rotulo: t("Batismos"), vazio: t("Quando uma turma de batismo é concluída, ou a etapa Batismo é marcada na ficha, a pessoa entra aqui com número de registro.") };
+  if (id === "casamento") return { rotulo: t("Casamentos"), vazio: t("Registre os casamentos celebrados pela igreja, com noivos, oficiante e testemunhas.") };
+  if (id === "apresentacao") return { rotulo: t("Apresentações"), vazio: t("Registre a apresentação de crianças. Se a criança já está no Kids, os dados vêm de lá.") };
+  return { rotulo: t("Rol de membros"), vazio: t("Toda ficha de membro entra no rol com a data de entrada. A saída e o motivo ficam aqui.") };
+}
+
 /** livros que a tela deixa lançar à mão (batismo e rol vêm dos fatos e das fichas) */
 export const LANCA_A_MAO: Livro[] = ["casamento", "apresentacao"];
 
 export const FORMAS_ENTRADA = ["Batismo", "Transferência", "Aclamação", "Reconciliação"];
 export const MOTIVOS_SAIDA = ["Transferência", "A pedido", "Falecimento", "Mudança de cidade", "Outro"];
+
+/** Forma de entrada ou motivo de saída na tela. O valor gravado continua o de FORMAS_ENTRADA/MOTIVOS_SAIDA. */
+export function rotuloDoRol(valor: string, t: Text = sourceText): string {
+  const rotulos: Record<string, string> = {
+    Batismo: t("Batismo"), "Transferência": t("Transferência"), "Aclamação": t("Aclamação"), "Reconciliação": t("Reconciliação"),
+    "A pedido": t("A pedido"), Falecimento: t("Falecimento"), "Mudança de cidade": t("Mudança de cidade"), Outro: t("Outro"),
+  };
+  return Object.hasOwn(rotulos, valor) ? rotulos[valor] : valor;
+}
 
 export const anoDe = (r: Pick<Registro, "data">) => Number(r.data.slice(0, 4));
 

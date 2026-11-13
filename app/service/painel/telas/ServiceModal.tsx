@@ -207,7 +207,7 @@ export function ServiceModal({
           })));
           if (erroReserva) avisar(traduzirUi("Já está na agenda, mas o espaço não ficou reservado. Reserve em Configurações → Espaços e Salas."), "warn");
         }
-        if (regra) avisar(feitoDaSerie(datas, regra, ct("{cultos}").toLowerCase()));
+        if (regra) avisar(feitoDaSerie(datas, regra, ct("{cultos}").toLowerCase(), traduzirUi));
         result = { error: null };
       }
     } else if (action.kind === "ministry") {

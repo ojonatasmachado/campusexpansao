@@ -3,6 +3,9 @@
    data. Painel: a semana e o próximo culto com o que falta na escala. */
 import { parseISODate, somaDias, todayISO, weekdayFromISO } from "./date";
 import { faltaN, plural } from "./plural";
+import { sourceText, type Text } from "./internacional/mensagens";
+import { formatCivilDate } from "./internacional/formatar";
+import type { Locale } from "./internacional/contrato";
 
 const MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
 const semAcento = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
@@ -35,13 +38,18 @@ export function linhaDoMembro(c: ContextoMembro, hoje = todayISO()): string {
   return dataPorExtenso(hoje);
 }
 
-/** "Semana de 5 a 11 de outubro" (segunda a domingo); "de 28 de setembro a 4 de outubro" quando vira o mês. */
-export function semanaDe(hoje = todayISO()): string {
+/** "Semana de 5 a 11 de outubro" (segunda a domingo); "de 28 de setembro a 4 de outubro" quando vira o mês.
+ *  Fora do pt-BR, dia e mês saem do Intl no idioma de quem vê. */
+export function semanaDe(hoje = todayISO(), t: Text = sourceText, locale: Locale = "pt-BR"): string {
   const d = parseISODate(hoje);
   if (!d) return "";
   const seg = somaDias(hoje, -((d.getDay() + 6) % 7));
   const dom = somaDias(seg, 6);
   const a = parseISODate(seg)!, b = parseISODate(dom)!;
+  if (locale !== "pt-BR") {
+    const dia = (iso: string) => formatCivilDate(iso, locale, { year: undefined, month: "long", day: "numeric" });
+    return t("Semana de {inicio} a {fim}", { inicio: dia(seg), fim: dia(dom) });
+  }
   return a.getMonth() === b.getMonth()
     ? `Semana de ${a.getDate()} a ${b.getDate()} de ${MESES[b.getMonth()]}`
     : `Semana de ${a.getDate()} de ${MESES[a.getMonth()]} a ${b.getDate()} de ${MESES[b.getMonth()]}`;

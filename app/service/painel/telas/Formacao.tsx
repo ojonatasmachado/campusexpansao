@@ -12,7 +12,7 @@ import CursoDrawer from "../../CursoDrawer";
 import { useServiceAccess } from "../../AccessContext";
 import { requirementsFor, requirementLabel } from "../../lib/requirements";
 import { Av, Chip, EmptyState, PageHead } from "../ui";
-import { BAT_ST_MAP, OUTRO_LOCAL } from "../comum";
+import { BAT_ST_MAP, OUTRO_LOCAL, rotuloTurmaBatismo } from "../comum";
 import { Indicador } from "../../ui/Indicador";
 import type { BaptismCandidateView, BaptismClassView, ChurchView, CourseView, DecisionView, DrawerState, EnrollmentView, LessonAttendanceView, LessonView, MemberView, ModalState, ModuleView, PersonView, RoomView } from "../tipos";
 
@@ -154,7 +154,7 @@ export function Batismos({
                 </div>
                 <div className="bat-meta">{joinDot(cls.location, cls.pastor)}</div>
                 <div className="bat-foot">
-                  <Selo tom={tomDaClasse(st?.cls ?? "chip-wait")}>{st?.label ?? cls.status}</Selo>
+                  <Selo tom={tomDaClasse(st?.cls ?? "chip-wait")}>{st ? rotuloTurmaBatismo(st.label, traduzirUi) : cls.status}</Selo>
                   <span className="panel-meta">{traduzirUi("{count, plural, =1 {{n} candidato} other {{n} candidatos}}", { count, n: String(count) })}</span>
                 </div>
               </Acao>
@@ -340,7 +340,6 @@ export function CursoBuilderColuna({
 }) {
   const traduzirUi = useTexto();
 
-  const { comTermos: ct } = useTermos();
   const access = useServiceAccess();
   return (
     <div
@@ -367,7 +366,7 @@ export function CursoBuilderColuna({
               <div className="cb-card-name">{c.name}</div>
               {requirementsFor(access.requirements, "course", c.id).length > 0 && (
                 <div className="cb-req">
-                  {traduzirUi("exige: {lista}", { lista: requirementsFor(access.requirements, "course", c.id).map((r) => ct(requirementLabel(r, access).replace(/^[^:]+: /, ""))).join(", ") })}
+                  {traduzirUi("exige: {lista}", { lista: requirementsFor(access.requirements, "course", c.id).map((r) => requirementLabel(r, access, traduzirUi).replace(/^[^:]+: /, "")).join(", ") })}
                 </div>
               )}
             </div>

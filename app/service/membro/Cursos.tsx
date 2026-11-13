@@ -13,7 +13,7 @@ import { Selo, tomDaClasse } from "../ui/Selo";
 import { Cartao } from "../ui/Cartao";
 import { Linha, Lista } from "../ui/Linha";
 import { Progresso } from "../ui/Graficos";
-import { useTexto } from "../lib/internacional/contexto";
+import { useServiceLocale, useTexto } from "../lib/internacional/contexto";
 
 export function ChipSt({ status, label }: { status: "ok" | "wait" | "no"; label?: string }) {
   const cls = status === "ok" ? "chip-ok" : status === "wait" ? "chip-wait" : "chip-no";
@@ -56,10 +56,11 @@ export function ProximaAulaBloco({ prox }: { prox: ProximaAula<CourseLesson> | n
 
 /* dia, hora e sala da aula (0067), quando o curso informou */
 export function AulaQuando({ aula }: { aula: CourseLesson }) {
+  const locale = useServiceLocale();
   if (!aula.lesson_date && !aula.lesson_time && !aula.location) return null;
   return (
     <ul className="m6-facts">
-      {(aula.lesson_date || aula.lesson_time) && <li><Icon name="agenda" size={20} /><span>{joinDot(dataLonga(aula.lesson_date), aula.lesson_time)}</span></li>}
+      {(aula.lesson_date || aula.lesson_time) && <li><Icon name="agenda" size={20} /><span>{joinDot(dataLonga(aula.lesson_date, locale), aula.lesson_time)}</span></li>}
       {aula.location && <li><Icon name="mapapin" size={20} /><span>{aula.location}</span></li>}
     </ul>
   );

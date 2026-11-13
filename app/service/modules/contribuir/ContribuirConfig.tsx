@@ -47,7 +47,7 @@ export function ContribuirConfig({ church }: { church?: IgrejaCfg }) {
             <Linha estilo="config">
               <div className="cfg-row-main">
                 <div className="cfg-row-t contrib-cfg-v">{chaveLegivel(cfg.tipo, cfg.chave)}</div>
-                <div className="cfg-row-s">{rotuloDoTipo(cfg.tipo)} · {cfg.favorecido}{cfg.cidade ? ` · ${cfg.cidade}` : ""}</div>
+                <div className="cfg-row-s">{rotuloDoTipo(cfg.tipo, traduzirUi)} · {cfg.favorecido}{cfg.cidade ? ` · ${cfg.cidade}` : ""}</div>
               </div>
             </Linha>
             <Linha estilo="config">
@@ -113,7 +113,7 @@ function ContribuirForm({ inicial, onSave, onClose }: { inicial: ContribuirCfg; 
   const [error, setError] = useState("");
 
   const tipoInfo = TIPOS_CHAVE.find((t) => t.v === tipo) ?? TIPOS_CHAVE[0];
-  const erroChave = chave.trim() ? erroDaChave(tipo, chave) : null;
+  const erroChave = chave.trim() ? erroDaChave(tipo, chave, traduzirUi) : null;
   const opcoes = [...FINALIDADES_SUGERIDAS, ...finalidades.filter((f) => !FINALIDADES_SUGERIDAS.includes(f))];
   const cheio = finalidades.length >= MAX_FINALIDADES;
   const alternar = (f: string) => setFinalidades((prev) => (prev.includes(f) ? prev.filter((x) => x !== f) : prev.length >= MAX_FINALIDADES ? prev : [...prev, f]));
@@ -168,7 +168,7 @@ function ContribuirForm({ inicial, onSave, onClose }: { inicial: ContribuirCfg; 
     >
       <FormSection title={traduzirUi("Chave")}>
         <div className="fs-grid">
-          <Campo rotulo={traduzirUi("Tipo da chave")} obrigatorio><Selecao id={`${fid}-tipo`} valor={tipo} aoMudar={(v) => setTipo(v as TipoChave)} opcoes={TIPOS_CHAVE.map((t) => ({ v: t.v, l: t.l }))} /></Campo>
+          <Campo rotulo={traduzirUi("Tipo da chave")} obrigatorio><Selecao id={`${fid}-tipo`} valor={tipo} aoMudar={(v) => setTipo(v as TipoChave)} opcoes={TIPOS_CHAVE.map((t) => ({ v: t.v, l: rotuloDoTipo(t.v, traduzirUi) }))} /></Campo>
           <Campo rotulo={traduzirUi("Chave Pix")} obrigatorio ajuda={erroChave ? traduzirUi("Falta {erro}.", { erro: erroChave }) : undefined}>
             <Entrada
               id={`${fid}-chave`} aria-required="true" aria-invalid={!!erroChave}

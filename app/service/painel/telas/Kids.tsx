@@ -403,7 +403,7 @@ export function ChildFormModal({
       </FormSection>
 
       <FormSection title={traduzirUi("Uso de imagem")}>
-        <Marcar className="fs-check" checked={imageAuthorized} onChange={(e) => setImageAuthorized(e.target.checked)}>{imageAuthorizationCopy(name)}</Marcar>
+        <Marcar className="fs-check" checked={imageAuthorized} onChange={(e) => setImageAuthorized(e.target.checked)}>{imageAuthorizationCopy(name, traduzirUi)}</Marcar>
       </FormSection>
     </FormScreen>
   );

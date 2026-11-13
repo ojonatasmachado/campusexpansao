@@ -13,7 +13,7 @@ import type { BaptismClass, Course, CourseLesson, CourseModule, Enrollment, Jour
 import { Botao } from "../ui/Botao";
 import { Cartao } from "../ui/Cartao";
 import { Campo, Entrada } from "../ui/Campo";
-import { useTexto } from "../lib/internacional/contexto";
+import { useServiceLocale, useTexto } from "../lib/internacional/contexto";
 import type { Text } from "../lib/internacional/mensagens";
 
 // ── constantes ────────────────────────────────────────────────────────────────
@@ -186,6 +186,7 @@ export function useSteps({ person, member, ministries, courses, enrollments, cou
   journeyRequests: JourneyRequest[]; onOpenSub: (sub: string) => void; onRequestStep: (step: JourneyStep) => void; onServir: () => void;
 }): StepView[] {
   const traduzirUi = useTexto();
+  const locale = useServiceLocale();
   const j = useContext(JourneyContext);
   const JORNADA = useJornada();
   const journey = member?.journey ?? [];
@@ -209,7 +210,7 @@ export function useSteps({ person, member, ministries, courses, enrollments, cou
     if (id === "curso") {
       if (cursando) {
         const prox = proximaAula(cursando.course_id, cursando.done_count, courseModules, courseLessons);
-        return { id, nome, st: "andamento", info: joinDot(cursoNome, prox && traduzirUi("Próxima aula: {aula}", { aula: prox.aula.name }), dataLonga(prox?.aula.lesson_date), prox?.aula.lesson_time, prox?.aula.location), acao: prox ? traduzirUi("Ver a próxima aula") : traduzirUi("Ver o curso"), run: () => onOpenSub("cursos") };
+        return { id, nome, st: "andamento", info: joinDot(cursoNome, prox && traduzirUi("Próxima aula: {aula}", { aula: prox.aula.name }), dataLonga(prox?.aula.lesson_date, locale), prox?.aula.lesson_time, prox?.aula.location), acao: prox ? traduzirUi("Ver a próxima aula") : traduzirUi("Ver o curso"), run: () => onOpenSub("cursos") };
       }
       /* sem curso publicado, o botão levaria a uma lista vazia (lei 6) */
       return courses.length ? { id, nome, st: "afazer", acao: traduzirUi("Ver os cursos"), run: () => onOpenSub("cursos") } : { id, nome, st: "afazer" };

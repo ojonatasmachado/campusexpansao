@@ -8,7 +8,7 @@ import { useTermos } from "../lib/vocabulario-context";
 import { useDestinatario } from "../lib/destinatario";
 import { conflitos, horaDeChegada } from "../lib/agenda";
 import { baixarIcs } from "../lib/ics";
-import { M6Row, M6St, MESES, MemberUiContext, chegadaDoTime, dataLonga } from "./comum";
+import { M6Row, M6St, MemberUiContext, chegadaDoTime, dataLonga, mesComInicial } from "./comum";
 import { EscalaCard, SheetTroca } from "./Inicio";
 import type { AgendaSeg } from "../lib/member-navigation";
 import { TabOnde } from "./Onde";
@@ -21,7 +21,7 @@ import { Acao } from "../ui/Acao";
 import { Opcao } from "../ui/Opcao";
 import { Linha, Lista, linhaClasse } from "../ui/Linha";
 import { Cartao } from "../ui/Cartao";
-import { useTexto } from "../lib/internacional/contexto";
+import { useServiceLocale, useTexto } from "../lib/internacional/contexto";
 
 /* data em bloquinho: "Dom 04" */
 export function M6Date({ iso }: { iso: string }) {
@@ -117,6 +117,7 @@ export function AgendaV6({ organizationId, initialCardId, seg, setSeg, person, m
   onAddCardComment?: (cardId: string, author: string, body: string) => void;
 }) {
   const traduzirUi = useTexto();
+  const locale = useServiceLocale();
   const { todayISO, aindaVaiAcontecer } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
   const ui = useContext(MemberUiContext);
@@ -193,7 +194,7 @@ export function AgendaV6({ organizationId, initialCardId, seg, setSeg, person, m
   const emConflito = conflitos(itens.filter((i) => i.tipo !== "Tarefa").map((i) => ({ id: i.id, data: i.data, hora: i.hora })));
   const dias = [...new Set(itens.map((i) => i.data))];
   const amanha = somaDias(hoje, 1);
-  const nomeDia = (d: string) => (d === hoje ? traduzirUi("Hoje · {data}", { data: dataLonga(d) }) : d === amanha ? traduzirUi("Amanhã · {data}", { data: dataLonga(d) }) : dataLonga(d));
+  const nomeDia = (d: string) => (d === hoje ? traduzirUi("Hoje · {data}", { data: dataLonga(d, locale) }) : d === amanha ? traduzirUi("Amanhã · {data}", { data: dataLonga(d, locale) }) : dataLonga(d, locale));
   /* tipo é a chave da lógica (Tarefa fica fora do conflito); só o texto mostrado muda de idioma */
   const rotuloTipo: Record<string, string> = { Serve: traduzirUi("Serve"), Culto: traduzirUi("Culto"), Evento: traduzirUi("Evento"), Ensaio: traduzirUi("Ensaio"), "Reunião": traduzirUi("Reunião"), Aula: traduzirUi("Aula"), Tarefa: traduzirUi("Tarefa") };
 
@@ -206,7 +207,7 @@ export function AgendaV6({ organizationId, initialCardId, seg, setSeg, person, m
     const dias = Math.floor((d.getTime() - h.getTime()) / 86400000);
     if (dias < 7 - h.getDay()) return traduzirUi("Esta semana");
     if (dias < 14 - h.getDay()) return traduzirUi("Próxima semana");
-    return `${MESES[d.getMonth()].charAt(0).toUpperCase()}${MESES[d.getMonth()].slice(1)}`;
+    return mesComInicial(d.getMonth(), locale);
   };
   const grupos = [...new Set(futuros.map((e) => semanaDe(e.eventDate)))];
 
@@ -322,6 +323,7 @@ export function SheetEvento({ ev, slot, ministry, rsvp, onRespond, paginaUrl, ch
   member?: M | null; onStartChat?: (selfMemberId: string, targetMemberId: string, firstMessage: string) => Promise<string | null>;
 }) {
   const traduzirUi = useTexto();
+  const locale = useServiceLocale();
   const ui = useContext(MemberUiContext);
   const destTroca = useDestinatario("troca", slot ? ministry?.id ?? null : null);
   const [resp, setResp] = useState<EventRsvp["kind"] | null>(rsvp);
@@ -356,7 +358,7 @@ export function SheetEvento({ ev, slot, ministry, rsvp, onRespond, paginaUrl, ch
       <div className="m6-kick">{ev.kind && ev.kind !== "Culto" ? ev.kind : traduzirUi("Na igreja")}</div>
       <h2 className="m6-sh">{ev.name}</h2>
       <ul className="m6-facts">
-        <li><Icon name="agenda" size={20} /><span>{joinDot(dataLonga(ev.eventDate) || ev.weekday, ev.time)}</span></li>
+        <li><Icon name="agenda" size={20} /><span>{joinDot(dataLonga(ev.eventDate, locale) || ev.weekday, ev.time)}</span></li>
         {ev.location && <li><Icon name="mapapin" size={20} /><span>{ev.location}</span></li>}
         {servindo && <li><Icon name="times" size={20} /><span>{joinDot(traduzirUi("Serve"), funcao ?? ministry?.name, chegar && traduzirUi("chegar {hora}", { hora: chegar }))}</span></li>}
       </ul>

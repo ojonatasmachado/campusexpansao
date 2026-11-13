@@ -773,7 +773,7 @@ function RosterActionModal({
         <div className="cand-name">{c.person.name}</div>
         {c.fit === "block" && c.motivo
           ? <div className="cand-meta cand-motivo"><Icon name="recusou" size={13} /> {motivoTexto(c.motivo)}</div>
-          : <div className="cand-meta">{fraseRodizio(c.ultima, c.vezes, todayISO())}</div>}
+          : <div className="cand-meta">{fraseRodizio(c.ultima, c.vezes, todayISO(), traduzirUi)}</div>}
         {c.person.tags.length > 0 ? <div className="cand-meta">{c.person.tags.join(" · ")}</div> : null}
       </div>
       {c.fit !== "block" && <span className={`cand-fit ${c.fit}`}>{c.fit === "good" ? <><Icon name="ok" size={13} /> {traduzirUi("disponível")}</> : <><Icon name="pendente" size={13} /> {traduzirUi("indisponível")}</>}</span>}

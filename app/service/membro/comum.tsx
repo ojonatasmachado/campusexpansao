@@ -7,11 +7,13 @@ import { telefoneValido } from "../lib/telefone";
 import { createContext, useContext } from "react";
 import { Icon } from "../lib/icons";
 import { Folha } from "../ui/Janela";
-import { parseISODate, weekdayFromISO } from "../lib/date";
+import { parseISODate, toISODate, weekdayFromISO } from "../lib/date";
+import { formatCivilDate } from "../lib/internacional/formatar";
+import type { Locale } from "../lib/internacional/contrato";
 import { iniciais } from "../lib/iniciais";
-import { useTermos } from "../lib/vocabulario-context";
 import { requirementLabel } from "../lib/requirements";
 import { sourceText, type Text } from "../lib/internacional/mensagens";
+import { useTexto } from "../lib/internacional/contexto";
 import type { JourneyActions, MemberContactInput, MemberUi, Ministry, MissingRequirement } from "./tipos";
 
 import { Acao } from "../ui/Acao";
@@ -36,11 +38,11 @@ export const JourneyContext = createContext<JourneyActions>({ missing: [], serve
 /* o que falta pra um alvo, já em texto */
 export function useFaltas() {
   const j = useContext(JourneyContext);
-  const { comTermos: ct } = useTermos();
+  const traduzirUi = useTexto();
   return (kind: MissingRequirement["target_kind"], id: string | null) =>
     j.missing
       .filter((m) => m.target_kind === kind && (m.target_id ?? null) === id)
-      .map((m) => ct(requirementLabel({ kind: m.req_kind, ref: m.req_ref }, j.names)));
+      .map((m) => requirementLabel({ kind: m.req_kind, ref: m.req_ref }, j.names, traduzirUi));
 }
 
 /* r é o código devolvido pelo banco; só o texto mostrado muda de idioma */
@@ -88,10 +90,18 @@ export function M6St({ k, ic, children }: { k: "ok" | "warn" | "neutral" | "dang
 }
 
 export const MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
-export function dataLonga(iso?: string | null) {
+/** "Terça, 6 de outubro"; fora do pt-BR, o Intl no idioma de quem vê ("Tuesday, October 6"). */
+export function dataLonga(iso?: string | null, locale: Locale = "pt-BR") {
   const d = parseISODate(iso);
   if (!d) return "";
+  if (locale !== "pt-BR") return formatCivilDate(toISODate(d), locale, { year: undefined, weekday: "long", day: "numeric", month: "long" });
   return `${weekdayFromISO(iso)}, ${d.getDate()} de ${MESES[d.getMonth()]}`;
+}
+
+/** "Outubro" (mês 0 a 11), com inicial maiúscula, no idioma de quem vê. */
+export function mesComInicial(mes: number, locale: Locale = "pt-BR") {
+  const nome = locale === "pt-BR" ? MESES[mes] : new Intl.DateTimeFormat(locale, { month: "long", timeZone: "UTC" }).format(new Date(Date.UTC(2026, mes, 15)));
+  return `${nome.charAt(0).toUpperCase()}${nome.slice(1)}`;
 }
 
 // ── cartão de escala (S18) ────────────────────────────────────────────────────

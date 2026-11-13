@@ -31,18 +31,23 @@ import { Opcao } from "../../ui/Opcao";
 import { Campo, Marcar } from "../../ui/Campo";
 import { SeletorData } from "../../ui/Data";
 import { Vazio } from "../../ui/Estados";
-import { useTexto } from "../../lib/internacional/contexto";
+import { useServiceLocale, useTexto } from "../../lib/internacional/contexto";
+import type { Locale } from "../../lib/internacional/contrato";
 const DIA_CURTO = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const DIA_LONGO = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 const DURACOES = [1, 3, 6, 12] as const;
 type Duracao = (typeof DURACOES)[number] | "datas";
 
-const nomeDoMes = (mes: string) => {
+const nomeDoMes = (mes: string, locale: Locale = "pt-BR") => {
   const d = parseISODate(`${mes}-01`);
   if (!d) return mes;
-  const t = new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(d);
+  const t = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(d);
   return t.charAt(0).toUpperCase() + t.slice(1);
 };
+/* "segunda" no pt-BR (como antes); fora dele, o nome do Intl na caixa do idioma ("Monday", "lunes") */
+const diaLongo = (dia: number, locale: Locale) => locale === "pt-BR"
+  ? DIA_LONGO[dia].toLowerCase()
+  : new Intl.DateTimeFormat(locale, { weekday: "long", timeZone: "UTC" }).format(new Date(Date.UTC(2026, 0, 4 + dia)));
 const diaCurto = (iso: string) => DIA_CURTO[parseISODate(iso)?.getDay() ?? 0];
 const novoId = () => (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`);
 
@@ -77,6 +82,7 @@ export function GerarPeriodo({
   onSalvo: (primeiroEventoId: string | null) => void;
 }) {
   const traduzirUi = useTexto();
+  const locale = useServiceLocale();
 
   const { todayISO } = useRelogioDaIgreja();
   const { comTermos: ct } = useTermos();
@@ -308,7 +314,7 @@ export function GerarPeriodo({
                   <Marcar className="fs-check" key={s.chave} checked={seriesSel.has(s.chave)} onChange={() => setSeriesSel((x) => alternar(x, s.chave))}>
                     <span className="per-check-txt">
                       <span className="per-check-t">{s.nome}</span>
-                      <span className="per-check-s">{joinDot(traduzirUi("Toda {dia}", { dia: DIA_LONGO[s.diaSemana].toLowerCase() }), s.hora, valido && traduzirUi("{count, plural, =1 {# data} other {# datas}}", { count: n.length }), criar > 0 && traduzirUi("{count, plural, =1 {{n} entra} other {{n} entram}} na agenda", { count: criar, n: String(criar) }))}</span>
+                      <span className="per-check-s">{joinDot(traduzirUi("Toda {dia}", { dia: diaLongo(s.diaSemana, locale) }), s.hora, valido && traduzirUi("{count, plural, =1 {# data} other {# datas}}", { count: n.length }), criar > 0 && traduzirUi("{count, plural, =1 {{n} entra} other {{n} entram}} na agenda", { count: criar, n: String(criar) }))}</span>
                     </span>
                   </Marcar>
                 );
@@ -389,7 +395,7 @@ export function GerarPeriodo({
           <ul className="per-avisos">
             {semPessoas.map((a) => <li key={`sp-${a.timeId}`}><Icon name="alerta" size={14} /> {traduzirUi("{time} não tem ninguém. Adicione pessoas em Times.", { time: timeNome(a.timeId) })}</li>)}
             {semGente.length > 0 && <li><Icon name="alerta" size={14} /> {traduzirUi("{vagas, plural, =1 {# vaga} other {# vagas}} sem ninguém disponível em {eventos, plural, =1 {# {culto}} other {# {cultos}}}. Toque na vaga para escolher alguém mesmo assim.", { vagas: semGente.reduce((s, a) => s + a.faltam, 0), eventos: new Set(semGente.map((a) => a.culto)).size })}</li>}
-            {acima.map((a) => <li key={`ac-${a.pessoa}-${a.mes}`}><Icon name="alerta" size={14} /> {traduzirUi("{nome} serve {vezes, plural, =1 {# vez} other {# vezes}} em {mes}, acima do limite de {limite}.", { nome: nome(a.pessoa), vezes: a.vezes, mes: nomeDoMes(a.mes), limite: String(cfg.maxPorMes) })}</li>)}
+            {acima.map((a) => <li key={`ac-${a.pessoa}-${a.mes}`}><Icon name="alerta" size={14} /> {traduzirUi("{nome} serve {vezes, plural, =1 {# vez} other {# vezes}} em {mes}, acima do limite de {limite}.", { nome: nome(a.pessoa), vezes: a.vezes, mes: nomeDoMes(a.mes, locale), limite: String(cfg.maxPorMes) })}</li>)}
             {outros > 0 && <li><Icon name="alerta" size={14} /> {traduzirUi("{count, plural, =1 {# escolha manual} other {# escolhas manuais}} com quem marcou que não pode ou já serve no mesmo {culto}.", { count: outros })}</li>}
           </ul>
           <div className="fs-chips">
@@ -409,7 +415,7 @@ export function GerarPeriodo({
         return (
           <section className="per-mes" key={mes}>
             <Acao className="per-mes-head" aria-expanded={aberto} onClick={() => alternarMes(mes)}>
-              <span className="per-mes-t">{nomeDoMes(mes)}</span>
+              <span className="per-mes-t">{nomeDoMes(mes, locale)}</span>
               <span className="per-mes-s">{joinDot(traduzirUi("{count, plural, =1 {# {culto}} other {# {cultos}}}", { count: cultos.length }), comAviso > 0 && traduzirUi("{n} com aviso", { n: String(comAviso) }))}</span>
               <Icon name="avancar" size={15} />
             </Acao>
