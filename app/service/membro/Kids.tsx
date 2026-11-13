@@ -527,8 +527,9 @@ export function TabKidsArea({
                 {meusFilhos.map((child) => {
                   const inscrito = enrollments.some((e) => e.kids_event_id === event.id && e.child_id === child.id);
                   return (
-                    <Acao key={child.id} className={`${seloClasse({ tom: "neutro" })}${inscrito ? "chip-ok" : "chip-neutral"}`} desativado={inscrito} onClick={() => inscrever(event.id, child.id)}>
-                      {child.name.split(" ")[0]}{inscrito ? <> <Icon name="ok" size={13} /></> : traduzirUi(" + inscrever")}
+                    <Acao key={child.id} className={seloClasse({ tom: inscrito ? "ok" : "neutro" })} desativado={inscrito} onClick={() => inscrever(event.id, child.id)}>
+                      {/* o ícone de "ok" agora vem do ::before do .chip-ok (--ic-ok); não duplicar aqui */}
+                      {child.name.split(" ")[0]}{inscrito ? null : traduzirUi(" + inscrever")}
                     </Acao>
                   );
                 })}
