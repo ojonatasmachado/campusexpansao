@@ -5,6 +5,8 @@ import { enderecoNoBrasil } from "../lib/endereco";
 import { listaFinalidades, type ContribuirCfg } from "../modules/contribuir/pix";
 import { useContext, useEffect, useState, useId, useTransition } from "react";
 import { createServiceBrowserClient } from "../lib/supabase-browser";
+import { avisar } from "../lib/avisar";
+import { friendlyWriteError } from "../painel/erros";
 import { Icon } from "../lib/icons";
 import { formatCivilDate } from "../lib/internacional/formatar";
 import { formatarTelefone } from "../lib/telefone";
@@ -264,9 +266,25 @@ export function TabPerfil({
             label={traduzirUi("Sua foto")}
             photoUrl={foto}
             path={`${organizationId}/kids/guardians/${person.id}`}
-            onUploaded={(url) => {
-              setFoto(url);
-              createServiceBrowserClient().schema("service").from("people").update({ photo_url: url }).eq("id", person.id);
+            onUploaded={async (url) => {
+              /* cache-busting: o caminho é sempre o mesmo (upsert), então sem isso o
+                 navegador/CDN continuaria mostrando a foto antiga na mesma URL */
+              const comVersao = `${url}?v=${Date.now()}`;
+              const anterior = foto;
+              setFoto(comVersao);
+              /* .select("id") é necessário: a policy de RLS é restrictive e filtra no
+                 USING, então uma gravação barrada por permissão volta 0 linhas e
+                 error: null, não um erro — sem o select, isso passaria em silêncio. */
+              const { data, error } = await createServiceBrowserClient().schema("service").from("people")
+                .update({ photo_url: url }).eq("id", person.id).select("id");
+              if (error || !data?.length) {
+                // só desfaz se nenhum envio mais recente já substituiu esta foto
+                setFoto((f) => (f === comVersao ? anterior : f));
+                // sem error mas 0 linhas = RLS bloqueou (policy restrictive, filtra no USING sem lançar exceção)
+                avisar(friendlyWriteError(error?.message ?? "permission denied", traduzirUi), "warn");
+                return;
+              }
+              router.refresh(); // outros lugares que leem person.photoUrl do servidor (ex.: o Av logo abaixo) também atualizam
             }}
           />
           <div className="m6-meta">{traduzirUi("Aparece no lugar das iniciais.")}</div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { avisar } from "../lib/avisar";
+import { friendlyWriteError } from "../painel/erros";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createServiceBrowserClient } from "../lib/supabase-browser";
@@ -278,6 +279,7 @@ export function TabKidsArea({
   checkinHoje?: React.ReactNode;
 }) {
   const traduzirUi = useTexto();
+  const router = useRouter();
   const emptyForm = { nome: "", nascimento: "", genero: "", autorizaImagem: false, alergias: "", restricoes: "", saude: "", medicamento: "", emergenciaNome: "", emergenciaTel: "", notas: "" };
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -294,9 +296,22 @@ export function TabKidsArea({
   const meusFilhos = myChildren.filter((c) => myGuardians.some((g) => g.child_id === c.id && g.guardian_person_id === person.id));
   const kidsWall = wallPosts.filter((w) => (w.audience ?? "").toLowerCase().includes("kids")).slice(0, 5);
 
-  const salvarMinhaFoto = (url: string) => {
-    setMinhaFoto(url);
-    createServiceBrowserClient().schema("service").from("people").update({ photo_url: url }).eq("id", person.id);
+  const salvarMinhaFoto = async (url: string) => {
+    /* cache-busting: o caminho é sempre o mesmo (upsert), então sem isso o navegador/CDN
+       continuaria mostrando a foto antiga na mesma URL */
+    const comVersao = `${url}?v=${Date.now()}`;
+    const anterior = minhaFoto;
+    setMinhaFoto(comVersao);
+    /* .select("id") é necessário: a policy de RLS é restrictive e filtra no USING, então
+       uma gravação barrada por permissão volta 0 linhas e error: null, não um erro. */
+    const { data, error } = await createServiceBrowserClient().schema("service").from("people")
+      .update({ photo_url: url }).eq("id", person.id).select("id");
+    if (error || !data?.length) {
+      setMinhaFoto((f) => (f === comVersao ? anterior : f));
+      avisar(friendlyWriteError(error?.message ?? "permission denied", traduzirUi), "warn");
+      return;
+    }
+    router.refresh(); // outros lugares que leem person.photoUrl do servidor também atualizam
   };
 
   const abrirNovo = () => {
