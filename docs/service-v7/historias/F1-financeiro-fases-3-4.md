@@ -2,10 +2,10 @@
 id: F1
 titulo: Implementar Financeiro fases 3 e 4
 tipo: codigo
-status: livre
-quem:
-desde:
-branch:
+status: reservada
+quem: claude
+desde: 2026-11-13
+branch: historia/F1-financeiro-fases-3-4
 depende: [I10]
 tamanho: G
 ---
@@ -17,7 +17,11 @@ Fonte: JORNADAS_PONTE.md seção 1 (tesoureiro) e 0; MANIFESTO seção 9.
 ## Arquivos (trilho)
 - `app/service/modules/financeiro/Financeiro.tsx`
 - `app/service/modules/financeiro/Fase2.tsx`
+- `app/service/modules/financeiro/Fase3.tsx` (novo, mesmo padrão de Fase2.tsx)
 - `app/service/modules/financeiro/Formularios.tsx`
+- `app/service/modules/financeiro/dados.ts`
+- `supabase/migrations/0111_service_financeiro_fase3.sql` (novo; 0107 é da M7, 0111 é o próximo livre)
+- `docs/service-v7/producao.sql`
 
 ## Pronto quando
 - Orçamento por ministério funcionando.
