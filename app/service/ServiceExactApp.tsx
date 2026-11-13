@@ -258,19 +258,19 @@ export default function ServiceExactApp({
   const [navOpen, setNavOpen] = useState(false);
   /* no celular a busca é um ícone que abre o campo na largura toda */
   const [buscaAberta, setBuscaAberta] = useState(false);
-  /* grupos do menu recolhidos (fica guardado no aparelho) */
-  const [gruposFechados, setGruposFechados] = useState<string[]>([]);
+  /* grupos do menu recolhidos (fica guardado no aparelho). null = ainda não leu o
+     aparelho (SSR) ou nunca houve preferência salva; o padrão nesse caso é
+     derivado mais abaixo (depois de NAV_GROUPS e route existirem), não fixado aqui. */
+  const [gruposFechadosSalvos, setGruposFechadosSalvos] = useState<string[] | null>(null);
   const [maisAberto, setMaisAberto] = useState(false);
   useEffect(() => {
     /* lido depois da hidratação: o servidor não tem localStorage */
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- preferência do aparelho, só existe no navegador
-    try { setGruposFechados(JSON.parse(localStorage.getItem("cex_nav_closed") ?? "[]")); } catch { /* sem armazenamento */ }
+    try {
+      const salvo = localStorage.getItem("cex_nav_closed");
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- preferência do aparelho, só existe no navegador
+      if (salvo != null) setGruposFechadosSalvos(JSON.parse(salvo));
+    } catch { /* sem armazenamento */ }
   }, []);
-  const alternarGrupo = (g: string) => setGruposFechados((prev) => {
-    const next = prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g];
-    try { localStorage.setItem("cex_nav_closed", JSON.stringify(next)); } catch { /* sem armazenamento */ }
-    return next;
-  });
   const [checkinEventId, setCheckinEventId] = useState<string | null>(null);
   const [shareEventId, setShareEventId] = useState<string | null>(null);
   const [pendingChatMemberId, setPendingChatMemberId] = useState<string | null>(null);
@@ -780,6 +780,16 @@ export default function ServiceExactApp({
      Sem tela liberada, qualquer papel usa o próprio app, sem painel vazio. */
   const podeGerenciar = temTelaLiberada;
   const [route, setRoute] = usePanelNavigation(initialPanelRoute, (Object.keys(ROUTES) as (keyof typeof ROUTES)[]).filter(podeVerItem), rotasPermitidas[0] ?? "painel", podeGerenciar, podeGerenciar && view === "gestao", setViewState);
+  /* sem preferência salva ainda, só o grupo da tela atual começa aberto (como o
+     "Mais" já faz): lei 13, menos ações na primeira dobra (Q24). Derivado a cada
+     render, não só na montagem, para acompanhar módulos que a igreja liga depois. */
+  const gruposFechados = gruposFechadosSalvos
+    ?? NAV_GROUPS.filter((g) => !g.items.some((i) => i.id === route)).map((g) => g.group);
+  const alternarGrupo = (g: string) => {
+    const next = gruposFechados.includes(g) ? gruposFechados.filter((x) => x !== g) : [...gruposFechados, g];
+    setGruposFechadosSalvos(next);
+    try { localStorage.setItem("cex_nav_closed", JSON.stringify(next)); } catch { /* sem armazenamento */ }
+  };
   const [filtroDiretorio, setFiltroDiretorio] = useState<{ route: "visitantes" | "membros" | "pessoas"; filtro: "sem-contato" | "pelo-link" | "em-grupos" | "servindo" | "membros" } | null>(null);
   const abrirDiretorio = (tela: "visitantes" | "membros" | "pessoas", filtro?: "sem-contato" | "pelo-link" | "em-grupos" | "servindo" | "membros") => {
     setFiltroDiretorio(filtro ? { route: tela, filtro } : null);
