@@ -989,7 +989,7 @@ export default function ServiceExactApp({
         </div>
       </aside>
 
-      <div className="main help-fab-reserve">
+      <div className="main">
         <header className={`top${buscaAberta ? " search-open" : ""}`}>
           <BotaoIcone className="top-menu" onClick={() => setNavOpen(true)} rotulo={textoDeErro("Abrir menu")}>
             <Icon name="menu" size={18} />
@@ -1233,7 +1233,6 @@ export default function ServiceExactApp({
         </main>
       </div>
 
-      <HelpFab onTour={abrirTourAjuda} onSetup={podeVerItem("configurar") ? abrirSetupAjuda : undefined} />
       {showTour ? (
         <Coachmark
           steps={tourSteps}
