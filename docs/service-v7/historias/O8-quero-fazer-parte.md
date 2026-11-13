@@ -17,7 +17,15 @@ Quem frequenta e quer virar membro não tem como dizer isso pelo app; a trilha a
 - `app/service/membro/Caminhada.tsx`
 - `app/service/membro/Inicio.tsx`
 - `app/service/modules/visitantes/manifest.ts`
-- `supabase/migrations/` (migração nova, se precisar de tabela de pedido)
+- `supabase/migrations/0111_service_quero_fazer_parte.sql` (situação inicial do link, pedidos, funções)
+- `app/service/modules/entrada/EntradaConfig.tsx` (quem entra pelo link: membro ou frequentador)
+- `app/service/painel/telas/Visitantes.tsx` (pedidos para fazer parte)
+- `app/service/lib/destinatario.ts` (tipo `fazer_parte`)
+- `app/service/lib/server/carregar.ts` (pedido da pessoa e pedidos pendentes)
+- `app/service/MobileApp.tsx` e `app/service/ServiceExactApp.tsx` (só passar dados e ações)
+- `app/service/lib/internacional/mensagens/` (catálogos)
+- `docs/service-v7/historias/screenshots/O8-*.png`
+- `docs/service-v7/PENDENTES.md` (tirar a O8 da ordem)
 
 ## Pronto quando
 - O membro ainda não membro vê "Quero fazer parte" uma vez, no lugar que responde à pergunta da aba (lei 2), e o pedido chega para quem acompanha a trilha.
